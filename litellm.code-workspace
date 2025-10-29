@@ -1,0 +1,17 @@
+{
+	"folders": [
+		{
+			"path": "../litellm"
+		},
+		{
+			"path": "../worker-infinity-embedding/models/remodlai/nova-embeddings-v1"
+		},
+		{
+			"path": "../new-site"
+		},
+		{
+			"path": "."
+		}
+	],
+	"settings": {}
+}
