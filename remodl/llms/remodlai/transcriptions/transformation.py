@@ -1,0 +1,65 @@
+"""
+Transformation logic for Hosted RemodlAI transcriptions
+"""
+
+from typing import Optional, Union
+
+import httpx
+
+from remodl.llms.base_llm.audio_transcription.transformation import (
+    AudioTranscriptionRequestData,
+)
+from remodl.llms.base_llm.chat.transformation import BaseLLMException
+from remodl.llms.openai.transcriptions.whisper_transformation import (
+    OpenAIWhisperAudioTranscriptionConfig,
+)
+from remodl.types.utils import FileTypes
+
+
+class RemodlAIAudioTranscriptionError(BaseLLMException):
+    def __init__(
+        self,
+        status_code: int,
+        message: str,
+        headers: Optional[Union[dict, httpx.Headers]] = None,
+    ):
+        super().__init__(status_code=status_code, message=message, headers=headers)
+
+
+class RemodlAIAudioTranscriptionConfig(OpenAIWhisperAudioTranscriptionConfig):
+    def __init__(self) -> None:
+        pass
+
+    def get_complete_url(
+        self,
+        api_base: Optional[str],
+        api_key: Optional[str],
+        model: str,
+        optional_params: dict,
+        remodl_params: dict,
+        stream: Optional[bool] = None,
+    ) -> str:
+        if api_base:
+            # Remove trailing slashes and ensure clean base URL
+            api_base = api_base.rstrip("/")
+            if not api_base.endswith("/v1/audio/transcriptions"):
+                api_base = f"{api_base}/v1/audio/transcriptions"
+            return api_base
+        raise ValueError("api_base must be provided for Hosted RemodlAI transcriptions")
+
+    def transform_audio_transcription_request(
+        self,
+        model: str,
+        audio_file: FileTypes,
+        optional_params: dict,
+        remodl_params: dict,
+    ) -> AudioTranscriptionRequestData:
+        """
+        Transform the audio transcription request
+        """
+
+        data = {"model": model, "file": audio_file, **optional_params}
+
+        return AudioTranscriptionRequestData(
+            data=data,
+        )
