@@ -3,7 +3,7 @@
 </h1>
 
 <p align="center">
-    <strong>Enterprise AI Infrastructure SDK</strong>
+    <strong>Cognitive AI Infrastructure SDK</strong>
     <br>
     Unified interface for LLMs, embeddings, search, and agentic workflows
 </p>
@@ -67,6 +67,7 @@ embeddings = remodl.embedding(
 ```
 
 **Nova Features:**
+
 - Multimodal: Process text, images, and code
 - Multi-vector output for enhanced precision
 - Task-specific adapters (retrieval, similarity, code search)
@@ -103,7 +104,7 @@ class QA(dspy.Module):
     def __init__(self):
         super().__init__()
         self.generate = dspy.ChainOfThought("question -> answer")
-    
+  
     def forward(self, question):
         return self.generate(question=question)
 
@@ -122,7 +123,7 @@ class RAGPipeline(dspy.Module):
         super().__init__()
         self.retrieve = dspy.Retrieve(k=5)
         self.generate = dspy.ChainOfThought("context, question -> answer")
-    
+  
     def forward(self, question):
         context = self.retrieve(question).passages
         return self.generate(context=context, question=question)
@@ -162,6 +163,7 @@ remodl.set_verbose = True
 ## Supported Models
 
 ### Embeddings
+
 - **Nova Embeddings V1** - Multimodal with task adapters
   - `nova-embeddings-v1` - Auto-routing base model
   - `nova-embeddings-v1-retrieval` - RAG optimized
@@ -169,6 +171,7 @@ remodl.set_verbose = True
   - `nova-embeddings-v1-code` - Code understanding
 
 ### LLMs
+
 - OpenAI: GPT-4, GPT-4 Turbo, GPT-3.5
 - Anthropic: Claude 3.5 Sonnet, Claude 3 Opus
 - Google: Gemini Pro, Gemini Ultra
@@ -270,7 +273,7 @@ class Solver(dspy.Module):
     def __init__(self):
         super().__init__()
         self.think = dspy.ChainOfThought("problem -> reasoning, solution")
-    
+  
     def forward(self, problem):
         return self.think(problem=problem)
 
@@ -290,7 +293,7 @@ class SearchRAG(dspy.Module):
     def __init__(self):
         super().__init__()
         self.generate = dspy.ChainOfThought("context, question -> answer")
-    
+  
     def forward(self, question):
         # Use remodl search directly
         search_results = remodl.search(
@@ -298,7 +301,7 @@ class SearchRAG(dspy.Module):
             search_provider="web-search",
             max_results=5
         )
-        
+      
         context = "\n".join([r.snippet for r in search_results.results])
         return self.generate(context=context, question=question)
 
