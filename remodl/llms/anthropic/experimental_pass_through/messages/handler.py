@@ -10,19 +10,19 @@ import contextvars
 from functools import partial
 from typing import Any, AsyncIterator, Coroutine, Dict, List, Optional, Union
 
-import litellm
-from litellm.litellm_core_utils.litellm_logging import Logging as LiteLLMLoggingObj
-from litellm.llms.base_llm.anthropic_messages.transformation import (
+import remodl
+from remodl.remodl_core_utils.remodl_logging import Logging as LiteLLMLoggingObj
+from remodl.llms.base_llm.anthropic_messages.transformation import (
     BaseAnthropicMessagesConfig,
 )
-from litellm.llms.custom_httpx.http_handler import AsyncHTTPHandler
-from litellm.llms.custom_httpx.llm_http_handler import BaseLLMHTTPHandler
-from litellm.types.llms.anthropic_messages.anthropic_request import AnthropicMetadata
-from litellm.types.llms.anthropic_messages.anthropic_response import (
+from remodl.llms.custom_httpx.http_handler import AsyncHTTPHandler
+from remodl.llms.custom_httpx.llm_http_handler import BaseLLMHTTPHandler
+from remodl.types.llms.anthropic_messages.anthropic_request import AnthropicMetadata
+from remodl.types.llms.anthropic_messages.anthropic_response import (
     AnthropicMessagesResponse,
 )
-from litellm.types.router import GenericLiteLLMParams
-from litellm.utils import ProviderConfigManager, client
+from remodl.types.router import GenericLiteLLMParams
+from remodl.utils import ProviderConfigManager, client
 
 from ..adapters.handler import LiteLLMMessagesToCompletionTransformationHandler
 from .utils import AnthropicMessagesRequestUtils, mock_response
@@ -97,7 +97,7 @@ def validate_anthropic_api_metadata(metadata: Optional[Dict] = None) -> Optional
     """
     Validate Anthropic API metadata - This is done to ensure only allowed `metadata` fields are passed to Anthropic API
 
-    If there are any litellm specific metadata fields, use `litellm_metadata` key to pass them.
+    If there are any remodl specific metadata fields, use `remodl_metadata` key to pass them.
     """
     if metadata is None:
         return None
@@ -132,16 +132,16 @@ def anthropic_messages_handler(
     """
     Makes Anthropic `/v1/messages` API calls In the Anthropic API Spec
     """
-    from litellm.types.utils import LlmProviders
+    from remodl.types.utils import LlmProviders
 
     metadata = validate_anthropic_api_metadata(metadata)
 
     local_vars = locals()
     is_async = kwargs.pop("is_async", False)
     # Use provided client or create a new one
-    litellm_logging_obj: LiteLLMLoggingObj = kwargs.get("litellm_logging_obj")  # type: ignore
+    remodl_logging_obj: LiteLLMLoggingObj = kwargs.get("remodl_logging_obj")  # type: ignore
 
-    litellm_params = GenericLiteLLMParams(
+    remodl_params = GenericLiteLLMParams(
         **kwargs,
         api_key=api_key,
         api_base=api_base,
@@ -152,20 +152,20 @@ def anthropic_messages_handler(
         custom_llm_provider,
         dynamic_api_key,
         dynamic_api_base,
-    ) = litellm.get_llm_provider(
+    ) = remodl.get_llm_provider(
         model=model,
         custom_llm_provider=custom_llm_provider,
-        api_base=litellm_params.api_base,
-        api_key=litellm_params.api_key,
+        api_base=remodl_params.api_base,
+        api_key=remodl_params.api_key,
     )
 
-    if litellm_params.mock_response and isinstance(litellm_params.mock_response, str):
+    if remodl_params.mock_response and isinstance(remodl_params.mock_response, str):
 
         return mock_response(
             model=model,
             messages=messages,
             max_tokens=max_tokens,
-            mock_response=litellm_params.mock_response,
+            mock_response=remodl_params.mock_response,
         )
 
     anthropic_messages_provider_config: Optional[BaseAnthropicMessagesConfig] = None
@@ -176,7 +176,7 @@ def anthropic_messages_handler(
         anthropic_messages_provider_config = (
             ProviderConfigManager.get_provider_anthropic_messages_config(
                 model=model,
-                provider=litellm.LlmProviders(custom_llm_provider),
+                provider=remodl.LlmProviders(custom_llm_provider),
             )
         )
     if anthropic_messages_provider_config is None:
@@ -226,8 +226,8 @@ def anthropic_messages_handler(
         _is_async=is_async,
         client=client,
         custom_llm_provider=custom_llm_provider,
-        litellm_params=litellm_params,
-        logging_obj=litellm_logging_obj,
+        remodl_params=remodl_params,
+        logging_obj=remodl_logging_obj,
         api_key=api_key,
         api_base=api_base,
         stream=stream,

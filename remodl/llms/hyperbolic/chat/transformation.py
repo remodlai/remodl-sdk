@@ -4,7 +4,7 @@ Translate from OpenAI's `/v1/chat/completions` to Hyperbolic's `/v1/chat/complet
 
 from typing import Optional, Tuple
 
-from litellm.secret_managers.main import get_secret_str
+from remodl.secret_managers.main import get_secret_str
 
 from ...openai_like.chat.transformation import OpenAILikeChatConfig
 

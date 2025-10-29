@@ -9,7 +9,7 @@ from openai.types.chat import ChatCompletionToolParam
 from openai.types.responses.function_tool_param import FunctionToolParam
 from openai.types.shared_params.function_definition import FunctionDefinition
 
-from litellm.types.utils import ChatCompletionMessageToolCall
+from remodl.types.utils import ChatCompletionMessageToolCall
 
 
 ########################################################

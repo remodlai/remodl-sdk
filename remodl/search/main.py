@@ -8,14 +8,14 @@ from typing import Any, Coroutine, Dict, List, Optional, Union
 
 import httpx
 
-import litellm
-from litellm._logging import verbose_logger
-from litellm.constants import request_timeout
-from litellm.litellm_core_utils.litellm_logging import Logging as LiteLLMLoggingObj
-from litellm.llms.base_llm.search.transformation import BaseSearchConfig, SearchResponse
-from litellm.llms.custom_httpx.llm_http_handler import BaseLLMHTTPHandler
-from litellm.types.utils import SearchProviders
-from litellm.utils import ProviderConfigManager, client, filter_out_litellm_params
+import remodl
+from remodl._logging import verbose_logger
+from remodl.constants import request_timeout
+from remodl.remodl_core_utils.remodl_logging import Logging as LiteLLMLoggingObj
+from remodl.llms.base_llm.search.transformation import BaseSearchConfig, SearchResponse
+from remodl.llms.custom_httpx.llm_http_handler import BaseLLMHTTPHandler
+from remodl.types.utils import SearchProviders
+from remodl.utils import ProviderConfigManager, client, filter_out_remodl_params
 
 ####### ENVIRONMENT VARIABLES ###################
 base_llm_http_handler = BaseLLMHTTPHandler()
@@ -89,16 +89,16 @@ async def asearch(
         
     Example:
         ```python
-        import litellm
+        import remodl
         
         # Basic search
-        response = await litellm.asearch(
+        response = await remodl.asearch(
             query="latest AI developments 2024",
             search_provider="perplexity"
         )
         
         # Search with options
-        response = await litellm.asearch(
+        response = await remodl.asearch(
             query="AI developments",
             search_provider="perplexity",
             max_results=10,
@@ -150,7 +150,7 @@ async def asearch(
         return response
     except Exception as e:
         model_name = f"{search_provider}/search"
-        raise litellm.exception_type(
+        raise remodl.exception_type(
             model=model_name,
             custom_llm_provider=search_provider,
             original_exception=e,
@@ -194,16 +194,16 @@ def search(
         
     Example:
         ```python
-        import litellm
+        import remodl
         
         # Basic search
-        response = litellm.search(
+        response = remodl.search(
             query="latest AI developments 2024",
             search_provider="perplexity"
         )
         
         # Search with options
-        response = litellm.search(
+        response = remodl.search(
             query="AI developments",
             search_provider="perplexity",
             max_results=10,
@@ -213,7 +213,7 @@ def search(
         )
         
         # Multi-query search
-        response = litellm.search(
+        response = remodl.search(
             query=["AI developments", "machine learning trends"],
             search_provider="perplexity"
         )
@@ -228,8 +228,8 @@ def search(
     """
     local_vars = locals()
     try:
-        litellm_logging_obj: LiteLLMLoggingObj = kwargs.pop("litellm_logging_obj")  # type: ignore
-        litellm_call_id: Optional[str] = kwargs.get("litellm_call_id", None)
+        remodl_logging_obj: LiteLLMLoggingObj = kwargs.pop("remodl_logging_obj")  # type: ignore
+        remodl_call_id: Optional[str] = kwargs.get("remodl_call_id", None)
         _is_async = kwargs.pop("asearch", False) is True
         
         # Validate query parameter
@@ -238,6 +238,10 @@ def search(
         
         if isinstance(query, list) and not all(isinstance(q, str) for q in query):
             raise ValueError("All items in query list must be strings")
+
+        # RemodlAI: Map custom aliases to actual providers
+        if search_provider == "web-search":
+            search_provider = "tavily"
 
         # Get provider config
         search_provider_config: Optional[BaseSearchConfig] = (
@@ -264,7 +268,7 @@ def search(
         )
         
         # Filter out internal LiteLLM parameters from kwargs
-        filtered_kwargs = filter_out_litellm_params(kwargs=kwargs)
+        filtered_kwargs = filter_out_remodl_params(kwargs=kwargs)
         
         # Add remaining kwargs to optional_params (for provider-specific params)
         for key, value in filtered_kwargs.items():
@@ -288,11 +292,11 @@ def search(
 
         # Pre Call logging
         model_name = f"{search_provider}/search"
-        litellm_logging_obj.update_environment_variables(
+        remodl_logging_obj.update_environment_variables(
             model=model_name,
             optional_params=optional_params,
-            litellm_params={
-                "litellm_call_id": litellm_call_id,
+            remodl_params={
+                "remodl_call_id": remodl_call_id,
                 "api_base": complete_url,
             },
             custom_llm_provider=search_provider,
@@ -303,7 +307,7 @@ def search(
             query=query,
             optional_params=optional_params,
             timeout=timeout or request_timeout,
-            logging_obj=litellm_logging_obj,
+            logging_obj=remodl_logging_obj,
             api_key=api_key,
             api_base=complete_url,
             custom_llm_provider=search_provider,
@@ -315,7 +319,7 @@ def search(
         return response
     except Exception as e:
         model_name = f"{search_provider}/search"
-        raise litellm.exception_type(
+        raise remodl.exception_type(
             model=model_name,
             custom_llm_provider=search_provider,
             original_exception=e,

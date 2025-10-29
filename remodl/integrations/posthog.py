@@ -13,19 +13,19 @@ import asyncio
 import os
 from typing import Any, Dict, Optional, Tuple
 
-from litellm._logging import verbose_logger
-from litellm._uuid import uuid
-from litellm.integrations.custom_batch_logger import CustomBatchLogger
-from litellm.llms.custom_httpx.http_handler import (
+from remodl._logging import verbose_logger
+from remodl._uuid import uuid
+from remodl.integrations.custom_batch_logger import CustomBatchLogger
+from remodl.llms.custom_httpx.http_handler import (
     _get_httpx_client,
     get_async_httpx_client,
     httpxSpecialProvider,
 )
-from litellm.types.integrations.posthog import (
+from remodl.types.integrations.posthog import (
     POSTHOG_MAX_BATCH_SIZE,
     PostHogEventPayload,
 )
-from litellm.types.utils import StandardCallbackDynamicParams, StandardLoggingPayload
+from remodl.types.utils import StandardCallbackDynamicParams, StandardLoggingPayload
 
 
 class PostHogLogger(CustomBatchLogger):
@@ -244,20 +244,20 @@ class PostHogLogger(CustomBatchLogger):
         if not isinstance(metadata, dict):
             return
 
-        litellm_internal_fields = {
+        remodl_internal_fields = {
             "endpoint", "caching_groups", "user_api_key_hash", "user_api_key_alias",
             "user_api_key_team_id", "user_api_key_user_id", "user_api_key_org_id",
             "user_api_key_team_alias", "user_api_key_end_user_id", "user_api_key_user_email",
-            "user_api_key", "user_api_end_user_max_budget", "litellm_api_version",
+            "user_api_key", "user_api_end_user_max_budget", "remodl_api_version",
             "global_max_parallel_requests", "user_api_key_team_max_budget", "user_api_key_team_spend",
             "user_api_key_spend", "user_api_key_max_budget", "user_api_key_model_max_budget",
-            "user_api_key_metadata", "headers", "litellm_parent_otel_span", "requester_ip_address",
+            "user_api_key_metadata", "headers", "remodl_parent_otel_span", "requester_ip_address",
             "model_group", "model_group_size", "deployment", "model_info", "api_base",
             "caching_groups", "hidden_params", "parent_run_id", "parent_id", "user_id"
         }
 
         for key, value in metadata.items():
-            if key not in litellm_internal_fields:
+            if key not in remodl_internal_fields:
                 properties[key] = value
 
     def _get_distinct_id(
@@ -364,8 +364,8 @@ class PostHogLogger(CustomBatchLogger):
                 raise
 
     def _extract_metadata(self, kwargs: Dict[str, Any]) -> Dict[str, Any]:
-        litellm_params = kwargs.get("litellm_params", {}) or {}
-        return litellm_params.get("metadata", {}) or {}
+        remodl_params = kwargs.get("remodl_params", {}) or {}
+        return remodl_params.get("metadata", {}) or {}
 
     def _safe_uuid(self) -> str:
         return str(uuid.uuid4())

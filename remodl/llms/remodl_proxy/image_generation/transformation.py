@@ -1,9 +1,9 @@
 from typing import Optional
 
-from litellm.llms.openai.image_generation.gpt_transformation import (
+from remodl.llms.openai.image_generation.gpt_transformation import (
     GPTImageGenerationConfig,
 )
-from litellm.secret_managers.main import get_secret_str
+from remodl.secret_managers.main import get_secret_str
 
 
 class LiteLLMProxyImageGenerationConfig(GPTImageGenerationConfig):
@@ -14,7 +14,7 @@ class LiteLLMProxyImageGenerationConfig(GPTImageGenerationConfig):
         model: str,
         messages,
         optional_params: dict,
-        litellm_params: dict,
+        remodl_params: dict,
         api_key: Optional[str] = None,
         api_base: Optional[str] = None,
     ) -> dict:
@@ -28,7 +28,7 @@ class LiteLLMProxyImageGenerationConfig(GPTImageGenerationConfig):
         api_key: Optional[str],
         model: str,
         optional_params: dict,
-        litellm_params: dict,
+        remodl_params: dict,
         stream: Optional[bool] = None,
     ) -> str:
         api_base = api_base or get_secret_str("LITELLM_PROXY_API_BASE")

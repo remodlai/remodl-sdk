@@ -4,16 +4,16 @@ Transformation logic from Cohere's /v1/rerank format to Infinity's  `/v1/rerank`
 Why separate file? Make it easy to see how transformation works
 """
 
-from litellm._uuid import uuid
+from remodl._uuid import uuid
 from typing import List, Optional
 
 import httpx
 
-import litellm
-from litellm.litellm_core_utils.litellm_logging import Logging as LiteLLMLoggingObj
-from litellm.llms.cohere.rerank.transformation import CohereRerankConfig
-from litellm.secret_managers.main import get_secret_str
-from litellm.types.rerank import (
+import remodl
+from remodl.remodl_core_utils.remodl_logging import Logging as LiteLLMLoggingObj
+from remodl.llms.cohere.rerank.transformation import CohereRerankConfig
+from remodl.secret_managers.main import get_secret_str
+from remodl.types.rerank import (
     RerankBilledUnits,
     RerankResponse,
     RerankResponseDocument,
@@ -45,7 +45,7 @@ class InfinityRerankConfig(CohereRerankConfig):
             api_key = (
                 get_secret_str("INFINITY_API_KEY")
                 or get_secret_str("INFINITY_API_KEY")
-                or litellm.infinity_key
+                or remodl.infinity_key
             )
 
         default_headers = {
@@ -70,7 +70,7 @@ class InfinityRerankConfig(CohereRerankConfig):
         api_key: Optional[str] = None,
         request_data: dict = {},
         optional_params: dict = {},
-        litellm_params: dict = {},
+        remodl_params: dict = {},
     ) -> RerankResponse:
         """
         Transform Infinity rerank response

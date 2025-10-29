@@ -4,8 +4,8 @@ import httpx
 from openai import AsyncAzureOpenAI, AzureOpenAI
 from openai.types.file_deleted import FileDeleted
 
-from litellm._logging import verbose_logger
-from litellm.types.llms.openai import *
+from remodl._logging import verbose_logger
+from remodl.types.llms.openai import *
 
 from ..common_utils import BaseAzureLLM
 
@@ -44,12 +44,12 @@ class AzureOpenAIFilesAPI(BaseAzureLLM):
         timeout: Union[float, httpx.Timeout],
         max_retries: Optional[int],
         client: Optional[Union[AzureOpenAI, AsyncAzureOpenAI]] = None,
-        litellm_params: Optional[dict] = None,
+        remodl_params: Optional[dict] = None,
     ) -> Union[OpenAIFileObject, Coroutine[Any, Any, OpenAIFileObject]]:
         openai_client: Optional[
             Union[AzureOpenAI, AsyncAzureOpenAI]
         ] = self.get_azure_openai_client(
-            litellm_params=litellm_params or {},
+            remodl_params=remodl_params or {},
             api_key=api_key,
             api_base=api_base,
             api_version=api_version,
@@ -90,14 +90,14 @@ class AzureOpenAIFilesAPI(BaseAzureLLM):
         max_retries: Optional[int],
         api_version: Optional[str] = None,
         client: Optional[Union[AzureOpenAI, AsyncAzureOpenAI]] = None,
-        litellm_params: Optional[dict] = None,
+        remodl_params: Optional[dict] = None,
     ) -> Union[
         HttpxBinaryResponseContent, Coroutine[Any, Any, HttpxBinaryResponseContent]
     ]:
         openai_client: Optional[
             Union[AzureOpenAI, AsyncAzureOpenAI]
         ] = self.get_azure_openai_client(
-            litellm_params=litellm_params or {},
+            remodl_params=remodl_params or {},
             api_key=api_key,
             api_base=api_base,
             api_version=api_version,
@@ -142,12 +142,12 @@ class AzureOpenAIFilesAPI(BaseAzureLLM):
         max_retries: Optional[int],
         api_version: Optional[str] = None,
         client: Optional[Union[AzureOpenAI, AsyncAzureOpenAI]] = None,
-        litellm_params: Optional[dict] = None,
+        remodl_params: Optional[dict] = None,
     ):
         openai_client: Optional[
             Union[AzureOpenAI, AsyncAzureOpenAI]
         ] = self.get_azure_openai_client(
-            litellm_params=litellm_params or {},
+            remodl_params=remodl_params or {},
             api_key=api_key,
             api_base=api_base,
             api_version=api_version,
@@ -194,12 +194,12 @@ class AzureOpenAIFilesAPI(BaseAzureLLM):
         organization: Optional[str] = None,
         api_version: Optional[str] = None,
         client: Optional[Union[AzureOpenAI, AsyncAzureOpenAI]] = None,
-        litellm_params: Optional[dict] = None,
+        remodl_params: Optional[dict] = None,
     ):
         openai_client: Optional[
             Union[AzureOpenAI, AsyncAzureOpenAI]
         ] = self.get_azure_openai_client(
-            litellm_params=litellm_params or {},
+            remodl_params=remodl_params or {},
             api_key=api_key,
             api_base=api_base,
             api_version=api_version,
@@ -248,12 +248,12 @@ class AzureOpenAIFilesAPI(BaseAzureLLM):
         purpose: Optional[str] = None,
         api_version: Optional[str] = None,
         client: Optional[Union[AzureOpenAI, AsyncAzureOpenAI]] = None,
-        litellm_params: Optional[dict] = None,
+        remodl_params: Optional[dict] = None,
     ):
         openai_client: Optional[
             Union[AzureOpenAI, AsyncAzureOpenAI]
         ] = self.get_azure_openai_client(
-            litellm_params=litellm_params or {},
+            remodl_params=remodl_params or {},
             api_key=api_key,
             api_base=api_base,
             api_version=api_version,

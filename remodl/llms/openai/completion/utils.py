@@ -1,9 +1,9 @@
 from typing import List, Union, cast
 
-from litellm.litellm_core_utils.prompt_templates.common_utils import (
+from remodl.remodl_core_utils.prompt_templates.common_utils import (
     convert_content_list_to_str,
 )
-from litellm.types.llms.openai import (
+from remodl.types.llms.openai import (
     AllMessageValues,
     AllPromptValues,
     OpenAITextCompletionUserMessage,

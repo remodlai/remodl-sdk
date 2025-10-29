@@ -12,17 +12,17 @@ import os
 import traceback
 from typing import TYPE_CHECKING, Any, Dict, List, Optional, Union
 
-from litellm.types.utils import StandardLoggingPayload
+from remodl.types.utils import StandardLoggingPayload
 
 if TYPE_CHECKING:
-    from litellm.proxy._types import SpendLogsPayload
+    from remodl.proxy._types import SpendLogsPayload
 else:
     SpendLogsPayload = Any
 
-import litellm
-from litellm._logging import verbose_logger
-from litellm.integrations.custom_batch_logger import CustomBatchLogger
-from litellm.llms.custom_httpx.http_handler import (
+import remodl
+from remodl._logging import verbose_logger
+from remodl.integrations.custom_batch_logger import CustomBatchLogger
+from remodl.llms.custom_httpx.http_handler import (
     get_async_httpx_client,
     httpxSpecialProvider,
 )
@@ -44,7 +44,7 @@ class GcsPubSubLogger(CustomBatchLogger):
             topic_id (str): Pub/Sub topic ID
             credentials_path (str, optional): Path to Google Cloud credentials JSON file
         """
-        from litellm.proxy.utils import _premium_user_check
+        from remodl.proxy.utils import _premium_user_check
 
         _premium_user_check()
 
@@ -68,7 +68,7 @@ class GcsPubSubLogger(CustomBatchLogger):
 
     async def construct_request_headers(self) -> Dict[str, str]:
         """Construct authorization headers using Vertex AI auth"""
-        from litellm import vertex_chat_completion
+        from remodl import vertex_chat_completion
 
         (
             _auth_header,
@@ -108,10 +108,10 @@ class GcsPubSubLogger(CustomBatchLogger):
         Raises:
             Raises a NON Blocking verbose_logger.exception if an error occurs
         """
-        from litellm.proxy.spend_tracking.spend_tracking_utils import (
+        from remodl.proxy.spend_tracking.spend_tracking_utils import (
             get_logging_payload,
         )
-        from litellm.proxy.utils import _premium_user_check
+        from remodl.proxy.utils import _premium_user_check
 
         _premium_user_check()
 
@@ -122,7 +122,7 @@ class GcsPubSubLogger(CustomBatchLogger):
             standard_logging_payload = kwargs.get("standard_logging_object", None)
 
             # Backwards compatibility with old logging payload
-            if litellm.gcs_pub_sub_use_v1 is True:
+            if remodl.gcs_pub_sub_use_v1 is True:
                 spend_logs_payload = get_logging_payload(
                     kwargs=kwargs,
                     response_obj=response_obj,

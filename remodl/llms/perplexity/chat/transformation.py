@@ -5,16 +5,16 @@ Translate from OpenAI's `/v1/chat/completions` to Perplexity's `/v1/chat/complet
 from typing import Any, List, Optional, Tuple
 
 import httpx
-import litellm
-from litellm._logging import verbose_logger
-from litellm.secret_managers.main import get_secret_str
-from litellm.types.llms.openai import AllMessageValues
-from litellm.types.utils import Usage, PromptTokensDetailsWrapper
-from litellm.litellm_core_utils.litellm_logging import Logging as LiteLLMLoggingObj
-from litellm.llms.openai.chat.gpt_transformation import OpenAIGPTConfig
-from litellm.types.utils import ModelResponse
-from litellm.types.llms.openai import ChatCompletionAnnotation
-from litellm.types.llms.openai import ChatCompletionAnnotationURLCitation
+import remodl
+from remodl._logging import verbose_logger
+from remodl.secret_managers.main import get_secret_str
+from remodl.types.llms.openai import AllMessageValues
+from remodl.types.utils import Usage, PromptTokensDetailsWrapper
+from remodl.remodl_core_utils.remodl_logging import Logging as LiteLLMLoggingObj
+from remodl.llms.openai.chat.gpt_transformation import OpenAIGPTConfig
+from remodl.types.utils import ModelResponse
+from remodl.types.llms.openai import ChatCompletionAnnotation
+from remodl.types.llms.openai import ChatCompletionAnnotationURLCitation
 
 
 class PerplexityChatConfig(OpenAIGPTConfig):
@@ -55,7 +55,7 @@ class PerplexityChatConfig(OpenAIGPTConfig):
         ]
 
         try:
-            if litellm.supports_reasoning(
+            if remodl.supports_reasoning(
                 model=model, custom_llm_provider=self.custom_llm_provider
             ):
                 base_openai_params.append("reasoning_effort")
@@ -63,7 +63,7 @@ class PerplexityChatConfig(OpenAIGPTConfig):
             verbose_logger.debug(f"Error checking if model supports reasoning: {e}")
         
         try:
-            if litellm.supports_web_search(
+            if remodl.supports_web_search(
                 model=model, custom_llm_provider=self.custom_llm_provider
             ):
                 base_openai_params.append("web_search_options")
@@ -81,7 +81,7 @@ class PerplexityChatConfig(OpenAIGPTConfig):
         request_data: dict,
         messages: List[AllMessageValues],
         optional_params: dict,
-        litellm_params: dict,
+        remodl_params: dict,
         encoding: Any,
         api_key: Optional[str] = None,
         json_mode: Optional[bool] = None,
@@ -95,7 +95,7 @@ class PerplexityChatConfig(OpenAIGPTConfig):
             request_data=request_data,
             messages=messages,
             optional_params=optional_params,
-            litellm_params=litellm_params,
+            remodl_params=remodl_params,
             encoding=encoding,
             api_key=api_key,
             json_mode=json_mode,

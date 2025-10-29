@@ -1,9 +1,9 @@
 from typing import Optional, Tuple, Union
 
-import litellm
-from litellm.constants import MIN_NON_ZERO_TEMPERATURE
-from litellm.llms.openai.chat.gpt_transformation import OpenAIGPTConfig
-from litellm.secret_managers.main import get_secret_str
+import remodl
+from remodl.constants import MIN_NON_ZERO_TEMPERATURE
+from remodl.llms.openai.chat.gpt_transformation import OpenAIGPTConfig
+from remodl.secret_managers.main import get_secret_str
 
 
 class DeepInfraConfig(OpenAIGPTConfig):
@@ -74,7 +74,7 @@ class DeepInfraConfig(OpenAIGPTConfig):
             "tool_choice"
         ]
 
-        if litellm.supports_reasoning(
+        if remodl.supports_reasoning(
             model=model,
             custom_llm_provider=self.custom_llm_provider,
         ):
@@ -101,11 +101,11 @@ class DeepInfraConfig(OpenAIGPTConfig):
                     value != "auto" and value != "none"
                 ):  # https://deepinfra.com/docs/advanced/function_calling
                     ## UNSUPPORTED TOOL CHOICE VALUE
-                    if litellm.drop_params is True or drop_params is True:
+                    if remodl.drop_params is True or drop_params is True:
                         value = None
                     else:
-                        raise litellm.utils.UnsupportedParamsError(
-                            message="Deepinfra doesn't support tool_choice={}. To drop unsupported openai params from the call, set `litellm.drop_params = True`".format(
+                        raise remodl.utils.UnsupportedParamsError(
+                            message="Deepinfra doesn't support tool_choice={}. To drop unsupported openai params from the call, set `remodl.drop_params = True`".format(
                                 value
                             ),
                             status_code=400,

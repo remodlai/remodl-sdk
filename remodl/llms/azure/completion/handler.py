@@ -2,8 +2,8 @@ from typing import Any, Callable, Optional
 
 from openai import AsyncAzureOpenAI, AzureOpenAI
 
-from litellm.litellm_core_utils.prompt_templates.factory import prompt_factory
-from litellm.utils import CustomStreamWrapper, ModelResponse, TextCompletionResponse
+from remodl.remodl_core_utils.prompt_templates.factory import prompt_factory
+from remodl.utils import CustomStreamWrapper, ModelResponse, TextCompletionResponse
 
 from ...openai.completion.transformation import OpenAITextCompletionConfig
 from ..common_utils import AzureOpenAIError, BaseAzureLLM
@@ -40,7 +40,7 @@ class AzureTextCompletion(BaseAzureLLM):
         timeout,
         logging_obj,
         optional_params,
-        litellm_params,
+        remodl_params,
         logger_fn,
         acompletion: bool = False,
         headers: Optional[dict] = None,
@@ -72,7 +72,7 @@ class AzureTextCompletion(BaseAzureLLM):
                     azure_ad_token=azure_ad_token,
                     azure_ad_token_provider=azure_ad_token_provider,
                     acompletion=acompletion,
-                    litellm_params=litellm_params,
+                    remodl_params=remodl_params,
                 )
 
                 data = {"model": None, "prompt": prompt, **optional_params}
@@ -95,7 +95,7 @@ class AzureTextCompletion(BaseAzureLLM):
                         azure_ad_token=azure_ad_token,
                         timeout=timeout,
                         client=client,
-                        litellm_params=litellm_params,
+                        remodl_params=remodl_params,
                     )
                 else:
                     return self.acompletion(
@@ -110,7 +110,7 @@ class AzureTextCompletion(BaseAzureLLM):
                         client=client,
                         logging_obj=logging_obj,
                         max_retries=max_retries,
-                        litellm_params=litellm_params,
+                        remodl_params=remodl_params,
                     )
             elif "stream" in optional_params and optional_params["stream"] is True:
                 return self.streaming(
@@ -149,7 +149,7 @@ class AzureTextCompletion(BaseAzureLLM):
                     api_base=api_base,
                     api_version=api_version,
                     client=client,
-                    litellm_params=litellm_params,
+                    remodl_params=remodl_params,
                     _is_async=False,
                     model=model,
                 )
@@ -207,7 +207,7 @@ class AzureTextCompletion(BaseAzureLLM):
         max_retries: int,
         azure_ad_token: Optional[str] = None,
         client=None,  # this is the AsyncAzureOpenAI
-        litellm_params: dict = {},
+        remodl_params: dict = {},
     ):
         response = None
         try:
@@ -220,7 +220,7 @@ class AzureTextCompletion(BaseAzureLLM):
                 model=model,
                 _is_async=True,
                 client=client,
-                litellm_params=litellm_params,
+                remodl_params=remodl_params,
             )
             if not isinstance(azure_client, AsyncAzureOpenAI):
                 raise AzureOpenAIError(
@@ -270,7 +270,7 @@ class AzureTextCompletion(BaseAzureLLM):
         timeout: Any,
         azure_ad_token: Optional[str] = None,
         client=None,
-        litellm_params: dict = {},
+        remodl_params: dict = {},
     ):
         max_retries = data.pop("max_retries", 2)
         if not isinstance(max_retries, int):
@@ -285,7 +285,7 @@ class AzureTextCompletion(BaseAzureLLM):
             model=model,
             _is_async=False,
             client=client,
-            litellm_params=litellm_params,
+            remodl_params=remodl_params,
         )
         if not isinstance(azure_client, AzureOpenAI):
             raise AzureOpenAIError(
@@ -327,7 +327,7 @@ class AzureTextCompletion(BaseAzureLLM):
         timeout: Any,
         azure_ad_token: Optional[str] = None,
         client=None,
-        litellm_params: dict = {},
+        remodl_params: dict = {},
     ):
         try:
             # init AzureOpenAI Client
@@ -338,7 +338,7 @@ class AzureTextCompletion(BaseAzureLLM):
                 model=model,
                 _is_async=True,
                 client=client,
-                litellm_params=litellm_params,
+                remodl_params=remodl_params,
             )
             if not isinstance(azure_client, AsyncAzureOpenAI):
                 raise AzureOpenAIError(

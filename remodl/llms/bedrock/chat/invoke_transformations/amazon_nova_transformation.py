@@ -10,11 +10,11 @@ from typing import Any, List, Optional
 
 import httpx
 
-import litellm
-from litellm.litellm_core_utils.litellm_logging import Logging
-from litellm.types.llms.bedrock import BedrockInvokeNovaRequest
-from litellm.types.llms.openai import AllMessageValues
-from litellm.types.utils import ModelResponse
+import remodl
+from remodl.remodl_core_utils.remodl_logging import Logging
+from remodl.types.llms.bedrock import BedrockInvokeNovaRequest
+from remodl.types.llms.openai import AllMessageValues
+from remodl.types.utils import ModelResponse
 
 from ..converse_transformation import AmazonConverseConfig
 from .base_invoke_transformation import AmazonInvokeConfig
@@ -47,7 +47,7 @@ class AmazonInvokeNovaConfig(AmazonInvokeConfig, AmazonConverseConfig):
         model: str,
         messages: List[AllMessageValues],
         optional_params: dict,
-        litellm_params: dict,
+        remodl_params: dict,
         headers: dict,
     ) -> dict:
         _transformed_nova_request = AmazonConverseConfig.transform_request(
@@ -55,7 +55,7 @@ class AmazonInvokeNovaConfig(AmazonInvokeConfig, AmazonConverseConfig):
             model=model,
             messages=messages,
             optional_params=optional_params,
-            litellm_params=litellm_params,
+            remodl_params=remodl_params,
             headers=headers,
         )
         _bedrock_invoke_nova_request = BedrockInvokeNovaRequest(
@@ -76,11 +76,11 @@ class AmazonInvokeNovaConfig(AmazonInvokeConfig, AmazonConverseConfig):
         request_data: dict,
         messages: List[AllMessageValues],
         optional_params: dict,
-        litellm_params: dict,
+        remodl_params: dict,
         encoding: Any,
         api_key: Optional[str] = None,
         json_mode: Optional[bool] = None,
-    ) -> litellm.ModelResponse:
+    ) -> remodl.ModelResponse:
         return AmazonConverseConfig.transform_response(
             self,
             model,
@@ -90,7 +90,7 @@ class AmazonInvokeNovaConfig(AmazonInvokeConfig, AmazonConverseConfig):
             request_data,
             messages,
             optional_params,
-            litellm_params,
+            remodl_params,
             encoding,
             api_key,
             json_mode,

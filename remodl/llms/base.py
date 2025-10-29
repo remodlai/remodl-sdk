@@ -3,11 +3,11 @@ from typing import TYPE_CHECKING, Any, Optional, Union
 
 import httpx
 
-import litellm
+import remodl
 
 if TYPE_CHECKING:
-    from litellm.litellm_core_utils.streaming_handler import CustomStreamWrapper
-    from litellm.types.utils import ModelResponse, TextCompletionResponse
+    from remodl.remodl_core_utils.streaming_handler import CustomStreamWrapper
+    from remodl.types.utils import ModelResponse, TextCompletionResponse
 
 
 class BaseLLM:
@@ -52,16 +52,16 @@ class BaseLLM:
         return model_response
 
     def create_client_session(self):
-        if litellm.client_session:
-            _client_session = litellm.client_session
+        if remodl.client_session:
+            _client_session = remodl.client_session
         else:
             _client_session = httpx.Client()
 
         return _client_session
 
     def create_aclient_session(self):
-        if litellm.aclient_session:
-            _aclient_session = litellm.aclient_session
+        if remodl.aclient_session:
+            _aclient_session = remodl.aclient_session
         else:
             _aclient_session = httpx.AsyncClient()
 

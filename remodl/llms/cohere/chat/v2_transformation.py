@@ -3,19 +3,19 @@ from typing import TYPE_CHECKING, Any, AsyncIterator, Iterator, List, Optional, 
 
 import httpx
 
-import litellm
-from litellm.llms.base_llm.chat.transformation import BaseLLMException
-from litellm.types.llms.cohere import CohereV2ChatResponse
-from litellm.types.llms.openai import AllMessageValues, ChatCompletionToolCallChunk
-from litellm.llms.openai.chat.gpt_transformation import OpenAIGPTConfig
-from litellm.types.utils import ModelResponse, Usage
+import remodl
+from remodl.llms.base_llm.chat.transformation import BaseLLMException
+from remodl.types.llms.cohere import CohereV2ChatResponse
+from remodl.types.llms.openai import AllMessageValues, ChatCompletionToolCallChunk
+from remodl.llms.openai.chat.gpt_transformation import OpenAIGPTConfig
+from remodl.types.utils import ModelResponse, Usage
 
 from ..common_utils import CohereError
 from ..common_utils import CohereV2ModelResponseIterator
 from ..common_utils import validate_environment as cohere_validate_environment
 
 if TYPE_CHECKING:
-    from litellm.litellm_core_utils.litellm_logging import Logging as _LiteLLMLoggingObj
+    from remodl.remodl_core_utils.remodl_logging import Logging as _LiteLLMLoggingObj
 
     LiteLLMLoggingObj = _LiteLLMLoggingObj
 else:
@@ -98,7 +98,7 @@ class CohereV2ChatConfig(OpenAIGPTConfig):
         model: str,
         messages: List[AllMessageValues],
         optional_params: dict,
-        litellm_params: dict,
+        remodl_params: dict,
         api_key: Optional[str] = None,
         api_base: Optional[str] = None,
     ) -> dict:
@@ -161,13 +161,13 @@ class CohereV2ChatConfig(OpenAIGPTConfig):
         model: str,
         messages: List[AllMessageValues],
         optional_params: dict,
-        litellm_params: dict,
+        remodl_params: dict,
         headers: dict,
     ) -> dict:
         """
         Cohere v2 chat api is in openai format, so we can use the openai transform request function to transform the request.
         """
-        data = super().transform_request(model, messages, optional_params, litellm_params, headers)
+        data = super().transform_request(model, messages, optional_params, remodl_params, headers)
         
         return data
 
@@ -180,7 +180,7 @@ class CohereV2ChatConfig(OpenAIGPTConfig):
         request_data: dict,
         messages: List[AllMessageValues],
         optional_params: dict,
-        litellm_params: dict,
+        remodl_params: dict,
         encoding: Any,
         api_key: Optional[str] = None,
         json_mode: Optional[bool] = None,
@@ -222,7 +222,7 @@ class CohereV2ChatConfig(OpenAIGPTConfig):
                     "index": index,
                 }
                 tool_calls.append(tool_call)
-            _message = litellm.Message(
+            _message = remodl.Message(
                 tool_calls=tool_calls,
                 content=None,
             )
@@ -261,7 +261,7 @@ class CohereV2ChatConfig(OpenAIGPTConfig):
         api_key: Optional[str],
         model: str,
         optional_params: dict,
-        litellm_params: dict,
+        remodl_params: dict,
         stream: Optional[bool] = None,
     ) -> str:
         """

@@ -3,7 +3,7 @@ Cost calculation for search providers.
 """
 from typing import Optional, Tuple
 
-from litellm.utils import get_model_info
+from remodl.utils import get_model_info
 
 
 def search_provider_cost_per_query(

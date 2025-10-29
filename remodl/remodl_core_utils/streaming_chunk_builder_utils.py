@@ -2,11 +2,11 @@ import base64
 import time
 from typing import TYPE_CHECKING, Any, Dict, List, Literal, Optional, Union, cast
 
-from litellm.types.llms.openai import (
+from remodl.types.llms.openai import (
     ChatCompletionAssistantContentValue,
     ChatCompletionAudioDelta,
 )
-from litellm.types.utils import (
+from remodl.types.utils import (
     ChatCompletionAudioResponse,
     ChatCompletionMessageToolCall,
     Choices,
@@ -19,13 +19,13 @@ from litellm.types.utils import (
     PromptTokensDetailsWrapper,
     Usage,
 )
-from litellm.utils import print_verbose, token_counter
+from remodl.utils import print_verbose, token_counter
 
 if TYPE_CHECKING:
-    from litellm.types.litellm_core_utils.streaming_chunk_builder_utils import (
+    from remodl.types.remodl_core_utils.streaming_chunk_builder_utils import (
         UsagePerChunk,
     )
-    from litellm.types.llms.openai import (
+    from remodl.types.llms.openai import (
         ChatCompletionRedactedThinkingBlock,
         ChatCompletionThinkingBlock,
     )
@@ -228,7 +228,7 @@ class ChunkProcessor:
             Union["ChatCompletionThinkingBlock", "ChatCompletionRedactedThinkingBlock"]
         ]
     ]:
-        from litellm.types.llms.openai import (
+        from remodl.types.llms.openai import (
             ChatCompletionRedactedThinkingBlock,
             ChatCompletionThinkingBlock,
         )
@@ -381,7 +381,7 @@ class ChunkProcessor:
         self,
         chunks: List[Union[Dict[str, Any], ModelResponse]],
     ) -> "UsagePerChunk":
-        from litellm.types.litellm_core_utils.streaming_chunk_builder_utils import (
+        from remodl.types.remodl_core_utils.streaming_chunk_builder_utils import (
             UsagePerChunk,
         )
 

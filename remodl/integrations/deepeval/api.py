@@ -2,7 +2,7 @@
 import logging
 import httpx
 from enum import Enum
-from litellm._logging import verbose_logger
+from remodl._logging import verbose_logger
 
 DEEPEVAL_BASE_URL = "https://deepeval.confident-ai.com"
 DEEPEVAL_BASE_URL_EU = "https://eu.deepeval.confident-ai.com"
@@ -10,7 +10,7 @@ API_BASE_URL = "https://api.confident-ai.com"
 API_BASE_URL_EU = "https://eu.api.confident-ai.com"
 retryable_exceptions = httpx.HTTPError
 
-from litellm.llms.custom_httpx.http_handler import (
+from remodl.llms.custom_httpx.http_handler import (
     HTTPHandler,
     get_async_httpx_client,
     httpxSpecialProvider,

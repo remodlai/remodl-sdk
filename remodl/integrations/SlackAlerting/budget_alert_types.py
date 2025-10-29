@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from typing import Literal
 
-from litellm.proxy._types import CallInfo
+from remodl.proxy._types import CallInfo
 
 
 class BaseBudgetAlertType(ABC):

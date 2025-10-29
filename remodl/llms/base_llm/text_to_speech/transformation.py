@@ -5,8 +5,8 @@ from typing import TYPE_CHECKING, Any, Dict, Optional, Tuple, TypedDict, Union
 import httpx
 
 if TYPE_CHECKING:
-    from litellm.litellm_core_utils.litellm_logging import Logging as _LiteLLMLoggingObj
-    from litellm.types.llms.openai import (
+    from remodl.remodl_core_utils.remodl_logging import Logging as _LiteLLMLoggingObj
+    from remodl.types.llms.openai import (
         HttpxBinaryResponseContent as _HttpxBinaryResponseContent,
     )
 
@@ -95,7 +95,7 @@ class BaseTextToSpeechConfig(ABC):
         self,
         model: str,
         api_base: Optional[str],
-        litellm_params: dict,
+        remodl_params: dict,
     ) -> str:
         """
         Get the complete url for the request
@@ -111,7 +111,7 @@ class BaseTextToSpeechConfig(ABC):
         input: str,
         voice: Optional[str],
         optional_params: Dict,
-        litellm_params: Dict,
+        remodl_params: Dict,
         headers: dict,
     ) -> TextToSpeechRequestData:
         """

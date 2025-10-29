@@ -2,13 +2,13 @@
 ## Cost calculation for Google AI Studio / Vertex AI models
 from typing import Literal, Optional, Tuple, Union
 
-import litellm
-from litellm import verbose_logger
-from litellm.litellm_core_utils.llm_cost_calc.utils import (
+import remodl
+from remodl import verbose_logger
+from remodl.remodl_core_utils.llm_cost_calc.utils import (
     _is_above_128k,
     generic_cost_per_token,
 )
-from litellm.types.utils import ModelInfo, Usage
+from remodl.types.utils import ModelInfo, Usage
 
 """
 Gemini pricing covers: 
@@ -78,12 +78,12 @@ def cost_per_character(
     Raises:
         Exception if model requires >128k pricing, but model cost not mapped
     """
-    model_info = litellm.get_model_info(
+    model_info = remodl.get_model_info(
         model=model, custom_llm_provider=custom_llm_provider
     )
 
     ## GET MODEL INFO
-    model_info = litellm.get_model_info(
+    model_info = remodl.get_model_info(
         model=model, custom_llm_provider=custom_llm_provider
     )
 
@@ -122,7 +122,7 @@ def cost_per_character(
                 prompt_cost = prompt_characters * model_info["input_cost_per_character"]
         except Exception as e:
             verbose_logger.debug(
-                "litellm.litellm_core_utils.llm_cost_calc.google.py::cost_per_character(): Exception occured - {}\nDefaulting to None".format(
+                "remodl.remodl_core_utils.llm_cost_calc.google.py::cost_per_character(): Exception occured - {}\nDefaulting to None".format(
                     str(e)
                 )
             )
@@ -169,7 +169,7 @@ def cost_per_character(
                 )
         except Exception as e:
             verbose_logger.debug(
-                "litellm.litellm_core_utils.llm_cost_calc.google.py::cost_per_character(): Exception occured - {}\nDefaulting to None".format(
+                "remodl.remodl_core_utils.llm_cost_calc.google.py::cost_per_character(): Exception occured - {}\nDefaulting to None".format(
                     str(e)
                 )
             )
@@ -242,7 +242,7 @@ def cost_per_token(
     """
 
     ## GET MODEL INFO
-    model_info = litellm.get_model_info(
+    model_info = remodl.get_model_info(
         model=model, custom_llm_provider=custom_llm_provider
     )
 

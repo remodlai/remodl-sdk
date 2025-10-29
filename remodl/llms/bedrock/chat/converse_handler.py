@@ -3,16 +3,16 @@ from typing import Any, Optional, Union
 
 import httpx
 
-import litellm
-from litellm.litellm_core_utils.litellm_logging import Logging as LiteLLMLoggingObject
-from litellm.llms.custom_httpx.http_handler import (
+import remodl
+from remodl.remodl_core_utils.remodl_logging import Logging as LiteLLMLoggingObject
+from remodl.llms.custom_httpx.http_handler import (
     AsyncHTTPHandler,
     HTTPHandler,
     _get_httpx_client,
     get_async_httpx_client,
 )
-from litellm.types.utils import ModelResponse
-from litellm.utils import CustomStreamWrapper
+from remodl.types.utils import ModelResponse
+from remodl.utils import CustomStreamWrapper
 
 from ..base_aws_llm import BaseAWSLLM, Credentials
 from ..common_utils import BedrockError
@@ -49,17 +49,17 @@ def make_sync_call(
     if fake_stream:
         model_response: (
             ModelResponse
-        ) = litellm.AmazonConverseConfig()._transform_response(
+        ) = remodl.AmazonConverseConfig()._transform_response(
             model=model,
             response=response,
-            model_response=litellm.ModelResponse(),
+            model_response=remodl.ModelResponse(),
             stream=True,
             logging_obj=logging_obj,
             optional_params={},
             api_key="",
             data=data,
             messages=messages,
-            encoding=litellm.encoding,
+            encoding=remodl.encoding,
         )  # type: ignore
         completion_stream: Any = MockResponseIterator(
             model_response=model_response, json_mode=json_mode
@@ -94,7 +94,7 @@ class BedrockConverseLLM(BaseAWSLLM):
         logging_obj,
         stream,
         optional_params: dict,
-        litellm_params: dict,
+        remodl_params: dict,
         credentials: Credentials,
         logger_fn=None,
         headers={},
@@ -103,18 +103,18 @@ class BedrockConverseLLM(BaseAWSLLM):
         json_mode: Optional[bool] = False,
         api_key: Optional[str] = None,
     ) -> CustomStreamWrapper:
-        request_data = await litellm.AmazonConverseConfig()._async_transform_request(
+        request_data = await remodl.AmazonConverseConfig()._async_transform_request(
             model=model,
             messages=messages,
             optional_params=optional_params,
-            litellm_params=litellm_params,
+            remodl_params=remodl_params,
             headers=headers,
         )
         data = json.dumps(request_data)
 
         prepped = self.get_request_headers(
             credentials=credentials,
-            aws_region_name=litellm_params.get("aws_region_name") or "us-west-2",
+            aws_region_name=remodl_params.get("aws_region_name") or "us-west-2",
             extra_headers=headers,
             endpoint_url=api_base,
             data=data,
@@ -163,25 +163,25 @@ class BedrockConverseLLM(BaseAWSLLM):
         logging_obj: LiteLLMLoggingObject,
         stream,
         optional_params: dict,
-        litellm_params: dict,
+        remodl_params: dict,
         credentials: Credentials,
         logger_fn=None,
         headers: dict = {},
         client: Optional[AsyncHTTPHandler] = None,
         api_key: Optional[str] = None,
     ) -> Union[ModelResponse, CustomStreamWrapper]:
-        request_data = await litellm.AmazonConverseConfig()._async_transform_request(
+        request_data = await remodl.AmazonConverseConfig()._async_transform_request(
             model=model,
             messages=messages,
             optional_params=optional_params,
-            litellm_params=litellm_params,
+            remodl_params=remodl_params,
             headers=headers,
         )
         data = json.dumps(request_data)
         
         prepped = self.get_request_headers(
             credentials=credentials,
-            aws_region_name=litellm_params.get("aws_region_name") or "us-west-2",
+            aws_region_name=remodl_params.get("aws_region_name") or "us-west-2",
             extra_headers=headers,
             endpoint_url=api_base,
             data=data,
@@ -208,7 +208,7 @@ class BedrockConverseLLM(BaseAWSLLM):
                     timeout = httpx.Timeout(timeout)
                 _params["timeout"] = timeout
             client = get_async_httpx_client(
-                params=_params, llm_provider=litellm.LlmProviders.BEDROCK
+                params=_params, llm_provider=remodl.LlmProviders.BEDROCK
             )
         else:
             client = client  # type: ignore
@@ -227,7 +227,7 @@ class BedrockConverseLLM(BaseAWSLLM):
         except httpx.TimeoutException:
             raise BedrockError(status_code=408, message="Timeout error occurred.")
 
-        return litellm.AmazonConverseConfig()._transform_response(
+        return remodl.AmazonConverseConfig()._transform_response(
             model=model,
             response=response,
             model_response=model_response,
@@ -252,7 +252,7 @@ class BedrockConverseLLM(BaseAWSLLM):
         optional_params: dict,
         acompletion: bool,
         timeout: Optional[Union[float, httpx.Timeout]],
-        litellm_params: dict,
+        remodl_params: dict,
         logger_fn=None,
         extra_headers: Optional[dict] = None,
         client: Optional[Union[AsyncHTTPHandler, HTTPHandler]] = None,
@@ -268,7 +268,7 @@ class BedrockConverseLLM(BaseAWSLLM):
         else:
             modelId = self.encode_model_id(model_id=model)
 
-        fake_stream = litellm.AmazonConverseConfig().should_fake_stream(
+        fake_stream = remodl.AmazonConverseConfig().should_fake_stream(
             fake_stream=fake_stream,
             model=model,
             stream=stream,
@@ -299,7 +299,7 @@ class BedrockConverseLLM(BaseAWSLLM):
         aws_external_id = optional_params.pop("aws_external_id", None)
         optional_params.pop("aws_region_name", None)
 
-        litellm_params[
+        remodl_params[
             "aws_region_name"
         ] = aws_region_name  # [DO NOT DELETE] important for async calls
 
@@ -348,7 +348,7 @@ class BedrockConverseLLM(BaseAWSLLM):
                     logging_obj=logging_obj,
                     optional_params=optional_params,
                     stream=True,
-                    litellm_params=litellm_params,
+                    remodl_params=remodl_params,
                     logger_fn=logger_fn,
                     headers=headers,
                     timeout=timeout,
@@ -368,7 +368,7 @@ class BedrockConverseLLM(BaseAWSLLM):
                 logging_obj=logging_obj,
                 optional_params=optional_params,
                 stream=stream,  # type: ignore
-                litellm_params=litellm_params,
+                remodl_params=remodl_params,
                 logger_fn=logger_fn,
                 headers=headers,
                 timeout=timeout,
@@ -379,11 +379,11 @@ class BedrockConverseLLM(BaseAWSLLM):
 
         ## TRANSFORMATION ##
 
-        _data = litellm.AmazonConverseConfig()._transform_request(
+        _data = remodl.AmazonConverseConfig()._transform_request(
             model=model,
             messages=messages,
             optional_params=optional_params,
-            litellm_params=litellm_params,
+            remodl_params=remodl_params,
             headers=extra_headers,
         )
         data = json.dumps(_data)
@@ -459,7 +459,7 @@ class BedrockConverseLLM(BaseAWSLLM):
         except httpx.TimeoutException:
             raise BedrockError(status_code=408, message="Timeout error occurred.")
 
-        return litellm.AmazonConverseConfig()._transform_response(
+        return remodl.AmazonConverseConfig()._transform_response(
             model=model,
             response=response,
             model_response=model_response,

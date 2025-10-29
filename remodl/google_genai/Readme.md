@@ -23,7 +23,7 @@ This module provides a native interface to Google's Generative AI API, allowing 
 ### Basic Non-Streaming Usage
 
 ```python
-from litellm.google_genai import generate_content, agenerate_content
+from remodl.google_genai import generate_content, agenerate_content
 from google.genai.types import ContentDict, PartDict
 
 # Synchronous usage
@@ -46,7 +46,7 @@ print(response)
 
 ```python
 import asyncio
-from litellm.google_genai import agenerate_content
+from remodl.google_genai import agenerate_content
 from google.genai.types import ContentDict, PartDict
 
 async def main():
@@ -71,7 +71,7 @@ asyncio.run(main())
 ### Streaming Usage
 
 ```python
-from litellm.google_genai import generate_content_stream
+from remodl.google_genai import generate_content_stream
 from google.genai.types import ContentDict, PartDict
 
 # Synchronous streaming
@@ -92,7 +92,7 @@ for chunk in generate_content_stream(
 
 ```python
 import asyncio
-from litellm.google_genai import agenerate_content_stream
+from remodl.google_genai import agenerate_content_stream
 from google.genai.types import ContentDict, PartDict
 
 async def main():

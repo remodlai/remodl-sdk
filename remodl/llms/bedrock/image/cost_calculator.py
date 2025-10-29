@@ -1,10 +1,10 @@
 from typing import Optional
 
-import litellm
-from litellm.llms.bedrock.image.amazon_titan_transformation import (
+import remodl
+from remodl.llms.bedrock.image.amazon_titan_transformation import (
     AmazonTitanImageGenerationConfig,
 )
-from litellm.types.utils import ImageResponse
+from remodl.types.utils import ImageResponse
 
 
 def cost_calculator(
@@ -18,7 +18,7 @@ def cost_calculator(
 
     Handles both Stability 1 and Stability 3 models
     """
-    if litellm.AmazonStability3Config()._is_stability_3_model(model=model):
+    if remodl.AmazonStability3Config()._is_stability_3_model(model=model):
         pass
     elif AmazonTitanImageGenerationConfig._is_titan_model(model=model):
         return AmazonTitanImageGenerationConfig.cost_calculator(
@@ -41,7 +41,7 @@ def cost_calculator(
         size = size or "1024-x-1024"
         model = f"{size}/{steps}/{model}"
 
-    _model_info = litellm.get_model_info(
+    _model_info = remodl.get_model_info(
         model=model,
         custom_llm_provider="bedrock",
     )

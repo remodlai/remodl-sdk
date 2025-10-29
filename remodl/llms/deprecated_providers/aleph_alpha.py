@@ -5,8 +5,8 @@ from typing import Callable, Optional
 
 import httpx  # type: ignore
 
-import litellm
-from litellm.utils import Choices, Message, ModelResponse, Usage
+import remodl
+from remodl.utils import Choices, Message, ModelResponse, Usage
 
 
 class AlephAlphaError(Exception):
@@ -79,7 +79,7 @@ class AlephAlphaConfig:
 
     maximum_tokens: Optional[
         int
-    ] = litellm.max_tokens  # aleph alpha requires max tokens
+    ] = remodl.max_tokens  # aleph alpha requires max tokens
     minimum_tokens: Optional[int] = None
     echo: Optional[bool] = None
     temperature: Optional[int] = None
@@ -189,14 +189,14 @@ def completion(
     api_key,
     logging_obj,
     optional_params: dict,
-    litellm_params=None,
+    remodl_params=None,
     logger_fn=None,
     default_max_tokens_to_sample=None,
 ):
     headers = validate_environment(api_key)
 
     ## Load Config
-    config = litellm.AlephAlphaConfig.get_config()
+    config = remodl.AlephAlphaConfig.get_config()
     for k, v in config.items():
         if (
             k not in optional_params
@@ -237,7 +237,7 @@ def completion(
         additional_args={"complete_input_dict": data},
     )
     ## COMPLETION CALL
-    response = litellm.module_level_client.post(
+    response = remodl.module_level_client.post(
         completion_url,
         headers=headers,
         data=json.dumps(data),

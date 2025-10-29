@@ -1,5 +1,5 @@
 """
-litellm.Router Types - includes RouterConfig, UpdateRouterConfig, ModelInfo etc
+remodl.Router Types - includes RouterConfig, UpdateRouterConfig, ModelInfo etc
 """
 
 import datetime
@@ -11,7 +11,7 @@ import httpx
 from pydantic import BaseModel, ConfigDict, Field
 from typing_extensions import Required, TypedDict
 
-from litellm._uuid import uuid
+from remodl._uuid import uuid
 
 from .completion import CompletionRequest
 from .embedding import EmbeddingRequest
@@ -32,7 +32,7 @@ CONFIGURABLE_CLIENTSIDE_AUTH_PARAMS = Optional[
 
 class ModelConfig(BaseModel):
     model_name: str
-    litellm_params: Union[CompletionRequest, EmbeddingRequest]
+    remodl_params: Union[CompletionRequest, EmbeddingRequest]
     tpm: int
     rpm: int
 
@@ -53,7 +53,7 @@ class RouterConfig(BaseModel):
     client_ttl: Optional[int] = 3600
     num_retries: Optional[int] = 0
     timeout: Optional[float] = None
-    default_litellm_params: Optional[Dict[str, str]] = {}
+    default_remodl_params: Optional[Dict[str, str]] = {}
     set_verbose: Optional[bool] = False
     fallbacks: Optional[List] = []
     allowed_fails: Optional[int] = None
@@ -180,10 +180,10 @@ class GenericLiteLLMParams(CredentialLiteLLMParams, CustomPricingLiteLLMParams):
     max_retries: Optional[int] = None
     organization: Optional[str] = None  # for openai orgs
     configurable_clientside_auth_params: CONFIGURABLE_CLIENTSIDE_AUTH_PARAMS = None
-    litellm_credential_name: Optional[str] = None
+    remodl_credential_name: Optional[str] = None
 
     ## LOGGING PARAMS ##
-    litellm_trace_id: Optional[str] = None
+    remodl_trace_id: Optional[str] = None
 
     max_file_size_mb: Optional[float] = None
 
@@ -191,7 +191,7 @@ class GenericLiteLLMParams(CredentialLiteLLMParams, CustomPricingLiteLLMParams):
     max_budget: Optional[float] = None
     budget_duration: Optional[str] = None
     use_in_pass_through: Optional[bool] = False
-    use_litellm_proxy: Optional[bool] = False
+    use_remodl_proxy: Optional[bool] = False
     model_config = ConfigDict(extra="allow", arbitrary_types_allowed=True)
     merge_reasoning_content_in_choices: Optional[bool] = False
     model_info: Optional[Dict] = None
@@ -225,7 +225,7 @@ class GenericLiteLLMParams(CredentialLiteLLMParams, CustomPricingLiteLLMParams):
         ),
         organization: Optional[str] = None,  # for openai orgs
         ## LOGGING PARAMS ##
-        litellm_trace_id: Optional[str] = None,
+        remodl_trace_id: Optional[str] = None,
         ## UNIFIED PROJECT/REGION ##
         region_name: Optional[str] = None,
         ## VERTEX AI ##
@@ -248,8 +248,8 @@ class GenericLiteLLMParams(CredentialLiteLLMParams, CustomPricingLiteLLMParams):
         budget_duration: Optional[str] = None,
         # Pass through params
         use_in_pass_through: Optional[bool] = False,
-        # Dynamic param to force using litellm proxy
-        use_litellm_proxy: Optional[bool] = False,
+        # Dynamic param to force using remodl proxy
+        use_remodl_proxy: Optional[bool] = False,
         # This will merge the reasoning content in the choices
         merge_reasoning_content_in_choices: Optional[bool] = False,
         model_info: Optional[Dict] = None,
@@ -325,11 +325,11 @@ class LiteLLM_Params(GenericLiteLLMParams):
         aws_secret_access_key: Optional[str] = None,
         aws_region_name: Optional[str] = None,
         # OpenAI / Azure Whisper
-        # set a max-size of file that can be passed to litellm proxy
+        # set a max-size of file that can be passed to remodl proxy
         max_file_size_mb: Optional[float] = None,
         # will use deployment on pass-through endpoints if True
         use_in_pass_through: Optional[bool] = False,
-        use_litellm_proxy: Optional[bool] = False,
+        use_remodl_proxy: Optional[bool] = False,
         **params,
     ):
         args = locals()
@@ -367,7 +367,7 @@ class updateLiteLLMParams(GenericLiteLLMParams):
 
 class updateDeployment(BaseModel):
     model_name: Optional[str] = None
-    litellm_params: Optional[updateLiteLLMParams] = None
+    remodl_params: Optional[updateLiteLLMParams] = None
     model_info: Optional[ModelInfo] = None
 
     model_config = ConfigDict(protected_namespaces=())
@@ -422,7 +422,7 @@ class LiteLLMParamsTypedDict(TypedDict, total=False):
 
 class DeploymentTypedDict(TypedDict, total=False):
     model_name: Required[str]
-    litellm_params: Required[LiteLLMParamsTypedDict]
+    remodl_params: Required[LiteLLMParamsTypedDict]
     model_info: dict
 
 
@@ -436,7 +436,7 @@ SPECIAL_MODEL_INFO_PARAMS = [
 
 class Deployment(BaseModel):
     model_name: str
-    litellm_params: LiteLLM_Params
+    remodl_params: LiteLLM_Params
     model_info: ModelInfo
 
     model_config = ConfigDict(extra="allow", protected_namespaces=())
@@ -444,7 +444,7 @@ class Deployment(BaseModel):
     def __init__(
         self,
         model_name: str,
-        litellm_params: LiteLLM_Params,
+        remodl_params: LiteLLM_Params,
         model_info: Optional[Union[ModelInfo, dict]] = None,
         **params,
     ):
@@ -458,14 +458,14 @@ class Deployment(BaseModel):
         ) in (
             SPECIAL_MODEL_INFO_PARAMS
         ):  # ensures custom pricing info is consistently in 'model_info'
-            field = getattr(litellm_params, key, None)
+            field = getattr(remodl_params, key, None)
             if field is not None:
                 setattr(model_info, key, field)
 
         super().__init__(
             model_info=model_info,
             model_name=model_name,
-            litellm_params=litellm_params,
+            remodl_params=remodl_params,
             **params,
         )
 
@@ -514,7 +514,7 @@ class AllowedFailsPolicy(BaseModel):
     If `AuthenticationErrorAllowedFails = 1000`, then 1000 AuthenticationError will be allowed before cooling down a deployment
 
     Mapping of Exception type to allowed_fails for each exception
-    https://docs.litellm.ai/docs/exception_mapping
+    https://docs.remodl.ai/docs/exception_mapping
     """
 
     BadRequestErrorAllowedFails: Optional[int] = None
@@ -530,7 +530,7 @@ class RetryPolicy(BaseModel):
     Use this to set a custom number of retries per exception type
     If RateLimitErrorRetries = 3, then 3 retries will be made for RateLimitError
     Mapping of Exception type to number of retries
-    https://docs.litellm.ai/docs/exception_mapping
+    https://docs.remodl.ai/docs/exception_mapping
     """
 
     BadRequestErrorRetries: Optional[int] = None
@@ -599,7 +599,7 @@ class ModelGroupInfo(BaseModel):
 
 class AssistantsTypedDict(TypedDict):
     custom_llm_provider: Literal["azure", "openai"]
-    litellm_params: LiteLLMParamsTypedDict
+    remodl_params: LiteLLMParamsTypedDict
 
 
 class SearchToolLiteLLMParams(TypedDict, total=False):
@@ -620,15 +620,15 @@ class SearchToolTypedDict(TypedDict):
     
     Example:
         {
-            "search_tool_name": "litellm-search",
-            "litellm_params": {
+            "search_tool_name": "remodl-search",
+            "remodl_params": {
                 "search_provider": "perplexity",
                 "api_key": "os.environ/PERPLEXITYAI_API_KEY"
             }
         }
     """
     search_tool_name: Required[str]
-    litellm_params: Required[SearchToolLiteLLMParams]
+    remodl_params: Required[SearchToolLiteLLMParams]
 
 
 class FineTuningConfig(BaseModel):
@@ -655,7 +655,7 @@ class CustomRoutingStrategyBase:
             request_kwargs (Optional[Dict], optional): Additional request keyword arguments. Defaults to None.
 
         Returns:
-            Returns an element from litellm.router.model_list
+            Returns an element from remodl.router.model_list
 
         """
         pass
@@ -679,7 +679,7 @@ class CustomRoutingStrategyBase:
             request_kwargs (Optional[Dict], optional): Additional request keyword arguments. Defaults to None.
 
         Returns:
-            Returns an element from litellm.router.model_list
+            Returns an element from remodl.router.model_list
 
         """
         pass
@@ -691,7 +691,7 @@ class RouterGeneralSettings(BaseModel):
     )  # this will only initialize async clients. Good for memory utils
     pass_through_all_models: bool = Field(
         default=False
-    )  # if passed a model not llm_router model list, pass through the request to litellm.acompletion/embedding
+    )  # if passed a model not llm_router model list, pass through the request to remodl.acompletion/embedding
 
 
 class RouterRateLimitErrorBasic(ValueError):
@@ -771,10 +771,10 @@ OptionalPreCallChecks = List[
 
 class LiteLLM_RouterFileObject(TypedDict, total=False):
     """
-    Tracking the litellm params hash, used for mapping the file id to the right model
+    Tracking the remodl params hash, used for mapping the file id to the right model
     """
 
-    litellm_params_sensitive_credential_hash: str
+    remodl_params_sensitive_credential_hash: str
     file_object: OpenAIFileObject
 
 
@@ -786,7 +786,7 @@ class MockRouterTestingParams:
 
     @classmethod
     def from_kwargs(cls, kwargs: dict) -> "MockRouterTestingParams":
-        from litellm.secret_managers.main import str_to_bool
+        from remodl.secret_managers.main import str_to_bool
 
         def extract_bool_param(name: str) -> Optional[bool]:
             value = kwargs.pop(name, None)

@@ -7,63 +7,63 @@ from typing import TYPE_CHECKING, Any, List, Literal, Optional, Tuple, Union, ca
 from httpx import Response
 from pydantic import BaseModel
 
-import litellm
-import litellm._logging
-from litellm import verbose_logger
-from litellm.constants import (
+import remodl
+import remodl._logging
+from remodl import verbose_logger
+from remodl.constants import (
     DEFAULT_MAX_LRU_CACHE_SIZE,
     DEFAULT_REPLICATE_GPU_PRICE_PER_SECOND,
 )
-from litellm.litellm_core_utils.llm_cost_calc.tool_call_cost_tracking import (
+from remodl.remodl_core_utils.llm_cost_calc.tool_call_cost_tracking import (
     StandardBuiltInToolCostTracking,
 )
-from litellm.litellm_core_utils.llm_cost_calc.utils import (
+from remodl.remodl_core_utils.llm_cost_calc.utils import (
     CostCalculatorUtils,
     _generic_cost_per_character,
     generic_cost_per_token,
     select_cost_metric_for_model,
 )
-from litellm.llms.anthropic.cost_calculation import (
+from remodl.llms.anthropic.cost_calculation import (
     cost_per_token as anthropic_cost_per_token,
 )
-from litellm.llms.azure.cost_calculation import (
+from remodl.llms.azure.cost_calculation import (
     cost_per_token as azure_openai_cost_per_token,
 )
-from litellm.llms.base_llm.search.transformation import SearchResponse
-from litellm.llms.bedrock.cost_calculation import (
+from remodl.llms.base_llm.search.transformation import SearchResponse
+from remodl.llms.bedrock.cost_calculation import (
     cost_per_token as bedrock_cost_per_token,
 )
-from litellm.llms.databricks.cost_calculator import (
+from remodl.llms.databricks.cost_calculator import (
     cost_per_token as databricks_cost_per_token,
 )
-from litellm.llms.deepseek.cost_calculator import (
+from remodl.llms.deepseek.cost_calculator import (
     cost_per_token as deepseek_cost_per_token,
 )
-from litellm.llms.fireworks_ai.cost_calculator import (
+from remodl.llms.fireworks_ai.cost_calculator import (
     cost_per_token as fireworks_ai_cost_per_token,
 )
-from litellm.llms.gemini.cost_calculator import cost_per_token as gemini_cost_per_token
-from litellm.llms.lemonade.cost_calculator import (
+from remodl.llms.gemini.cost_calculator import cost_per_token as gemini_cost_per_token
+from remodl.llms.lemonade.cost_calculator import (
     cost_per_token as lemonade_cost_per_token,
 )
-from litellm.llms.openai.cost_calculation import (
+from remodl.llms.openai.cost_calculation import (
     cost_per_second as openai_cost_per_second,
 )
-from litellm.llms.openai.cost_calculation import cost_per_token as openai_cost_per_token
-from litellm.llms.perplexity.cost_calculator import (
+from remodl.llms.openai.cost_calculation import cost_per_token as openai_cost_per_token
+from remodl.llms.perplexity.cost_calculator import (
     cost_per_token as perplexity_cost_per_token,
 )
-from litellm.llms.together_ai.cost_calculator import get_model_params_and_category
-from litellm.llms.vertex_ai.cost_calculator import (
+from remodl.llms.together_ai.cost_calculator import get_model_params_and_category
+from remodl.llms.vertex_ai.cost_calculator import (
     cost_per_character as google_cost_per_character,
 )
-from litellm.llms.vertex_ai.cost_calculator import (
+from remodl.llms.vertex_ai.cost_calculator import (
     cost_per_token as google_cost_per_token,
 )
-from litellm.llms.vertex_ai.cost_calculator import cost_router as google_cost_router
-from litellm.llms.xai.cost_calculator import cost_per_token as xai_cost_per_token
-from litellm.responses.utils import ResponseAPILoggingUtils
-from litellm.types.llms.openai import (
+from remodl.llms.vertex_ai.cost_calculator import cost_router as google_cost_router
+from remodl.llms.xai.cost_calculator import cost_per_token as xai_cost_per_token
+from remodl.responses.utils import ResponseAPILoggingUtils
+from remodl.types.llms.openai import (
     HttpxBinaryResponseContent,
     ImageGenerationRequestQuality,
     OpenAIModerationResponse,
@@ -73,8 +73,8 @@ from litellm.types.llms.openai import (
     ResponseAPIUsage,
     ResponsesAPIResponse,
 )
-from litellm.types.rerank import RerankBilledUnits, RerankResponse
-from litellm.types.utils import (
+from remodl.types.rerank import RerankBilledUnits, RerankResponse
+from remodl.types.utils import (
     CallTypesLiteral,
     LiteLLMRealtimeStreamLoggingObject,
     LlmProviders,
@@ -84,7 +84,7 @@ from litellm.types.utils import (
     Usage,
     VectorStoreSearchResponse,
 )
-from litellm.utils import (
+from remodl.utils import (
     CallTypes,
     CostPerToken,
     EmbeddingResponse,
@@ -98,7 +98,7 @@ from litellm.utils import (
 )
 
 if TYPE_CHECKING:
-    from litellm.litellm_core_utils.litellm_logging import (
+    from remodl.remodl_core_utils.remodl_logging import (
         Logging as LitellmLoggingObject,
     )
 else:
@@ -206,7 +206,7 @@ def cost_per_token(  # noqa: PLR0915
     # given
     prompt_tokens_cost_usd_dollar: float = 0
     completion_tokens_cost_usd_dollar: float = 0
-    model_cost_ref = litellm.model_cost
+    model_cost_ref = remodl.model_cost
     model_with_provider = model
     if custom_llm_provider is not None:
         model_with_provider = custom_llm_provider + "/" + model
@@ -219,7 +219,7 @@ def cost_per_token(  # noqa: PLR0915
             ):  # use region based pricing, if it's available
                 model_with_provider = model_with_provider_and_region
     else:
-        _, custom_llm_provider, _, _ = litellm.get_llm_provider(model=model)
+        _, custom_llm_provider, _, _ = remodl.get_llm_provider(model=model)
     model_without_prefix = model
     model_parts = model.split("/", 1)
     if len(model_parts) > 1:
@@ -227,7 +227,7 @@ def cost_per_token(  # noqa: PLR0915
     else:
         model_without_prefix = model
     """
-    Code block that formats model to lookup in litellm.model_cost
+    Code block that formats model to lookup in remodl.model_cost
     Option1. model = "bedrock/ap-northeast-1/anthropic.claude-instant-v1". This is the most accurate since it is region based. Should always be option 1
     Option2. model = "openai/gpt-4"       - model = provider/model
     Option3. model = "anthropic.claude-3" - model = model
@@ -245,7 +245,7 @@ def cost_per_token(  # noqa: PLR0915
 
     # see this https://learn.microsoft.com/en-us/azure/ai-services/openai/concepts/models
     if call_type == "speech" or call_type == "aspeech":
-        speech_model_info = litellm.get_model_info(
+        speech_model_info = remodl.get_model_info(
             model=model_without_prefix, custom_llm_provider=custom_llm_provider
         )
         cost_metric = select_cost_metric_for_model(speech_model_info)
@@ -326,7 +326,7 @@ def cost_per_token(  # noqa: PLR0915
         )
     elif call_type == "search" or call_type == "asearch":
         # Search providers use per-query pricing
-        from litellm.search import search_provider_cost_per_query
+        from remodl.search import search_provider_cost_per_query
         
         return search_provider_cost_per_query(
             model=model,
@@ -381,7 +381,7 @@ def cost_per_token(  # noqa: PLR0915
     elif custom_llm_provider == "lemonade":
         return lemonade_cost_per_token(model=model, usage=usage_block)
     elif custom_llm_provider == "dashscope":
-        from litellm.llms.dashscope.cost_calculator import (
+        from remodl.llms.dashscope.cost_calculator import (
             cost_per_token as dashscope_cost_per_token,
         )
 
@@ -441,7 +441,7 @@ def cost_per_token(  # noqa: PLR0915
 
 def get_replicate_completion_pricing(completion_response: dict, total_time=0.0):
     # see https://replicate.com/pricing
-    # for all litellm currently supported LLMs, almost all requests go to a100_80gb
+    # for all remodl currently supported LLMs, almost all requests go to a100_80gb
     a100_80gb_price_per_second_public = DEFAULT_REPLICATE_GPU_PRICE_PER_SECOND  # assume all calls sent to A100 80GB for now
     if total_time == 0.0:  # total time is in ms
         start_time = completion_response.get("created", time.time())
@@ -464,10 +464,10 @@ def _get_provider_for_cost_calc(
     if model is None:
         return None
     try:
-        _, custom_llm_provider, _, _ = litellm.get_llm_provider(model=model)
+        _, custom_llm_provider, _, _ = remodl.get_llm_provider(model=model)
     except Exception as e:
         verbose_logger.debug(
-            f"litellm.cost_calculator.py::_get_provider_for_cost_calc() - Error inferring custom_llm_provider - {str(e)}"
+            f"remodl.cost_calculator.py::_get_provider_for_cost_calc() - Error inferring custom_llm_provider - {str(e)}"
         )
         return None
 
@@ -504,7 +504,7 @@ def _select_model_name_for_cost_calc(
     hidden_params: Optional[dict] = getattr(completion_response, "_hidden_params", None)
 
     if custom_pricing is True:
-        if router_model_id is not None and router_model_id in litellm.model_cost:
+        if router_model_id is not None and router_model_id in remodl.model_cost:
             return_model = router_model_id
         else:
             return_model = model
@@ -586,7 +586,7 @@ def _get_usage_object(
 
 def _is_known_usage_objects(usage_obj):
     """Returns True if the usage obj is a known Usage type"""
-    return isinstance(usage_obj, litellm.Usage) or isinstance(
+    return isinstance(usage_obj, remodl.Usage) or isinstance(
         usage_obj, ResponseAPIUsage
     )
 
@@ -636,8 +636,8 @@ def _apply_cost_discount(
     discount_percent = 0.0
     discount_amount = 0.0
 
-    if custom_llm_provider and custom_llm_provider in litellm.cost_discount_config:
-        discount_percent = litellm.cost_discount_config[custom_llm_provider]
+    if custom_llm_provider and custom_llm_provider in remodl.cost_discount_config:
+        discount_percent = remodl.cost_discount_config[custom_llm_provider]
         discount_amount = original_cost * discount_percent
         final_cost = original_cost - discount_amount
 
@@ -652,7 +652,7 @@ def _apply_cost_discount(
 
 
 def _store_cost_breakdown_in_logging_obj(
-    litellm_logging_obj: Optional[LitellmLoggingObject],
+    remodl_logging_obj: Optional[LitellmLoggingObject],
     prompt_tokens_cost_usd_dollar: float,
     completion_tokens_cost_usd_dollar: float,
     cost_for_built_in_tools_cost_usd_dollar: float,
@@ -665,7 +665,7 @@ def _store_cost_breakdown_in_logging_obj(
     Helper function to store cost breakdown in the logging object.
 
     Args:
-        litellm_logging_obj: The logging object to store breakdown in
+        remodl_logging_obj: The logging object to store breakdown in
         prompt_tokens_cost_usd_dollar: Cost of input tokens
         completion_tokens_cost_usd_dollar: Cost of completion tokens (includes reasoning if applicable)
         cost_for_built_in_tools_cost_usd_dollar: Cost of built-in tools
@@ -674,12 +674,12 @@ def _store_cost_breakdown_in_logging_obj(
         discount_percent: Discount percentage applied (0.05 = 5%)
         discount_amount: Discount amount in USD
     """
-    if litellm_logging_obj is None:
+    if remodl_logging_obj is None:
         return
 
     try:
         # Store the cost breakdown
-        litellm_logging_obj.set_cost_breakdown(
+        remodl_logging_obj.set_cost_breakdown(
             input_cost=prompt_tokens_cost_usd_dollar,
             output_cost=completion_tokens_cost_usd_dollar,
             total_cost=total_cost_usd_dollar,
@@ -717,17 +717,17 @@ def completion_cost(  # noqa: PLR0915
     custom_pricing: Optional[bool] = None,
     base_model: Optional[str] = None,
     standard_built_in_tools_params: Optional[StandardBuiltInToolsParams] = None,
-    litellm_model_name: Optional[str] = None,
+    remodl_model_name: Optional[str] = None,
     router_model_id: Optional[str] = None,
-    litellm_logging_obj: Optional[LitellmLoggingObject] = None,
+    remodl_logging_obj: Optional[LitellmLoggingObject] = None,
     ### SERVICE TIER ###
     service_tier: Optional[str] = None,  # for OpenAI service tier pricing
 ) -> float:
     """
-    Calculate the cost of a given completion call fot GPT-3.5-turbo, llama2, any litellm supported llm.
+    Calculate the cost of a given completion call fot GPT-3.5-turbo, llama2, any remodl supported llm.
 
     Parameters:
-        completion_response (litellm.ModelResponses): [Required] The response received from a LiteLLM completion request.
+        completion_response (remodl.ModelResponses): [Required] The response received from a LiteLLM completion request.
 
         [OPTIONAL PARAMS]
         model (str): Optional. The name of the language model used in the completion calls
@@ -741,7 +741,7 @@ def completion_cost(  # noqa: PLR0915
         float: The cost in USD dollars for the completion based on the provided parameters.
 
     Exceptions:
-        Raises exception if model not in the litellm model cost map. Register model, via custom pricing or PR - https://github.com/BerriAI/litellm/blob/main/model_prices_and_context_window.json
+        Raises exception if model not in the remodl model cost map. Register model, via custom pricing or PR - https://github.com/BerriAI/remodl/blob/main/model_prices_and_context_window.json
 
 
     Note:
@@ -814,7 +814,7 @@ def completion_cost(  # noqa: PLR0915
                         setattr(
                             completion_response,
                             "usage",
-                            litellm.Usage(**usage_obj.model_dump()),
+                            remodl.Usage(**usage_obj.model_dump()),
                         )
                     if usage_obj is None:
                         _usage = {}
@@ -879,12 +879,12 @@ def completion_cost(  # noqa: PLR0915
                     )
                 if custom_llm_provider is None:
                     try:
-                        model, custom_llm_provider, _, _ = litellm.get_llm_provider(
+                        model, custom_llm_provider, _, _ = remodl.get_llm_provider(
                             model=model
                         )  # strip the llm provider from the model name -> for image gen cost calculation
                     except Exception as e:
                         verbose_logger.debug(
-                            "litellm.cost_calculator.py::completion_cost() - Error inferring custom_llm_provider - {}".format(
+                            "remodl.cost_calculator.py::completion_cost() - Error inferring custom_llm_provider - {}".format(
                                 str(e)
                             )
                         )
@@ -916,7 +916,7 @@ def completion_cost(  # noqa: PLR0915
 
                         if duration_seconds is not None:
                             # Calculate cost based on video duration using video-specific cost calculation
-                            from litellm.llms.openai.cost_calculation import video_generation_cost
+                            from remodl.llms.openai.cost_calculation import video_generation_cost
                             return video_generation_cost(
                                 model=model,
                                 duration_seconds=duration_seconds,
@@ -932,7 +932,7 @@ def completion_cost(  # noqa: PLR0915
                     call_type == CallTypes.speech.value
                     or call_type == CallTypes.aspeech.value
                 ):
-                    prompt_characters = litellm.utils._count_characters(text=prompt)
+                    prompt_characters = remodl.utils._count_characters(text=prompt)
                 elif (
                     call_type == CallTypes.atranscription.value
                     or call_type == CallTypes.transcription.value
@@ -979,15 +979,15 @@ def completion_cost(  # noqa: PLR0915
                         results=completion_response.results,
                         combined_usage_object=cost_per_token_usage_object,
                         custom_llm_provider=custom_llm_provider,
-                        litellm_model_name=model,
+                        remodl_model_name=model,
                     )
                 elif call_type == CallTypes.call_mcp_tool.value:
-                    from litellm.proxy._experimental.mcp_server.cost_calculator import (
+                    from remodl.proxy._experimental.mcp_server.cost_calculator import (
                         MCPCostCalculator,
                     )
 
                     return MCPCostCalculator.calculate_mcp_tool_call_cost(
-                        litellm_logging_obj=litellm_logging_obj
+                        remodl_logging_obj=remodl_logging_obj
                     )
                 # Calculate cost based on prompt_tokens, completion_tokens
                 if (
@@ -1005,8 +1005,8 @@ def completion_cost(  # noqa: PLR0915
                 # replicate llms are calculate based on time for request running
                 # see https://replicate.com/pricing
                 elif (
-                    model in litellm.replicate_models or "replicate" in model
-                ) and model not in litellm.model_cost:
+                    model in remodl.replicate_models or "replicate" in model
+                ) and model not in remodl.model_cost:
                     # for unmapped replicate model, default to replicate's time tracking logic
                     return get_replicate_completion_pricing(completion_response, total_time)  # type: ignore
 
@@ -1021,20 +1021,20 @@ def completion_cost(  # noqa: PLR0915
                 ):
                     # Calculate the prompt characters + response characters
                     if len(messages) > 0:
-                        prompt_string = litellm.utils.get_formatted_prompt(
+                        prompt_string = remodl.utils.get_formatted_prompt(
                             data={"messages": messages}, call_type="completion"
                         )
 
-                        prompt_characters = litellm.utils._count_characters(
+                        prompt_characters = remodl.utils._count_characters(
                             text=prompt_string
                         )
                     if completion_response is not None and isinstance(
                         completion_response, ModelResponse
                     ):
-                        completion_string = litellm.utils.get_response_string(
+                        completion_string = remodl.utils.get_response_string(
                             response_obj=completion_response
                         )
-                        completion_characters = litellm.utils._count_characters(
+                        completion_characters = remodl.utils._count_characters(
                             text=completion_string
                         )
 
@@ -1084,7 +1084,7 @@ def completion_cost(  # noqa: PLR0915
 
                 # Store cost breakdown in logging object if available
                 _store_cost_breakdown_in_logging_obj(
-                    litellm_logging_obj=litellm_logging_obj,
+                    remodl_logging_obj=remodl_logging_obj,
                     prompt_tokens_cost_usd_dollar=prompt_tokens_cost_usd_dollar,
                     completion_tokens_cost_usd_dollar=completion_tokens_cost_usd_dollar,
                     cost_for_built_in_tools_cost_usd_dollar=cost_for_built_in_tools,
@@ -1097,7 +1097,7 @@ def completion_cost(  # noqa: PLR0915
                 return _final_cost
             except Exception as e:
                 verbose_logger.debug(
-                    "litellm.cost_calculator.py::completion_cost() - Error calculating cost for model={} - {}".format(
+                    "remodl.cost_calculator.py::completion_cost() - Error calculating cost for model={} - {}".format(
                         model, str(e)
                     )
                 )
@@ -1175,9 +1175,9 @@ def response_cost_calculator(
     custom_pricing: Optional[bool] = None,
     prompt: str = "",
     standard_built_in_tools_params: Optional[StandardBuiltInToolsParams] = None,
-    litellm_model_name: Optional[str] = None,
+    remodl_model_name: Optional[str] = None,
     router_model_id: Optional[str] = None,
-    litellm_logging_obj: Optional[LitellmLoggingObject] = None,
+    remodl_logging_obj: Optional[LitellmLoggingObject] = None,
     ### SERVICE TIER ###
     service_tier: Optional[str] = None,  # for OpenAI service tier pricing
 ) -> float:
@@ -1210,9 +1210,9 @@ def response_cost_calculator(
                 base_model=base_model,
                 prompt=prompt,
                 standard_built_in_tools_params=standard_built_in_tools_params,
-                litellm_model_name=litellm_model_name,
+                remodl_model_name=remodl_model_name,
                 router_model_id=router_model_id,
-                litellm_logging_obj=litellm_logging_obj,
+                remodl_logging_obj=remodl_logging_obj,
                 service_tier=service_tier,
             )
         return response_cost
@@ -1236,7 +1236,7 @@ def ocr_cost(
 
         (Parent function requires a tuple, so we return a tuple. Cost is only in the first element.)
     """
-    from litellm.llms.base_llm.ocr.transformation import OCRResponse
+    from remodl.llms.base_llm.ocr.transformation import OCRResponse
 
     #########################################################
     # validate it's an OCR response
@@ -1254,7 +1254,7 @@ def ocr_cost(
         raise ValueError("OCR response pages_processed is None")
 
     try:
-        model_info: Optional[ModelInfo] = litellm.get_model_info(
+        model_info: Optional[ModelInfo] = remodl.get_model_info(
             model=model, custom_llm_provider=custom_llm_provider
         )
     except Exception:
@@ -1282,7 +1282,7 @@ def vector_store_search_cost(
         custom_llm_provider = "openai"
 
     if model is not None and "/" in model:
-        api_type, custom_llm_provider, _, _ = litellm.get_llm_provider(
+        api_type, custom_llm_provider, _, _ = remodl.get_llm_provider(
             model=model,
         )
 
@@ -1311,7 +1311,7 @@ def rerank_cost(
     Returns
     - float or None: cost of response OR none if error.
     """
-    _, custom_llm_provider, _, _ = litellm.get_llm_provider(
+    _, custom_llm_provider, _, _ = remodl.get_llm_provider(
         model=model, custom_llm_provider=custom_llm_provider
     )
 
@@ -1324,7 +1324,7 @@ def rerank_cost(
         )
 
         try:
-            model_info: Optional[ModelInfo] = litellm.get_model_info(
+            model_info: Optional[ModelInfo] = remodl.get_model_info(
                 model=model, custom_llm_provider=custom_llm_provider
             )
         except Exception:
@@ -1423,8 +1423,8 @@ def default_image_cost_calculator(
         model_name_without_custom_llm_provider,
     ]
     for _model in models_to_check:
-        if _model is not None and _model in litellm.model_cost:
-            cost_info = litellm.model_cost[_model]
+        if _model is not None and _model in remodl.model_cost:
+            cost_info = remodl.model_cost[_model]
             break
     if cost_info is None:
         raise Exception(
@@ -1477,15 +1477,15 @@ def default_video_cost_calculator(
         model_name_without_custom_llm_provider,
     ]
     for _model in models_to_check:
-        if _model is not None and _model in litellm.model_cost:
-            cost_info = litellm.model_cost[_model]
+        if _model is not None and _model in remodl.model_cost:
+            cost_info = remodl.model_cost[_model]
             break
     
     # If still not found, try with custom_llm_provider prefix
     if cost_info is None and custom_llm_provider:
         prefixed_model = f"{custom_llm_provider}/{model}"
-        if prefixed_model in litellm.model_cost:
-            cost_info = litellm.model_cost[prefixed_model]
+        if prefixed_model in remodl.model_cost:
+            cost_info = remodl.model_cost[prefixed_model]
     if cost_info is None:
         raise Exception(
             f"Model not found in cost map. Tried checking {models_to_check}"
@@ -1517,7 +1517,7 @@ def batch_cost_calculator(
     Calculate the cost of a batch job
     """
 
-    _, custom_llm_provider, _, _ = litellm.get_llm_provider(
+    _, custom_llm_provider, _, _ = remodl.get_llm_provider(
         model=model, custom_llm_provider=custom_llm_provider
     )
 
@@ -1528,7 +1528,7 @@ def batch_cost_calculator(
     )
 
     try:
-        model_info: Optional[ModelInfo] = litellm.get_model_info(
+        model_info: Optional[ModelInfo] = remodl.get_model_info(
             model=model, custom_llm_provider=custom_llm_provider
         )
     except Exception:
@@ -1565,7 +1565,7 @@ class BaseTokenUsageProcessor:
         """
         Combine multiple Usage objects into a single Usage object, checking model keys for nested values.
         """
-        from litellm.types.utils import (
+        from remodl.types.utils import (
             CompletionTokensDetailsWrapper,
             PromptTokensDetailsWrapper,
             Usage,
@@ -1698,7 +1698,7 @@ def handle_realtime_stream_cost_calculation(
     results: OpenAIRealtimeStreamList,
     combined_usage_object: Usage,
     custom_llm_provider: str,
-    litellm_model_name: str,
+    remodl_model_name: str,
 ) -> float:
     """
     Handles the cost calculation for realtime stream responses.
@@ -1717,7 +1717,7 @@ def handle_realtime_stream_cost_calculation(
             ].get("model", None)
             potential_model_names.append(received_model)
 
-    potential_model_names.append(litellm_model_name)
+    potential_model_names.append(remodl_model_name)
     input_cost_per_token = 0.0
     output_cost_per_token = 0.0
 

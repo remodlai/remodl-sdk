@@ -1,4 +1,4 @@
-from litellm.integrations.custom_prompt_management import CustomPromptManagement
+from remodl.integrations.custom_prompt_management import CustomPromptManagement
 
 
 class BaseVectorStore(CustomPromptManagement):

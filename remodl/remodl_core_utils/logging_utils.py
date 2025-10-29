@@ -4,8 +4,8 @@ import time
 from datetime import datetime
 from typing import TYPE_CHECKING, Any, List, Optional, Union
 
-from litellm._logging import verbose_logger
-from litellm.types.utils import (
+from remodl._logging import verbose_logger
+from remodl.types.utils import (
     ModelResponse,
     ModelResponseStream,
     TextCompletionResponse,
@@ -14,8 +14,8 @@ from litellm.types.utils import (
 if TYPE_CHECKING:
     from opentelemetry.trace import Span as _Span
 
-    from litellm import ModelResponse as _ModelResponse
-    from litellm.litellm_core_utils.litellm_logging import (
+    from remodl import ModelResponse as _ModelResponse
+    from remodl.remodl_core_utils.remodl_logging import (
         Logging as LiteLLMLoggingObject,
     )
 
@@ -27,7 +27,7 @@ else:
     Span = Any
 
 
-import litellm
+import remodl
 
 """
 Helper utils used for logging callbacks
@@ -41,7 +41,7 @@ def _get_service_logger():
     """Get or create the global ServiceLogging instance"""
     global _service_logger
     if _service_logger is None:
-        from litellm._service_logger import ServiceLogging
+        from remodl._service_logger import ServiceLogging
 
         _service_logger = ServiceLogging()
     return _service_logger
@@ -64,7 +64,7 @@ def _get_parent_otel_span_from_logging_obj(
             return None
 
         # Reuse existing function by passing model_call_details as kwargs
-        from litellm.litellm_core_utils.core_helpers import (
+        from remodl.remodl_core_utils.core_helpers import (
             _get_parent_otel_span_from_kwargs,
         )
 
@@ -77,17 +77,17 @@ def _get_parent_otel_span_from_logging_obj(
         return None
 
 
-def convert_litellm_response_object_to_str(
+def convert_remodl_response_object_to_str(
     response_obj: Union[Any, LiteLLMModelResponse],
 ) -> Optional[str]:
     """
     Get the string of the response object from LiteLLM
 
     """
-    if isinstance(response_obj, litellm.ModelResponse):
+    if isinstance(response_obj, remodl.ModelResponse):
         response_str = ""
         for choice in response_obj.choices:
-            if isinstance(choice, litellm.Choices):
+            if isinstance(choice, remodl.Choices):
                 if choice.message.content and isinstance(choice.message.content, str):
                     response_str += choice.message.content
         return response_str
@@ -132,7 +132,7 @@ def _assemble_complete_response_from_streaming_chunks(
     if result.choices[0].finish_reason is not None:  # if it's the last chunk
         streaming_chunks.append(result)
         try:
-            complete_streaming_response = litellm.stream_chunk_builder(
+            complete_streaming_response = remodl.stream_chunk_builder(
                 chunks=streaming_chunks,
                 messages=request_kwargs.get("messages", None),
                 start_time=start_time,
@@ -203,7 +203,7 @@ def track_llm_api_timing():
 
                 # Log timing using ServiceLogging (like Redis cache)
                 try:
-                    from litellm.types.services import ServiceTypes
+                    from remodl.types.services import ServiceTypes
 
                     service_logger = _get_service_logger()
 
@@ -250,7 +250,7 @@ def track_llm_api_timing():
 
                 # Log timing using ServiceLogging (like Redis cache)
                 try:
-                    from litellm.types.services import ServiceTypes
+                    from remodl.types.services import ServiceTypes
 
                     service_logger = _get_service_logger()
 

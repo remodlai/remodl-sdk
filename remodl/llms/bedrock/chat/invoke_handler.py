@@ -1,5 +1,5 @@
 """
-TODO: DELETE FILE. Bedrock LLM is no longer used. Goto `litellm/llms/bedrock/chat/invoke_transformations/base_invoke_transformation.py`
+TODO: DELETE FILE. Bedrock LLM is no longer used. Goto `remodl/llms/bedrock/chat/invoke_transformations/base_invoke_transformation.py`
 """
 
 import copy
@@ -18,14 +18,14 @@ from typing import (
 
 import httpx  # type: ignore
 
-import litellm
-from litellm import verbose_logger
-from litellm._uuid import uuid
-from litellm.caching.caching import InMemoryCache
-from litellm.litellm_core_utils.core_helpers import map_finish_reason
-from litellm.litellm_core_utils.litellm_logging import Logging
-from litellm.litellm_core_utils.logging_utils import track_llm_api_timing
-from litellm.litellm_core_utils.prompt_templates.factory import (
+import remodl
+from remodl import verbose_logger
+from remodl._uuid import uuid
+from remodl.caching.caching import InMemoryCache
+from remodl.remodl_core_utils.core_helpers import map_finish_reason
+from remodl.remodl_core_utils.remodl_logging import Logging
+from remodl.remodl_core_utils.logging_utils import track_llm_api_timing
+from remodl.remodl_core_utils.prompt_templates.factory import (
     cohere_message_pt,
     construct_tool_use_system_prompt,
     contains_tag,
@@ -34,32 +34,32 @@ from litellm.litellm_core_utils.prompt_templates.factory import (
     parse_xml_params,
     prompt_factory,
 )
-from litellm.llms.anthropic.chat.handler import (
+from remodl.llms.anthropic.chat.handler import (
     ModelResponseIterator as AnthropicModelResponseIterator,
 )
-from litellm.llms.custom_httpx.http_handler import (
+from remodl.llms.custom_httpx.http_handler import (
     AsyncHTTPHandler,
     HTTPHandler,
     _get_httpx_client,
     get_async_httpx_client,
 )
-from litellm.types.llms.bedrock import *
-from litellm.types.llms.openai import (
+from remodl.types.llms.bedrock import *
+from remodl.types.llms.openai import (
     ChatCompletionRedactedThinkingBlock,
     ChatCompletionThinkingBlock,
     ChatCompletionToolCallChunk,
     ChatCompletionToolCallFunctionChunk,
     ChatCompletionUsageBlock,
 )
-from litellm.types.utils import ChatCompletionMessageToolCall, Choices, Delta
-from litellm.types.utils import GenericStreamingChunk as GChunk
-from litellm.types.utils import (
+from remodl.types.utils import ChatCompletionMessageToolCall, Choices, Delta
+from remodl.types.utils import GenericStreamingChunk as GChunk
+from remodl.types.utils import (
     ModelResponse,
     ModelResponseStream,
     StreamingChoices,
     Usage,
 )
-from litellm.utils import CustomStreamWrapper, get_secret
+from remodl.utils import CustomStreamWrapper, get_secret
 
 from ..base_aws_llm import BaseAWSLLM
 from ..common_utils import BedrockError, ModelResponseIterator, get_bedrock_tool_name
@@ -68,7 +68,7 @@ _response_stream_shape_cache = None
 bedrock_tool_name_mappings: InMemoryCache = InMemoryCache(
     max_size_in_memory=50, default_ttl=600
 )
-from litellm.llms.bedrock.chat.converse_transformation import AmazonConverseConfig
+from remodl.llms.bedrock.chat.converse_transformation import AmazonConverseConfig
 
 converse_config = AmazonConverseConfig()
 
@@ -184,12 +184,12 @@ async def make_call(
     logging_obj: Logging,
     fake_stream: bool = False,
     json_mode: Optional[bool] = False,
-    bedrock_invoke_provider: Optional[litellm.BEDROCK_INVOKE_PROVIDERS_LITERAL] = None,
+    bedrock_invoke_provider: Optional[remodl.BEDROCK_INVOKE_PROVIDERS_LITERAL] = None,
 ):
     try:
         if client is None:
             client = get_async_httpx_client(
-                llm_provider=litellm.LlmProviders.BEDROCK
+                llm_provider=remodl.LlmProviders.BEDROCK
             )  # Create a new client if none provided
 
         response = await client.post(
@@ -206,17 +206,17 @@ async def make_call(
         if fake_stream:
             model_response: (
                 ModelResponse
-            ) = litellm.AmazonConverseConfig()._transform_response(
+            ) = remodl.AmazonConverseConfig()._transform_response(
                 model=model,
                 response=response,
-                model_response=litellm.ModelResponse(),
+                model_response=remodl.ModelResponse(),
                 stream=True,
                 logging_obj=logging_obj,
                 optional_params={},
                 api_key="",
                 data=data,
                 messages=messages,
-                encoding=litellm.encoding,
+                encoding=remodl.encoding,
             )  # type: ignore
             completion_stream: Any = MockResponseIterator(
                 model_response=model_response, json_mode=json_mode
@@ -273,7 +273,7 @@ def make_sync_call(
     logging_obj: Logging,
     fake_stream: bool = False,
     json_mode: Optional[bool] = False,
-    bedrock_invoke_provider: Optional[litellm.BEDROCK_INVOKE_PROVIDERS_LITERAL] = None,
+    bedrock_invoke_provider: Optional[remodl.BEDROCK_INVOKE_PROVIDERS_LITERAL] = None,
 ):
     try:
         if client is None:
@@ -293,17 +293,17 @@ def make_sync_call(
         if fake_stream:
             model_response: (
                 ModelResponse
-            ) = litellm.AmazonConverseConfig()._transform_response(
+            ) = remodl.AmazonConverseConfig()._transform_response(
                 model=model,
                 response=response,
-                model_response=litellm.ModelResponse(),
+                model_response=remodl.ModelResponse(),
                 stream=True,
                 logging_obj=logging_obj,
                 optional_params={},
                 api_key="",
                 data=data,
                 messages=messages,
-                encoding=litellm.encoding,
+                encoding=remodl.encoding,
             )  # type: ignore
             completion_stream: Any = MockResponseIterator(
                 model_response=model_response, json_mode=json_mode
@@ -479,7 +479,7 @@ class BedrockLLM(BaseAWSLLM):
                                 function_name, None
                             ),  # check if we have a json schema for this function name)
                         )
-                        _message = litellm.Message(
+                        _message = remodl.Message(
                             tool_calls=[
                                 {
                                     "id": f"call_{uuid.uuid4()}",
@@ -509,8 +509,8 @@ class BedrockLLM(BaseAWSLLM):
                         streaming_model_response.choices[0].finish_reason = getattr(
                             model_response.choices[0], "finish_reason", "stop"
                         )
-                        # streaming_model_response.choices = [litellm.utils.StreamingChoices()]
-                        streaming_choice = litellm.utils.StreamingChoices()
+                        # streaming_model_response.choices = [remodl.utils.StreamingChoices()]
+                        streaming_choice = remodl.utils.StreamingChoices()
                         streaming_choice.index = model_response.choices[0].index
                         _tool_calls = []
                         print_verbose(
@@ -519,7 +519,7 @@ class BedrockLLM(BaseAWSLLM):
                         print_verbose(
                             f"type of streaming_choice: {type(streaming_choice)}"
                         )
-                        if isinstance(model_response.choices[0], litellm.Choices):
+                        if isinstance(model_response.choices[0], remodl.Choices):
                             if getattr(
                                 model_response.choices[0].message, "tool_calls", None
                             ) is not None and isinstance(
@@ -545,7 +545,7 @@ class BedrockLLM(BaseAWSLLM):
                             print_verbose(
                                 "Returns anthropic CustomStreamWrapper with 'cached_response' streaming object"
                             )
-                            return litellm.CustomStreamWrapper(
+                            return remodl.CustomStreamWrapper(
                                 completion_stream=completion_stream,
                                 model=model,
                                 custom_llm_provider="cached_response",
@@ -555,7 +555,7 @@ class BedrockLLM(BaseAWSLLM):
                     model_response.choices[0].finish_reason = map_finish_reason(
                         completion_response.get("stop_reason", "")
                     )
-                    _usage = litellm.Usage(
+                    _usage = remodl.Usage(
                         prompt_tokens=completion_response["usage"]["input_tokens"],
                         completion_tokens=completion_response["usage"]["output_tokens"],
                         total_tokens=completion_response["usage"]["input_tokens"]
@@ -619,10 +619,10 @@ class BedrockLLM(BaseAWSLLM):
             streaming_model_response.choices[0].finish_reason = model_response.choices[  # type: ignore
                 0
             ].finish_reason
-            # streaming_model_response.choices = [litellm.utils.StreamingChoices()]
-            streaming_choice = litellm.utils.StreamingChoices()
+            # streaming_model_response.choices = [remodl.utils.StreamingChoices()]
+            streaming_choice = remodl.utils.StreamingChoices()
             streaming_choice.index = model_response.choices[0].index
-            delta_obj = litellm.utils.Delta(
+            delta_obj = remodl.utils.Delta(
                 content=getattr(model_response.choices[0].message, "content", None),  # type: ignore
                 role=model_response.choices[0].message.role,  # type: ignore
             )
@@ -645,12 +645,12 @@ class BedrockLLM(BaseAWSLLM):
         )
 
         prompt_tokens = int(
-            bedrock_input_tokens or litellm.token_counter(messages=messages)
+            bedrock_input_tokens or remodl.token_counter(messages=messages)
         )
 
         completion_tokens = int(
             bedrock_output_tokens
-            or litellm.token_counter(
+            or remodl.token_counter(
                 text=model_response.choices[0].message.content,  # type: ignore
                 count_response_tokens=True,
             )
@@ -680,7 +680,7 @@ class BedrockLLM(BaseAWSLLM):
         optional_params: dict,
         acompletion: bool,
         timeout: Optional[Union[float, httpx.Timeout]],
-        litellm_params=None,
+        remodl_params=None,
         logger_fn=None,
         extra_headers: Optional[dict] = None,
         client: Optional[Union[AsyncHTTPHandler, HTTPHandler]] = None,
@@ -720,12 +720,12 @@ class BedrockLLM(BaseAWSLLM):
         ### SET REGION NAME ###
         if aws_region_name is None:
             # check env #
-            litellm_aws_region_name = get_secret("AWS_REGION_NAME", None)
+            remodl_aws_region_name = get_secret("AWS_REGION_NAME", None)
 
-            if litellm_aws_region_name is not None and isinstance(
-                litellm_aws_region_name, str
+            if remodl_aws_region_name is not None and isinstance(
+                remodl_aws_region_name, str
             ):
-                aws_region_name = litellm_aws_region_name
+                aws_region_name = remodl_aws_region_name
 
             standard_aws_region_name = get_secret("AWS_REGION", None)
             if standard_aws_region_name is not None and isinstance(
@@ -774,7 +774,7 @@ class BedrockLLM(BaseAWSLLM):
         if provider == "cohere":
             if model.startswith("cohere.command-r"):
                 ## LOAD CONFIG
-                config = litellm.AmazonCohereChatConfig().get_config()
+                config = remodl.AmazonCohereChatConfig().get_config()
                 for k, v in config.items():
                     if (
                         k not in inference_params
@@ -786,7 +786,7 @@ class BedrockLLM(BaseAWSLLM):
                 data = json.dumps(_data)
             else:
                 ## LOAD CONFIG
-                config = litellm.AmazonCohereConfig.get_config()
+                config = remodl.AmazonCohereConfig.get_config()
                 for k, v in config.items():
                     if (
                         k not in inference_params
@@ -816,7 +816,7 @@ class BedrockLLM(BaseAWSLLM):
                     model=model, messages=messages, custom_llm_provider="anthropic_xml"
                 )  # type: ignore
                 ## LOAD CONFIG
-                config = litellm.AmazonAnthropicClaudeConfig.get_config()
+                config = remodl.AmazonAnthropicClaudeConfig.get_config()
                 for k, v in config.items():
                     if (
                         k not in inference_params
@@ -840,7 +840,7 @@ class BedrockLLM(BaseAWSLLM):
                 data = json.dumps({"messages": messages, **inference_params})
             else:
                 ## LOAD CONFIG
-                config = litellm.AmazonAnthropicConfig.get_config()
+                config = remodl.AmazonAnthropicConfig.get_config()
                 for k, v in config.items():
                     if (
                         k not in inference_params
@@ -849,7 +849,7 @@ class BedrockLLM(BaseAWSLLM):
                 data = json.dumps({"prompt": prompt, **inference_params})
         elif provider == "ai21":
             ## LOAD CONFIG
-            config = litellm.AmazonAI21Config.get_config()
+            config = remodl.AmazonAI21Config.get_config()
             for k, v in config.items():
                 if (
                     k not in inference_params
@@ -859,7 +859,7 @@ class BedrockLLM(BaseAWSLLM):
             data = json.dumps({"prompt": prompt, **inference_params})
         elif provider == "mistral":
             ## LOAD CONFIG
-            config = litellm.AmazonMistralConfig.get_config()
+            config = remodl.AmazonMistralConfig.get_config()
             for k, v in config.items():
                 if (
                     k not in inference_params
@@ -869,7 +869,7 @@ class BedrockLLM(BaseAWSLLM):
             data = json.dumps({"prompt": prompt, **inference_params})
         elif provider == "amazon":  # amazon titan
             ## LOAD CONFIG
-            config = litellm.AmazonTitanConfig.get_config()
+            config = remodl.AmazonTitanConfig.get_config()
             for k, v in config.items():
                 if (
                     k not in inference_params
@@ -884,7 +884,7 @@ class BedrockLLM(BaseAWSLLM):
             )
         elif provider == "meta" or provider == "llama":
             ## LOAD CONFIG
-            config = litellm.AmazonLlamaConfig.get_config()
+            config = remodl.AmazonLlamaConfig.get_config()
             for k, v in config.items():
                 if (
                     k not in inference_params
@@ -949,7 +949,7 @@ class BedrockLLM(BaseAWSLLM):
                     logging_obj=logging_obj,
                     optional_params=optional_params,
                     stream=True,
-                    litellm_params=litellm_params,
+                    remodl_params=remodl_params,
                     logger_fn=logger_fn,
                     headers=prepped.headers,
                     timeout=timeout,
@@ -967,7 +967,7 @@ class BedrockLLM(BaseAWSLLM):
                 logging_obj=logging_obj,
                 optional_params=optional_params,
                 stream=stream,  # type: ignore
-                litellm_params=litellm_params,
+                remodl_params=remodl_params,
                 logger_fn=logger_fn,
                 headers=prepped.headers,
                 timeout=timeout,
@@ -1057,7 +1057,7 @@ class BedrockLLM(BaseAWSLLM):
         logging_obj: Logging,
         stream,
         optional_params: dict,
-        litellm_params=None,
+        remodl_params=None,
         logger_fn=None,
         headers={},
         client: Optional[AsyncHTTPHandler] = None,
@@ -1068,7 +1068,7 @@ class BedrockLLM(BaseAWSLLM):
                 if isinstance(timeout, float) or isinstance(timeout, int):
                     timeout = httpx.Timeout(timeout)
                 _params["timeout"] = timeout
-            client = get_async_httpx_client(params=_params, llm_provider=litellm.LlmProviders.BEDROCK)  # type: ignore
+            client = get_async_httpx_client(params=_params, llm_provider=remodl.LlmProviders.BEDROCK)  # type: ignore
         else:
             client = client  # type: ignore
 
@@ -1115,7 +1115,7 @@ class BedrockLLM(BaseAWSLLM):
         logging_obj: Logging,
         stream,
         optional_params: dict,
-        litellm_params=None,
+        remodl_params=None,
         logger_fn=None,
         headers={},
         client: Optional[AsyncHTTPHandler] = None,
@@ -1144,7 +1144,7 @@ class BedrockLLM(BaseAWSLLM):
     @staticmethod
     def _get_provider_from_model_path(
         model_path: str,
-    ) -> Optional[litellm.BEDROCK_INVOKE_PROVIDERS_LITERAL]:
+    ) -> Optional[remodl.BEDROCK_INVOKE_PROVIDERS_LITERAL]:
         """
         Helper function to get the provider from a model path with format: provider/model-name
 
@@ -1157,8 +1157,8 @@ class BedrockLLM(BaseAWSLLM):
         parts = model_path.split("/")
         if len(parts) >= 1:
             provider = parts[0]
-            if provider in get_args(litellm.BEDROCK_INVOKE_PROVIDERS_LITERAL):
-                return cast(litellm.BEDROCK_INVOKE_PROVIDERS_LITERAL, provider)
+            if provider in get_args(remodl.BEDROCK_INVOKE_PROVIDERS_LITERAL):
+                return cast(remodl.BEDROCK_INVOKE_PROVIDERS_LITERAL, provider)
         return None
 
 
@@ -1268,7 +1268,7 @@ class AWSEventStreamDecoder:
                 self.content_blocks = []  # reset
                 if start_obj is not None:
                     if "toolUse" in start_obj and start_obj["toolUse"] is not None:
-                        ## check tool name was formatted by litellm
+                        ## check tool name was formatted by remodl
                         _response_tool_name = start_obj["toolUse"]["name"]
                         response_tool_name = get_bedrock_tool_name(
                             response_tool_name=_response_tool_name
@@ -1542,7 +1542,7 @@ class AmazonDeepSeekR1StreamDecoder(AWSEventStreamDecoder):
         sync_stream: bool,
     ) -> None:
         super().__init__(model=model)
-        from litellm.llms.bedrock.chat.invoke_transformations.amazon_deepseek_transformation import (
+        from remodl.llms.bedrock.chat.invoke_transformations.amazon_deepseek_transformation import (
             AmazonDeepseekR1ResponseIterator,
         )
 
@@ -1587,7 +1587,7 @@ class MockResponseIterator:  # for returning ai21 streaming responses
         """
         tool_use: Optional[ChatCompletionToolCallChunk] = None
         if self.json_mode is True and tool_calls is not None:
-            message = litellm.AnthropicConfig()._convert_tool_response_to_message(
+            message = remodl.AnthropicConfig()._convert_tool_response_to_message(
                 tool_calls=tool_calls
             )
             if message is not None:

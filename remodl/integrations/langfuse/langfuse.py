@@ -7,16 +7,16 @@ from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple, Union, cast
 
 from packaging.version import Version
 
-import litellm
-from litellm._logging import verbose_logger
-from litellm.constants import MAX_LANGFUSE_INITIALIZED_CLIENTS
-from litellm.litellm_core_utils.core_helpers import safe_deep_copy
-from litellm.litellm_core_utils.redact_messages import redact_user_api_key_info
-from litellm.llms.custom_httpx.http_handler import _get_httpx_client
-from litellm.secret_managers.main import str_to_bool
-from litellm.types.integrations.langfuse import *
-from litellm.types.llms.openai import HttpxBinaryResponseContent, ResponsesAPIResponse
-from litellm.types.utils import (
+import remodl
+from remodl._logging import verbose_logger
+from remodl.constants import MAX_LANGFUSE_INITIALIZED_CLIENTS
+from remodl.remodl_core_utils.core_helpers import safe_deep_copy
+from remodl.remodl_core_utils.redact_messages import redact_user_api_key_info
+from remodl.llms.custom_httpx.http_handler import _get_httpx_client
+from remodl.secret_managers.main import str_to_bool
+from remodl.types.integrations.langfuse import *
+from remodl.types.llms.openai import HttpxBinaryResponseContent, ResponsesAPIResponse
+from remodl.types.utils import (
     EmbeddingResponse,
     ImageResponse,
     ModelResponse,
@@ -30,7 +30,7 @@ from litellm.types.utils import (
 if TYPE_CHECKING:
     from langfuse.client import Langfuse, StatefulTraceClient
 
-    from litellm.litellm_core_utils.litellm_logging import DynamicLoggingCache
+    from remodl.remodl_core_utils.remodl_logging import DynamicLoggingCache
 else:
     DynamicLoggingCache = Any
     StatefulTraceClient = Any
@@ -85,7 +85,7 @@ class LangFuseLogger:
         self.langfuse_sdk_version: str = langfuse.version.__version__
 
         if Version(self.langfuse_sdk_version) >= Version("2.6.0"):
-            parameters["sdk_integration"] = "litellm"
+            parameters["sdk_integration"] = "remodl"
         self.Langfuse: Langfuse = self.safe_init_langfuse_client(parameters)
 
         # set the current langfuse project id in the environ
@@ -135,37 +135,37 @@ class LangFuseLogger:
         """
         from langfuse import Langfuse
 
-        if litellm.initialized_langfuse_clients >= MAX_LANGFUSE_INITIALIZED_CLIENTS:
+        if remodl.initialized_langfuse_clients >= MAX_LANGFUSE_INITIALIZED_CLIENTS:
             raise Exception(
-                f"Max langfuse clients reached: {litellm.initialized_langfuse_clients} is greater than {MAX_LANGFUSE_INITIALIZED_CLIENTS}"
+                f"Max langfuse clients reached: {remodl.initialized_langfuse_clients} is greater than {MAX_LANGFUSE_INITIALIZED_CLIENTS}"
             )
         langfuse_client = Langfuse(**parameters)
-        litellm.initialized_langfuse_clients += 1
+        remodl.initialized_langfuse_clients += 1
         verbose_logger.debug(
-            f"Created langfuse client number {litellm.initialized_langfuse_clients}"
+            f"Created langfuse client number {remodl.initialized_langfuse_clients}"
         )
         return langfuse_client
 
     @staticmethod
-    def add_metadata_from_header(litellm_params: dict, metadata: dict) -> dict:
+    def add_metadata_from_header(remodl_params: dict, metadata: dict) -> dict:
         """
         Adds metadata from proxy request headers to Langfuse logging if keys start with "langfuse_"
-        and overwrites litellm_params.metadata if already included.
+        and overwrites remodl_params.metadata if already included.
 
         For example if you want to append your trace to an existing `trace_id` via header, send
         `headers: { ..., langfuse_existing_trace_id: your-existing-trace-id }` via proxy request.
         """
-        if litellm_params is None:
+        if remodl_params is None:
             return metadata
 
-        if litellm_params.get("proxy_server_request") is None:
+        if remodl_params.get("proxy_server_request") is None:
             return metadata
 
         if metadata is None:
             metadata = {}
 
         proxy_headers = (
-            litellm_params.get("proxy_server_request", {}).get("headers", {}) or {}
+            remodl_params.get("proxy_server_request", {}).get("headers", {}) or {}
         )
 
         for metadata_param_key in proxy_headers:
@@ -216,12 +216,12 @@ class LangFuseLogger:
             input = None
             output = None
 
-            litellm_params = kwargs.get("litellm_params", {})
-            litellm_call_id = kwargs.get("litellm_call_id", None)
+            remodl_params = kwargs.get("remodl_params", {})
+            remodl_call_id = kwargs.get("remodl_call_id", None)
             metadata = (
-                litellm_params.get("metadata", {}) or {}
-            )  # if litellm_params['metadata'] == None
-            metadata = self.add_metadata_from_header(litellm_params, metadata)
+                remodl_params.get("metadata", {}) or {}
+            )  # if remodl_params['metadata'] == None
+            metadata = self.add_metadata_from_header(remodl_params, metadata)
             optional_params = safe_deep_copy(kwargs.get("optional_params", {}))
 
             prompt = {"messages": kwargs.get("messages")}
@@ -258,7 +258,7 @@ class LangFuseLogger:
                 trace_id, generation_id = self._log_langfuse_v2(
                     user_id=user_id,
                     metadata=metadata,
-                    litellm_params=litellm_params,
+                    remodl_params=remodl_params,
                     output=output,
                     start_time=start_time,
                     end_time=end_time,
@@ -267,7 +267,7 @@ class LangFuseLogger:
                     input=input,
                     response_obj=response_obj,
                     level=level,
-                    litellm_call_id=litellm_call_id,
+                    remodl_call_id=remodl_call_id,
                 )
             elif response_obj is not None:
                 self._log_langfuse_v1(
@@ -337,42 +337,42 @@ class LangFuseLogger:
             output = status_message
         elif response_obj is not None and (
             kwargs.get("call_type", None) == "embedding"
-            or isinstance(response_obj, litellm.EmbeddingResponse)
+            or isinstance(response_obj, remodl.EmbeddingResponse)
         ):
             input = prompt
             output = None
         elif response_obj is not None and isinstance(
-            response_obj, litellm.ModelResponse
+            response_obj, remodl.ModelResponse
         ):
             input = prompt
             output = self._get_chat_content_for_langfuse(response_obj)
         elif response_obj is not None and isinstance(
-            response_obj, litellm.HttpxBinaryResponseContent
+            response_obj, remodl.HttpxBinaryResponseContent
         ):
             input = prompt
             output = "speech-output"
         elif response_obj is not None and isinstance(
-            response_obj, litellm.TextCompletionResponse
+            response_obj, remodl.TextCompletionResponse
         ):
             input = prompt
             output = self._get_text_completion_content_for_langfuse(response_obj)
         elif response_obj is not None and isinstance(
-            response_obj, litellm.ImageResponse
+            response_obj, remodl.ImageResponse
         ):
             input = prompt
             output = response_obj.get("data", None)
         elif response_obj is not None and isinstance(
-            response_obj, litellm.TranscriptionResponse
+            response_obj, remodl.TranscriptionResponse
         ):
             input = prompt
             output = response_obj.get("text", None)
         elif response_obj is not None and isinstance(
-            response_obj, litellm.RerankResponse
+            response_obj, remodl.RerankResponse
         ):
             input = prompt
             output = response_obj.results
         elif response_obj is not None and isinstance(
-            response_obj, litellm.ResponsesAPIResponse
+            response_obj, remodl.ResponsesAPIResponse
         ):
             input = prompt
             output = self._get_responses_api_content_for_langfuse(response_obj)
@@ -428,7 +428,7 @@ class LangFuseLogger:
 
         trace = self.Langfuse.trace(  # type: ignore
             CreateTrace(  # type: ignore
-                name=metadata.get("generation_name", "litellm-completion"),
+                name=metadata.get("generation_name", "remodl-completion"),
                 input=input,
                 output=output,
                 userId=user_id,
@@ -437,7 +437,7 @@ class LangFuseLogger:
 
         trace.generation(
             CreateGeneration(
-                name=metadata.get("generation_name", "litellm-completion"),
+                name=metadata.get("generation_name", "remodl-completion"),
                 startTime=start_time,
                 endTime=end_time,
                 model=kwargs["model"],
@@ -456,7 +456,7 @@ class LangFuseLogger:
         self,
         user_id: Optional[str],
         metadata: dict,
-        litellm_params: dict,
+        remodl_params: dict,
         output: Optional[Union[str, dict, list]],
         start_time: Optional[datetime],
         end_time: Optional[datetime],
@@ -465,7 +465,7 @@ class LangFuseLogger:
         input: Optional[dict],
         response_obj,
         level: str,
-        litellm_call_id: Optional[str],
+        remodl_call_id: Optional[str],
     ) -> tuple:
         verbose_logger.debug("Langfuse Layer Logging - logging to langfuse v2")
 
@@ -500,7 +500,7 @@ class LangFuseLogger:
 
             # Clean Metadata before logging - never log raw metadata
             # the raw metadata can contain circular references which leads to infinite recursion
-            # we clean out all extra litellm metadata params before logging
+            # we clean out all extra remodl metadata params before logging
             clean_metadata: Dict[str, Any] = {}
             if prompt_management_metadata is not None:
                 clean_metadata[
@@ -510,13 +510,13 @@ class LangFuseLogger:
                 for key, value in metadata.items():
                     # generate langfuse tags - Default Tags sent to Langfuse from LiteLLM Proxy
                     if (
-                        litellm.langfuse_default_tags is not None
-                        and isinstance(litellm.langfuse_default_tags, list)
-                        and key in litellm.langfuse_default_tags
+                        remodl.langfuse_default_tags is not None
+                        and isinstance(remodl.langfuse_default_tags, list)
+                        and key in remodl.langfuse_default_tags
                     ):
                         tags.append(f"{key}:{value}")
 
-                    # clean litellm metadata before logging
+                    # clean remodl metadata before logging
                     if key in [
                         "headers",
                         "endpoint",
@@ -534,7 +534,7 @@ class LangFuseLogger:
 
             session_id = clean_metadata.pop("session_id", None)
             trace_name = cast(Optional[str], clean_metadata.pop("trace_name", None))
-            trace_id = clean_metadata.pop("trace_id", litellm_call_id)
+            trace_id = clean_metadata.pop("trace_id", remodl_call_id)
             existing_trace_id = clean_metadata.pop("existing_trace_id", None)
             update_trace_keys = cast(list, clean_metadata.pop("update_trace_keys", []))
             debug = clean_metadata.pop("debug_langfuse", None)
@@ -544,9 +544,9 @@ class LangFuseLogger:
             clean_metadata = redact_user_api_key_info(metadata=clean_metadata)
 
             if trace_name is None and existing_trace_id is None:
-                # just log `litellm-{call_type}` as the trace name
+                # just log `remodl-{call_type}` as the trace name
                 ## DO NOT SET TRACE_NAME if trace-id set. this can lead to overwriting of past traces.
-                trace_name = f"litellm-{kwargs.get('call_type', 'completion')}"
+                trace_name = f"remodl-{kwargs.get('call_type', 'completion')}"
 
             if existing_trace_id is not None:
                 trace_params: Dict[str, Any] = {"id": existing_trace_id}
@@ -570,18 +570,18 @@ class LangFuseLogger:
                 # Special keys that are found in the function arguments and not the metadata
                 if "input" in update_trace_keys:
                     trace_params["input"] = (
-                        input if not mask_input else "redacted-by-litellm"
+                        input if not mask_input else "redacted-by-remodl"
                     )
                 if "output" in update_trace_keys:
                     trace_params["output"] = (
-                        output if not mask_output else "redacted-by-litellm"
+                        output if not mask_output else "redacted-by-remodl"
                     )
             else:  # don't overwrite an existing trace
                 trace_params = {
                     "id": trace_id,
                     "name": trace_name,
                     "session_id": session_id,
-                    "input": input if not mask_input else "redacted-by-litellm",
+                    "input": input if not mask_input else "redacted-by-remodl",
                     "version": clean_metadata.pop(
                         "trace_version", clean_metadata.get("version", None)
                     ),  # If provided just version, it will applied to the trace as well, if applied a trace version it will take precedence
@@ -598,35 +598,35 @@ class LangFuseLogger:
                     trace_params["status_message"] = output
                 else:
                     trace_params["output"] = (
-                        output if not mask_output else "redacted-by-litellm"
+                        output if not mask_output else "redacted-by-remodl"
                     )
 
             if debug is True or (isinstance(debug, str) and debug.lower() == "true"):
                 if "metadata" in trace_params:
                     # log the raw_metadata in the trace
-                    trace_params["metadata"]["metadata_passed_to_litellm"] = metadata
+                    trace_params["metadata"]["metadata_passed_to_remodl"] = metadata
                 else:
-                    trace_params["metadata"] = {"metadata_passed_to_litellm": metadata}
+                    trace_params["metadata"] = {"metadata_passed_to_remodl": metadata}
 
             cost = kwargs.get("response_cost", None)
             verbose_logger.debug(f"trace: {cost}")
 
-            clean_metadata["litellm_response_cost"] = cost
+            clean_metadata["remodl_response_cost"] = cost
             if standard_logging_object is not None:
                 clean_metadata["hidden_params"] = standard_logging_object[
                     "hidden_params"
                 ]
 
             if (
-                litellm.langfuse_default_tags is not None
-                and isinstance(litellm.langfuse_default_tags, list)
-                and "proxy_base_url" in litellm.langfuse_default_tags
+                remodl.langfuse_default_tags is not None
+                and isinstance(remodl.langfuse_default_tags, list)
+                and "proxy_base_url" in remodl.langfuse_default_tags
             ):
                 proxy_base_url = os.environ.get("PROXY_BASE_URL", None)
                 if proxy_base_url is not None:
                     tags.append(f"proxy_base_url:{proxy_base_url}")
 
-            api_base = litellm_params.get("api_base", None)
+            api_base = remodl_params.get("api_base", None)
             if api_base:
                 clean_metadata["api_base"] = api_base
 
@@ -646,7 +646,7 @@ class LangFuseLogger:
                 if existing_trace_id is None:
                     trace_params.update({"tags": tags})
 
-            proxy_server_request = litellm_params.get("proxy_server_request", None)
+            proxy_server_request = remodl_params.get("proxy_server_request", None)
             if proxy_server_request:
                 proxy_server_request.get("method", None)
                 proxy_server_request.get("url", None)
@@ -677,7 +677,7 @@ class LangFuseLogger:
                     hasattr(response_obj, "id")
                     and response_obj.get("id", None) is not None
                 ):
-                    generation_id = litellm.utils.get_logging_id(
+                    generation_id = remodl.utils.get_logging_id(
                         start_time, response_obj
                     )
                 _usage_obj = getattr(response_obj, "usage", None)
@@ -697,16 +697,16 @@ class LangFuseLogger:
             generation_name = clean_metadata.pop("generation_name", None)
             if generation_name is None:
                 # if `generation_name` is None, use sensible default values
-                # If using litellm proxy user `key_alias` if not None
-                # If `key_alias` is None, just log `litellm-{call_type}` as the generation name
+                # If using remodl proxy user `key_alias` if not None
+                # If `key_alias` is None, just log `remodl-{call_type}` as the generation name
                 _user_api_key_alias = cast(
                     Optional[str], clean_metadata.get("user_api_key_alias", None)
                 )
                 generation_name = (
-                    f"litellm-{cast(str, kwargs.get('call_type', 'completion'))}"
+                    f"remodl-{cast(str, kwargs.get('call_type', 'completion'))}"
                 )
                 if _user_api_key_alias is not None:
-                    generation_name = f"litellm:{_user_api_key_alias}"
+                    generation_name = f"remodl:{_user_api_key_alias}"
 
             if response_obj is not None:
                 system_fingerprint = getattr(response_obj, "system_fingerprint", None)
@@ -723,8 +723,8 @@ class LangFuseLogger:
                 "end_time": end_time,
                 "model": kwargs["model"],
                 "model_parameters": optional_params,
-                "input": input if not mask_input else "redacted-by-litellm",
-                "output": output if not mask_output else "redacted-by-litellm",
+                "input": input if not mask_input else "redacted-by-remodl",
+                "output": output if not mask_output else "redacted-by-remodl",
                 "usage": usage,
                 "usage_details": usage_details,
                 "metadata": log_requester_metadata(clean_metadata),
@@ -806,25 +806,25 @@ class LangFuseLogger:
 
     def add_default_langfuse_tags(self, tags, kwargs, metadata):
         """
-        Helper function to add litellm default langfuse tags
+        Helper function to add remodl default langfuse tags
 
         - Special LiteLLM tags:
             - cache_hit
             - cache_key
 
         """
-        if litellm.langfuse_default_tags is not None and isinstance(
-            litellm.langfuse_default_tags, list
+        if remodl.langfuse_default_tags is not None and isinstance(
+            remodl.langfuse_default_tags, list
         ):
-            if "cache_hit" in litellm.langfuse_default_tags:
+            if "cache_hit" in remodl.langfuse_default_tags:
                 _cache_hit_value = kwargs.get("cache_hit", False)
                 tags.append(f"cache_hit:{_cache_hit_value}")
-            if "cache_key" in litellm.langfuse_default_tags:
+            if "cache_key" in remodl.langfuse_default_tags:
                 _hidden_params = metadata.get("hidden_params", {}) or {}
                 _cache_key = _hidden_params.get("cache_key", None)
-                if _cache_key is None and litellm.cache is not None:
+                if _cache_key is None and remodl.cache is not None:
                     # fallback to using "preset_cache_key"
-                    _preset_cache_key = litellm.cache._get_preset_cache_key_from_kwargs(
+                    _preset_cache_key = remodl.cache._get_preset_cache_key_from_kwargs(
                         **kwargs
                     )
                     _cache_key = _preset_cache_key

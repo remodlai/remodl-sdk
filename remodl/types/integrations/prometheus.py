@@ -6,7 +6,7 @@ from typing import Dict, List, Literal, Optional, Tuple, Union
 from pydantic import BaseModel, Field
 from typing_extensions import Annotated
 
-import litellm
+import remodl
 
 
 def _sanitize_prometheus_label_name(label: str) -> str:
@@ -139,7 +139,7 @@ class UserAPIKeyLabelNames(Enum):
     TEAM_ALIAS = "team_alias"
     REQUESTED_MODEL = REQUESTED_MODEL
     v1_LITELLM_MODEL_NAME = "model"
-    v2_LITELLM_MODEL_NAME = "litellm_model_name"
+    v2_LITELLM_MODEL_NAME = "remodl_model_name"
     TAG = "tag"
     MODEL_ID = "model_id"
     API_BASE = "api_base"
@@ -153,43 +153,43 @@ class UserAPIKeyLabelNames(Enum):
 
 
 DEFINED_PROMETHEUS_METRICS = Literal[
-    "litellm_llm_api_latency_metric",
-    "litellm_llm_api_time_to_first_token_metric",
-    "litellm_request_total_latency_metric",
-    "litellm_overhead_latency_metric",
-    "litellm_remaining_requests_metric",
-    "litellm_remaining_tokens_metric",
-    "litellm_proxy_total_requests_metric",
-    "litellm_proxy_failed_requests_metric",
-    "litellm_deployment_latency_per_output_token",
-    "litellm_requests_metric",
-    "litellm_spend_metric",
-    "litellm_total_tokens_metric",
-    "litellm_input_tokens_metric",
-    "litellm_output_tokens_metric",
-    "litellm_deployment_successful_fallbacks",
-    "litellm_deployment_failed_fallbacks",
-    "litellm_remaining_team_budget_metric",
-    "litellm_team_max_budget_metric",
-    "litellm_team_budget_remaining_hours_metric",
-    "litellm_remaining_api_key_budget_metric",
-    "litellm_api_key_max_budget_metric",
-    "litellm_api_key_budget_remaining_hours_metric",
-    "litellm_deployment_state",
-    "litellm_deployment_failure_responses",
-    "litellm_deployment_total_requests",
-    "litellm_deployment_success_responses",
-    "litellm_deployment_cooled_down",
-    "litellm_pod_lock_manager_size",
-    "litellm_in_memory_daily_spend_update_queue_size",
-    "litellm_redis_daily_spend_update_queue_size",
-    "litellm_in_memory_spend_update_queue_size",
-    "litellm_redis_spend_update_queue_size",
+    "remodl_llm_api_latency_metric",
+    "remodl_llm_api_time_to_first_token_metric",
+    "remodl_request_total_latency_metric",
+    "remodl_overhead_latency_metric",
+    "remodl_remaining_requests_metric",
+    "remodl_remaining_tokens_metric",
+    "remodl_proxy_total_requests_metric",
+    "remodl_proxy_failed_requests_metric",
+    "remodl_deployment_latency_per_output_token",
+    "remodl_requests_metric",
+    "remodl_spend_metric",
+    "remodl_total_tokens_metric",
+    "remodl_input_tokens_metric",
+    "remodl_output_tokens_metric",
+    "remodl_deployment_successful_fallbacks",
+    "remodl_deployment_failed_fallbacks",
+    "remodl_remaining_team_budget_metric",
+    "remodl_team_max_budget_metric",
+    "remodl_team_budget_remaining_hours_metric",
+    "remodl_remaining_api_key_budget_metric",
+    "remodl_api_key_max_budget_metric",
+    "remodl_api_key_budget_remaining_hours_metric",
+    "remodl_deployment_state",
+    "remodl_deployment_failure_responses",
+    "remodl_deployment_total_requests",
+    "remodl_deployment_success_responses",
+    "remodl_deployment_cooled_down",
+    "remodl_pod_lock_manager_size",
+    "remodl_in_memory_daily_spend_update_queue_size",
+    "remodl_redis_daily_spend_update_queue_size",
+    "remodl_in_memory_spend_update_queue_size",
+    "remodl_redis_spend_update_queue_size",
 ]
 
 
 class PrometheusMetricLabels:
-    litellm_llm_api_latency_metric = [
+    remodl_llm_api_latency_metric = [
         UserAPIKeyLabelNames.v1_LITELLM_MODEL_NAME.value,
         UserAPIKeyLabelNames.API_KEY_HASH.value,
         UserAPIKeyLabelNames.API_KEY_ALIAS.value,
@@ -200,7 +200,7 @@ class PrometheusMetricLabels:
         UserAPIKeyLabelNames.USER.value,
     ]
 
-    litellm_llm_api_time_to_first_token_metric = [
+    remodl_llm_api_time_to_first_token_metric = [
         UserAPIKeyLabelNames.v1_LITELLM_MODEL_NAME.value,
         UserAPIKeyLabelNames.API_KEY_HASH.value,
         UserAPIKeyLabelNames.API_KEY_ALIAS.value,
@@ -208,7 +208,7 @@ class PrometheusMetricLabels:
         UserAPIKeyLabelNames.TEAM_ALIAS.value,
     ]
 
-    litellm_request_total_latency_metric = [
+    remodl_request_total_latency_metric = [
         UserAPIKeyLabelNames.END_USER.value,
         UserAPIKeyLabelNames.API_KEY_HASH.value,
         UserAPIKeyLabelNames.API_KEY_ALIAS.value,
@@ -219,7 +219,7 @@ class PrometheusMetricLabels:
         UserAPIKeyLabelNames.v1_LITELLM_MODEL_NAME.value,
     ]
 
-    litellm_proxy_total_requests_metric = [
+    remodl_proxy_total_requests_metric = [
         UserAPIKeyLabelNames.END_USER.value,
         UserAPIKeyLabelNames.API_KEY_HASH.value,
         UserAPIKeyLabelNames.API_KEY_ALIAS.value,
@@ -232,7 +232,7 @@ class PrometheusMetricLabels:
         UserAPIKeyLabelNames.ROUTE.value,
     ]
 
-    litellm_proxy_failed_requests_metric = [
+    remodl_proxy_failed_requests_metric = [
         UserAPIKeyLabelNames.END_USER.value,
         UserAPIKeyLabelNames.API_KEY_HASH.value,
         UserAPIKeyLabelNames.API_KEY_ALIAS.value,
@@ -246,7 +246,7 @@ class PrometheusMetricLabels:
         UserAPIKeyLabelNames.ROUTE.value,
     ]
 
-    litellm_deployment_latency_per_output_token = [
+    remodl_deployment_latency_per_output_token = [
         UserAPIKeyLabelNames.v2_LITELLM_MODEL_NAME.value,
         UserAPIKeyLabelNames.MODEL_ID.value,
         UserAPIKeyLabelNames.API_BASE.value,
@@ -257,7 +257,7 @@ class PrometheusMetricLabels:
         UserAPIKeyLabelNames.TEAM_ALIAS.value,
     ]
 
-    litellm_overhead_latency_metric = [
+    remodl_overhead_latency_metric = [
         UserAPIKeyLabelNames.MODEL_GROUP.value,
         UserAPIKeyLabelNames.API_PROVIDER.value,
         UserAPIKeyLabelNames.API_BASE.value,
@@ -266,7 +266,7 @@ class PrometheusMetricLabels:
         UserAPIKeyLabelNames.API_KEY_ALIAS.value,
     ]
 
-    litellm_remaining_requests_metric = [
+    remodl_remaining_requests_metric = [
         UserAPIKeyLabelNames.MODEL_GROUP.value,
         UserAPIKeyLabelNames.API_PROVIDER.value,
         UserAPIKeyLabelNames.API_BASE.value,
@@ -275,7 +275,7 @@ class PrometheusMetricLabels:
         UserAPIKeyLabelNames.API_KEY_ALIAS.value,
     ]
 
-    litellm_remaining_tokens_metric = [
+    remodl_remaining_tokens_metric = [
         UserAPIKeyLabelNames.MODEL_GROUP.value,
         UserAPIKeyLabelNames.API_PROVIDER.value,
         UserAPIKeyLabelNames.API_BASE.value,
@@ -284,7 +284,7 @@ class PrometheusMetricLabels:
         UserAPIKeyLabelNames.API_KEY_ALIAS.value,
     ]
 
-    litellm_requests_metric = [
+    remodl_requests_metric = [
         UserAPIKeyLabelNames.END_USER.value,
         UserAPIKeyLabelNames.API_KEY_HASH.value,
         UserAPIKeyLabelNames.API_KEY_ALIAS.value,
@@ -295,7 +295,7 @@ class PrometheusMetricLabels:
         UserAPIKeyLabelNames.USER_EMAIL.value,
     ]
 
-    litellm_spend_metric = [
+    remodl_spend_metric = [
         UserAPIKeyLabelNames.END_USER.value,
         UserAPIKeyLabelNames.API_KEY_HASH.value,
         UserAPIKeyLabelNames.API_KEY_ALIAS.value,
@@ -306,7 +306,7 @@ class PrometheusMetricLabels:
         UserAPIKeyLabelNames.USER_EMAIL.value,
     ]
 
-    litellm_input_tokens_metric = [
+    remodl_input_tokens_metric = [
         UserAPIKeyLabelNames.END_USER.value,
         UserAPIKeyLabelNames.API_KEY_HASH.value,
         UserAPIKeyLabelNames.API_KEY_ALIAS.value,
@@ -318,7 +318,7 @@ class PrometheusMetricLabels:
         UserAPIKeyLabelNames.REQUESTED_MODEL.value,
     ]
 
-    litellm_total_tokens_metric = [
+    remodl_total_tokens_metric = [
         UserAPIKeyLabelNames.END_USER.value,
         UserAPIKeyLabelNames.API_KEY_HASH.value,
         UserAPIKeyLabelNames.API_KEY_ALIAS.value,
@@ -330,7 +330,7 @@ class PrometheusMetricLabels:
         UserAPIKeyLabelNames.REQUESTED_MODEL.value,
     ]
 
-    litellm_output_tokens_metric = [
+    remodl_output_tokens_metric = [
         UserAPIKeyLabelNames.END_USER.value,
         UserAPIKeyLabelNames.API_KEY_HASH.value,
         UserAPIKeyLabelNames.API_KEY_ALIAS.value,
@@ -342,21 +342,21 @@ class PrometheusMetricLabels:
         UserAPIKeyLabelNames.REQUESTED_MODEL.value,
     ]
 
-    litellm_deployment_state = [
+    remodl_deployment_state = [
         UserAPIKeyLabelNames.v2_LITELLM_MODEL_NAME.value,
         UserAPIKeyLabelNames.MODEL_ID.value,
         UserAPIKeyLabelNames.API_BASE.value,
         UserAPIKeyLabelNames.API_PROVIDER.value,
     ]
 
-    litellm_deployment_cooled_down = [
+    remodl_deployment_cooled_down = [
         UserAPIKeyLabelNames.v2_LITELLM_MODEL_NAME.value,
         UserAPIKeyLabelNames.MODEL_ID.value,
         UserAPIKeyLabelNames.API_BASE.value,
         UserAPIKeyLabelNames.API_PROVIDER.value,
     ]
 
-    litellm_deployment_successful_fallbacks = [
+    remodl_deployment_successful_fallbacks = [
         UserAPIKeyLabelNames.REQUESTED_MODEL.value,
         UserAPIKeyLabelNames.FALLBACK_MODEL.value,
         UserAPIKeyLabelNames.API_KEY_HASH.value,
@@ -367,36 +367,36 @@ class PrometheusMetricLabels:
         UserAPIKeyLabelNames.EXCEPTION_CLASS.value,
     ]
 
-    litellm_deployment_failed_fallbacks = litellm_deployment_successful_fallbacks
+    remodl_deployment_failed_fallbacks = remodl_deployment_successful_fallbacks
 
-    litellm_remaining_team_budget_metric = [
+    remodl_remaining_team_budget_metric = [
         UserAPIKeyLabelNames.TEAM.value,
         UserAPIKeyLabelNames.TEAM_ALIAS.value,
     ]
 
-    litellm_team_max_budget_metric = [
+    remodl_team_max_budget_metric = [
         UserAPIKeyLabelNames.TEAM.value,
         UserAPIKeyLabelNames.TEAM_ALIAS.value,
     ]
 
-    litellm_team_budget_remaining_hours_metric = [
+    remodl_team_budget_remaining_hours_metric = [
         UserAPIKeyLabelNames.TEAM.value,
         UserAPIKeyLabelNames.TEAM_ALIAS.value,
     ]
 
-    litellm_remaining_api_key_budget_metric = [
+    remodl_remaining_api_key_budget_metric = [
         UserAPIKeyLabelNames.API_KEY_HASH.value,
         UserAPIKeyLabelNames.API_KEY_ALIAS.value,
     ]
 
-    litellm_api_key_max_budget_metric = litellm_remaining_api_key_budget_metric
+    remodl_api_key_max_budget_metric = remodl_remaining_api_key_budget_metric
 
-    litellm_api_key_budget_remaining_hours_metric = (
-        litellm_remaining_api_key_budget_metric
+    remodl_api_key_budget_remaining_hours_metric = (
+        remodl_remaining_api_key_budget_metric
     )
 
     # Add deployment metrics
-    litellm_deployment_failure_responses = [
+    remodl_deployment_failure_responses = [
         UserAPIKeyLabelNames.REQUESTED_MODEL.value,
         UserAPIKeyLabelNames.v2_LITELLM_MODEL_NAME.value,
         UserAPIKeyLabelNames.MODEL_ID.value,
@@ -410,7 +410,7 @@ class PrometheusMetricLabels:
         UserAPIKeyLabelNames.TEAM_ALIAS.value,
     ]
 
-    litellm_deployment_total_requests = [
+    remodl_deployment_total_requests = [
         UserAPIKeyLabelNames.REQUESTED_MODEL.value,
         UserAPIKeyLabelNames.v2_LITELLM_MODEL_NAME.value,
         UserAPIKeyLabelNames.MODEL_ID.value,
@@ -422,18 +422,18 @@ class PrometheusMetricLabels:
         UserAPIKeyLabelNames.TEAM_ALIAS.value,
     ]
 
-    litellm_deployment_success_responses = litellm_deployment_total_requests
+    remodl_deployment_success_responses = remodl_deployment_total_requests
 
     # Buffer monitoring metrics - these typically don't need additional labels
-    litellm_pod_lock_manager_size: List[str] = []
+    remodl_pod_lock_manager_size: List[str] = []
 
-    litellm_in_memory_daily_spend_update_queue_size: List[str] = []
+    remodl_in_memory_daily_spend_update_queue_size: List[str] = []
 
-    litellm_redis_daily_spend_update_queue_size: List[str] = []
+    remodl_redis_daily_spend_update_queue_size: List[str] = []
 
-    litellm_in_memory_spend_update_queue_size: List[str] = []
+    remodl_in_memory_spend_update_queue_size: List[str] = []
 
-    litellm_redis_spend_update_queue_size: List[str] = []
+    remodl_redis_spend_update_queue_size: List[str] = []
 
     @staticmethod
     def get_labels(label_name: DEFINED_PROMETHEUS_METRICS) -> List[str]:
@@ -444,7 +444,7 @@ class PrometheusMetricLabels:
         custom_labels.extend(
             [
                 _sanitize_prometheus_label_name(metric)
-                for metric in litellm.custom_prometheus_metadata_labels
+                for metric in remodl.custom_prometheus_metadata_labels
             ]
         )
 
@@ -452,7 +452,7 @@ class PrometheusMetricLabels:
         custom_labels.extend(
             [
                 _sanitize_prometheus_label_name(f"tag_{tag}")
-                for tag in litellm.custom_prometheus_tags
+                for tag in remodl.custom_prometheus_tags
             ]
         )
 
@@ -496,7 +496,7 @@ class UserAPIKeyLabelValues(BaseModel):
         Optional[str],
         Field(..., alias=UserAPIKeyLabelNames.v1_LITELLM_MODEL_NAME.value),
     ] = None
-    litellm_model_name: Annotated[
+    remodl_model_name: Annotated[
         Optional[str],
         Field(..., alias=UserAPIKeyLabelNames.v2_LITELLM_MODEL_NAME.value),
     ] = None

@@ -5,7 +5,7 @@ This folder contains the Slack Alerting integration for LiteLLM Gateway.
 ## Folder Structure 
 
 - `slack_alerting.py`: This is the main file that handles sending different types of alerts
-- `batching_handler.py`: Handles Batching + sending Httpx Post requests to slack. Slack alerts are sent every 10s or when events are greater than X events. Done to ensure litellm has good performance under high traffic
+- `batching_handler.py`: Handles Batching + sending Httpx Post requests to slack. Slack alerts are sent every 10s or when events are greater than X events. Done to ensure remodl has good performance under high traffic
 - `types.py`: This file contains the AlertType enum which is used to define the different types of alerts that can be sent to Slack.
 - `utils.py`: This file contains common utils used specifically for slack alerting
 
@@ -29,7 +29,7 @@ Concrete implementations include:
 Use the `get_budget_alert_type()` factory function to get the appropriate alert type class for a given alert type string:
 
 ```python
-from litellm.integrations.SlackAlerting.budget_alert_types import get_budget_alert_type
+from remodl.integrations.SlackAlerting.budget_alert_types import get_budget_alert_type
 
 # Get the appropriate handler
 budget_alert_class = get_budget_alert_type("user_budget")
@@ -43,4 +43,4 @@ cache_id = budget_alert_class.get_id(user_info)  # Returns user_id
 To add a new budget alert type, simply create a new class that extends `BaseBudgetAlertType` and implements all the required methods, then add it to the dictionary in the `get_budget_alert_type()` function.
 
 ## Further Reading
-- [Doc setting up Alerting on LiteLLM Proxy (Gateway)](https://docs.litellm.ai/docs/proxy/alerting)
+- [Doc setting up Alerting on LiteLLM Proxy (Gateway)](https://docs.remodl.ai/docs/proxy/alerting)

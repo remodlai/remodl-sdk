@@ -1,12 +1,12 @@
 from typing import List, Optional, Tuple
 
-from litellm.integrations.custom_logger import CustomLogger
-from litellm.integrations.prompt_management_base import (
+from remodl.integrations.custom_logger import CustomLogger
+from remodl.integrations.prompt_management_base import (
     PromptManagementBase,
     PromptManagementClient,
 )
-from litellm.types.llms.openai import AllMessageValues
-from litellm.types.utils import StandardCallbackDynamicParams
+from remodl.types.llms.openai import AllMessageValues
+from remodl.types.utils import StandardCallbackDynamicParams
 
 
 class CustomPromptManagement(CustomLogger, PromptManagementBase):

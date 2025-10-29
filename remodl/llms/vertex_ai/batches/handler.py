@@ -3,18 +3,18 @@ from typing import Any, Coroutine, Dict, Optional, Union
 
 import httpx
 
-import litellm
-from litellm.llms.custom_httpx.http_handler import (
+import remodl
+from remodl.llms.custom_httpx.http_handler import (
     _get_httpx_client,
     get_async_httpx_client,
 )
-from litellm.llms.vertex_ai.gemini.vertex_and_google_ai_studio_gemini import VertexLLM
-from litellm.types.llms.openai import CreateBatchRequest
-from litellm.types.llms.vertex_ai import (
+from remodl.llms.vertex_ai.gemini.vertex_and_google_ai_studio_gemini import VertexLLM
+from remodl.types.llms.openai import CreateBatchRequest
+from remodl.types.llms.vertex_ai import (
     VERTEX_CREDENTIALS_TYPES,
     VertexAIBatchPredictionJob,
 )
-from litellm.types.utils import LiteLLMBatch
+from remodl.types.utils import LiteLLMBatch
 
 from .transformation import VertexAIBatchTransformation
 
@@ -101,7 +101,7 @@ class VertexAIBatchPrediction(VertexLLM):
         headers: Dict[str, str],
     ) -> LiteLLMBatch:
         client = get_async_httpx_client(
-            llm_provider=litellm.LlmProviders.VERTEX_AI,
+            llm_provider=remodl.LlmProviders.VERTEX_AI,
         )
         response = await client.post(
             url=api_base,
@@ -199,7 +199,7 @@ class VertexAIBatchPrediction(VertexLLM):
         headers: Dict[str, str],
     ) -> LiteLLMBatch:
         client = get_async_httpx_client(
-            llm_provider=litellm.LlmProviders.VERTEX_AI,
+            llm_provider=remodl.LlmProviders.VERTEX_AI,
         )
         response = await client.get(
             url=api_base,

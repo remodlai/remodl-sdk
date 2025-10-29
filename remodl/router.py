@@ -1,7 +1,7 @@
 # +-----------------------------------------------+
 # |                                               |
 # |           Give Feedback / Get Help            |
-# | https://github.com/BerriAI/litellm/issues/new |
+# | https://github.com/BerriAI/remodl/issues/new |
 # |                                               |
 # +-----------------------------------------------+
 #
@@ -39,90 +39,90 @@ from openai import AsyncOpenAI
 from pydantic import BaseModel
 from typing_extensions import overload
 
-import litellm
-import litellm.litellm_core_utils
-import litellm.litellm_core_utils.exception_mapping_utils
-from litellm import get_secret_str
-from litellm._logging import verbose_router_logger
-from litellm._uuid import uuid
-from litellm.caching.caching import (
+import remodl
+import remodl.remodl_core_utils
+import remodl.remodl_core_utils.exception_mapping_utils
+from remodl import get_secret_str
+from remodl._logging import verbose_router_logger
+from remodl._uuid import uuid
+from remodl.caching.caching import (
     DualCache,
     InMemoryCache,
     RedisCache,
     RedisClusterCache,
 )
-from litellm.constants import DEFAULT_MAX_LRU_CACHE_SIZE
-from litellm.integrations.custom_logger import CustomLogger
-from litellm.litellm_core_utils.asyncify import run_async_function
-from litellm.litellm_core_utils.core_helpers import (
+from remodl.constants import DEFAULT_MAX_LRU_CACHE_SIZE
+from remodl.integrations.custom_logger import CustomLogger
+from remodl.remodl_core_utils.asyncify import run_async_function
+from remodl.remodl_core_utils.core_helpers import (
     _get_parent_otel_span_from_kwargs,
     get_metadata_variable_name_from_kwargs,
 )
-from litellm.litellm_core_utils.coroutine_checker import coroutine_checker
-from litellm.litellm_core_utils.credential_accessor import CredentialAccessor
-from litellm.litellm_core_utils.dd_tracing import tracer
-from litellm.litellm_core_utils.litellm_logging import Logging as LiteLLMLogging
-from litellm.litellm_core_utils.sensitive_data_masker import SensitiveDataMasker
-from litellm.router_strategy.budget_limiter import RouterBudgetLimiting
-from litellm.router_strategy.least_busy import LeastBusyLoggingHandler
-from litellm.router_strategy.lowest_cost import LowestCostLoggingHandler
-from litellm.router_strategy.lowest_latency import LowestLatencyLoggingHandler
-from litellm.router_strategy.lowest_tpm_rpm import LowestTPMLoggingHandler
-from litellm.router_strategy.lowest_tpm_rpm_v2 import LowestTPMLoggingHandler_v2
-from litellm.router_strategy.simple_shuffle import simple_shuffle
-from litellm.router_strategy.tag_based_routing import get_deployments_for_tag
-from litellm.router_utils.add_retry_fallback_headers import (
+from remodl.remodl_core_utils.coroutine_checker import coroutine_checker
+from remodl.remodl_core_utils.credential_accessor import CredentialAccessor
+from remodl.remodl_core_utils.dd_tracing import tracer
+from remodl.remodl_core_utils.remodl_logging import Logging as LiteLLMLogging
+from remodl.remodl_core_utils.sensitive_data_masker import SensitiveDataMasker
+from remodl.router_strategy.budget_limiter import RouterBudgetLimiting
+from remodl.router_strategy.least_busy import LeastBusyLoggingHandler
+from remodl.router_strategy.lowest_cost import LowestCostLoggingHandler
+from remodl.router_strategy.lowest_latency import LowestLatencyLoggingHandler
+from remodl.router_strategy.lowest_tpm_rpm import LowestTPMLoggingHandler
+from remodl.router_strategy.lowest_tpm_rpm_v2 import LowestTPMLoggingHandler_v2
+from remodl.router_strategy.simple_shuffle import simple_shuffle
+from remodl.router_strategy.tag_based_routing import get_deployments_for_tag
+from remodl.router_utils.add_retry_fallback_headers import (
     add_fallback_headers_to_response,
     add_retry_headers_to_response,
 )
-from litellm.router_utils.batch_utils import (
+from remodl.router_utils.batch_utils import (
     _get_router_metadata_variable_name,
     replace_model_in_jsonl,
     should_replace_model_in_jsonl,
 )
-from litellm.router_utils.client_initalization_utils import InitalizeCachedClient
-from litellm.router_utils.clientside_credential_handler import (
-    get_dynamic_litellm_params,
+from remodl.router_utils.client_initalization_utils import InitalizeCachedClient
+from remodl.router_utils.clientside_credential_handler import (
+    get_dynamic_remodl_params,
     is_clientside_credential,
 )
-from litellm.router_utils.cooldown_cache import CooldownCache
-from litellm.router_utils.cooldown_handlers import (
+from remodl.router_utils.cooldown_cache import CooldownCache
+from remodl.router_utils.cooldown_handlers import (
     DEFAULT_COOLDOWN_TIME_SECONDS,
     _async_get_cooldown_deployments,
     _async_get_cooldown_deployments_with_debug_info,
     _get_cooldown_deployments,
     _set_cooldown_deployments,
 )
-from litellm.router_utils.fallback_event_handlers import (
+from remodl.router_utils.fallback_event_handlers import (
     _check_non_standard_fallback_format,
     get_fallback_model_group,
     run_async_fallback,
 )
-from litellm.router_utils.get_retry_from_policy import (
+from remodl.router_utils.get_retry_from_policy import (
     get_num_retries_from_retry_policy as _get_num_retries_from_retry_policy,
 )
-from litellm.router_utils.handle_error import (
+from remodl.router_utils.handle_error import (
     async_raise_no_deployment_exception,
     send_llm_exception_alert,
 )
-from litellm.router_utils.pre_call_checks.prompt_caching_deployment_check import (
+from remodl.router_utils.pre_call_checks.prompt_caching_deployment_check import (
     PromptCachingDeploymentCheck,
 )
-from litellm.router_utils.pre_call_checks.responses_api_deployment_check import (
+from remodl.router_utils.pre_call_checks.responses_api_deployment_check import (
     ResponsesApiDeploymentCheck,
 )
-from litellm.router_utils.router_callbacks.track_deployment_metrics import (
+from remodl.router_utils.router_callbacks.track_deployment_metrics import (
     increment_deployment_failures_for_current_minute,
     increment_deployment_successes_for_current_minute,
 )
-from litellm.scheduler import FlowItem, Scheduler
-from litellm.types.llms.openai import (
+from remodl.scheduler import FlowItem, Scheduler
+from remodl.types.llms.openai import (
     AllMessageValues,
     FileTypes,
     OpenAIFileObject,
     OpenAIFilesPurpose,
 )
-from litellm.types.router import (
+from remodl.types.router import (
     CONFIGURABLE_CLIENTSIDE_AUTH_PARAMS,
     VALID_LITELLM_ENVIRONMENTS,
     AlertingConfig,
@@ -145,20 +145,20 @@ from litellm.types.router import (
     RoutingStrategy,
     SearchToolTypedDict,
 )
-from litellm.types.services import ServiceTypes
-from litellm.types.utils import (
+from remodl.types.services import ServiceTypes
+from remodl.types.utils import (
     CustomPricingLiteLLMParams,
     GenericBudgetConfigType,
     LiteLLMBatch,
 )
-from litellm.types.utils import ModelInfo
-from litellm.types.utils import ModelInfo as ModelMapInfo
-from litellm.types.utils import (
+from remodl.types.utils import ModelInfo
+from remodl.types.utils import ModelInfo as ModelMapInfo
+from remodl.types.utils import (
     ModelResponseStream,
     StandardLoggingPayload,
     Usage,
 )
-from litellm.utils import (
+from remodl.utils import (
     CustomStreamWrapper,
     EmbeddingResponse,
     ModelResponse,
@@ -176,7 +176,7 @@ from .router_utils.pattern_match_deployments import PatternMatchRouter
 if TYPE_CHECKING:
     from opentelemetry.trace import Span as _Span
 
-    from litellm.router_strategy.auto_router.auto_router import (
+    from remodl.router_strategy.auto_router.auto_router import (
         AutoRouter,
         PreRoutingHookResponse,
     )
@@ -231,7 +231,7 @@ class Router:
         ] = None,  # max fallbacks to try before exiting the call. Defaults to 5.
         timeout: Optional[float] = None,
         stream_timeout: Optional[float] = None,
-        default_litellm_params: Optional[
+        default_remodl_params: Optional[
             dict
         ] = None,  # default params for Router.chat.completion.create
         default_max_parallel_requests: Optional[int] = None,
@@ -299,7 +299,7 @@ class Router:
             default_priority: (Optional[int]): the default priority for a request. Only for '.scheduler_acompletion()'. Default is None.
             num_retries (Optional[int]): Number of retries for failed requests. Defaults to 2.
             timeout (Optional[float]): Timeout for requests. Defaults to None.
-            default_litellm_params (dict): Default parameters for Router.chat.completion.create. Defaults to {}.
+            default_remodl_params (dict): Default parameters for Router.chat.completion.create. Defaults to {}.
             set_verbose (bool): Flag to set verbose mode. Defaults to False.
             debug_level (Literal["DEBUG", "INFO"]): Debug level for logging. Defaults to "INFO".
             fallbacks (List): List of fallback options. Defaults to [].
@@ -315,15 +315,15 @@ class Router:
             provider_budget_config (ProviderBudgetConfig): Provider budget configuration. Use this to set llm_provider budget limits. example $100/day to OpenAI, $100/day to Azure, etc. Defaults to None.
             ignore_invalid_deployments (bool): Ignores invalid deployments, and continues with other deployments. Default is to raise an error.
         Returns:
-            Router: An instance of the litellm.Router class.
+            Router: An instance of the remodl.Router class.
 
         Example Usage:
         ```python
-        from litellm import Router
+        from remodl import Router
         model_list = [
         {
             "model_name": "azure-gpt-3.5-turbo", # model alias
-            "litellm_params": { # params for litellm completion/embedding call
+            "remodl_params": { # params for remodl completion/embedding call
                 "model": "azure/<your-deployment-name-1>",
                 "api_key": <your-api-key>,
                 "api_version": <your-api-version>,
@@ -332,7 +332,7 @@ class Router:
         },
         {
             "model_name": "azure-gpt-3.5-turbo", # model alias
-            "litellm_params": { # params for litellm completion/embedding call
+            "remodl_params": { # params for remodl completion/embedding call
                 "model": "azure/<your-deployment-name-2>",
                 "api_key": <your-api-key>,
                 "api_version": <your-api-version>,
@@ -341,7 +341,7 @@ class Router:
         },
         {
             "model_name": "openai-gpt-3.5-turbo", # model alias
-            "litellm_params": { # params for litellm completion/embedding call
+            "remodl_params": { # params for remodl completion/embedding call
                 "model": "gpt-3.5-turbo",
                 "api_key": <your-api-key>,
             },
@@ -356,9 +356,9 @@ class Router:
         self.debug_level = debug_level
         self.enable_pre_call_checks = enable_pre_call_checks
         self.enable_tag_filtering = enable_tag_filtering
-        from litellm._service_logger import ServiceLogging
+        from remodl._service_logger import ServiceLogging
         self.service_logger_obj: ServiceLogging = ServiceLogging()
-        litellm.suppress_debug_info = True  # prevents 'Give Feedback/Get help' message from being emitted on Router - Relevant Issue: https://github.com/BerriAI/litellm/issues/5942
+        remodl.suppress_debug_info = True  # prevents 'Give Feedback/Get help' message from being emitted on Router - Relevant Issue: https://github.com/BerriAI/remodl/issues/5942
         if self.set_verbose is True:
             if debug_level == "INFO":
                 verbose_router_logger.setLevel(logging.INFO)
@@ -372,7 +372,7 @@ class Router:
         self.search_tools = search_tools or []
         self.deployment_names: List = (
             []
-        )  # names of models under litellm_params. ex. azure/chatgpt-v-2
+        )  # names of models under remodl_params. ex. azure/chatgpt-v-2
         self.deployment_latency_map = {}
         ### CACHING ###
         cache_type: Literal[
@@ -402,9 +402,9 @@ class Router:
             redis_cache = self._create_redis_cache(cache_config)
 
         if cache_responses:
-            if litellm.cache is None:
+            if remodl.cache is None:
                 # the cache can be initialized on the proxy server. We should not overwrite it
-                litellm.cache = litellm.Cache(type=cache_type, **cache_config)  # type: ignore
+                remodl.cache = remodl.Cache(type=cache_type, **cache_config)  # type: ignore
             self.cache_responses = cache_responses
         self.cache = DualCache(
             redis_cache=redis_cache, in_memory_cache=InMemoryCache()
@@ -440,8 +440,8 @@ class Router:
             self.set_model_list(model_list)
             self.healthy_deployments: List = self.model_list  # type: ignore
             for m in model_list:
-                if "model" in m["litellm_params"]:
-                    self.deployment_latency_map[m["litellm_params"]["model"]] = 0
+                if "model" in m["remodl_params"]:
+                    self.deployment_latency_map[m["remodl_params"]["model"]] = 0
         else:
             self.model_list: List = (
                 []
@@ -450,7 +450,7 @@ class Router:
         if allowed_fails is not None:
             self.allowed_fails = allowed_fails
         else:
-            self.allowed_fails = litellm.allowed_fails
+            self.allowed_fails = remodl.allowed_fails
         self.cooldown_time = cooldown_time or DEFAULT_COOLDOWN_TIME_SECONDS
         self.cooldown_cache = CooldownCache(
             cache=self.cache, default_cooldown_time=self.cooldown_time
@@ -462,19 +462,19 @@ class Router:
 
         if num_retries is not None:
             self.num_retries = num_retries
-        elif litellm.num_retries is not None:
-            self.num_retries = litellm.num_retries
+        elif remodl.num_retries is not None:
+            self.num_retries = remodl.num_retries
         else:
             self.num_retries = openai.DEFAULT_MAX_RETRIES
 
         if max_fallbacks is not None:
             self.max_fallbacks = max_fallbacks
-        elif litellm.max_fallbacks is not None:
-            self.max_fallbacks = litellm.max_fallbacks
+        elif remodl.max_fallbacks is not None:
+            self.max_fallbacks = remodl.max_fallbacks
         else:
-            self.max_fallbacks = litellm.ROUTER_MAX_FALLBACKS
+            self.max_fallbacks = remodl.ROUTER_MAX_FALLBACKS
 
-        self.timeout = timeout or litellm.request_timeout
+        self.timeout = timeout or remodl.request_timeout
         self.stream_timeout = stream_timeout
 
         self.retry_after = retry_after
@@ -482,25 +482,25 @@ class Router:
 
         ## SETTING FALLBACKS ##
         ### validate if it's set + in correct format
-        _fallbacks = fallbacks or litellm.fallbacks
+        _fallbacks = fallbacks or remodl.fallbacks
 
         self.validate_fallbacks(fallback_param=_fallbacks)
         ### set fallbacks
         self.fallbacks = _fallbacks
 
-        if default_fallbacks is not None or litellm.default_fallbacks is not None:
-            _fallbacks = default_fallbacks or litellm.default_fallbacks
+        if default_fallbacks is not None or remodl.default_fallbacks is not None:
+            _fallbacks = default_fallbacks or remodl.default_fallbacks
             if self.fallbacks is not None:
                 self.fallbacks.append({"*": _fallbacks})
             else:
                 self.fallbacks = [{"*": _fallbacks}]
 
         self.context_window_fallbacks = (
-            context_window_fallbacks or litellm.context_window_fallbacks
+            context_window_fallbacks or remodl.context_window_fallbacks
         )
 
         _content_policy_fallbacks = (
-            content_policy_fallbacks or litellm.content_policy_fallbacks
+            content_policy_fallbacks or remodl.content_policy_fallbacks
         )
         self.validate_fallbacks(fallback_param=_content_policy_fallbacks)
         self.content_policy_fallbacks = _content_policy_fallbacks
@@ -518,14 +518,14 @@ class Router:
         )  # list to store failed calls (passed in as metadata to next call)
 
         # make Router.chat.completions.create compatible for openai.chat.completions.create
-        default_litellm_params = default_litellm_params or {}
-        self.chat = litellm.Chat(params=default_litellm_params, router_obj=self)
+        default_remodl_params = default_remodl_params or {}
+        self.chat = remodl.Chat(params=default_remodl_params, router_obj=self)
 
-        # default litellm args
-        self.default_litellm_params = default_litellm_params
-        self.default_litellm_params.setdefault("timeout", timeout)
-        self.default_litellm_params.setdefault("max_retries", 0)
-        self.default_litellm_params.setdefault("metadata", {}).update(
+        # default remodl args
+        self.default_remodl_params = default_remodl_params
+        self.default_remodl_params.setdefault("timeout", timeout)
+        self.default_remodl_params.setdefault("max_retries", 0)
+        self.default_remodl_params.setdefault("metadata", {}).update(
             {"caching_groups": caching_groups}
         )
 
@@ -551,35 +551,35 @@ class Router:
         )
         self.access_groups = None
         ## USAGE TRACKING ##
-        if isinstance(litellm._async_success_callback, list):
-            litellm.logging_callback_manager.add_litellm_async_success_callback(
+        if isinstance(remodl._async_success_callback, list):
+            remodl.logging_callback_manager.add_remodl_async_success_callback(
                 self.deployment_callback_on_success
             )
         else:
-            litellm.logging_callback_manager.add_litellm_async_success_callback(
+            remodl.logging_callback_manager.add_remodl_async_success_callback(
                 self.deployment_callback_on_success
             )
-        if isinstance(litellm.success_callback, list):
-            litellm.logging_callback_manager.add_litellm_success_callback(
+        if isinstance(remodl.success_callback, list):
+            remodl.logging_callback_manager.add_remodl_success_callback(
                 self.sync_deployment_callback_on_success
             )
         else:
-            litellm.success_callback = [self.sync_deployment_callback_on_success]
-        if isinstance(litellm._async_failure_callback, list):
-            litellm.logging_callback_manager.add_litellm_async_failure_callback(
+            remodl.success_callback = [self.sync_deployment_callback_on_success]
+        if isinstance(remodl._async_failure_callback, list):
+            remodl.logging_callback_manager.add_remodl_async_failure_callback(
                 self.async_deployment_callback_on_failure
             )
         else:
-            litellm._async_failure_callback = [
+            remodl._async_failure_callback = [
                 self.async_deployment_callback_on_failure
             ]
         ## COOLDOWNS ##
-        if isinstance(litellm.failure_callback, list):
-            litellm.logging_callback_manager.add_litellm_failure_callback(
+        if isinstance(remodl.failure_callback, list):
+            remodl.logging_callback_manager.add_remodl_failure_callback(
                 self.deployment_callback_on_failure
             )
         else:
-            litellm.failure_callback = [self.deployment_callback_on_failure]
+            remodl.failure_callback = [self.deployment_callback_on_failure]
         self.routing_strategy_args = routing_strategy_args
         self.provider_budget_config = provider_budget_config
         self.router_budget_logger: Optional[RouterBudgetLimiting] = None
@@ -645,33 +645,33 @@ class Router:
         Pseudo-destructor to be invoked to clean up global data structures when router is no longer used.
         For now, unhook router's callbacks from all lists
         """
-        litellm.logging_callback_manager.remove_callback_from_list_by_object(
-            litellm._async_success_callback, self
+        remodl.logging_callback_manager.remove_callback_from_list_by_object(
+            remodl._async_success_callback, self
         )
-        litellm.logging_callback_manager.remove_callback_from_list_by_object(
-            litellm.success_callback, self
+        remodl.logging_callback_manager.remove_callback_from_list_by_object(
+            remodl.success_callback, self
         )
-        litellm.logging_callback_manager.remove_callback_from_list_by_object(
-            litellm._async_failure_callback, self
+        remodl.logging_callback_manager.remove_callback_from_list_by_object(
+            remodl._async_failure_callback, self
         )
-        litellm.logging_callback_manager.remove_callback_from_list_by_object(
-            litellm.failure_callback, self
+        remodl.logging_callback_manager.remove_callback_from_list_by_object(
+            remodl.failure_callback, self
         )
-        litellm.logging_callback_manager.remove_callback_from_list_by_object(
-            litellm.input_callback, self
+        remodl.logging_callback_manager.remove_callback_from_list_by_object(
+            remodl.input_callback, self
         )
-        litellm.logging_callback_manager.remove_callback_from_list_by_object(
-            litellm.service_callback, self
+        remodl.logging_callback_manager.remove_callback_from_list_by_object(
+            remodl.service_callback, self
         )
-        litellm.logging_callback_manager.remove_callback_from_list_by_object(
-            litellm.callbacks, self
+        remodl.logging_callback_manager.remove_callback_from_list_by_object(
+            remodl.callbacks, self
         )
 
         # Remove ForwardClientSideHeadersByModelGroup if it exists
         if self.optional_callbacks is not None:
             for callback in self.optional_callbacks:
-                litellm.logging_callback_manager.remove_callback_from_list_by_object(
-                    litellm.callbacks, callback, require_self=False
+                remodl.logging_callback_manager.remove_callback_from_list_by_object(
+                    remodl.callbacks, callback, require_self=False
                 )
 
     @staticmethod
@@ -692,7 +692,7 @@ class Router:
 
         Allows proxy user to just do
         ```yaml
-        litellm_settings:
+        remodl_settings:
             cache: true
         ```
         and caching to just work.
@@ -712,12 +712,12 @@ class Router:
                 router_cache=self.cache
             )
             ## add callback
-            if isinstance(litellm.input_callback, list):
-                litellm.input_callback.append(self.leastbusy_logger)  # type: ignore
+            if isinstance(remodl.input_callback, list):
+                remodl.input_callback.append(self.leastbusy_logger)  # type: ignore
             else:
-                litellm.input_callback = [self.leastbusy_logger]  # type: ignore
-            if isinstance(litellm.callbacks, list):
-                litellm.logging_callback_manager.add_litellm_callback(self.leastbusy_logger)  # type: ignore
+                remodl.input_callback = [self.leastbusy_logger]  # type: ignore
+            if isinstance(remodl.callbacks, list):
+                remodl.logging_callback_manager.add_remodl_callback(self.leastbusy_logger)  # type: ignore
         elif (
             routing_strategy == RoutingStrategy.USAGE_BASED_ROUTING.value
             or routing_strategy == RoutingStrategy.USAGE_BASED_ROUTING
@@ -726,8 +726,8 @@ class Router:
                 router_cache=self.cache,
                 routing_args=routing_strategy_args,
             )
-            if isinstance(litellm.callbacks, list):
-                litellm.logging_callback_manager.add_litellm_callback(self.lowesttpm_logger)  # type: ignore
+            if isinstance(remodl.callbacks, list):
+                remodl.logging_callback_manager.add_remodl_callback(self.lowesttpm_logger)  # type: ignore
         elif (
             routing_strategy == RoutingStrategy.USAGE_BASED_ROUTING_V2.value
             or routing_strategy == RoutingStrategy.USAGE_BASED_ROUTING_V2
@@ -736,8 +736,8 @@ class Router:
                 router_cache=self.cache,
                 routing_args=routing_strategy_args,
             )
-            if isinstance(litellm.callbacks, list):
-                litellm.logging_callback_manager.add_litellm_callback(self.lowesttpm_logger_v2)  # type: ignore
+            if isinstance(remodl.callbacks, list):
+                remodl.logging_callback_manager.add_remodl_callback(self.lowesttpm_logger_v2)  # type: ignore
         elif (
             routing_strategy == RoutingStrategy.LATENCY_BASED.value
             or routing_strategy == RoutingStrategy.LATENCY_BASED
@@ -746,8 +746,8 @@ class Router:
                 router_cache=self.cache,
                 routing_args=routing_strategy_args,
             )
-            if isinstance(litellm.callbacks, list):
-                litellm.logging_callback_manager.add_litellm_callback(self.lowestlatency_logger)  # type: ignore
+            if isinstance(remodl.callbacks, list):
+                remodl.logging_callback_manager.add_remodl_callback(self.lowestlatency_logger)  # type: ignore
         elif (
             routing_strategy == RoutingStrategy.COST_BASED.value
             or routing_strategy == RoutingStrategy.COST_BASED
@@ -756,89 +756,89 @@ class Router:
                 router_cache=self.cache,
                 routing_args={},
             )
-            if isinstance(litellm.callbacks, list):
-                litellm.logging_callback_manager.add_litellm_callback(self.lowestcost_logger)  # type: ignore
+            if isinstance(remodl.callbacks, list):
+                remodl.logging_callback_manager.add_remodl_callback(self.lowestcost_logger)  # type: ignore
         else:
             pass
 
     def initialize_assistants_endpoint(self):
         ## INITIALIZE PASS THROUGH ASSISTANTS ENDPOINT ##
-        self.acreate_assistants = self.factory_function(litellm.acreate_assistants)
-        self.adelete_assistant = self.factory_function(litellm.adelete_assistant)
-        self.aget_assistants = self.factory_function(litellm.aget_assistants)
-        self.acreate_thread = self.factory_function(litellm.acreate_thread)
-        self.aget_thread = self.factory_function(litellm.aget_thread)
-        self.a_add_message = self.factory_function(litellm.a_add_message)
-        self.aget_messages = self.factory_function(litellm.aget_messages)
-        self.arun_thread = self.factory_function(litellm.arun_thread)
+        self.acreate_assistants = self.factory_function(remodl.acreate_assistants)
+        self.adelete_assistant = self.factory_function(remodl.adelete_assistant)
+        self.aget_assistants = self.factory_function(remodl.aget_assistants)
+        self.acreate_thread = self.factory_function(remodl.acreate_thread)
+        self.aget_thread = self.factory_function(remodl.aget_thread)
+        self.a_add_message = self.factory_function(remodl.a_add_message)
+        self.aget_messages = self.factory_function(remodl.aget_messages)
+        self.arun_thread = self.factory_function(remodl.arun_thread)
 
     def initialize_router_endpoints(self):
         self.amoderation = self.factory_function(
-            litellm.amoderation, call_type="moderation"
+            remodl.amoderation, call_type="moderation"
         )
         self.aanthropic_messages = self.factory_function(
-            litellm.anthropic_messages, call_type="anthropic_messages"
+            remodl.anthropic_messages, call_type="anthropic_messages"
         )
         self.agenerate_content = self.factory_function(
-            litellm.agenerate_content, call_type="agenerate_content"
+            remodl.agenerate_content, call_type="agenerate_content"
         )
 
         self.aadapter_generate_content = self.factory_function(
-            litellm.aadapter_generate_content, call_type="aadapter_generate_content"
+            remodl.aadapter_generate_content, call_type="aadapter_generate_content"
         )
 
         self.aresponses = self.factory_function(
-            litellm.aresponses, call_type="aresponses"
+            remodl.aresponses, call_type="aresponses"
         )
         self.afile_delete = self.factory_function(
-            litellm.afile_delete, call_type="afile_delete"
+            remodl.afile_delete, call_type="afile_delete"
         )
 
         self.afile_content = self.factory_function(
-            litellm.afile_content, call_type="afile_content"
+            remodl.afile_content, call_type="afile_content"
         )
-        self.responses = self.factory_function(litellm.responses, call_type="responses")
+        self.responses = self.factory_function(remodl.responses, call_type="responses")
         self.aget_responses = self.factory_function(
-            litellm.aget_responses, call_type="aget_responses"
+            remodl.aget_responses, call_type="aget_responses"
         )
         self.acancel_responses = self.factory_function(
-            litellm.acancel_responses, call_type="acancel_responses"
+            remodl.acancel_responses, call_type="acancel_responses"
         )
         self.adelete_responses = self.factory_function(
-            litellm.adelete_responses, call_type="adelete_responses"
+            remodl.adelete_responses, call_type="adelete_responses"
         )
         self.alist_input_items = self.factory_function(
-            litellm.alist_input_items, call_type="alist_input_items"
+            remodl.alist_input_items, call_type="alist_input_items"
         )
         self._arealtime = self.factory_function(
-            litellm._arealtime, call_type="_arealtime"
+            remodl._arealtime, call_type="_arealtime"
         )
         self.acreate_fine_tuning_job = self.factory_function(
-            litellm.acreate_fine_tuning_job, call_type="acreate_fine_tuning_job"
+            remodl.acreate_fine_tuning_job, call_type="acreate_fine_tuning_job"
         )
         self.acancel_fine_tuning_job = self.factory_function(
-            litellm.acancel_fine_tuning_job, call_type="acancel_fine_tuning_job"
+            remodl.acancel_fine_tuning_job, call_type="acancel_fine_tuning_job"
         )
         self.alist_fine_tuning_jobs = self.factory_function(
-            litellm.alist_fine_tuning_jobs, call_type="alist_fine_tuning_jobs"
+            remodl.alist_fine_tuning_jobs, call_type="alist_fine_tuning_jobs"
         )
         self.aretrieve_fine_tuning_job = self.factory_function(
-            litellm.aretrieve_fine_tuning_job, call_type="aretrieve_fine_tuning_job"
+            remodl.aretrieve_fine_tuning_job, call_type="aretrieve_fine_tuning_job"
         )
         self.afile_list = self.factory_function(
-            litellm.afile_list, call_type="alist_files"
+            remodl.afile_list, call_type="alist_files"
         )
         self.aimage_edit = self.factory_function(
-            litellm.aimage_edit, call_type="aimage_edit"
+            remodl.aimage_edit, call_type="aimage_edit"
         )
         self.allm_passthrough_route = self.factory_function(
-            litellm.allm_passthrough_route, call_type="allm_passthrough_route"
+            remodl.allm_passthrough_route, call_type="allm_passthrough_route"
         )
 
         #########################################################
         # Vector Store routes
         #########################################################
-        from litellm.vector_stores.main import acreate, asearch, create, search
+        from remodl.vector_stores.main import acreate, asearch, create, search
 
         # async routes
         self.avector_store_search = self.factory_function(
@@ -858,7 +858,7 @@ class Router:
         #########################################################
         # Gemini Native routes
         #########################################################
-        from litellm.google_genai import (
+        from remodl.google_genai import (
             agenerate_content,
             agenerate_content_stream,
             generate_content,
@@ -881,21 +881,21 @@ class Router:
         #########################################################
         # OCR routes
         #########################################################
-        from litellm.ocr import aocr, ocr
+        from remodl.ocr import aocr, ocr
 
         self.aocr = self.factory_function(aocr, call_type="aocr")
         self.ocr = self.factory_function(ocr, call_type="ocr")
 
         # Search routes
         #########################################################
-        from litellm.search import asearch, search
+        from remodl.search import asearch, search
 
         self.asearch = self.factory_function(asearch, call_type="asearch")
         self.search = self.factory_function(search, call_type="search")
 
         # Video routes
         #########################################################
-        from litellm.videos import (
+        from remodl.videos import (
             avideo_generation,
             video_generation,
             avideo_list,
@@ -953,7 +953,7 @@ class Router:
                     if self.optional_callbacks is None:
                         self.optional_callbacks = []
                     self.optional_callbacks.append(_callback)
-                    litellm.logging_callback_manager.add_litellm_callback(_callback)
+                    remodl.logging_callback_manager.add_remodl_callback(_callback)
 
     def print_deployment(self, deployment: dict):
         """
@@ -963,13 +963,13 @@ class Router:
         """
         try:
             _deployment_copy = copy.deepcopy(deployment)
-            litellm_params: dict = _deployment_copy["litellm_params"]
+            remodl_params: dict = _deployment_copy["remodl_params"]
 
-            if litellm.redact_user_api_key_info:
+            if remodl.redact_user_api_key_info:
                 masker = SensitiveDataMasker(visible_prefix=2, visible_suffix=0)
-                _deployment_copy["litellm_params"] = masker.mask_dict(litellm_params)
-            elif "api_key" in litellm_params:
-                litellm_params["api_key"] = litellm_params["api_key"][:2] + "*" * 10
+                _deployment_copy["remodl_params"] = masker.mask_dict(remodl_params)
+            elif "api_key" in remodl_params:
+                remodl_params["api_key"] = remodl_params["api_key"][:2] + "*" * 10
 
             return _deployment_copy
         except Exception as e:
@@ -1014,7 +1014,7 @@ class Router:
             self._update_kwargs_with_deployment(deployment=deployment, kwargs=kwargs)
 
             # No copy needed - data is only read and spread into new dict below
-            data = deployment["litellm_params"]
+            data = deployment["remodl_params"]
             model_name = data["model"]
             potential_model_client = self._get_client(
                 deployment=deployment, kwargs=kwargs
@@ -1035,7 +1035,7 @@ class Router:
             if not self.has_model_id(model):
                 self.routing_strategy_pre_call_checks(deployment=deployment)
 
-            response = litellm.completion(
+            response = remodl.completion(
                 **{
                     **data,
                     "messages": messages,
@@ -1045,7 +1045,7 @@ class Router:
                 }
             )
             verbose_router_logger.info(
-                f"litellm.completion(model={model_name})\033[32m 200 OK\033[0m"
+                f"remodl.completion(model={model_name})\033[32m 200 OK\033[0m"
             )
 
             ## CHECK CONTENT FILTER ERROR ##
@@ -1054,7 +1054,7 @@ class Router:
                     model=model, response=response, kwargs=kwargs
                 )
                 if _should_raise:
-                    raise litellm.ContentPolicyViolationError(
+                    raise remodl.ContentPolicyViolationError(
                         message="Response output was blocked.",
                         model=model,
                         llm_provider="",
@@ -1063,7 +1063,7 @@ class Router:
             return response
         except Exception as e:
             verbose_router_logger.info(
-                f"litellm.completion(model={model_name})\033[31m Exception {str(e)}\033[0m"
+                f"remodl.completion(model={model_name})\033[31m Exception {str(e)}\033[0m"
             )
             raise e
 
@@ -1135,7 +1135,7 @@ class Router:
         except Exception as e:
             asyncio.create_task(
                 send_llm_exception_alert(
-                    litellm_router_instance=self,
+                    remodl_router_instance=self,
                     request_kwargs=kwargs,
                     error_traceback_str=traceback.format_exc(),
                     original_exception=e,
@@ -1154,7 +1154,7 @@ class Router:
 
         Catches errors for fallbacks using the router's fallback system
         """
-        from litellm.exceptions import MidStreamFallbackError
+        from remodl.exceptions import MidStreamFallbackError
 
         class FallbackStreamWrapper(CustomStreamWrapper):
             def __init__(self, async_generator: AsyncGenerator):
@@ -1178,7 +1178,7 @@ class Router:
                 async for item in model_response:
                     yield item
             except MidStreamFallbackError as e:
-                from litellm.main import stream_chunk_builder
+                from remodl.main import stream_chunk_builder
 
                 complete_response_object = stream_chunk_builder(
                     chunks=model_response.chunks
@@ -1235,7 +1235,7 @@ class Router:
                                 and isinstance(fallback_item, ModelResponseStream)
                                 and hasattr(fallback_item, "usage")
                             ):
-                                from litellm.cost_calculator import (
+                                from remodl.cost_calculator import (
                                     BaseTokenUsageProcessor,
                                 )
 
@@ -1322,7 +1322,7 @@ class Router:
             )
             self._update_kwargs_with_deployment(deployment=deployment, kwargs=kwargs)
             # No copy needed - data is only read and spread into new dict below
-            data = deployment["litellm_params"]
+            data = deployment["remodl_params"]
 
             model_name = data["model"]
 
@@ -1340,10 +1340,10 @@ class Router:
                 **kwargs,
             }
 
-            _response = litellm.acompletion(**input_kwargs)
+            _response = remodl.acompletion(**input_kwargs)
 
             logging_obj: Optional[LiteLLMLogging] = kwargs.get(
-                "litellm_logging_obj", None
+                "remodl_logging_obj", None
             )
 
             rpm_semaphore = self._get_client(
@@ -1380,7 +1380,7 @@ class Router:
                     model=model, response=response, kwargs=kwargs
                 )
                 if _should_raise:
-                    raise litellm.ContentPolicyViolationError(
+                    raise remodl.ContentPolicyViolationError(
                         message="Response output was blocked.",
                         model=model,
                         llm_provider="",
@@ -1388,7 +1388,7 @@ class Router:
 
             self.success_calls[model_name] += 1
             verbose_router_logger.info(
-                f"litellm.acompletion(model={model_name})\033[32m 200 OK\033[0m"
+                f"remodl.acompletion(model={model_name})\033[32m 200 OK\033[0m"
             )
             # debug how often this deployment picked
             self._track_deployment_metrics(
@@ -1405,18 +1405,18 @@ class Router:
                 )
 
             return response
-        except litellm.Timeout as e:
+        except remodl.Timeout as e:
             deployment_request_timeout_param = _timeout_debug_deployment_dict.get(
-                "litellm_params", {}
+                "remodl_params", {}
             ).get("request_timeout", None)
             deployment_timeout_param = _timeout_debug_deployment_dict.get(
-                "litellm_params", {}
+                "remodl_params", {}
             ).get("timeout", None)
             e.message += f"\n\nDeployment Info: request_timeout: {deployment_request_timeout_param}\ntimeout: {deployment_timeout_param}"
             raise e
         except Exception as e:
             verbose_router_logger.info(
-                f"litellm.acompletion(model={model_name})\033[31m Exception {str(e)}\033[0m"
+                f"remodl.acompletion(model={model_name})\033[31m Exception {str(e)}\033[0m"
             )
             if model_name is not None:
                 self.fail_calls[model_name] += 1
@@ -1431,11 +1431,11 @@ class Router:
         """
         Adds/updates to kwargs:
         - num_retries
-        - litellm_trace_id
+        - remodl_trace_id
         - metadata
         """
         kwargs["num_retries"] = kwargs.get("num_retries", self.num_retries)
-        kwargs.setdefault("litellm_trace_id", str(uuid.uuid4()))
+        kwargs.setdefault("remodl_trace_id", str(uuid.uuid4()))
         model_group_alias: Optional[str] = None
         if self._get_model_from_alias(model=model):
             model_group_alias = model
@@ -1443,16 +1443,16 @@ class Router:
             {"model_group": model, "model_group_alias": model_group_alias}
         )
 
-    def _update_kwargs_with_default_litellm_params(
+    def _update_kwargs_with_default_remodl_params(
         self, kwargs: dict, metadata_variable_name: Optional[str] = "metadata"
     ) -> None:
         """
-        Adds default litellm params to kwargs, if set.
+        Adds default remodl params to kwargs, if set.
 
-        Handles inserting this as either "metadata" or "litellm_metadata" depending on the metadata_variable_name
+        Handles inserting this as either "metadata" or "remodl_metadata" depending on the metadata_variable_name
         """
         # 1) copy your defaults and pull out metadata
-        defaults = self.default_litellm_params.copy()
+        defaults = self.default_remodl_params.copy()
         metadata_defaults = defaults.pop("metadata", {}) or {}
 
         # 2) add any non-metadata defaults that aren't already in kwargs
@@ -1461,7 +1461,7 @@ class Router:
                 continue
             kwargs.setdefault(key, value)
 
-        # 3) merge in metadata, this handles inserting this as either "metadata" or "litellm_metadata"
+        # 3) merge in metadata, this handles inserting this as either "metadata" or "remodl_metadata"
         kwargs.setdefault(metadata_variable_name, {}).update(metadata_defaults)
 
     def _handle_clientside_credential(
@@ -1471,9 +1471,9 @@ class Router:
         Handle clientside credential
         """
         model_info = deployment.get("model_info", {}).copy()
-        litellm_params = deployment["litellm_params"].copy()
-        dynamic_litellm_params = get_dynamic_litellm_params(
-            litellm_params=litellm_params, request_kwargs=kwargs
+        remodl_params = deployment["remodl_params"].copy()
+        dynamic_remodl_params = get_dynamic_remodl_params(
+            remodl_params=remodl_params, request_kwargs=kwargs
         )
         # Use deployment model_name as model_group for generating model_id
         metadata_variable_name = _get_router_metadata_variable_name(
@@ -1481,14 +1481,14 @@ class Router:
         )
         model_group = kwargs.get(metadata_variable_name, {}).get("model_group")
         _model_id = self._generate_model_id(
-            model_group=model_group, litellm_params=dynamic_litellm_params
+            model_group=model_group, remodl_params=dynamic_remodl_params
         )
         original_model_id = model_info.get("id")
         model_info["id"] = _model_id
         model_info["original_model_id"] = original_model_id
         deployment_pydantic_obj = Deployment(
             model_name=model_group,
-            litellm_params=LiteLLM_Params(**dynamic_litellm_params),
+            remodl_params=LiteLLM_Params(**dynamic_remodl_params),
             model_info=model_info,
         )
         self.upsert_deployment(
@@ -1505,19 +1505,19 @@ class Router:
         """
         2 jobs:
         - Adds selected deployment, model_info and api_base to kwargs["metadata"] (used for logging)
-        - Adds default litellm params to kwargs, if set.
+        - Adds default remodl params to kwargs, if set.
         """
         model_info = deployment.get("model_info", {}).copy()
-        deployment_litellm_model_name = deployment["litellm_params"]["model"]
-        deployment_api_base = deployment["litellm_params"].get("api_base")
+        deployment_remodl_model_name = deployment["remodl_params"]["model"]
+        deployment_api_base = deployment["remodl_params"].get("api_base")
         deployment_model_name = deployment["model_name"]
         if is_clientside_credential(request_kwargs=kwargs):
             deployment_pydantic_obj = self._handle_clientside_credential(
                 deployment=deployment, kwargs=kwargs, function_name=function_name
             )
             model_info = deployment_pydantic_obj.model_info.model_dump()
-            deployment_litellm_model_name = deployment_pydantic_obj.litellm_params.model
-            deployment_api_base = deployment_pydantic_obj.litellm_params.api_base
+            deployment_remodl_model_name = deployment_pydantic_obj.remodl_params.model
+            deployment_api_base = deployment_pydantic_obj.remodl_params.api_base
 
         metadata_variable_name = _get_router_metadata_variable_name(
             function_name=function_name,
@@ -1525,7 +1525,7 @@ class Router:
 
         kwargs.setdefault(metadata_variable_name, {}).update(
             {
-                "deployment": deployment_litellm_model_name,
+                "deployment": deployment_remodl_model_name,
                 "model_info": model_info,
                 "api_base": deployment_api_base,
                 "deployment_model_name": deployment_model_name,
@@ -1534,10 +1534,10 @@ class Router:
         kwargs["model_info"] = model_info
 
         kwargs["timeout"] = self._get_timeout(
-            kwargs=kwargs, data=deployment["litellm_params"]
+            kwargs=kwargs, data=deployment["remodl_params"]
         )
 
-        self._update_kwargs_with_default_litellm_params(
+        self._update_kwargs_with_default_remodl_params(
             kwargs=kwargs, metadata_variable_name=metadata_variable_name
         )
 
@@ -1575,9 +1575,9 @@ class Router:
             kwargs.get("stream_timeout", None)  # the params dynamically set by user
             or data.get(
                 "stream_timeout", None
-            )  # timeout set on litellm_params for this deployment
+            )  # timeout set on remodl_params for this deployment
             or self.stream_timeout  # timeout set on router
-            or self.default_litellm_params.get("stream_timeout", None)
+            or self.default_remodl_params.get("stream_timeout", None)
         )
 
     def _get_non_stream_timeout(
@@ -1589,12 +1589,12 @@ class Router:
             or kwargs.get("request_timeout", None)  # the params dynamically set by user
             or data.get(
                 "timeout", None
-            )  # timeout set on litellm_params for this deployment
+            )  # timeout set on remodl_params for this deployment
             or data.get(
                 "request_timeout", None
-            )  # timeout set on litellm_params for this deployment
+            )  # timeout set on remodl_params for this deployment
             or self.timeout  # timeout set on router
-            or self.default_litellm_params.get("timeout", None)
+            or self.default_remodl_params.get("timeout", None)
         )
         return timeout
 
@@ -1617,15 +1617,15 @@ class Router:
     ):
         """
         Async Batch Completion. Used for 2 scenarios:
-        1. Batch Process 1 request to N models on litellm.Router. Pass messages as List[Dict[str, str]] to use this
-        2. Batch Process N requests to M models on litellm.Router. Pass messages as List[List[Dict[str, str]]] to use this
+        1. Batch Process 1 request to N models on remodl.Router. Pass messages as List[Dict[str, str]] to use this
+        2. Batch Process N requests to M models on remodl.Router. Pass messages as List[List[Dict[str, str]]] to use this
 
         Example Request for 1 request to N models:
         ```
             response = await router.abatch_completion(
                 models=["gpt-3.5-turbo", "groq-llama"],
                 messages=[
-                    {"role": "user", "content": "is litellm becoming a better product ?"}
+                    {"role": "user", "content": "is remodl becoming a better product ?"}
                 ],
                 max_tokens=15,
             )
@@ -1637,7 +1637,7 @@ class Router:
             response = await router.abatch_completion(
                 models=["gpt-3.5-turbo", "groq-llama"],
                 messages=[
-                    [{"role": "user", "content": "is litellm becoming a better product ?"}],
+                    [{"role": "user", "content": "is remodl becoming a better product ?"}],
                     [{"role": "user", "content": "who is this"}],
                 ],
             )
@@ -1705,7 +1705,7 @@ class Router:
         self, model: str, messages: List[List[AllMessageValues]], **kwargs
     ):
         """
-        Async Batch Completion - Batch Process multiple Messages to one model_group on litellm.Router
+        Async Batch Completion - Batch Process multiple Messages to one model_group on remodl.Router
 
         Use this for sending multiple requests to 1 model
 
@@ -1917,7 +1917,7 @@ class Router:
                 setattr(e, "priority", priority)
                 raise e
         else:
-            raise litellm.Timeout(
+            raise remodl.Timeout(
                 message="Request timed out while polling queue",
                 model=model,
                 llm_provider="openai",
@@ -1978,7 +1978,7 @@ class Router:
                 setattr(e, "priority", priority)
                 raise e
         else:
-            raise litellm.Timeout(
+            raise remodl.Timeout(
                 message="Request timed out while polling queue",
                 model=model,
                 llm_provider="openai",
@@ -1989,12 +1989,12 @@ class Router:
         if model_list is None or len(model_list) != 1:
             return False
 
-        litellm_model = model_list[0]["litellm_params"].get("model", None)
-        if litellm_model is None or "/" not in litellm_model:
+        remodl_model = model_list[0]["remodl_params"].get("model", None)
+        if remodl_model is None or "/" not in remodl_model:
             return False
 
-        split_litellm_model = litellm_model.split("/")[0]
-        return split_litellm_model in litellm._known_custom_logger_compatible_callbacks
+        split_remodl_model = remodl_model.split("/")[0]
+        return split_remodl_model in remodl._known_custom_logger_compatible_callbacks
 
     async def _prompt_management_factory(
         self,
@@ -2002,9 +2002,9 @@ class Router:
         messages: List[AllMessageValues],
         kwargs: Dict[str, Any],
     ):
-        litellm_logging_object = kwargs.get("litellm_logging_obj", None)
-        if litellm_logging_object is None:
-            litellm_logging_object, kwargs = function_setup(
+        remodl_logging_object = kwargs.get("remodl_logging_obj", None)
+        if remodl_logging_object is None:
+            remodl_logging_object, kwargs = function_setup(
                 **{
                     "original_function": "acompletion",
                     "rules_obj": Rules(),
@@ -2012,7 +2012,7 @@ class Router:
                     **kwargs,
                 }
             )
-        litellm_logging_object = cast(LiteLLMLogging, litellm_logging_object)
+        remodl_logging_object = cast(LiteLLMLogging, remodl_logging_object)
         prompt_management_deployment = self.get_available_deployment(
             model=model,
             messages=[{"role": "user", "content": "prompt"}],
@@ -2022,20 +2022,20 @@ class Router:
         self._update_kwargs_with_deployment(
             deployment=prompt_management_deployment, kwargs=kwargs
         )
-        data = prompt_management_deployment["litellm_params"].copy()
+        data = prompt_management_deployment["remodl_params"].copy()
 
-        litellm_model = data.get("model", None)
+        remodl_model = data.get("model", None)
 
         prompt_id = kwargs.get("prompt_id") or prompt_management_deployment[
-            "litellm_params"
+            "remodl_params"
         ].get("prompt_id", None)
         prompt_variables = kwargs.get(
             "prompt_variables"
-        ) or prompt_management_deployment["litellm_params"].get(
+        ) or prompt_management_deployment["remodl_params"].get(
             "prompt_variables", None
         )
         prompt_label = kwargs.get("prompt_label", None) or prompt_management_deployment[
-            "litellm_params"
+            "remodl_params"
         ].get("prompt_label", None)
 
         if prompt_id is None or not isinstance(prompt_id, str):
@@ -2051,8 +2051,8 @@ class Router:
             model,
             messages,
             optional_params,
-        ) = litellm_logging_object.get_chat_completion_prompt(
-            model=litellm_model,
+        ) = remodl_logging_object.get_chat_completion_prompt(
+            model=remodl_model,
             messages=messages,
             non_default_params=get_non_default_completion_params(kwargs=kwargs),
             prompt_id=prompt_id,
@@ -2076,7 +2076,7 @@ class Router:
         kwargs = {**filtered_data, **kwargs, **optional_params}
         kwargs["model"] = model
         kwargs["messages"] = messages
-        kwargs["litellm_logging_obj"] = litellm_logging_object
+        kwargs["remodl_logging_obj"] = remodl_logging_object
         kwargs["prompt_id"] = prompt_id
         kwargs["prompt_variables"] = prompt_variables
         kwargs["prompt_label"] = prompt_label
@@ -2084,7 +2084,7 @@ class Router:
         _model_list = self.get_model_list(model_name=model)
         if _model_list is None or len(_model_list) == 0:  # if direct call to model
             kwargs.pop("original_function")
-            return await litellm.acompletion(**kwargs)
+            return await remodl.acompletion(**kwargs)
 
         return await self.async_function_with_fallbacks(**kwargs)
 
@@ -2113,7 +2113,7 @@ class Router:
                 specific_deployment=kwargs.pop("specific_deployment", None),
             )
             self._update_kwargs_with_deployment(deployment=deployment, kwargs=kwargs)
-            data = deployment["litellm_params"].copy()
+            data = deployment["remodl_params"].copy()
 
             model_client = self._get_async_openai_model_client(
                 deployment=deployment,
@@ -2125,7 +2125,7 @@ class Router:
             ### DEPLOYMENT-SPECIFIC PRE-CALL CHECKS ### (e.g. update rpm pre-call. Raise error, if deployment over limit)
             self.routing_strategy_pre_call_checks(deployment=deployment)
 
-            response = litellm.image_generation(
+            response = remodl.image_generation(
                 **{
                     **data,
                     "prompt": prompt,
@@ -2136,12 +2136,12 @@ class Router:
             )
             self.success_calls[model_name] += 1
             verbose_router_logger.info(
-                f"litellm.image_generation(model={model_name})\033[32m 200 OK\033[0m"
+                f"remodl.image_generation(model={model_name})\033[32m 200 OK\033[0m"
             )
             return response
         except Exception as e:
             verbose_router_logger.info(
-                f"litellm.image_generation(model={model_name})\033[31m Exception {str(e)}\033[0m"
+                f"remodl.image_generation(model={model_name})\033[31m Exception {str(e)}\033[0m"
             )
             if model_name is not None:
                 self.fail_calls[model_name] += 1
@@ -2160,7 +2160,7 @@ class Router:
         except Exception as e:
             asyncio.create_task(
                 send_llm_exception_alert(
-                    litellm_router_instance=self,
+                    remodl_router_instance=self,
                     request_kwargs=kwargs,
                     error_traceback_str=traceback.format_exc(),
                     original_exception=e,
@@ -2183,7 +2183,7 @@ class Router:
             )
             self._update_kwargs_with_deployment(deployment=deployment, kwargs=kwargs)
 
-            data = deployment["litellm_params"].copy()
+            data = deployment["remodl_params"].copy()
             model_name = data["model"]
 
             model_client = self._get_async_openai_model_client(
@@ -2192,7 +2192,7 @@ class Router:
             )
 
             self.total_calls[model_name] += 1
-            response = litellm.aimage_generation(
+            response = remodl.aimage_generation(
                 **{
                     **data,
                     "prompt": prompt,
@@ -2229,12 +2229,12 @@ class Router:
 
             self.success_calls[model_name] += 1
             verbose_router_logger.info(
-                f"litellm.aimage_generation(model={model_name})\033[32m 200 OK\033[0m"
+                f"remodl.aimage_generation(model={model_name})\033[32m 200 OK\033[0m"
             )
             return response
         except Exception as e:
             verbose_router_logger.info(
-                f"litellm.aimage_generation(model={model_name})\033[31m Exception {str(e)}\033[0m"
+                f"remodl.aimage_generation(model={model_name})\033[31m Exception {str(e)}\033[0m"
             )
             if model_name is not None:
                 self.fail_calls[model_name] += 1
@@ -2245,11 +2245,11 @@ class Router:
         Example Usage:
 
         ```
-        from litellm import Router
+        from remodl import Router
         client = Router(model_list = [
             {
                 "model_name": "whisper",
-                "litellm_params": {
+                "remodl_params": {
                     "model": "whisper-1",
                 },
             },
@@ -2274,7 +2274,7 @@ class Router:
         except Exception as e:
             asyncio.create_task(
                 send_llm_exception_alert(
-                    litellm_router_instance=self,
+                    remodl_router_instance=self,
                     request_kwargs=kwargs,
                     error_traceback_str=traceback.format_exc(),
                     original_exception=e,
@@ -2297,14 +2297,14 @@ class Router:
             )
 
             self._update_kwargs_with_deployment(deployment=deployment, kwargs=kwargs)
-            data = deployment["litellm_params"].copy()
+            data = deployment["remodl_params"].copy()
             model_client = self._get_async_openai_model_client(
                 deployment=deployment,
                 kwargs=kwargs,
             )
 
             self.total_calls[model_name] += 1
-            response = litellm.atranscription(
+            response = remodl.atranscription(
                 **{
                     **data,
                     "file": file,
@@ -2341,12 +2341,12 @@ class Router:
 
             self.success_calls[model_name] += 1
             verbose_router_logger.info(
-                f"litellm.atranscription(model={model_name})\033[32m 200 OK\033[0m"
+                f"remodl.atranscription(model={model_name})\033[32m 200 OK\033[0m"
             )
             return response
         except Exception as e:
             verbose_router_logger.info(
-                f"litellm.atranscription(model={model_name})\033[31m Exception {str(e)}\033[0m"
+                f"remodl.atranscription(model={model_name})\033[31m Exception {str(e)}\033[0m"
             )
             if model_name is not None:
                 self.fail_calls[model_name] += 1
@@ -2357,11 +2357,11 @@ class Router:
         Example Usage:
 
         ```
-        from litellm import Router
+        from remodl import Router
         client = Router(model_list = [
             {
                 "model_name": "tts",
-                "litellm_params": {
+                "remodl_params": {
                     "model": "tts-1",
                 },
             },
@@ -2395,9 +2395,9 @@ class Router:
                 request_kwargs=kwargs,
             )
             self._update_kwargs_before_fallbacks(model=model, kwargs=kwargs)
-            data = deployment["litellm_params"].copy()
+            data = deployment["remodl_params"].copy()
             data["model"]
-            for k, v in self.default_litellm_params.items():
+            for k, v in self.default_remodl_params.items():
                 if (
                     k not in kwargs
                 ):  # prioritize model-specific params > default router params
@@ -2419,7 +2419,7 @@ class Router:
             else:
                 model_client = potential_model_client
 
-            response = await litellm.aspeech(
+            response = await remodl.aspeech(
                 **{
                     **data,
                     "client": model_client,
@@ -2430,7 +2430,7 @@ class Router:
         except Exception as e:
             asyncio.create_task(
                 send_llm_exception_alert(
-                    litellm_router_instance=self,
+                    remodl_router_instance=self,
                     request_kwargs=kwargs,
                     error_traceback_str=traceback.format_exc(),
                     original_exception=e,
@@ -2451,7 +2451,7 @@ class Router:
         except Exception as e:
             asyncio.create_task(
                 send_llm_exception_alert(
-                    litellm_router_instance=self,
+                    remodl_router_instance=self,
                     request_kwargs=kwargs,
                     error_traceback_str=traceback.format_exc(),
                     original_exception=e,
@@ -2471,7 +2471,7 @@ class Router:
                 request_kwargs=kwargs,
             )
             self._update_kwargs_with_deployment(deployment=deployment, kwargs=kwargs)
-            data = deployment["litellm_params"].copy()
+            data = deployment["remodl_params"].copy()
             model_name = data["model"]
 
             model_client = self._get_async_openai_model_client(
@@ -2480,7 +2480,7 @@ class Router:
             )
             self.total_calls[model_name] += 1
 
-            response = await litellm.arerank(
+            response = await remodl.arerank(
                 **{
                     **data,
                     "caching": self.cache_responses,
@@ -2491,12 +2491,12 @@ class Router:
 
             self.success_calls[model_name] += 1
             verbose_router_logger.info(
-                f"litellm.arerank(model={model_name})\033[32m 200 OK\033[0m"
+                f"remodl.arerank(model={model_name})\033[32m 200 OK\033[0m"
             )
             return response
         except Exception as e:
             verbose_router_logger.info(
-                f"litellm.arerank(model={model_name})\033[31m Exception {str(e)}\033[0m"
+                f"remodl.arerank(model={model_name})\033[31m Exception {str(e)}\033[0m"
             )
             if model_name is not None:
                 self.fail_calls[model_name] += 1
@@ -2525,8 +2525,8 @@ class Router:
                 specific_deployment=kwargs.pop("specific_deployment", None),
             )
 
-            data = deployment["litellm_params"].copy()
-            for k, v in self.default_litellm_params.items():
+            data = deployment["remodl_params"].copy()
+            for k, v in self.default_remodl_params.items():
                 if (
                     k not in kwargs
                 ):  # prioritize model-specific params > default router params
@@ -2534,8 +2534,8 @@ class Router:
                 elif k == "metadata":
                     kwargs[k].update(v)
 
-            # call via litellm.completion()
-            return litellm.text_completion(**{**data, "prompt": prompt, "caching": self.cache_responses, **kwargs})  # type: ignore
+            # call via remodl.completion()
+            return remodl.text_completion(**{**data, "prompt": prompt, "caching": self.cache_responses, **kwargs})  # type: ignore
         except Exception as e:
             raise e
 
@@ -2568,7 +2568,7 @@ class Router:
         except Exception as e:
             asyncio.create_task(
                 send_llm_exception_alert(
-                    litellm_router_instance=self,
+                    remodl_router_instance=self,
                     request_kwargs=kwargs,
                     error_traceback_str=traceback.format_exc(),
                     original_exception=e,
@@ -2590,7 +2590,7 @@ class Router:
             )
             self._update_kwargs_with_deployment(deployment=deployment, kwargs=kwargs)
 
-            data = deployment["litellm_params"].copy()
+            data = deployment["remodl_params"].copy()
             model_name = data["model"]
 
             model_client = self._get_async_openai_model_client(
@@ -2599,7 +2599,7 @@ class Router:
             )
             self.total_calls[model_name] += 1
 
-            response = litellm.atext_completion(
+            response = remodl.atext_completion(
                 **{
                     **data,
                     "prompt": prompt,
@@ -2635,12 +2635,12 @@ class Router:
 
             self.success_calls[model_name] += 1
             verbose_router_logger.info(
-                f"litellm.atext_completion(model={model_name})\033[32m 200 OK\033[0m"
+                f"remodl.atext_completion(model={model_name})\033[32m 200 OK\033[0m"
             )
             return response
         except Exception as e:
             verbose_router_logger.info(
-                f"litellm.atext_completion(model={model})\033[31m Exception {str(e)}\033[0m"
+                f"remodl.atext_completion(model={model})\033[31m Exception {str(e)}\033[0m"
             )
             if model is not None:
                 self.fail_calls[model] += 1
@@ -2667,7 +2667,7 @@ class Router:
         except Exception as e:
             asyncio.create_task(
                 send_llm_exception_alert(
-                    litellm_router_instance=self,
+                    remodl_router_instance=self,
                     request_kwargs=kwargs,
                     error_traceback_str=traceback.format_exc(),
                     original_exception=e,
@@ -2689,7 +2689,7 @@ class Router:
             )
             self._update_kwargs_with_deployment(deployment=deployment, kwargs=kwargs)
 
-            data = deployment["litellm_params"].copy()
+            data = deployment["remodl_params"].copy()
             model_name = data["model"]
 
             model_client = self._get_async_openai_model_client(
@@ -2698,7 +2698,7 @@ class Router:
             )
             self.total_calls[model_name] += 1
 
-            response = litellm.aadapter_completion(
+            response = remodl.aadapter_completion(
                 **{
                     **data,
                     "adapter_id": adapter_id,
@@ -2734,12 +2734,12 @@ class Router:
 
             self.success_calls[model_name] += 1
             verbose_router_logger.info(
-                f"litellm.aadapter_completion(model={model_name})\033[32m 200 OK\033[0m"
+                f"remodl.aadapter_completion(model={model_name})\033[32m 200 OK\033[0m"
             )
             return response
         except Exception as e:
             verbose_router_logger.info(
-                f"litellm.aadapter_completion(model={model})\033[31m Exception {str(e)}\033[0m"
+                f"remodl.aadapter_completion(model={model})\033[31m Exception {str(e)}\033[0m"
             )
             if model is not None:
                 self.fail_calls[model] += 1
@@ -2752,7 +2752,7 @@ class Router:
         Helper function to make a search API call through the router with load balancing and fallbacks.
         Reuses the router's retry/fallback infrastructure.
         """
-        from litellm.router_utils.search_api_router import SearchAPIRouter
+        from remodl.router_utils.search_api_router import SearchAPIRouter
         
         return await SearchAPIRouter.async_search_with_fallbacks(
             router_instance=self,
@@ -2767,7 +2767,7 @@ class Router:
         Helper function for search API calls - selects a search tool and calls the original function.
         Called by async_function_with_fallbacks for each retry attempt.
         """
-        from litellm.router_utils.search_api_router import SearchAPIRouter
+        from remodl.router_utils.search_api_router import SearchAPIRouter
         
         return await SearchAPIRouter.async_search_with_fallbacks_helper(
             router_instance=self,
@@ -2780,14 +2780,14 @@ class Router:
         self, model: str, original_function: Callable, **kwargs
     ):
         """
-        Helper function to make a generic LLM API call through the router, this allows you to use retries/fallbacks with litellm router
+        Helper function to make a generic LLM API call through the router, this allows you to use retries/fallbacks with remodl router
         """
         try:
             kwargs["model"] = model
             kwargs["original_generic_function"] = original_function
             kwargs["original_function"] = self._ageneric_api_call_with_fallbacks_helper
             self._update_kwargs_before_fallbacks(
-                model=model, kwargs=kwargs, metadata_variable_name="litellm_metadata"
+                model=model, kwargs=kwargs, metadata_variable_name="remodl_metadata"
             )
             verbose_router_logger.debug(
                 f"Inside ageneric_api_call_with_fallbacks() - model: {model}; kwargs: {kwargs}"
@@ -2799,7 +2799,7 @@ class Router:
         except Exception as e:
             asyncio.create_task(
                 send_llm_exception_alert(
-                    litellm_router_instance=self,
+                    remodl_router_instance=self,
                     request_kwargs=kwargs,
                     error_traceback_str=traceback.format_exc(),
                     original_exception=e,
@@ -2821,7 +2821,7 @@ class Router:
         if "endpoint" in kwargs and kwargs["endpoint"]:
             # For provider-specific endpoints, strip the provider prefix from model_name
             # e.g., "bedrock/us.anthropic.claude-3-5-sonnet-20240620-v1:0" -> "us.anthropic.claude-3-5-sonnet-20240620-v1:0"
-            from litellm import get_llm_provider
+            from remodl import get_llm_provider
             
             try:
                 # get_llm_provider returns (model_without_prefix, provider, api_key, api_base)
@@ -2842,7 +2842,7 @@ class Router:
         self, model: str, original_generic_function: Callable, **kwargs
     ):
         """
-        Helper function to make a generic LLM API call through the router, this allows you to use retries/fallbacks with litellm router
+        Helper function to make a generic LLM API call through the router, this allows you to use retries/fallbacks with remodl router
         """
 
         passthrough_on_no_deployment = kwargs.pop("passthrough_on_no_deployment", False)
@@ -2865,7 +2865,7 @@ class Router:
                 deployment=deployment, kwargs=kwargs, function_name=function_name
             )
 
-            data = deployment["litellm_params"].copy()
+            data = deployment["remodl_params"].copy()
             model_name = data["model"]
             self.total_calls[model_name] += 1
 
@@ -2921,10 +2921,10 @@ class Router:
         self, model: str, original_function: Callable, **kwargs
     ):
         """
-        Make a generic LLM API call through the router, this allows you to use retries/fallbacks with litellm router
+        Make a generic LLM API call through the router, this allows you to use retries/fallbacks with remodl router
         Args:
             model: The model to use
-            original_function: The handler function to call (e.g., litellm.completion)
+            original_function: The handler function to call (e.g., remodl.completion)
             **kwargs: Additional arguments to pass to the handler function
         Returns:
             The response from the handler function
@@ -2943,7 +2943,7 @@ class Router:
                 deployment=deployment, kwargs=kwargs, function_name="generic_api_call"
             )
 
-            data = deployment["litellm_params"].copy()
+            data = deployment["remodl_params"].copy()
             model_name = data["model"]
 
             self.total_calls[model_name] += 1
@@ -3014,7 +3014,7 @@ class Router:
                 specific_deployment=kwargs.pop("specific_deployment", None),
             )
             self._update_kwargs_with_deployment(deployment=deployment, kwargs=kwargs)
-            data = deployment["litellm_params"].copy()
+            data = deployment["remodl_params"].copy()
             model_name = data["model"]
 
             potential_model_client = self._get_client(
@@ -3036,7 +3036,7 @@ class Router:
             ### DEPLOYMENT-SPECIFIC PRE-CALL CHECKS ### (e.g. update rpm pre-call. Raise error, if deployment over limit)
             self.routing_strategy_pre_call_checks(deployment=deployment)
 
-            response = litellm.embedding(
+            response = remodl.embedding(
                 **{
                     **data,
                     "input": input,
@@ -3047,12 +3047,12 @@ class Router:
             )
             self.success_calls[model_name] += 1
             verbose_router_logger.info(
-                f"litellm.embedding(model={model_name})\033[32m 200 OK\033[0m"
+                f"remodl.embedding(model={model_name})\033[32m 200 OK\033[0m"
             )
             return response
         except Exception as e:
             verbose_router_logger.info(
-                f"litellm.embedding(model={model_name})\033[31m Exception {str(e)}\033[0m"
+                f"remodl.embedding(model={model_name})\033[31m Exception {str(e)}\033[0m"
             )
             if model_name is not None:
                 self.fail_calls[model_name] += 1
@@ -3075,7 +3075,7 @@ class Router:
         except Exception as e:
             asyncio.create_task(
                 send_llm_exception_alert(
-                    litellm_router_instance=self,
+                    remodl_router_instance=self,
                     request_kwargs=kwargs,
                     error_traceback_str=traceback.format_exc(),
                     original_exception=e,
@@ -3097,7 +3097,7 @@ class Router:
                 request_kwargs=kwargs,
             )
             self._update_kwargs_with_deployment(deployment=deployment, kwargs=kwargs)
-            data = deployment["litellm_params"].copy()
+            data = deployment["remodl_params"].copy()
             model_name = data["model"]
             model_client = self._get_async_openai_model_client(
                 deployment=deployment,
@@ -3105,7 +3105,7 @@ class Router:
             )
 
             self.total_calls[model_name] += 1
-            response = litellm.aembedding(
+            response = remodl.aembedding(
                 **{
                     **data,
                     "input": input,
@@ -3142,12 +3142,12 @@ class Router:
 
             self.success_calls[model_name] += 1
             verbose_router_logger.info(
-                f"litellm.aembedding(model={model_name})\033[32m 200 OK\033[0m"
+                f"remodl.aembedding(model={model_name})\033[32m 200 OK\033[0m"
             )
             return response
         except Exception as e:
             verbose_router_logger.info(
-                f"litellm.aembedding(model={model_name})\033[31m Exception {str(e)}\033[0m"
+                f"remodl.aembedding(model={model_name})\033[31m Exception {str(e)}\033[0m"
             )
             if model_name is not None:
                 self.fail_calls[model_name] += 1
@@ -3170,7 +3170,7 @@ class Router:
         except Exception as e:
             asyncio.create_task(
                 send_llm_exception_alert(
-                    litellm_router_instance=self,
+                    remodl_router_instance=self,
                     request_kwargs=kwargs,
                     error_traceback_str=traceback.format_exc(),
                     original_exception=e,
@@ -3184,7 +3184,7 @@ class Router:
         **kwargs,
     ) -> OpenAIFileObject:
         try:
-            from litellm.router_utils.common_utils import add_model_file_id_mappings
+            from remodl.router_utils.common_utils import add_model_file_id_mappings
 
             verbose_router_logger.debug(
                 f"Inside _atext_completion()- model: {model}; kwargs: {kwargs}"
@@ -3199,7 +3199,7 @@ class Router:
             )
 
             async def create_file_for_deployment(deployment: dict) -> OpenAIFileObject:
-                from litellm.litellm_core_utils.core_helpers import safe_deep_copy
+                from remodl.remodl_core_utils.core_helpers import safe_deep_copy
 
                 kwargs_copy = safe_deep_copy(kwargs)
                 self._update_kwargs_with_deployment(
@@ -3207,7 +3207,7 @@ class Router:
                     kwargs=kwargs_copy,
                     function_name="acreate_file",
                 )
-                data = deployment["litellm_params"].copy()
+                data = deployment["remodl_params"].copy()
                 model_name = data["model"]
 
                 model_client = self._get_async_openai_model_client(
@@ -3240,7 +3240,7 @@ class Router:
 
                     kwargs_copy["file"] = file
 
-                response = litellm.acreate_file(
+                response = remodl.acreate_file(
                     **{
                         **data,
                         "custom_llm_provider": custom_llm_provider,
@@ -3276,7 +3276,7 @@ class Router:
 
                 self.success_calls[model_name] += 1
                 verbose_router_logger.info(
-                    f"litellm.acreate_file(model={model_name})\033[32m 200 OK\033[0m"
+                    f"remodl.acreate_file(model={model_name})\033[32m 200 OK\033[0m"
                 )
 
                 return response
@@ -3304,7 +3304,7 @@ class Router:
             return returned_response
         except Exception as e:
             verbose_router_logger.exception(
-                f"litellm.acreate_file(model={model}, {kwargs})\033[31m Exception {str(e)}\033[0m"
+                f"remodl.acreate_file(model={model}, {kwargs})\033[31m Exception {str(e)}\033[0m"
             )
             if model is not None:
                 self.fail_calls[model] += 1
@@ -3333,7 +3333,7 @@ class Router:
         except Exception as e:
             asyncio.create_task(
                 send_llm_exception_alert(
-                    litellm_router_instance=self,
+                    remodl_router_instance=self,
                     request_kwargs=kwargs,
                     error_traceback_str=traceback.format_exc(),
                     original_exception=e,
@@ -3358,7 +3358,7 @@ class Router:
                 request_kwargs=kwargs,
             )
 
-            data = deployment["litellm_params"].copy()
+            data = deployment["remodl_params"].copy()
             model_name = data["model"]
             self._update_kwargs_with_deployment(
                 deployment=deployment, kwargs=kwargs, function_name="_acreate_batch"
@@ -3373,7 +3373,7 @@ class Router:
             ## SET CUSTOM PROVIDER TO SELECTED DEPLOYMENT ##
             _, custom_llm_provider, _, _ = get_llm_provider(model=data["model"])
 
-            response = litellm.acreate_batch(
+            response = remodl.acreate_batch(
                 **{
                     **data,
                     "custom_llm_provider": custom_llm_provider,
@@ -3409,13 +3409,13 @@ class Router:
 
             self.success_calls[model_name] += 1
             verbose_router_logger.info(
-                f"litellm.acreate_batch(model={model_name})\033[32m 200 OK\033[0m"
+                f"remodl.acreate_batch(model={model_name})\033[32m 200 OK\033[0m"
             )
 
             return response  # type: ignore
         except Exception as e:
             verbose_router_logger.exception(
-                f"litellm._acreate_batch(model={model}, {kwargs})\033[31m Exception {str(e)}\033[0m"
+                f"remodl._acreate_batch(model={model}, {kwargs})\033[31m Exception {str(e)}\033[0m"
             )
             if model is not None:
                 self.fail_calls[model] += 1
@@ -3452,14 +3452,14 @@ class Router:
 
             async def try_retrieve_batch(model_name: DeploymentTypedDict):
                 try:
-                    from litellm.litellm_core_utils.core_helpers import safe_deep_copy
+                    from remodl.remodl_core_utils.core_helpers import safe_deep_copy
 
-                    model = model_name["litellm_params"].get("model")
-                    data = model_name["litellm_params"].copy()
+                    model = model_name["remodl_params"].get("model")
+                    data = model_name["remodl_params"].copy()
                     custom_llm_provider = data.get("custom_llm_provider")
                     if model is None:
                         raise Exception(
-                            f"Model not found in litellm_params for deployment: {model_name}"
+                            f"Model not found in remodl_params for deployment: {model_name}"
                         )
                     # Update kwargs with the current model name or any other model-specific adjustments
                     ## SET CUSTOM PROVIDER TO SELECTED DEPLOYMENT ##
@@ -3475,7 +3475,7 @@ class Router:
                     )
                     new_kwargs.pop("custom_llm_provider", None)
                     data.pop("custom_llm_provider", None)
-                    return await litellm.aretrieve_batch(
+                    return await remodl.aretrieve_batch(
                         **{
                             **data,
                             "custom_llm_provider": custom_llm_provider,
@@ -3533,7 +3533,7 @@ class Router:
         except Exception as e:
             asyncio.create_task(
                 send_llm_exception_alert(
-                    litellm_router_instance=self,
+                    remodl_router_instance=self,
                     request_kwargs=kwargs,
                     error_traceback_str=traceback.format_exc(),
                     original_exception=e,
@@ -3557,8 +3557,8 @@ class Router:
         async def try_retrieve_batch(model: DeploymentTypedDict):
             try:
                 # Update kwargs with the current model name or any other model-specific adjustments
-                return await litellm.alist_batches(
-                    **{**model["litellm_params"], **kwargs}
+                return await remodl.alist_batches(
+                    **{**model["remodl_params"], **kwargs}
                 )
             except Exception:
                 return None
@@ -3608,8 +3608,8 @@ class Router:
                 model=kwargs["model"],
                 request_kwargs=kwargs,
             )
-            kwargs["model"] = deployment["litellm_params"]["model"]
-            data = deployment["litellm_params"].copy()
+            kwargs["model"] = deployment["remodl_params"]["model"]
+            data = deployment["remodl_params"].copy()
             self._update_kwargs_with_deployment(
                 deployment=deployment,
                 kwargs=kwargs,
@@ -3804,7 +3804,7 @@ class Router:
 
         GET, DELETE, CANCEL Responses API Requests encode the model_id in the response_id, this function decodes the response_id and sets the model to the model_id.
         """
-        from litellm.responses.utils import ResponsesAPIRequestUtils
+        from remodl.responses.utils import ResponsesAPIRequestUtils
 
         model_id = ResponsesAPIRequestUtils.get_model_id_from_response_id(
             kwargs.get("response_id")
@@ -3827,7 +3827,7 @@ class Router:
         if custom_llm_provider is None:
             if self.assistants_config is not None:
                 custom_llm_provider = self.assistants_config["custom_llm_provider"]
-                kwargs.update(self.assistants_config["litellm_params"])
+                kwargs.update(self.assistants_config["remodl_params"])
             else:
                 raise Exception(
                     "'custom_llm_provider' must be set. Either via:\n `Router(assistants_config={'custom_llm_provider': ..})` \nor\n `router.arun_thread(custom_llm_provider=..)`"
@@ -3862,7 +3862,7 @@ class Router:
             raise e
 
         input_kwargs = {
-            "litellm_router": self,
+            "remodl_router": self,
             "original_exception": original_exception,
             **kwargs,
         }
@@ -3895,7 +3895,7 @@ class Router:
 
                 return response
 
-            if isinstance(e, litellm.ContextWindowExceededError):
+            if isinstance(e, remodl.ContextWindowExceededError):
                 if context_window_fallbacks is not None:
                     context_window_fallback_model_group: Optional[
                         List[str]
@@ -3920,7 +3920,7 @@ class Router:
                     return response
 
                 else:
-                    error_message = "model={}. context_window_fallbacks={}. fallbacks={}.\n\nSet 'context_window_fallback' - https://docs.litellm.ai/docs/routing#fallbacks".format(
+                    error_message = "model={}. context_window_fallbacks={}. fallbacks={}.\n\nSet 'context_window_fallback' - https://docs.remodl.ai/docs/routing#fallbacks".format(
                         model_group, context_window_fallbacks, fallbacks
                     )
                     verbose_router_logger.info(
@@ -3931,7 +3931,7 @@ class Router:
                     )
 
                     e.message += "\n{}".format(error_message)
-            elif isinstance(e, litellm.ContentPolicyViolationError):
+            elif isinstance(e, remodl.ContentPolicyViolationError):
                 if content_policy_fallbacks is not None:
                     content_policy_fallback_model_group: Optional[
                         List[str]
@@ -3955,7 +3955,7 @@ class Router:
                     )
                     return response
                 else:
-                    error_message = "model={}. content_policy_fallback={}. fallbacks={}.\n\nSet 'content_policy_fallback' - https://docs.litellm.ai/docs/routing#fallbacks".format(
+                    error_message = "model={}. content_policy_fallback={}. fallbacks={}.\n\nSet 'content_policy_fallback' - https://docs.remodl.ai/docs/routing#fallbacks".format(
                         model_group, content_policy_fallbacks, fallbacks
                     )
                     verbose_router_logger.info(
@@ -4003,11 +4003,11 @@ class Router:
         except Exception as new_exception:
             parent_otel_span = _get_parent_otel_span_from_kwargs(kwargs)
             verbose_router_logger.error(
-                "litellm.router.py::async_function_with_fallbacks() - Error occurred while trying to do fallbacks - {}\n{}\n\nDebug Information:\nCooldown Deployments={}".format(
+                "remodl.router.py::async_function_with_fallbacks() - Error occurred while trying to do fallbacks - {}\n{}\n\nDebug Information:\nCooldown Deployments={}".format(
                     str(new_exception),
                     traceback.format_exc(),
                     await _async_get_cooldown_deployments_with_debug_info(
-                        litellm_router_instance=self,
+                        remodl_router_instance=self,
                         parent_otel_span=parent_otel_span,
                     ),
                 )
@@ -4089,19 +4089,19 @@ class Router:
         content_policy_fallbacks: Optional[List] = None,
     ):
         """
-        Helper function to raise a litellm Error for mock testing purposes.
+        Helper function to raise a remodl Error for mock testing purposes.
 
         Raises:
-            litellm.InternalServerError: when `mock_testing_fallbacks=True` passed in request params
-            litellm.ContextWindowExceededError: when `mock_testing_context_fallbacks=True` passed in request params
-            litellm.ContentPolicyViolationError: when `mock_testing_content_policy_fallbacks=True` passed in request params
+            remodl.InternalServerError: when `mock_testing_fallbacks=True` passed in request params
+            remodl.ContextWindowExceededError: when `mock_testing_context_fallbacks=True` passed in request params
+            remodl.ContentPolicyViolationError: when `mock_testing_content_policy_fallbacks=True` passed in request params
         """
         mock_testing_params = MockRouterTestingParams.from_kwargs(kwargs)
         if (
             mock_testing_params.mock_testing_fallbacks is not None
             and mock_testing_params.mock_testing_fallbacks is True
         ):
-            raise litellm.InternalServerError(
+            raise remodl.InternalServerError(
                 model=model_group,
                 llm_provider="",
                 message=f"This is a mock exception for model={model_group}, to trigger a fallback. Fallbacks={fallbacks}",
@@ -4110,7 +4110,7 @@ class Router:
             mock_testing_params.mock_testing_context_fallbacks is not None
             and mock_testing_params.mock_testing_context_fallbacks is True
         ):
-            raise litellm.ContextWindowExceededError(
+            raise remodl.ContextWindowExceededError(
                 model=model_group,
                 llm_provider="",
                 message=f"This is a mock exception for model={model_group}, to trigger a fallback. \
@@ -4120,7 +4120,7 @@ class Router:
             mock_testing_params.mock_testing_content_policy_fallbacks is not None
             and mock_testing_params.mock_testing_content_policy_fallbacks is True
         ):
-            raise litellm.ContentPolicyViolationError(
+            raise remodl.ContentPolicyViolationError(
                 model=model_group,
                 llm_provider="",
                 message=f"This is a mock exception for model={model_group}, to trigger a fallback. \
@@ -4143,7 +4143,7 @@ class Router:
         num_retries = kwargs.pop("num_retries")
 
         ## ADD MODEL GROUP SIZE TO METADATA - used for model_group_rate_limit_error tracking
-        _metadata: dict = kwargs.get("litellm_metadata", kwargs.get("metadata")) or {}
+        _metadata: dict = kwargs.get("remodl_metadata", kwargs.get("metadata")) or {}
         if "model_group" in _metadata and isinstance(_metadata["model_group"], str):
             model_list = self.get_model_list(model_name=_metadata["model_group"])
             if model_list is not None:
@@ -4262,7 +4262,7 @@ class Router:
                     )
                     await asyncio.sleep(_timeout)
 
-            if type(original_exception) in litellm.LITELLM_EXCEPTION_TYPES:
+            if type(original_exception) in remodl.LITELLM_EXCEPTION_TYPES:
                 setattr(original_exception, "max_retries", num_retries)
                 setattr(original_exception, "num_retries", current_attempt)
 
@@ -4289,10 +4289,10 @@ class Router:
         self, kwargs: dict, model_group: Optional[str] = None
     ):
         """
-        Helper function to raise a mock litellm.RateLimitError error for testing purposes.
+        Helper function to raise a mock remodl.RateLimitError error for testing purposes.
 
         Raises:
-            litellm.RateLimitError error when `mock_testing_rate_limit_error=True` passed in request params
+            remodl.RateLimitError error when `mock_testing_rate_limit_error=True` passed in request params
         """
         mock_testing_rate_limit_error: Optional[bool] = kwargs.pop(
             "mock_testing_rate_limit_error", None
@@ -4303,7 +4303,7 @@ class Router:
 
         if available_models is not None and len(available_models) == 1:
             num_retries = cast(
-                Optional[int], available_models[0]["litellm_params"].get("num_retries")
+                Optional[int], available_models[0]["remodl_params"].get("num_retries")
             )
 
         if (
@@ -4311,9 +4311,9 @@ class Router:
             and mock_testing_rate_limit_error is True
         ):
             verbose_router_logger.info(
-                f"litellm.router.py::_mock_rate_limit_error() - Raising mock RateLimitError for model={model_group}"
+                f"remodl.router.py::_mock_rate_limit_error() - Raising mock RateLimitError for model={model_group}"
             )
-            raise litellm.RateLimitError(
+            raise remodl.RateLimitError(
                 model=model_group,
                 llm_provider="",
                 message=f"This is a mock exception for model={model_group}, to trigger a rate limit error.",
@@ -4347,18 +4347,18 @@ class Router:
 
         ### CHECK IF RATE LIMIT / CONTEXT WINDOW ERROR / CONTENT POLICY VIOLATION ERROR w/ fallbacks available / Bad Request Error
         if (
-            isinstance(error, litellm.ContextWindowExceededError)
+            isinstance(error, remodl.ContextWindowExceededError)
             and context_window_fallbacks is not None
         ):
             raise error
 
         if (
-            isinstance(error, litellm.ContentPolicyViolationError)
+            isinstance(error, remodl.ContentPolicyViolationError)
             and content_policy_fallbacks is not None
         ):
             raise error
 
-        if isinstance(error, litellm.NotFoundError):
+        if isinstance(error, remodl.NotFoundError):
             raise error
         # Error we should only retry if there are other deployments
         if isinstance(error, openai.RateLimitError):
@@ -4448,11 +4448,11 @@ class Router:
         response_headers: Optional[httpx.Headers] = None
         if hasattr(e, "response") and hasattr(e.response, "headers"):  # type: ignore
             response_headers = e.response.headers  # type: ignore
-        if hasattr(e, "litellm_response_headers"):
-            response_headers = e.litellm_response_headers  # type: ignore
+        if hasattr(e, "remodl_response_headers"):
+            response_headers = e.remodl_response_headers  # type: ignore
 
         if response_headers is not None:
-            timeout = litellm._calculate_retry_after(
+            timeout = remodl._calculate_retry_after(
                 remaining_retries=remaining_retries,
                 max_retries=num_retries,
                 response_headers=response_headers,
@@ -4460,7 +4460,7 @@ class Router:
             )
 
         else:
-            timeout = litellm._calculate_retry_after(
+            timeout = remodl._calculate_retry_after(
                 remaining_retries=remaining_retries,
                 max_retries=num_retries,
                 min_timeout=self.retry_after,
@@ -4480,7 +4480,7 @@ class Router:
         """
         Track remaining tpm/rpm quota for model in model_list
         """
-        from litellm.types.caching import RedisPipelineIncrementOperation
+        from remodl.types.caching import RedisPipelineIncrementOperation
 
         try:
             standard_logging_object: Optional[StandardLoggingPayload] = kwargs.get(
@@ -4488,17 +4488,17 @@ class Router:
             )
             if standard_logging_object is None:
                 raise ValueError("standard_logging_object is None")
-            if kwargs["litellm_params"].get("metadata") is None:
+            if kwargs["remodl_params"].get("metadata") is None:
                 pass
             else:
-                deployment_name = kwargs["litellm_params"]["metadata"].get(
+                deployment_name = kwargs["remodl_params"]["metadata"].get(
                     "deployment", None
                 )  # stable name - works for wildcard routes as well
                 # Get model_group and id from kwargs like the sync version does
-                model_group = kwargs["litellm_params"]["metadata"].get(
+                model_group = kwargs["remodl_params"]["metadata"].get(
                     "model_group", None
                 )
-                model_info = kwargs["litellm_params"].get("model_info", {}) or {}
+                model_info = kwargs["remodl_params"].get("model_info", {}) or {}
                 id = model_info.get("id", None)
                 if model_group is None or id is None:
                     return
@@ -4519,9 +4519,9 @@ class Router:
                     tpm = deployment_info.get("tpm", None)
                     rpm = deployment_info.get("rpm", None)
 
-                    ## check tpm/rpm in litellm_params
-                    tpm_litellm_params = deployment_info.litellm_params.tpm
-                    rpm_litellm_params = deployment_info.litellm_params.rpm
+                    ## check tpm/rpm in remodl_params
+                    tpm_remodl_params = deployment_info.remodl_params.tpm
+                    rpm_remodl_params = deployment_info.remodl_params.rpm
 
                     ## check tpm/rpm in model_info
                     tpm_model_info = deployment_model_info.get("tpm", None)
@@ -4529,7 +4529,7 @@ class Router:
 
                 # Always track deployment successes for cooldown logic, regardless of TPM/RPM limits
                 increment_deployment_successes_for_current_minute(
-                    litellm_router_instance=self,
+                    remodl_router_instance=self,
                     deployment_id=id,
                 )
 
@@ -4537,8 +4537,8 @@ class Router:
                 if (
                     tpm is None
                     and rpm is None
-                    and tpm_litellm_params is None
-                    and rpm_litellm_params is None
+                    and tpm_remodl_params is None
+                    and rpm_remodl_params is None
                     and tpm_model_info is None
                     and rpm_model_info is None
                 ):
@@ -4594,7 +4594,7 @@ class Router:
 
         except Exception as e:
             verbose_router_logger.debug(
-                "litellm.router.Router::deployment_callback_on_success(): Exception occured - {}".format(
+                "remodl.router.Router::deployment_callback_on_success(): Exception occured - {}".format(
                     str(e)
                 )
             )
@@ -4615,11 +4615,11 @@ class Router:
         - None: if no key is found
         """
         id = None
-        if kwargs["litellm_params"].get("metadata") is None:
+        if kwargs["remodl_params"].get("metadata") is None:
             pass
         else:
-            model_group = kwargs["litellm_params"]["metadata"].get("model_group", None)
-            model_info = kwargs["litellm_params"].get("model_info", {}) or {}
+            model_group = kwargs["remodl_params"]["metadata"].get("model_group", None)
+            model_info = kwargs["remodl_params"].get("model_info", {}) or {}
             id = model_info.get("id", None)
             if model_group is None or id is None:
                 return None
@@ -4628,7 +4628,7 @@ class Router:
 
         if id is not None:
             key = increment_deployment_successes_for_current_minute(
-                litellm_router_instance=self,
+                remodl_router_instance=self,
                 deployment_id=id,
             )
             return key
@@ -4656,20 +4656,20 @@ class Router:
             exception = kwargs.get("exception", None)
             exception_status = getattr(exception, "status_code", "")
             
-            # Cache litellm_params to avoid repeated dict lookups
-            litellm_params = kwargs.get("litellm_params", {})
-            _model_info = litellm_params.get("model_info", {})
+            # Cache remodl_params to avoid repeated dict lookups
+            remodl_params = kwargs.get("remodl_params", {})
+            _model_info = remodl_params.get("model_info", {})
 
-            exception_headers = litellm.litellm_core_utils.exception_mapping_utils._get_response_headers(
+            exception_headers = remodl.remodl_core_utils.exception_mapping_utils._get_response_headers(
                 original_exception=exception
             )
 
             # Determine cooldown time with priority: deployment config > response header > router default
-            deployment_cooldown = litellm_params.get("cooldown_time", None)
+            deployment_cooldown = remodl_params.get("cooldown_time", None)
 
             header_cooldown = None
             if exception_headers is not None:
-                header_cooldown = litellm.utils._get_retry_after_from_exception_header(
+                header_cooldown = remodl.utils._get_retry_after_from_exception_header(
                     response_headers=exception_headers
                 )
             ##############################################
@@ -4690,11 +4690,11 @@ class Router:
                 if deployment_id is None:
                     return False
                 increment_deployment_failures_for_current_minute(
-                    litellm_router_instance=self,
+                    remodl_router_instance=self,
                     deployment_id=deployment_id,
                 )
                 result = _set_cooldown_deployments(
-                    litellm_router_instance=self,
+                    remodl_router_instance=self,
                     exception_status=exception_status,
                     original_exception=exception,
                     deployment=deployment_id,
@@ -4717,11 +4717,11 @@ class Router:
         """
         Update RPM usage for a deployment
         """
-        deployment_name = kwargs["litellm_params"]["metadata"].get(
+        deployment_name = kwargs["remodl_params"]["metadata"].get(
             "deployment", None
-        )  # handles wildcard routes - by giving the original name sent to `litellm.completion`
-        model_group = kwargs["litellm_params"]["metadata"].get("model_group", None)
-        model_info = kwargs["litellm_params"].get("model_info", {}) or {}
+        )  # handles wildcard routes - by giving the original name sent to `remodl.completion`
+        model_group = kwargs["remodl_params"]["metadata"].get("model_group", None)
+        model_info = kwargs["remodl_params"].get("model_info", {}) or {}
         id = model_info.get("id", None)
         if model_group is None or id is None:
             return
@@ -4747,17 +4747,17 @@ class Router:
 
     def _get_metadata_variable_name_from_kwargs(
         self, kwargs: dict
-    ) -> Literal["metadata", "litellm_metadata"]:
+    ) -> Literal["metadata", "remodl_metadata"]:
         """
         Helper to return what the "metadata" field should be called in the request data
 
-        - New endpoints return `litellm_metadata`
+        - New endpoints return `remodl_metadata`
         - Old endpoints return `metadata`
 
         Context:
         - LiteLLM used `metadata` as an internal field for storing metadata
         - OpenAI then started using this field for their metadata
-        - LiteLLM is now moving to using `litellm_metadata` for our metadata
+        - LiteLLM is now moving to using `remodl_metadata` for our metadata
         """
         return get_metadata_variable_name_from_kwargs(kwargs)
 
@@ -4767,7 +4767,7 @@ class Router:
         """
         try:
             _metadata_var = (
-                "litellm_metadata" if "litellm_metadata" in kwargs else "metadata"
+                "remodl_metadata" if "remodl_metadata" in kwargs else "metadata"
             )
             # Log failed model as the previous model
             previous_model = {
@@ -4884,7 +4884,7 @@ class Router:
             pass
 
         unhealthy_deployments = _get_cooldown_deployments(
-            litellm_router_instance=self, parent_otel_span=parent_otel_span
+            remodl_router_instance=self, parent_otel_span=parent_otel_span
         )
         healthy_deployments: list = []
         for deployment in _all_deployments:
@@ -4915,7 +4915,7 @@ class Router:
             pass
 
         unhealthy_deployments = await _async_get_cooldown_deployments(
-            litellm_router_instance=self, parent_otel_span=parent_otel_span
+            remodl_router_instance=self, parent_otel_span=parent_otel_span
         )
         # Convert to set for O(1) lookup instead of O(n)
         unhealthy_deployments_set = set(unhealthy_deployments)
@@ -4937,7 +4937,7 @@ class Router:
         Raises:
         - Rate Limit Exception - If the deployment is over it's tpm/rpm limits
         """
-        for _callback in litellm.callbacks:
+        for _callback in remodl.callbacks:
             if isinstance(_callback, CustomLogger):
                 _callback.pre_call_check(deployment)
 
@@ -4958,11 +4958,11 @@ class Router:
         Raises:
         - Rate Limit Exception - If the deployment is over it's tpm/rpm limits
         """
-        for _callback in litellm.callbacks:
+        for _callback in remodl.callbacks:
             if isinstance(_callback, CustomLogger):
                 try:
                     await _callback.async_pre_call_check(deployment, parent_otel_span)
-                except litellm.RateLimitError as e:
+                except remodl.RateLimitError as e:
                     ## LOG FAILURE EVENT
                     if logging_obj is not None:
                         asyncio.create_task(
@@ -4978,7 +4978,7 @@ class Router:
                             args=(e, traceback.format_exc()),
                         ).start()  # log response
                     _set_cooldown_deployments(
-                        litellm_router_instance=self,
+                        remodl_router_instance=self,
                         exception_status=e.status_code,
                         original_exception=e,
                         deployment=deployment["model_info"]["id"],
@@ -5023,7 +5023,7 @@ class Router:
         - Rate Limit Exception - If the deployment is over it's tpm/rpm limits
         """
         returned_healthy_deployments = healthy_deployments
-        for _callback in litellm.callbacks:
+        for _callback in remodl.callbacks:
             if isinstance(_callback, CustomLogger):
                 try:
                     returned_healthy_deployments = (
@@ -5053,18 +5053,18 @@ class Router:
                     raise e
         return returned_healthy_deployments
 
-    def _generate_model_id(self, model_group: str, litellm_params: dict):
+    def _generate_model_id(self, model_group: str, remodl_params: dict):
         """
         Helper function to consistently generate the same id for a deployment
 
-        - create a string from all the litellm params
+        - create a string from all the remodl params
         - hash
         - use hash as id
         """
         # Optimized: Use list and join instead of string concatenation in loop
         # This avoids creating many temporary string objects (O(n) vs O(n²) complexity)
         parts = [model_group]
-        for k, v in litellm_params.items():
+        for k, v in remodl_params.items():
             if isinstance(k, str):
                 parts.append(k)
             elif isinstance(k, dict):
@@ -5088,7 +5088,7 @@ class Router:
         self,
         deployment_info: dict,
         _model_name: str,
-        _litellm_params: dict,
+        _remodl_params: dict,
         _model_info: dict,
     ) -> Optional[Deployment]:
         """
@@ -5098,37 +5098,37 @@ class Router:
 
         Returns:
         - Deployment: The deployment object
-        - None: If the deployment is not active for the current environment (if 'supported_environments' is set in litellm_params)
+        - None: If the deployment is not active for the current environment (if 'supported_environments' is set in remodl_params)
         """
         try:
-            litellm_params: LiteLLM_Params = LiteLLM_Params(**_litellm_params)
+            remodl_params: LiteLLM_Params = LiteLLM_Params(**_remodl_params)
             deployment = Deployment(
                 **deployment_info,
                 model_name=_model_name,
-                litellm_params=litellm_params,
+                remodl_params=remodl_params,
                 model_info=_model_info,
             )
             for field in CustomPricingLiteLLMParams.model_fields.keys():
-                if deployment.litellm_params.get(field) is not None:
-                    _model_info[field] = deployment.litellm_params[field]
+                if deployment.remodl_params.get(field) is not None:
+                    _model_info[field] = deployment.remodl_params[field]
 
             ## REGISTER MODEL INFO IN LITELLM MODEL COST MAP
             model_id = deployment.model_info.id
             if model_id is not None:
-                litellm.register_model(
+                remodl.register_model(
                     model_cost={
                         model_id: _model_info,
                     }
                 )
 
             ## OLD MODEL REGISTRATION ## Kept to prevent breaking changes
-            _model_name = deployment.litellm_params.model
-            if deployment.litellm_params.custom_llm_provider is not None:
+            _model_name = deployment.remodl_params.model
+            if deployment.remodl_params.custom_llm_provider is not None:
                 _model_name = (
-                    deployment.litellm_params.custom_llm_provider + "/" + _model_name
+                    deployment.remodl_params.custom_llm_provider + "/" + _model_name
                 )
 
-            litellm.register_model(
+            remodl.register_model(
                 model_cost={
                     _model_name: _model_info,
                 }
@@ -5161,13 +5161,13 @@ class Router:
             else:
                 raise e
 
-    def _is_auto_router_deployment(self, litellm_params: LiteLLM_Params) -> bool:
+    def _is_auto_router_deployment(self, remodl_params: LiteLLM_Params) -> bool:
         """
         Check if the deployment is an auto-router deployment.
 
-        Returns True if the litellm_params model starts with "auto_router/"
+        Returns True if the remodl_params model starts with "auto_router/"
         """
-        if litellm_params.model.startswith("auto_router/"):
+        if remodl_params.model.startswith("auto_router/"):
             return True
         return False
 
@@ -5177,31 +5177,31 @@ class Router:
 
         This will initialize the auto-router and add it to the auto-routers dictionary.
         """
-        from litellm.router_strategy.auto_router.auto_router import AutoRouter
+        from remodl.router_strategy.auto_router.auto_router import AutoRouter
 
         auto_router_config_path: Optional[
             str
-        ] = deployment.litellm_params.auto_router_config_path
-        auto_router_config: Optional[str] = deployment.litellm_params.auto_router_config
+        ] = deployment.remodl_params.auto_router_config_path
+        auto_router_config: Optional[str] = deployment.remodl_params.auto_router_config
         if auto_router_config_path is None and auto_router_config is None:
             raise ValueError(
-                "auto_router_config_path or auto_router_config is required for auto-router deployments. Please set it in the litellm_params"
+                "auto_router_config_path or auto_router_config is required for auto-router deployments. Please set it in the remodl_params"
             )
 
         default_model: Optional[
             str
-        ] = deployment.litellm_params.auto_router_default_model
+        ] = deployment.remodl_params.auto_router_default_model
         if default_model is None:
             raise ValueError(
-                "auto_router_default_model is required for auto-router deployments. Please set it in the litellm_params"
+                "auto_router_default_model is required for auto-router deployments. Please set it in the remodl_params"
             )
 
         embedding_model: Optional[
             str
-        ] = deployment.litellm_params.auto_router_embedding_model
+        ] = deployment.remodl_params.auto_router_embedding_model
         if embedding_model is None:
             raise ValueError(
-                "auto_router_embedding_model is required for auto-router deployments. Please set it in the litellm_params"
+                "auto_router_embedding_model is required for auto-router deployments. Please set it in the remodl_params"
             )
 
         autor_router: AutoRouter = AutoRouter(
@@ -5210,7 +5210,7 @@ class Router:
             auto_router_config=auto_router_config,
             default_model=default_model,
             embedding_model=embedding_model,
-            litellm_router_instance=self,
+            remodl_router_instance=self,
         )
         if deployment.model_name in self.auto_routers:
             raise ValueError(
@@ -5237,15 +5237,15 @@ class Router:
             or deployment.model_info["supported_environments"] is None
         ):
             return True
-        litellm_environment = get_secret_str(secret_name="LITELLM_ENVIRONMENT")
-        if litellm_environment is None:
+        remodl_environment = get_secret_str(secret_name="LITELLM_ENVIRONMENT")
+        if remodl_environment is None:
             raise ValueError(
                 "Set 'supported_environments' for model but not 'LITELLM_ENVIRONMENT' set in .env"
             )
 
-        if litellm_environment not in VALID_LITELLM_ENVIRONMENTS:
+        if remodl_environment not in VALID_LITELLM_ENVIRONMENTS:
             raise ValueError(
-                f"LITELLM_ENVIRONMENT must be one of {VALID_LITELLM_ENVIRONMENTS}. but set as: {litellm_environment}"
+                f"LITELLM_ENVIRONMENT must be one of {VALID_LITELLM_ENVIRONMENTS}. but set as: {remodl_environment}"
             )
 
         for _env in deployment.model_info["supported_environments"]:
@@ -5254,7 +5254,7 @@ class Router:
                     f"supported_environments must be one of {VALID_LITELLM_ENVIRONMENTS}. but set as: {_env} for deployment: {deployment}"
                 )
 
-        if litellm_environment in deployment.model_info["supported_environments"]:
+        if remodl_environment in deployment.model_info["supported_environments"]:
             return True
         return False
 
@@ -5267,36 +5267,36 @@ class Router:
 
         for model in original_model_list:
             _model_name = model.pop("model_name")
-            _litellm_params = model.pop("litellm_params")
-            ## check if litellm params in os.environ
-            if isinstance(_litellm_params, dict):
-                for k, v in _litellm_params.items():
+            _remodl_params = model.pop("remodl_params")
+            ## check if remodl params in os.environ
+            if isinstance(_remodl_params, dict):
+                for k, v in _remodl_params.items():
                     if isinstance(v, str) and v.startswith("os.environ/"):
-                        _litellm_params[k] = get_secret(v)
+                        _remodl_params[k] = get_secret(v)
 
             _model_info: dict = model.pop("model_info", {})
 
             # check if model info has id
             if "id" not in _model_info:
-                _id = self._generate_model_id(_model_name, _litellm_params)
+                _id = self._generate_model_id(_model_name, _remodl_params)
                 _model_info["id"] = _id
 
-            if _litellm_params.get("organization", None) is not None and isinstance(
-                _litellm_params["organization"], list
-            ):  # Addresses https://github.com/BerriAI/litellm/issues/3949
-                for org in _litellm_params["organization"]:
-                    _litellm_params["organization"] = org
+            if _remodl_params.get("organization", None) is not None and isinstance(
+                _remodl_params["organization"], list
+            ):  # Addresses https://github.com/BerriAI/remodl/issues/3949
+                for org in _remodl_params["organization"]:
+                    _remodl_params["organization"] = org
                     self._create_deployment(
                         deployment_info=model,
                         _model_name=_model_name,
-                        _litellm_params=_litellm_params,
+                        _remodl_params=_remodl_params,
                         _model_info=_model_info,
                     )
             else:
                 self._create_deployment(
                     deployment_info=model,
                     _model_name=_model_name,
-                    _litellm_params=_litellm_params,
+                    _remodl_params=_remodl_params,
                     _model_info=_model_info,
                 )
 
@@ -5313,18 +5313,18 @@ class Router:
 
         #### VALIDATE MODEL ########
         # Check if this is a prompt management model before validating as LLM provider
-        litellm_model = deployment.litellm_params.model
+        remodl_model = deployment.remodl_params.model
         is_prompt_management_model = False
 
-        if "/" in litellm_model:
-            split_litellm_model = litellm_model.split("/")[0]
-            if split_litellm_model in litellm._known_custom_logger_compatible_callbacks:
+        if "/" in remodl_model:
+            split_remodl_model = remodl_model.split("/")[0]
+            if split_remodl_model in remodl._known_custom_logger_compatible_callbacks:
                 is_prompt_management_model = True
 
         if is_prompt_management_model:
             # For prompt management models, skip LLM provider validation
             # The actual model will be resolved at runtime from the prompt file
-            _model = litellm_model
+            _model = remodl_model
             custom_llm_provider = None
             dynamic_api_key = None
             api_base = None
@@ -5335,38 +5335,38 @@ class Router:
                 custom_llm_provider,
                 dynamic_api_key,
                 api_base,
-            ) = litellm.get_llm_provider(
-                model=deployment.litellm_params.model,
-                custom_llm_provider=deployment.litellm_params.get(
+            ) = remodl.get_llm_provider(
+                model=deployment.remodl_params.model,
+                custom_llm_provider=deployment.remodl_params.get(
                     "custom_llm_provider", None
                 ),
             )
-            # done reading model["litellm_params"]
-            if custom_llm_provider not in litellm.provider_list:
+            # done reading model["remodl_params"]
+            if custom_llm_provider not in remodl.provider_list:
                 raise Exception(f"Unsupported provider - {custom_llm_provider}")
 
         #### DEPLOYMENT NAMES INIT ########
-        self.deployment_names.append(deployment.litellm_params.model)
-        ############ Users can either pass tpm/rpm as a litellm_param or a router param ###########
-        # for get_available_deployment, we use the litellm_param["rpm"]
-        # in this snippet we also set rpm to be a litellm_param
+        self.deployment_names.append(deployment.remodl_params.model)
+        ############ Users can either pass tpm/rpm as a remodl_param or a router param ###########
+        # for get_available_deployment, we use the remodl_param["rpm"]
+        # in this snippet we also set rpm to be a remodl_param
         if (
-            deployment.litellm_params.rpm is None
+            deployment.remodl_params.rpm is None
             and getattr(deployment, "rpm", None) is not None
         ):
-            deployment.litellm_params.rpm = getattr(deployment, "rpm")
+            deployment.remodl_params.rpm = getattr(deployment, "rpm")
 
         if (
-            deployment.litellm_params.tpm is None
+            deployment.remodl_params.tpm is None
             and getattr(deployment, "tpm", None) is not None
         ):
-            deployment.litellm_params.tpm = getattr(deployment, "tpm")
+            deployment.remodl_params.tpm = getattr(deployment, "tpm")
 
         # Check if user is trying to use model_name == "*"
         # this is a catch all model for their specific api key
         # if deployment.model_name == "*":
-        #     if deployment.litellm_params.model == "*":
-        #         # user wants to pass through all requests to litellm.acompletion for unknown deployments
+        #     if deployment.remodl_params.model == "*":
+        #         # user wants to pass through all requests to remodl.acompletion for unknown deployments
         #         self.router_general_settings.pass_through_all_models = True
         #     else:
         #         self.default_deployment = deployment.to_json(exclude_none=True)
@@ -5395,7 +5395,7 @@ class Router:
             )
 
         # Azure GPT-Vision Enhancements, users can pass os.environ/
-        data_sources = deployment.litellm_params.get("dataSources", []) or []
+        data_sources = deployment.remodl_params.get("dataSources", []) or []
 
         for data_source in data_sources:
             params = data_source.get("parameters", {})
@@ -5407,20 +5407,20 @@ class Router:
 
         # # init OpenAI, Azure clients
         # InitalizeOpenAISDKClient.set_client(
-        #     litellm_router_instance=self, model=deployment.to_json(exclude_none=True)
+        #     remodl_router_instance=self, model=deployment.to_json(exclude_none=True)
         # )
 
         if custom_llm_provider is not None:
             self._initialize_deployment_for_pass_through(
                 deployment=deployment,
                 custom_llm_provider=custom_llm_provider,
-                model=deployment.litellm_params.model,
+                model=deployment.remodl_params.model,
             )
 
         #########################################################
         # Check if this is an auto-router deployment
         #########################################################
-        if self._is_auto_router_deployment(litellm_params=deployment.litellm_params):
+        if self._is_auto_router_deployment(remodl_params=deployment.remodl_params):
             self.init_auto_router_deployment(deployment=deployment)
 
         return deployment
@@ -5429,18 +5429,18 @@ class Router:
         self, deployment: Deployment, custom_llm_provider: str, model: str
     ):
         """
-        Optional: Initialize deployment for pass-through endpoints if `deployment.litellm_params.use_in_pass_through` is True
+        Optional: Initialize deployment for pass-through endpoints if `deployment.remodl_params.use_in_pass_through` is True
 
         Each provider uses diff .env vars for pass-through endpoints, this helper uses the deployment credentials to set the .env vars for pass-through endpoints
         """
-        if deployment.litellm_params.use_in_pass_through is True:
-            from litellm.proxy.pass_through_endpoints.llm_passthrough_endpoints import (
+        if deployment.remodl_params.use_in_pass_through is True:
+            from remodl.proxy.pass_through_endpoints.llm_passthrough_endpoints import (
                 passthrough_endpoint_router,
             )
 
-            if deployment.litellm_params.litellm_credential_name is not None:
+            if deployment.remodl_params.remodl_credential_name is not None:
                 credential_values = CredentialAccessor.get_credential_values(
-                    deployment.litellm_params.litellm_credential_name
+                    deployment.remodl_params.remodl_credential_name
                 )
             else:
                 credential_values = {}
@@ -5448,20 +5448,20 @@ class Router:
             if custom_llm_provider == "vertex_ai":
                 vertex_project = (
                     credential_values.get("vertex_project")
-                    or deployment.litellm_params.vertex_project
+                    or deployment.remodl_params.vertex_project
                 )
                 vertex_location = (
                     credential_values.get("vertex_location")
-                    or deployment.litellm_params.vertex_location
+                    or deployment.remodl_params.vertex_location
                 )
                 vertex_credentials = (
                     credential_values.get("vertex_credentials")
-                    or deployment.litellm_params.vertex_credentials
+                    or deployment.remodl_params.vertex_credentials
                 )
 
                 if vertex_project is None or vertex_location is None:
                     raise ValueError(
-                        "vertex_project, and vertex_location must be set in litellm_params for pass-through endpoints."
+                        "vertex_project, and vertex_location must be set in remodl_params for pass-through endpoints."
                     )
                 passthrough_endpoint_router.add_vertex_credentials(
                     project_id=vertex_project,
@@ -5471,11 +5471,11 @@ class Router:
             else:
                 api_base = (
                     credential_values.get("api_base")
-                    or deployment.litellm_params.api_base
+                    or deployment.remodl_params.api_base
                 )
                 api_key = (
                     credential_values.get("api_key")
-                    or deployment.litellm_params.api_key
+                    or deployment.remodl_params.api_key
                 )
                 passthrough_endpoint_router.set_pass_through_credentials(
                     custom_llm_provider=custom_llm_provider,
@@ -5594,11 +5594,11 @@ class Router:
             )
             if _deployment_on_router is not None:
                 # deployment with this model_id exists on the router
-                if deployment.litellm_params == _deployment_on_router.litellm_params:
+                if deployment.remodl_params == _deployment_on_router.remodl_params:
                     # No need to update
                     return None
 
-                # if there is a new litellm param -> then update the deployment
+                # if there is a new remodl param -> then update the deployment
                 # remove the previous deployment
                 removal_idx: Optional[int] = None
                 deployment_id = deployment.model_info.id
@@ -5678,7 +5678,7 @@ class Router:
         if deployment is None:
             return None
         return CredentialLiteLLMParams(
-            **deployment.litellm_params.model_dump(exclude_none=True)
+            **deployment.remodl_params.model_dump(exclude_none=True)
         ).model_dump(exclude_none=True)
 
     def get_deployment_by_model_group_name(
@@ -5726,7 +5726,7 @@ class Router:
         """
         For a given model id, return the model info (max tokens, input cost, output cost, etc.).
 
-        Augment litellm info with additional params set in `model_info`.
+        Augment remodl info with additional params set in `model_info`.
 
         For azure models, ignore the `model:`. Only set max tokens, cost values if base_model is set.
 
@@ -5747,20 +5747,20 @@ class Router:
         ## GET BASE MODEL
         base_model = deployment.get("model_info", {}).get("base_model", None)
         if base_model is None:
-            base_model = deployment.get("litellm_params", {}).get("base_model", None)
+            base_model = deployment.get("remodl_params", {}).get("base_model", None)
 
         model = base_model
 
         ## GET PROVIDER
-        _model, custom_llm_provider, _, _ = litellm.get_llm_provider(
-            model=deployment.get("litellm_params", {}).get("model", ""),
-            litellm_params=LiteLLM_Params(**deployment.get("litellm_params", {})),
+        _model, custom_llm_provider, _, _ = remodl.get_llm_provider(
+            model=deployment.get("remodl_params", {}).get("model", ""),
+            remodl_params=LiteLLM_Params(**deployment.get("remodl_params", {})),
         )
 
         ## SET MODEL TO 'model=' - if base_model is None + not azure
         if custom_llm_provider == "azure" and base_model is None:
             verbose_router_logger.error(
-                f"Could not identify azure model '{_model}'. Set azure 'base_model' for accurate max tokens, cost tracking, etc.- https://docs.litellm.ai/docs/proxy/cost_tracking#spend-tracking-for-azure-openai-models"
+                f"Could not identify azure model '{_model}'. Set azure 'base_model' for accurate max tokens, cost tracking, etc.- https://docs.remodl.ai/docs/proxy/cost_tracking#spend-tracking-for-azure-openai-models"
             )
         elif custom_llm_provider != "azure":
             model = _model
@@ -5772,7 +5772,7 @@ class Router:
                         if potential_model.get("model_info", {}).get(
                             "id"
                         ) == deployment.get("model_info", {}).get("id"):
-                            model = potential_model.get("litellm_params", {}).get(
+                            model = potential_model.get("remodl_params", {}).get(
                                 "model"
                             )
                             break
@@ -5782,7 +5782,7 @@ class Router:
         ## GET LITELLM MODEL INFO - raises exception, if model is not mapped
         if model is None:
             # Handle case where base_model is None (e.g., Azure models without base_model set)
-            # Use the original model from litellm_params
+            # Use the original model from remodl_params
             model = _model
 
         if not model.startswith("{}/".format(custom_llm_provider)):
@@ -5790,7 +5790,7 @@ class Router:
         else:
             model_info_name = model
 
-        model_info = litellm.get_model_info(model=model_info_name)
+        model_info = remodl.get_model_info(model=model_info_name)
 
         ## CHECK USER SET MODEL INFO
         user_model_info = deployment.get("model_info", {})
@@ -5804,7 +5804,7 @@ class Router:
         For a given model id, return the model info
 
         Returns
-        - dict: the model in list with 'model_name', 'litellm_params', Optional['model_info']
+        - dict: the model in list with 'model_name', 'remodl_params', Optional['model_info']
         - None: could not find deployment in list
         
         Optimized with O(1) index lookup instead of O(n) linear scan.
@@ -5834,22 +5834,22 @@ class Router:
         For a given model id, return the model info
 
         1. Check if model_id is in model info
-        2. If not, check if litellm model name is in model info
+        2. If not, check if remodl model name is in model info
         3. If not, return None
         """
-        from litellm.utils import _update_dictionary
+        from remodl.utils import _update_dictionary
 
         model_info: Optional[ModelInfo] = None
         custom_model_info: Optional[dict] = None
-        litellm_model_name_model_info: Optional[ModelInfo] = None
+        remodl_model_name_model_info: Optional[ModelInfo] = None
 
         try:
-            custom_model_info = litellm.model_cost.get(model_id)
+            custom_model_info = remodl.model_cost.get(model_id)
         except Exception:
             pass
 
         try:
-            litellm_model_name_model_info = litellm.get_model_info(model=model_name)
+            remodl_model_name_model_info = remodl.get_model_info(model=model_name)
         except Exception:
             pass
 
@@ -5858,8 +5858,8 @@ class Router:
             if custom_model_info is not None:
                 base_model = custom_model_info.get("base_model", None)
                 if base_model is not None:
-                    ## update litellm model info with base model info
-                    base_model_info = litellm.get_model_info(model=base_model)
+                    ## update remodl model info with base model info
+                    base_model_info = remodl.get_model_info(model=base_model)
                     if base_model_info is not None:
                         custom_model_info = custom_model_info or {}
                         # Base model provides defaults, custom model info overrides
@@ -5870,16 +5870,16 @@ class Router:
         except Exception:
             pass
 
-        if custom_model_info is not None and litellm_model_name_model_info is not None:
+        if custom_model_info is not None and remodl_model_name_model_info is not None:
             model_info = cast(
                 ModelInfo,
                 _update_dictionary(
-                    cast(dict, litellm_model_name_model_info).copy(),
+                    cast(dict, remodl_model_name_model_info).copy(),
                     custom_model_info,
                 ),
             )
-        elif litellm_model_name_model_info is not None:
-            model_info = litellm_model_name_model_info
+        elif remodl_model_name_model_info is not None:
+            model_info = remodl_model_name_model_info
 
         return model_info
 
@@ -5916,14 +5916,14 @@ class Router:
             if not is_match:
                 continue
             # model in model group found #
-            litellm_params = LiteLLM_Params(**model["litellm_params"])  # type: ignore
+            remodl_params = LiteLLM_Params(**model["remodl_params"])  # type: ignore
             # get configurable clientside auth params
             configurable_clientside_auth_params = (
-                litellm_params.configurable_clientside_auth_params
+                remodl_params.configurable_clientside_auth_params
             )
             
             # Cache nested dict access to avoid repeated temporary dict allocations
-            model_litellm_params = model.get("litellm_params", {})
+            model_remodl_params = model.get("remodl_params", {})
             model_info_dict = model.get("model_info", {})
             
             # get model tpm
@@ -5931,7 +5931,7 @@ class Router:
             if _deployment_tpm is None:
                 _deployment_tpm = model.get("tpm", None)  # type: ignore
             if _deployment_tpm is None:
-                _deployment_tpm = model_litellm_params.get("tpm", None)  # type: ignore
+                _deployment_tpm = model_remodl_params.get("tpm", None)  # type: ignore
             if _deployment_tpm is None:
                 _deployment_tpm = model_info_dict.get("tpm", None)  # type: ignore
 
@@ -5940,7 +5940,7 @@ class Router:
             if _deployment_rpm is None:
                 _deployment_rpm = model.get("rpm", None)  # type: ignore
             if _deployment_rpm is None:
-                _deployment_rpm = model_litellm_params.get("rpm", None)  # type: ignore
+                _deployment_rpm = model_remodl_params.get("rpm", None)  # type: ignore
             if _deployment_rpm is None:
                 _deployment_rpm = model_info_dict.get("rpm", None)  # type: ignore
 
@@ -5949,7 +5949,7 @@ class Router:
                 model_id = model_info_dict.get("id", None)
                 if model_id is not None:
                     model_info = self.get_deployment_model_info(
-                        model_id=model_id, model_name=litellm_params.model
+                        model_id=model_id, model_name=remodl_params.model
                     )
                 else:
                     model_info = None
@@ -5957,20 +5957,20 @@ class Router:
                 model_info = None
 
             # get llm provider
-            litellm_model, llm_provider = "", ""
+            remodl_model, llm_provider = "", ""
             try:
-                litellm_model, llm_provider, _, _ = litellm.get_llm_provider(
-                    model=litellm_params.model,
-                    custom_llm_provider=litellm_params.custom_llm_provider,
+                remodl_model, llm_provider, _, _ = remodl.get_llm_provider(
+                    model=remodl_params.model,
+                    custom_llm_provider=remodl_params.custom_llm_provider,
                 )
-            except litellm.exceptions.BadRequestError as e:
+            except remodl.exceptions.BadRequestError as e:
                 verbose_router_logger.error(
-                    "litellm.router.py::get_model_group_info() - {}".format(str(e))
+                    "remodl.router.py::get_model_group_info() - {}".format(str(e))
                 )
 
             if model_info is None:
-                supported_openai_params = litellm.get_supported_openai_params(
-                    model=litellm_model, custom_llm_provider=llm_provider
+                supported_openai_params = remodl.get_supported_openai_params(
+                    model=remodl_model, custom_llm_provider=llm_provider
                 )
                 if supported_openai_params is None:
                     supported_openai_params = []
@@ -5986,7 +5986,7 @@ class Router:
                     max_output_tokens=None,
                     input_cost_per_token=0,
                     output_cost_per_token=0,
-                    litellm_provider=llm_provider,
+                    remodl_provider=llm_provider,
                     mode=mode,
                     supported_openai_params=supported_openai_params,
                     supports_system_messages=None,
@@ -6171,22 +6171,22 @@ class Router:
 
         for model in model_list:
             id: Optional[str] = model.get("model_info", {}).get("id")  # type: ignore
-            litellm_model: Optional[str] = model["litellm_params"].get(
+            remodl_model: Optional[str] = model["remodl_params"].get(
                 "model"
-            )  # USE THE MODEL SENT TO litellm.completion() - consistent with how global_router cache is written.
-            if id is None or litellm_model is None:
+            )  # USE THE MODEL SENT TO remodl.completion() - consistent with how global_router cache is written.
+            if id is None or remodl_model is None:
                 continue
             tpm_keys.append(
                 RouterCacheEnum.TPM.value.format(
                     id=id,
-                    model=litellm_model,
+                    model=remodl_model,
                     current_minute=current_minute,
                 )
             )
             rpm_keys.append(
                 RouterCacheEnum.RPM.value.format(
                     id=id,
-                    model=litellm_model,
+                    model=remodl_model,
                     current_minute=current_minute,
                 )
             )
@@ -6330,8 +6330,8 @@ class Router:
             # If no ID exists, generate one using the same logic as set_model_list
             if model_id is None:
                 model_name = model.get("model_name", "")
-                litellm_params = model.get("litellm_params", {})
-                model_id = self._generate_model_id(model_name, litellm_params)
+                remodl_params = model.get("remodl_params", {})
+                model_id = self._generate_model_id(model_name, remodl_params)
                 # Update the model_info in the original list
                 if "model_info" not in model:
                     model["model_info"] = {}
@@ -6768,7 +6768,7 @@ class Router:
             )
             if client is None:
                 InitalizeCachedClient.set_max_parallel_requests_client(
-                    litellm_router_instance=self, model=deployment
+                    remodl_router_instance=self, model=deployment
                 )
                 client = self.cache.get_cache(
                     key=cache_key, local_only=True, parent_otel_span=parent_otel_span
@@ -6811,7 +6811,7 @@ class Router:
         """
         Filter out model in model group, if:
 
-        - model context window < message length. For azure openai models, requires 'base_model' is set. - https://docs.litellm.ai/docs/proxy/cost_tracking#spend-tracking-for-azure-openai-models
+        - model context window < message length. For azure openai models, requires 'base_model' is set. - https://docs.remodl.ai/docs/proxy/cost_tracking#spend-tracking-for-azure-openai-models
         - filter models above rpm limits
         - if region given, filter out models not in that region / unknown region
         - [TODO] function call and model doesn't support function calling
@@ -6828,10 +6828,10 @@ class Router:
         invalid_model_indices = set()  # Use set for O(1) membership checks
 
         try:
-            input_tokens = litellm.token_counter(messages=messages)
+            input_tokens = remodl.token_counter(messages=messages)
         except Exception as e:
             verbose_router_logger.error(
-                "litellm.router.py::_pre_call_checks: failed to count tokens. Returning initial list of deployments. Got - {}".format(
+                "remodl.router.py::_pre_call_checks: failed to count tokens. Returning initial list of deployments. Got - {}".format(
                     str(e)
                 )
             )
@@ -6854,18 +6854,18 @@ class Router:
         )  # check the in-memory cache used by lowest_latency and usage-based routing. Only check the local cache.
         for idx, deployment in enumerate(_returned_deployments):
             # Cache nested dict access to avoid repeated temporary dict allocations
-            _litellm_params = deployment.get("litellm_params", {})
+            _remodl_params = deployment.get("remodl_params", {})
             _model_info = deployment.get("model_info", {})
             
             # see if we have the info for this model
             try:
                 base_model = _model_info.get("base_model", None)
                 if base_model is None:
-                    base_model = _litellm_params.get("base_model", None)
+                    base_model = _remodl_params.get("base_model", None)
                 model_info = self.get_router_model_info(
                     deployment=deployment, received_model_name=model
                 )
-                model = base_model or _litellm_params.get("model", None)
+                model = base_model or _remodl_params.get("model", None)
 
                 if (
                     isinstance(model_info, dict)
@@ -6907,12 +6907,12 @@ class Router:
                 )
 
                 if (
-                    isinstance(_litellm_params, dict)
-                    and _litellm_params.get("rpm", None) is not None
+                    isinstance(_remodl_params, dict)
+                    and _remodl_params.get("rpm", None) is not None
                 ):
                     if (
-                        isinstance(_litellm_params["rpm"], int)
-                        and _litellm_params["rpm"] <= current_request
+                        isinstance(_remodl_params["rpm"], int)
+                        and _remodl_params["rpm"] <= current_request
                     ):
                         invalid_model_indices.add(idx)
                         _rate_limit_error = True
@@ -6927,20 +6927,20 @@ class Router:
 
                 if allowed_model_region is not None:
                     if not is_region_allowed(
-                        litellm_params=LiteLLM_Params(**_litellm_params),
+                        remodl_params=LiteLLM_Params(**_remodl_params),
                         allowed_model_region=allowed_model_region,
                     ):
                         invalid_model_indices.add(idx)
                         continue
 
             ## INVALID PARAMS ## -> catch 'gpt-3.5-turbo-16k' not supporting 'response_format' param
-            if request_kwargs is not None and litellm.drop_params is False:
+            if request_kwargs is not None and remodl.drop_params is False:
                 # get supported params
-                model, custom_llm_provider, _, _ = litellm.get_llm_provider(
-                    model=model, litellm_params=LiteLLM_Params(**_litellm_params)
+                model, custom_llm_provider, _, _ = remodl.get_llm_provider(
+                    model=model, remodl_params=LiteLLM_Params(**_remodl_params)
                 )
 
-                supported_openai_params = litellm.get_supported_openai_params(
+                supported_openai_params = remodl.get_supported_openai_params(
                     model=model, custom_llm_provider=custom_llm_provider
                 )
 
@@ -6948,7 +6948,7 @@ class Router:
                     continue
                 else:
                     # check the non-default openai params in request kwargs
-                    non_default_params = litellm.utils.get_non_default_params(
+                    non_default_params = remodl.utils.get_non_default_params(
                         passed_params=request_kwargs
                     )
                     special_params = ["response_format"]
@@ -6974,8 +6974,8 @@ class Router:
                 )
 
             elif _context_window_error is True:
-                raise litellm.ContextWindowExceededError(
-                    message="litellm._pre_call_checks: Context Window exceeded for given call. No models have context window large enough for this call.\n{}".format(
+                raise remodl.ContextWindowExceededError(
+                    message="remodl._pre_call_checks: Context Window exceeded for given call. No models have context window large enough for this call.\n{}".format(
                         _potential_error_str
                     ),
                     model=model,
@@ -6989,7 +6989,7 @@ class Router:
 
         ## ORDER FILTERING ## -> if user set 'order' in deployments, return deployments with lowest order (e.g. order=1 > order=2)
         if len(_returned_deployments) > 0:
-            _returned_deployments = litellm.utils._get_order_filtered_deployments(
+            _returned_deployments = remodl.utils._get_order_filtered_deployments(
                 _returned_deployments
             )
 
@@ -7000,7 +7000,7 @@ class Router:
         Get the model from the alias.
 
         Returns:
-        - str, the litellm model name
+        - str, the remodl model name
         - None, if model is not in model group alias
         """
         if model not in self.model_group_alias:
@@ -7014,11 +7014,11 @@ class Router:
 
         return model
 
-    def _get_deployment_by_litellm_model(self, model: str) -> List:
+    def _get_deployment_by_remodl_model(self, model: str) -> List:
         """
-        Get the deployment by litellm model.
+        Get the deployment by remodl model.
         """
-        return [m for m in self.model_list if m["litellm_params"]["model"] == model]
+        return [m for m in self.model_list if m["remodl_params"]["model"] == model]
 
     def _common_checks_available_deployment(
         self,
@@ -7034,7 +7034,7 @@ class Router:
         If 'healthy_deployments' returned is None, this means the user chose a specific deployment
 
         Returns
-        - str, the litellm model name
+        - str, the remodl model name
         - List, if multiple models chosen
         - Dict, if specific model chosen
         """
@@ -7042,17 +7042,17 @@ class Router:
         request_team_id: Optional[str] = None
         if request_kwargs is not None:
             metadata = request_kwargs.get("metadata") or {}
-            litellm_metadata = request_kwargs.get("litellm_metadata") or {}
+            remodl_metadata = request_kwargs.get("remodl_metadata") or {}
             request_team_id = metadata.get(
                 "user_api_key_team_id"
-            ) or litellm_metadata.get("user_api_key_team_id")
-        # check if aliases set on litellm model alias map
+            ) or remodl_metadata.get("user_api_key_team_id")
+        # check if aliases set on remodl model alias map
         if specific_deployment is True:
-            return model, self._get_deployment_by_litellm_model(model=model)
+            return model, self._get_deployment_by_remodl_model(model=model)
         elif self.has_model_id(model):
             deployment = self.get_deployment(model_id=model)
             if deployment is not None:
-                deployment_model = deployment.litellm_params.model
+                deployment_model = deployment.remodl_params.model
                 return deployment_model, deployment.model_dump(exclude_none=True)
             raise ValueError(
                 f"LiteLLM Router: Trying to call specific deployment, but Model ID :{model} does not exist in Model ID map"
@@ -7085,12 +7085,12 @@ class Router:
 
             # check if default deployment is set
             if self.default_deployment is not None:
-                # Shallow copy with nested litellm_params copy (100x+ faster than deepcopy)
+                # Shallow copy with nested remodl_params copy (100x+ faster than deepcopy)
                 updated_deployment = self.default_deployment.copy()
-                updated_deployment["litellm_params"] = self.default_deployment[
-                    "litellm_params"
+                updated_deployment["remodl_params"] = self.default_deployment[
+                    "remodl_params"
                 ].copy()
-                updated_deployment["litellm_params"]["model"] = model
+                updated_deployment["remodl_params"]["model"] = model
                 return model, updated_deployment
 
         ## get healthy deployments
@@ -7099,7 +7099,7 @@ class Router:
 
         if len(healthy_deployments) == 0:
             # check if the user sent in a deployment name instead
-            healthy_deployments = self._get_deployment_by_litellm_model(model=model)
+            healthy_deployments = self._get_deployment_by_remodl_model(model=model)
 
         verbose_router_logger.debug(
             f"initial list of deployments: {healthy_deployments}"
@@ -7115,14 +7115,14 @@ class Router:
                     model
                 )
 
-            raise litellm.BadRequestError(
+            raise remodl.BadRequestError(
                 message=message,
                 model=model,
                 llm_provider="",
             )
 
-        if litellm.model_alias_map and model in litellm.model_alias_map:
-            model = litellm.model_alias_map[
+        if remodl.model_alias_map and model in remodl.model_alias_map:
+            model = remodl.model_alias_map[
                 model
             ]  # update the model to the actual value if an alias has been passed in
 
@@ -7145,7 +7145,7 @@ class Router:
         *OR*
         - Dict, if specific model chosen
         """
-        from litellm.router_utils.common_utils import filter_team_based_models
+        from remodl.router_utils.common_utils import filter_team_based_models
 
         model, healthy_deployments = self._common_checks_available_deployment(
             model=model,
@@ -7166,7 +7166,7 @@ class Router:
             return healthy_deployments
 
         cooldown_deployments = await _async_get_cooldown_deployments(
-            litellm_router_instance=self, parent_otel_span=parent_otel_span
+            remodl_router_instance=self, parent_otel_span=parent_otel_span
         )
         verbose_router_logger.debug(
             f"async cooldown deployments: {cooldown_deployments}"
@@ -7207,7 +7207,7 @@ class Router:
 
         if len(healthy_deployments) == 0:
             exception = await async_raise_no_deployment_exception(
-                litellm_router_instance=self,
+                remodl_router_instance=self,
                 model=model,
                 parent_otel_span=parent_otel_span,
             )
@@ -7330,7 +7330,7 @@ class Router:
                 deployment = None
             if deployment is None:
                 exception = await async_raise_no_deployment_exception(
-                    litellm_router_instance=self,
+                    remodl_router_instance=self,
                     model=model,
                     parent_otel_span=parent_otel_span,
                 )
@@ -7357,7 +7357,7 @@ class Router:
             traceback_exception = traceback.format_exc()
             # if router rejects call -> log to langfuse/otel/etc.
             if request_kwargs is not None:
-                logging_obj = request_kwargs.get("litellm_logging_obj", None)
+                logging_obj = request_kwargs.get("remodl_logging_obj", None)
 
                 if logging_obj is not None:
                     ## LOGGING
@@ -7382,7 +7382,7 @@ class Router:
         """
         This hook is called before the routing decision is made.
 
-        Used for the litellm auto-router to modify the request before the routing decision is made.
+        Used for the remodl auto-router to modify the request before the routing decision is made.
         """
         #########################################################
         # Check if any auto-router should be used
@@ -7426,7 +7426,7 @@ class Router:
             request_kwargs
         )
         cooldown_deployments = _get_cooldown_deployments(
-            litellm_router_instance=self, parent_otel_span=parent_otel_span
+            remodl_router_instance=self, parent_otel_span=parent_otel_span
         )
         healthy_deployments = self._filter_cooldown_deployments(
             healthy_deployments=healthy_deployments,
@@ -7448,7 +7448,7 @@ class Router:
                 model_ids=model_ids, parent_otel_span=parent_otel_span
             )
             _cooldown_list = _get_cooldown_deployments(
-                litellm_router_instance=self, parent_otel_span=parent_otel_span
+                remodl_router_instance=self, parent_otel_span=parent_otel_span
             )
             raise RouterRateLimitError(
                 model=model,
@@ -7510,7 +7510,7 @@ class Router:
                 model_ids=model_ids, parent_otel_span=parent_otel_span
             )
             _cooldown_list = _get_cooldown_deployments(
-                litellm_router_instance=self, parent_otel_span=parent_otel_span
+                remodl_router_instance=self, parent_otel_span=parent_otel_span
             )
             raise RouterRateLimitError(
                 model=model,
@@ -7586,33 +7586,33 @@ class Router:
             return None
 
         if (
-            isinstance(exception, litellm.BadRequestError)
+            isinstance(exception, remodl.BadRequestError)
             and allowed_fails_policy.BadRequestErrorAllowedFails is not None
         ):
             return allowed_fails_policy.BadRequestErrorAllowedFails
         if (
-            isinstance(exception, litellm.AuthenticationError)
+            isinstance(exception, remodl.AuthenticationError)
             and allowed_fails_policy.AuthenticationErrorAllowedFails is not None
         ):
             return allowed_fails_policy.AuthenticationErrorAllowedFails
         if (
-            isinstance(exception, litellm.Timeout)
+            isinstance(exception, remodl.Timeout)
             and allowed_fails_policy.TimeoutErrorAllowedFails is not None
         ):
             return allowed_fails_policy.TimeoutErrorAllowedFails
         if (
-            isinstance(exception, litellm.RateLimitError)
+            isinstance(exception, remodl.RateLimitError)
             and allowed_fails_policy.RateLimitErrorAllowedFails is not None
         ):
             return allowed_fails_policy.RateLimitErrorAllowedFails
         if (
-            isinstance(exception, litellm.ContentPolicyViolationError)
+            isinstance(exception, remodl.ContentPolicyViolationError)
             and allowed_fails_policy.ContentPolicyViolationErrorAllowedFails is not None
         ):
             return allowed_fails_policy.ContentPolicyViolationErrorAllowedFails
 
     def _initialize_alerting(self):
-        from litellm.integrations.SlackAlerting.slack_alerting import SlackAlerting
+        from remodl.integrations.SlackAlerting.slack_alerting import SlackAlerting
 
         if self.alerting_config is None:
             return
@@ -7627,24 +7627,24 @@ class Router:
 
         self.slack_alerting_logger = _slack_alerting_logger
 
-        litellm.logging_callback_manager.add_litellm_callback(_slack_alerting_logger)  # type: ignore
-        litellm.logging_callback_manager.add_litellm_success_callback(
+        remodl.logging_callback_manager.add_remodl_callback(_slack_alerting_logger)  # type: ignore
+        remodl.logging_callback_manager.add_remodl_success_callback(
             _slack_alerting_logger.response_taking_too_long_callback
         )
         verbose_router_logger.info(
-            "\033[94m\nInitialized Alerting for litellm.Router\033[0m\n"
+            "\033[94m\nInitialized Alerting for remodl.Router\033[0m\n"
         )
 
     def set_custom_routing_strategy(
         self, CustomRoutingStrategy: CustomRoutingStrategyBase
     ):
         """
-        Sets get_available_deployment and async_get_available_deployment on an instanced of litellm.Router
+        Sets get_available_deployment and async_get_available_deployment on an instanced of remodl.Router
 
         Use this to set your custom routing strategy
 
         Args:
-            CustomRoutingStrategy: litellm.router.CustomRoutingStrategyBase
+            CustomRoutingStrategy: remodl.router.CustomRoutingStrategyBase
         """
 
         setattr(
@@ -7659,14 +7659,14 @@ class Router:
         )
 
     def flush_cache(self):
-        litellm.cache = None
+        remodl.cache = None
         self.cache.flush_cache()
 
     def reset(self):
         ## clean up on close
-        litellm.success_callback = []
-        litellm._async_success_callback = []
-        litellm.failure_callback = []
-        litellm._async_failure_callback = []
+        remodl.success_callback = []
+        remodl._async_success_callback = []
+        remodl.failure_callback = []
+        remodl._async_failure_callback = []
         self.retry_policy = None
         self.flush_cache()

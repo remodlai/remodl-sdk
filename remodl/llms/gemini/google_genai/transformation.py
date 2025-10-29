@@ -6,16 +6,16 @@ from typing import TYPE_CHECKING, Any, Dict, List, Literal, Optional, Tuple, Uni
 
 import httpx
 
-import litellm
-from litellm.litellm_core_utils.litellm_logging import Logging as LiteLLMLoggingObj
-from litellm.llms.base_llm.google_genai.transformation import (
+import remodl
+from remodl.remodl_core_utils.remodl_logging import Logging as LiteLLMLoggingObj
+from remodl.llms.base_llm.google_genai.transformation import (
     BaseGoogleGenAIGenerateContentConfig,
 )
-from litellm.llms.vertex_ai.gemini.vertex_and_google_ai_studio_gemini import VertexLLM
-from litellm.types.router import GenericLiteLLMParams
+from remodl.llms.vertex_ai.gemini.vertex_and_google_ai_studio_gemini import VertexLLM
+from remodl.types.router import GenericLiteLLMParams
 
 if TYPE_CHECKING:
-    from litellm.types.google_genai.main import (
+    from remodl.types.google_genai.main import (
         GenerateContentConfigDict,
         GenerateContentContentListUnionDict,
         GenerateContentResponse,
@@ -119,14 +119,14 @@ class GoogleGenAIConfig(BaseGoogleGenAIGenerateContentConfig, VertexLLM):
         api_key: Optional[str],
         headers: Optional[dict],
         model: str,
-        litellm_params: Optional[Union[GenericLiteLLMParams, dict]],
+        remodl_params: Optional[Union[GenericLiteLLMParams, dict]],
     ) -> dict:
         default_headers = {
             "Content-Type": "application/json",
         }
-        # Use the passed api_key first, then fall back to litellm_params and environment
+        # Use the passed api_key first, then fall back to remodl_params and environment
         gemini_api_key = api_key or self._get_google_ai_studio_api_key(
-            dict(litellm_params or {})
+            dict(remodl_params or {})
         )
         if gemini_api_key is not None:
             default_headers[self.XGOOGLE_API_KEY] = gemini_api_key
@@ -135,17 +135,17 @@ class GoogleGenAIConfig(BaseGoogleGenAIGenerateContentConfig, VertexLLM):
 
         return default_headers
 
-    def _get_google_ai_studio_api_key(self, litellm_params: dict) -> Optional[str]:
+    def _get_google_ai_studio_api_key(self, remodl_params: dict) -> Optional[str]:
         return (
-            litellm_params.pop("api_key", None)
-            or litellm_params.pop("gemini_api_key", None)
+            remodl_params.pop("api_key", None)
+            or remodl_params.pop("gemini_api_key", None)
             or get_api_key_from_env()
-            or litellm.api_key
+            or remodl.api_key
         )
 
     def _get_common_auth_components(
         self,
-        litellm_params: dict,
+        remodl_params: dict,
     ) -> Tuple[Any, Optional[str], Optional[str]]:
         """
         Get common authentication components used by both sync and async methods.
@@ -153,9 +153,9 @@ class GoogleGenAIConfig(BaseGoogleGenAIGenerateContentConfig, VertexLLM):
         Returns:
             Tuple of (vertex_credentials, vertex_project, vertex_location)
         """
-        vertex_credentials = self.get_vertex_ai_credentials(litellm_params)
-        vertex_project = self.get_vertex_ai_project(litellm_params)
-        vertex_location = self.get_vertex_ai_location(litellm_params)
+        vertex_credentials = self.get_vertex_ai_credentials(remodl_params)
+        vertex_project = self.get_vertex_ai_project(remodl_params)
+        vertex_location = self.get_vertex_ai_location(remodl_params)
         return vertex_credentials, vertex_project, vertex_location
 
     def _build_final_headers_and_url(
@@ -167,12 +167,12 @@ class GoogleGenAIConfig(BaseGoogleGenAIGenerateContentConfig, VertexLLM):
         vertex_credentials: Any,
         stream: bool,
         api_base: Optional[str],
-        litellm_params: dict,
+        remodl_params: dict,
     ) -> Tuple[dict, str]:
         """
         Build final headers and API URL from auth components.
         """
-        gemini_api_key = self._get_google_ai_studio_api_key(litellm_params)
+        gemini_api_key = self._get_google_ai_studio_api_key(remodl_params)
 
         auth_header, api_base = self._get_token_and_url(
             model=model,
@@ -191,7 +191,7 @@ class GoogleGenAIConfig(BaseGoogleGenAIGenerateContentConfig, VertexLLM):
             api_key=auth_header,
             headers=None,
             model=model,
-            litellm_params=litellm_params,
+            remodl_params=remodl_params,
         )
 
         return headers, api_base
@@ -200,14 +200,14 @@ class GoogleGenAIConfig(BaseGoogleGenAIGenerateContentConfig, VertexLLM):
         self,
         api_base: Optional[str],
         model: str,
-        litellm_params: dict,
+        remodl_params: dict,
         stream: bool,
     ) -> Tuple[dict, str]:
         """
         Sync version of get_auth_token_and_url.
         """
         vertex_credentials, vertex_project, vertex_location = (
-            self._get_common_auth_components(litellm_params)
+            self._get_common_auth_components(remodl_params)
         )
 
         _auth_header, vertex_project = self._ensure_access_token(
@@ -224,14 +224,14 @@ class GoogleGenAIConfig(BaseGoogleGenAIGenerateContentConfig, VertexLLM):
             vertex_credentials=vertex_credentials,
             stream=stream,
             api_base=api_base,
-            litellm_params=litellm_params,
+            remodl_params=remodl_params,
         )
 
     async def get_auth_token_and_url(
         self,
         api_base: Optional[str],
         model: str,
-        litellm_params: dict,
+        remodl_params: dict,
         stream: bool,
     ) -> Tuple[dict, str]:
         """
@@ -240,13 +240,13 @@ class GoogleGenAIConfig(BaseGoogleGenAIGenerateContentConfig, VertexLLM):
         Args:
             api_base: Base API URL
             model: The model name
-            litellm_params: LiteLLM parameters
+            remodl_params: LiteLLM parameters
 
         Returns:
             Tuple of headers and API base
         """
         vertex_credentials, vertex_project, vertex_location = (
-            self._get_common_auth_components(litellm_params)
+            self._get_common_auth_components(remodl_params)
         )
 
         _auth_header, vertex_project = await self._ensure_access_token_async(
@@ -263,7 +263,7 @@ class GoogleGenAIConfig(BaseGoogleGenAIGenerateContentConfig, VertexLLM):
             vertex_credentials=vertex_credentials,
             stream=stream,
             api_base=api_base,
-            litellm_params=litellm_params,
+            remodl_params=remodl_params,
         )
 
     def transform_generate_content_request(
@@ -273,7 +273,7 @@ class GoogleGenAIConfig(BaseGoogleGenAIGenerateContentConfig, VertexLLM):
         tools: Optional[ToolConfigDict],
         generate_content_config_dict: Dict,
     ) -> dict:
-        from litellm.types.google_genai.main import (
+        from remodl.types.google_genai.main import (
             GenerateContentConfigDict,
             GenerateContentRequestDict,
         )
@@ -305,7 +305,7 @@ class GoogleGenAIConfig(BaseGoogleGenAIGenerateContentConfig, VertexLLM):
         Returns:
             Transformed response data
         """
-        from litellm.types.google_genai.main import GenerateContentResponse
+        from remodl.types.google_genai.main import GenerateContentResponse
 
         try:
             response = raw_response.json()

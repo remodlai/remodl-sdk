@@ -8,11 +8,11 @@ Use this to route requests between Teams
 
 from typing import TYPE_CHECKING, Any, Dict, List, Literal, Optional, Union
 
-from litellm._logging import verbose_logger
-from litellm.types.router import RouterErrors
+from remodl._logging import verbose_logger
+from remodl.types.router import RouterErrors
 
 if TYPE_CHECKING:
-    from litellm.router import Router as _Router
+    from remodl.router import Router as _Router
 
     LitellmRouter = _Router
 else:
@@ -41,7 +41,7 @@ async def get_deployments_for_tag(
     model: str,  # used to raise the correct error
     healthy_deployments: Union[List[Any], Dict[Any, Any]],
     request_kwargs: Optional[Dict[Any, Any]] = None,
-    metadata_variable_name: Literal["metadata", "litellm_metadata"] = "metadata",
+    metadata_variable_name: Literal["metadata", "remodl_metadata"] = "metadata",
 ):
     """
     Returns a list of deployments that match the requested model and tags in the request.
@@ -78,8 +78,8 @@ async def get_deployments_for_tag(
             # example this can be router_keys=["free", "custom"]
             # get all deployments that have a superset of these router keys
             for deployment in healthy_deployments:
-                deployment_litellm_params = deployment.get("litellm_params")
-                deployment_tags = deployment_litellm_params.get("tags")
+                deployment_remodl_params = deployment.get("remodl_params")
+                deployment_tags = deployment_remodl_params.get("tags")
 
                 verbose_logger.debug(
                     "deployment: %s,  deployment_router_keys: %s",
@@ -106,7 +106,7 @@ async def get_deployments_for_tag(
     # for Untagged requests use default deployments if set
     _default_deployments_with_tags = []
     for deployment in healthy_deployments:
-        if "default" in deployment.get("litellm_params", {}).get("tags", []):
+        if "default" in deployment.get("remodl_params", {}).get("tags", []):
             _default_deployments_with_tags.append(deployment)
 
     if len(_default_deployments_with_tags) > 0:
@@ -122,7 +122,7 @@ async def get_deployments_for_tag(
 
 def _get_tags_from_request_kwargs(
     request_kwargs: Optional[Dict[Any, Any]] = None,
-    metadata_variable_name: Literal["metadata", "litellm_metadata"] = "metadata",
+    metadata_variable_name: Literal["metadata", "remodl_metadata"] = "metadata",
 ) -> List[str]:
     """
     Helper to get tags from request kwargs
@@ -139,9 +139,9 @@ def _get_tags_from_request_kwargs(
         metadata = request_kwargs[metadata_variable_name] or {}
         tags = metadata.get("tags", [])
         return tags if tags is not None else []
-    elif "litellm_params" in request_kwargs:
-        litellm_params = request_kwargs["litellm_params"] or {}
-        _metadata = litellm_params.get(metadata_variable_name, {}) or {}
+    elif "remodl_params" in request_kwargs:
+        remodl_params = request_kwargs["remodl_params"] or {}
+        _metadata = remodl_params.get(metadata_variable_name, {}) or {}
         tags = _metadata.get("tags", [])
         return tags if tags is not None else []
     return []

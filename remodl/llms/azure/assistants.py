@@ -34,11 +34,11 @@ class AzureAssistantsAPI(BaseAzureLLM):
         timeout: Union[float, httpx.Timeout],
         max_retries: Optional[int],
         client: Optional[AzureOpenAI] = None,
-        litellm_params: Optional[dict] = None,
+        remodl_params: Optional[dict] = None,
     ) -> AzureOpenAI:
         if client is None:
             azure_client_params = self.initialize_azure_sdk_client(
-                litellm_params=litellm_params or {},
+                remodl_params=remodl_params or {},
                 api_key=api_key,
                 api_base=api_base,
                 model_name="",
@@ -60,11 +60,11 @@ class AzureAssistantsAPI(BaseAzureLLM):
         timeout: Union[float, httpx.Timeout],
         max_retries: Optional[int],
         client: Optional[AsyncAzureOpenAI] = None,
-        litellm_params: Optional[dict] = None,
+        remodl_params: Optional[dict] = None,
     ) -> AsyncAzureOpenAI:
         if client is None:
             azure_client_params = self.initialize_azure_sdk_client(
-                litellm_params=litellm_params or {},
+                remodl_params=remodl_params or {},
                 api_key=api_key,
                 api_base=api_base,
                 model_name="",
@@ -90,7 +90,7 @@ class AzureAssistantsAPI(BaseAzureLLM):
         timeout: Union[float, httpx.Timeout],
         max_retries: Optional[int],
         client: Optional[AsyncAzureOpenAI],
-        litellm_params: Optional[dict] = None,
+        remodl_params: Optional[dict] = None,
     ) -> AsyncCursorPage[Assistant]:
         azure_openai_client = self.async_get_azure_client(
             api_key=api_key,
@@ -100,7 +100,7 @@ class AzureAssistantsAPI(BaseAzureLLM):
             timeout=timeout,
             max_retries=max_retries,
             client=client,
-            litellm_params=litellm_params,
+            remodl_params=remodl_params,
         )
 
         response = await azure_openai_client.beta.assistants.list()
@@ -149,7 +149,7 @@ class AzureAssistantsAPI(BaseAzureLLM):
         max_retries: Optional[int],
         client=None,
         aget_assistants=None,
-        litellm_params: Optional[dict] = None,
+        remodl_params: Optional[dict] = None,
     ):
         if aget_assistants is not None and aget_assistants is True:
             return self.async_get_assistants(
@@ -160,7 +160,7 @@ class AzureAssistantsAPI(BaseAzureLLM):
                 timeout=timeout,
                 max_retries=max_retries,
                 client=client,
-                litellm_params=litellm_params,
+                remodl_params=remodl_params,
             )
         azure_openai_client = self.get_azure_client(
             api_key=api_key,
@@ -170,7 +170,7 @@ class AzureAssistantsAPI(BaseAzureLLM):
             max_retries=max_retries,
             client=client,
             api_version=api_version,
-            litellm_params=litellm_params,
+            remodl_params=remodl_params,
         )
 
         response = azure_openai_client.beta.assistants.list()
@@ -190,7 +190,7 @@ class AzureAssistantsAPI(BaseAzureLLM):
         timeout: Union[float, httpx.Timeout],
         max_retries: Optional[int],
         client: Optional[AsyncAzureOpenAI] = None,
-        litellm_params: Optional[dict] = None,
+        remodl_params: Optional[dict] = None,
     ) -> OpenAIMessage:
         openai_client = self.async_get_azure_client(
             api_key=api_key,
@@ -200,7 +200,7 @@ class AzureAssistantsAPI(BaseAzureLLM):
             timeout=timeout,
             max_retries=max_retries,
             client=client,
-            litellm_params=litellm_params,
+            remodl_params=remodl_params,
         )
 
         thread_message: OpenAIMessage = await openai_client.beta.threads.messages.create(  # type: ignore
@@ -230,7 +230,7 @@ class AzureAssistantsAPI(BaseAzureLLM):
         max_retries: Optional[int],
         client: Optional[AsyncAzureOpenAI],
         a_add_message: Literal[True],
-        litellm_params: Optional[dict] = None,
+        remodl_params: Optional[dict] = None,
     ) -> Coroutine[None, None, OpenAIMessage]:
         ...
 
@@ -247,7 +247,7 @@ class AzureAssistantsAPI(BaseAzureLLM):
         max_retries: Optional[int],
         client: Optional[AzureOpenAI],
         a_add_message: Optional[Literal[False]],
-        litellm_params: Optional[dict] = None,
+        remodl_params: Optional[dict] = None,
     ) -> OpenAIMessage:
         ...
 
@@ -265,7 +265,7 @@ class AzureAssistantsAPI(BaseAzureLLM):
         max_retries: Optional[int],
         client=None,
         a_add_message: Optional[bool] = None,
-        litellm_params: Optional[dict] = None,
+        remodl_params: Optional[dict] = None,
     ):
         if a_add_message is not None and a_add_message is True:
             return self.a_add_message(
@@ -278,7 +278,7 @@ class AzureAssistantsAPI(BaseAzureLLM):
                 timeout=timeout,
                 max_retries=max_retries,
                 client=client,
-                litellm_params=litellm_params,
+                remodl_params=remodl_params,
             )
         openai_client = self.get_azure_client(
             api_key=api_key,
@@ -288,7 +288,7 @@ class AzureAssistantsAPI(BaseAzureLLM):
             timeout=timeout,
             max_retries=max_retries,
             client=client,
-            litellm_params=litellm_params,
+            remodl_params=remodl_params,
         )
 
         thread_message: OpenAIMessage = openai_client.beta.threads.messages.create(  # type: ignore
@@ -313,7 +313,7 @@ class AzureAssistantsAPI(BaseAzureLLM):
         timeout: Union[float, httpx.Timeout],
         max_retries: Optional[int],
         client: Optional[AsyncAzureOpenAI] = None,
-        litellm_params: Optional[dict] = None,
+        remodl_params: Optional[dict] = None,
     ) -> AsyncCursorPage[OpenAIMessage]:
         openai_client = self.async_get_azure_client(
             api_key=api_key,
@@ -323,7 +323,7 @@ class AzureAssistantsAPI(BaseAzureLLM):
             timeout=timeout,
             max_retries=max_retries,
             client=client,
-            litellm_params=litellm_params,
+            remodl_params=remodl_params,
         )
 
         response = await openai_client.beta.threads.messages.list(thread_id=thread_id)
@@ -344,7 +344,7 @@ class AzureAssistantsAPI(BaseAzureLLM):
         max_retries: Optional[int],
         client: Optional[AsyncAzureOpenAI],
         aget_messages: Literal[True],
-        litellm_params: Optional[dict] = None,
+        remodl_params: Optional[dict] = None,
     ) -> Coroutine[None, None, AsyncCursorPage[OpenAIMessage]]:
         ...
 
@@ -360,7 +360,7 @@ class AzureAssistantsAPI(BaseAzureLLM):
         max_retries: Optional[int],
         client: Optional[AzureOpenAI],
         aget_messages: Optional[Literal[False]],
-        litellm_params: Optional[dict] = None,
+        remodl_params: Optional[dict] = None,
     ) -> SyncCursorPage[OpenAIMessage]:
         ...
 
@@ -377,7 +377,7 @@ class AzureAssistantsAPI(BaseAzureLLM):
         max_retries: Optional[int],
         client=None,
         aget_messages=None,
-        litellm_params: Optional[dict] = None,
+        remodl_params: Optional[dict] = None,
     ):
         if aget_messages is not None and aget_messages is True:
             return self.async_get_messages(
@@ -389,7 +389,7 @@ class AzureAssistantsAPI(BaseAzureLLM):
                 timeout=timeout,
                 max_retries=max_retries,
                 client=client,
-                litellm_params=litellm_params,
+                remodl_params=remodl_params,
             )
         openai_client = self.get_azure_client(
             api_key=api_key,
@@ -399,7 +399,7 @@ class AzureAssistantsAPI(BaseAzureLLM):
             timeout=timeout,
             max_retries=max_retries,
             client=client,
-            litellm_params=litellm_params,
+            remodl_params=remodl_params,
         )
 
         response = openai_client.beta.threads.messages.list(thread_id=thread_id)
@@ -419,7 +419,7 @@ class AzureAssistantsAPI(BaseAzureLLM):
         max_retries: Optional[int],
         client: Optional[AsyncAzureOpenAI],
         messages: Optional[Iterable[OpenAICreateThreadParamsMessage]],
-        litellm_params: Optional[dict] = None,
+        remodl_params: Optional[dict] = None,
     ) -> Thread:
         openai_client = self.async_get_azure_client(
             api_key=api_key,
@@ -429,7 +429,7 @@ class AzureAssistantsAPI(BaseAzureLLM):
             timeout=timeout,
             max_retries=max_retries,
             client=client,
-            litellm_params=litellm_params,
+            remodl_params=remodl_params,
         )
 
         data = {}
@@ -457,7 +457,7 @@ class AzureAssistantsAPI(BaseAzureLLM):
         messages: Optional[Iterable[OpenAICreateThreadParamsMessage]],
         client: Optional[AsyncAzureOpenAI],
         acreate_thread: Literal[True],
-        litellm_params: Optional[dict] = None,
+        remodl_params: Optional[dict] = None,
     ) -> Coroutine[None, None, Thread]:
         ...
 
@@ -474,7 +474,7 @@ class AzureAssistantsAPI(BaseAzureLLM):
         messages: Optional[Iterable[OpenAICreateThreadParamsMessage]],
         client: Optional[AzureOpenAI],
         acreate_thread: Optional[Literal[False]],
-        litellm_params: Optional[dict] = None,
+        remodl_params: Optional[dict] = None,
     ) -> Thread:
         ...
 
@@ -492,12 +492,12 @@ class AzureAssistantsAPI(BaseAzureLLM):
         messages: Optional[Iterable[OpenAICreateThreadParamsMessage]],
         client=None,
         acreate_thread=None,
-        litellm_params: Optional[dict] = None,
+        remodl_params: Optional[dict] = None,
     ):
         """
         Here's an example:
         ```
-        from litellm.llms.openai.openai import OpenAIAssistantsAPI, MessageData
+        from remodl.llms.openai.openai import OpenAIAssistantsAPI, MessageData
 
         # create thread
         message: MessageData = {"role": "user", "content": "Hey, how's it going?"}
@@ -515,7 +515,7 @@ class AzureAssistantsAPI(BaseAzureLLM):
                 max_retries=max_retries,
                 client=client,
                 messages=messages,
-                litellm_params=litellm_params,
+                remodl_params=remodl_params,
             )
         azure_openai_client = self.get_azure_client(
             api_key=api_key,
@@ -525,7 +525,7 @@ class AzureAssistantsAPI(BaseAzureLLM):
             timeout=timeout,
             max_retries=max_retries,
             client=client,
-            litellm_params=litellm_params,
+            remodl_params=remodl_params,
         )
 
         data = {}
@@ -548,7 +548,7 @@ class AzureAssistantsAPI(BaseAzureLLM):
         timeout: Union[float, httpx.Timeout],
         max_retries: Optional[int],
         client: Optional[AsyncAzureOpenAI],
-        litellm_params: Optional[dict] = None,
+        remodl_params: Optional[dict] = None,
     ) -> Thread:
         openai_client = self.async_get_azure_client(
             api_key=api_key,
@@ -558,7 +558,7 @@ class AzureAssistantsAPI(BaseAzureLLM):
             timeout=timeout,
             max_retries=max_retries,
             client=client,
-            litellm_params=litellm_params,
+            remodl_params=remodl_params,
         )
 
         response = await openai_client.beta.threads.retrieve(thread_id=thread_id)
@@ -579,7 +579,7 @@ class AzureAssistantsAPI(BaseAzureLLM):
         max_retries: Optional[int],
         client: Optional[AsyncAzureOpenAI],
         aget_thread: Literal[True],
-        litellm_params: Optional[dict] = None,
+        remodl_params: Optional[dict] = None,
     ) -> Coroutine[None, None, Thread]:
         ...
 
@@ -595,7 +595,7 @@ class AzureAssistantsAPI(BaseAzureLLM):
         max_retries: Optional[int],
         client: Optional[AzureOpenAI],
         aget_thread: Optional[Literal[False]],
-        litellm_params: Optional[dict] = None,
+        remodl_params: Optional[dict] = None,
     ) -> Thread:
         ...
 
@@ -612,7 +612,7 @@ class AzureAssistantsAPI(BaseAzureLLM):
         max_retries: Optional[int],
         client=None,
         aget_thread=None,
-        litellm_params: Optional[dict] = None,
+        remodl_params: Optional[dict] = None,
     ):
         if aget_thread is not None and aget_thread is True:
             return self.async_get_thread(
@@ -624,7 +624,7 @@ class AzureAssistantsAPI(BaseAzureLLM):
                 timeout=timeout,
                 max_retries=max_retries,
                 client=client,
-                litellm_params=litellm_params,
+                remodl_params=remodl_params,
             )
         openai_client = self.get_azure_client(
             api_key=api_key,
@@ -634,7 +634,7 @@ class AzureAssistantsAPI(BaseAzureLLM):
             timeout=timeout,
             max_retries=max_retries,
             client=client,
-            litellm_params=litellm_params,
+            remodl_params=remodl_params,
         )
 
         response = openai_client.beta.threads.retrieve(thread_id=thread_id)
@@ -663,7 +663,7 @@ class AzureAssistantsAPI(BaseAzureLLM):
         timeout: Union[float, httpx.Timeout],
         max_retries: Optional[int],
         client: Optional[AsyncAzureOpenAI],
-        litellm_params: Optional[dict] = None,
+        remodl_params: Optional[dict] = None,
     ) -> Run:
         openai_client = self.async_get_azure_client(
             api_key=api_key,
@@ -673,7 +673,7 @@ class AzureAssistantsAPI(BaseAzureLLM):
             api_version=api_version,
             azure_ad_token=azure_ad_token,
             client=client,
-            litellm_params=litellm_params,
+            remodl_params=remodl_params,
         )
 
         response = await openai_client.beta.threads.runs.create_and_poll(  # type: ignore
@@ -699,7 +699,7 @@ class AzureAssistantsAPI(BaseAzureLLM):
         model: Optional[str],
         tools: Optional[Iterable[AssistantToolParam]],
         event_handler: Optional[AssistantEventHandler],
-        litellm_params: Optional[dict] = None,
+        remodl_params: Optional[dict] = None,
     ) -> AsyncAssistantStreamManager[AsyncAssistantEventHandler]:
         data: Dict[str, Any] = {
             "thread_id": thread_id,
@@ -725,7 +725,7 @@ class AzureAssistantsAPI(BaseAzureLLM):
         model: Optional[str],
         tools: Optional[Iterable[AssistantToolParam]],
         event_handler: Optional[AssistantEventHandler],
-        litellm_params: Optional[dict] = None,
+        remodl_params: Optional[dict] = None,
     ) -> AssistantStreamManager[AssistantEventHandler]:
         data: Dict[str, Any] = {
             "thread_id": thread_id,
@@ -807,7 +807,7 @@ class AzureAssistantsAPI(BaseAzureLLM):
         client=None,
         arun_thread=None,
         event_handler: Optional[AssistantEventHandler] = None,
-        litellm_params: Optional[dict] = None,
+        remodl_params: Optional[dict] = None,
     ):
         if arun_thread is not None and arun_thread is True:
             if stream is not None and stream is True:
@@ -819,7 +819,7 @@ class AzureAssistantsAPI(BaseAzureLLM):
                     timeout=timeout,
                     max_retries=max_retries,
                     client=client,
-                    litellm_params=litellm_params,
+                    remodl_params=remodl_params,
                 )
                 return self.async_run_thread_stream(
                     client=azure_client,
@@ -831,7 +831,7 @@ class AzureAssistantsAPI(BaseAzureLLM):
                     model=model,
                     tools=tools,
                     event_handler=event_handler,
-                    litellm_params=litellm_params,
+                    remodl_params=remodl_params,
                 )
             return self.arun_thread(
                 thread_id=thread_id,
@@ -849,7 +849,7 @@ class AzureAssistantsAPI(BaseAzureLLM):
                 timeout=timeout,
                 max_retries=max_retries,
                 client=client,
-                litellm_params=litellm_params,
+                remodl_params=remodl_params,
             )
         openai_client = self.get_azure_client(
             api_key=api_key,
@@ -859,7 +859,7 @@ class AzureAssistantsAPI(BaseAzureLLM):
             timeout=timeout,
             max_retries=max_retries,
             client=client,
-            litellm_params=litellm_params,
+            remodl_params=remodl_params,
         )
 
         if stream is not None and stream is True:
@@ -873,7 +873,7 @@ class AzureAssistantsAPI(BaseAzureLLM):
                 model=model,
                 tools=tools,
                 event_handler=event_handler,
-                litellm_params=litellm_params,
+                remodl_params=remodl_params,
             )
 
         response = openai_client.beta.threads.runs.create_and_poll(  # type: ignore
@@ -899,7 +899,7 @@ class AzureAssistantsAPI(BaseAzureLLM):
         max_retries: Optional[int],
         client: Optional[AsyncAzureOpenAI],
         create_assistant_data: dict,
-        litellm_params: Optional[dict] = None,
+        remodl_params: Optional[dict] = None,
     ) -> Assistant:
         azure_openai_client = self.async_get_azure_client(
             api_key=api_key,
@@ -909,7 +909,7 @@ class AzureAssistantsAPI(BaseAzureLLM):
             timeout=timeout,
             max_retries=max_retries,
             client=client,
-            litellm_params=litellm_params,
+            remodl_params=remodl_params,
         )
 
         response = await azure_openai_client.beta.assistants.create(
@@ -928,7 +928,7 @@ class AzureAssistantsAPI(BaseAzureLLM):
         create_assistant_data: dict,
         client=None,
         async_create_assistants=None,
-        litellm_params: Optional[dict] = None,
+        remodl_params: Optional[dict] = None,
     ):
         if async_create_assistants is not None and async_create_assistants is True:
             return self.async_create_assistants(
@@ -940,7 +940,7 @@ class AzureAssistantsAPI(BaseAzureLLM):
                 max_retries=max_retries,
                 client=client,
                 create_assistant_data=create_assistant_data,
-                litellm_params=litellm_params,
+                remodl_params=remodl_params,
             )
         azure_openai_client = self.get_azure_client(
             api_key=api_key,
@@ -950,7 +950,7 @@ class AzureAssistantsAPI(BaseAzureLLM):
             timeout=timeout,
             max_retries=max_retries,
             client=client,
-            litellm_params=litellm_params,
+            remodl_params=remodl_params,
         )
 
         response = azure_openai_client.beta.assistants.create(**create_assistant_data)
@@ -967,7 +967,7 @@ class AzureAssistantsAPI(BaseAzureLLM):
         max_retries: Optional[int],
         client: Optional[AsyncAzureOpenAI],
         assistant_id: str,
-        litellm_params: Optional[dict] = None,
+        remodl_params: Optional[dict] = None,
     ):
         azure_openai_client = self.async_get_azure_client(
             api_key=api_key,
@@ -977,7 +977,7 @@ class AzureAssistantsAPI(BaseAzureLLM):
             timeout=timeout,
             max_retries=max_retries,
             client=client,
-            litellm_params=litellm_params,
+            remodl_params=remodl_params,
         )
 
         response = await azure_openai_client.beta.assistants.delete(
@@ -996,7 +996,7 @@ class AzureAssistantsAPI(BaseAzureLLM):
         assistant_id: str,
         async_delete_assistants: Optional[bool] = None,
         client=None,
-        litellm_params: Optional[dict] = None,
+        remodl_params: Optional[dict] = None,
     ):
         if async_delete_assistants is not None and async_delete_assistants is True:
             return self.async_delete_assistant(
@@ -1008,7 +1008,7 @@ class AzureAssistantsAPI(BaseAzureLLM):
                 max_retries=max_retries,
                 client=client,
                 assistant_id=assistant_id,
-                litellm_params=litellm_params,
+                remodl_params=remodl_params,
             )
         azure_openai_client = self.get_azure_client(
             api_key=api_key,
@@ -1018,7 +1018,7 @@ class AzureAssistantsAPI(BaseAzureLLM):
             timeout=timeout,
             max_retries=max_retries,
             client=client,
-            litellm_params=litellm_params,
+            remodl_params=remodl_params,
         )
 
         response = azure_openai_client.beta.assistants.delete(assistant_id=assistant_id)

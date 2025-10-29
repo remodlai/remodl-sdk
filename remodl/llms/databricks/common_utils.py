@@ -1,6 +1,6 @@
 from typing import Literal, Optional, Tuple
 
-from litellm.llms.base_llm.chat.transformation import BaseLLMException
+from remodl.llms.base_llm.chat.transformation import BaseLLMException
 
 
 class DatabricksException(BaseLLMException):

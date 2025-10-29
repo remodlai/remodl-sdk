@@ -11,7 +11,7 @@ class LangsmithInputs(BaseModel):
     messages: Optional[List[Any]] = None
     stream: Optional[bool] = None
     call_type: Optional[str] = None
-    litellm_call_id: Optional[str] = None
+    remodl_call_id: Optional[str] = None
     completion_start_time: Optional[datetime] = None
     temperature: Optional[float] = None
     max_tokens: Optional[int] = None

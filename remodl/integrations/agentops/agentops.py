@@ -4,8 +4,8 @@ AgentOps integration for LiteLLM - Provides OpenTelemetry tracing for LLM calls
 import os
 from dataclasses import dataclass
 from typing import Optional, Dict, Any
-from litellm.integrations.opentelemetry import OpenTelemetry, OpenTelemetryConfig
-from litellm.llms.custom_httpx.http_handler import _get_httpx_client
+from remodl.integrations.opentelemetry import OpenTelemetry, OpenTelemetryConfig
+from remodl.llms.custom_httpx.http_handler import _get_httpx_client
 
 @dataclass
 class AgentOpsConfig:
@@ -31,11 +31,11 @@ class AgentOps(OpenTelemetry):
 
     Example usage:
         ```python
-        import litellm
+        import remodl
         
-        litellm.success_callback = ["agentops"]
+        remodl.success_callback = ["agentops"]
 
-        response = litellm.completion(
+        response = remodl.completion(
             model="gpt-3.5-turbo",
             messages=[{"role": "user", "content": "Hello, how are you?"}],
         )
@@ -75,7 +75,7 @@ class AgentOps(OpenTelemetry):
 
         # Set AgentOps-specific resource attributes
         resource_attrs = {
-            "service.name": config.service_name or "litellm",
+            "service.name": config.service_name or "remodl",
             "deployment.environment": config.deployment_environment or "production",
             "telemetry.sdk.name": "agentops",
         }

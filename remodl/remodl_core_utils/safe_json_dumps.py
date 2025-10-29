@@ -1,7 +1,7 @@
 import json
 from typing import Any, Union
 
-from litellm.constants import DEFAULT_MAX_RECURSE_DEPTH
+from remodl.constants import DEFAULT_MAX_RECURSE_DEPTH
 
 
 def safe_dumps(data: Any, max_depth: int = DEFAULT_MAX_RECURSE_DEPTH) -> str:

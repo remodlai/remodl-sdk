@@ -6,13 +6,13 @@ from typing import Optional
 
 import httpx
 
-from litellm.llms.base_llm.embedding.transformation import (
+from remodl.llms.base_llm.embedding.transformation import (
     BaseEmbeddingConfig,
     LiteLLMLoggingObj,
 )
-from litellm.types.llms.openai import AllEmbeddingInputValues
-from litellm.types.llms.watsonx import WatsonXAIEndpoint
-from litellm.types.utils import EmbeddingResponse, Usage
+from remodl.types.llms.openai import AllEmbeddingInputValues
+from remodl.types.llms.watsonx import WatsonXAIEndpoint
+from remodl.types.utils import EmbeddingResponse, Usage
 
 from ..common_utils import IBMWatsonXMixin, _get_api_params
 
@@ -55,7 +55,7 @@ class IBMWatsonXEmbeddingConfig(IBMWatsonXMixin, BaseEmbeddingConfig):
         api_key: Optional[str],
         model: str,
         optional_params: dict,
-        litellm_params: dict,
+        remodl_params: dict,
         stream: Optional[bool] = None,
     ) -> str:
         url = self._get_base_url(api_base=api_base)
@@ -80,7 +80,7 @@ class IBMWatsonXEmbeddingConfig(IBMWatsonXMixin, BaseEmbeddingConfig):
         api_key: Optional[str],
         request_data: dict,
         optional_params: dict,
-        litellm_params: dict,
+        remodl_params: dict,
     ) -> EmbeddingResponse:
         logging_obj.post_call(
             original_response=raw_response.text,

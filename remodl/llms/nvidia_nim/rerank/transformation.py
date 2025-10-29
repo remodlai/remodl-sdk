@@ -3,13 +3,13 @@ from typing import Any, Dict, List, Literal, Optional, Union
 import httpx
 from typing_extensions import Required, TypedDict
 
-import litellm
-from litellm._uuid import uuid
-from litellm.litellm_core_utils.litellm_logging import Logging as LiteLLMLoggingObj
-from litellm.llms.base_llm.chat.transformation import BaseLLMException
-from litellm.llms.base_llm.rerank.transformation import BaseRerankConfig
-from litellm.secret_managers.main import get_secret_str
-from litellm.types.rerank import (
+import remodl
+from remodl._uuid import uuid
+from remodl.remodl_core_utils.remodl_logging import Logging as LiteLLMLoggingObj
+from remodl.llms.base_llm.chat.transformation import BaseLLMException
+from remodl.llms.base_llm.rerank.transformation import BaseRerankConfig
+from remodl.secret_managers.main import get_secret_str
+from remodl.types.rerank import (
     RerankBilledUnits,
     RerankResponse,
     RerankResponseMeta,
@@ -138,7 +138,7 @@ class NvidiaNimRerankConfig(BaseRerankConfig):
         if api_key is None:
             api_key = (
                 get_secret_str("NVIDIA_NIM_API_KEY")
-                or litellm.api_key
+                or remodl.api_key
             )
 
         if api_key is None:
@@ -237,7 +237,7 @@ class NvidiaNimRerankConfig(BaseRerankConfig):
         api_key: Optional[str] = None,
         request_data: dict = {},
         optional_params: dict = {},
-        litellm_params: dict = {},
+        remodl_params: dict = {},
     ) -> RerankResponse:
         """
         Transform Nvidia NIM rerank response to LiteLLM format.

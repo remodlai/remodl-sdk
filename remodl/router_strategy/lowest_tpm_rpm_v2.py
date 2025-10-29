@@ -5,15 +5,15 @@ from typing import TYPE_CHECKING, Any, Dict, List, Optional, Union
 
 import httpx
 
-import litellm
-from litellm import token_counter
-from litellm._logging import verbose_logger, verbose_router_logger
-from litellm.caching.caching import DualCache
-from litellm.integrations.custom_logger import CustomLogger
-from litellm.litellm_core_utils.core_helpers import _get_parent_otel_span_from_kwargs
-from litellm.types.router import RouterErrors
-from litellm.types.utils import LiteLLMPydanticObjectBase, StandardLoggingPayload
-from litellm.utils import get_utc_datetime, print_verbose
+import remodl
+from remodl import token_counter
+from remodl._logging import verbose_logger, verbose_router_logger
+from remodl.caching.caching import DualCache
+from remodl.integrations.custom_logger import CustomLogger
+from remodl.remodl_core_utils.core_helpers import _get_parent_otel_span_from_kwargs
+from remodl.types.router import RouterErrors
+from remodl.types.utils import LiteLLMPydanticObjectBase, StandardLoggingPayload
+from remodl.utils import get_utc_datetime, print_verbose
 
 from .base_routing_strategy import BaseRoutingStrategy
 
@@ -75,7 +75,7 @@ class LowestTPMLoggingHandler_v2(BaseRoutingStrategy, CustomLogger):
             dt = get_utc_datetime()
             current_minute = dt.strftime("%H-%M")
             model_id = deployment.get("model_info", {}).get("id")
-            deployment_name = deployment.get("litellm_params", {}).get("model")
+            deployment_name = deployment.get("remodl_params", {}).get("model")
             rpm_key = f"{model_id}:{deployment_name}:rpm:{current_minute}"
 
             local_result = self.router_cache.get_cache(
@@ -86,19 +86,19 @@ class LowestTPMLoggingHandler_v2(BaseRoutingStrategy, CustomLogger):
             if deployment_rpm is None:
                 deployment_rpm = deployment.get("rpm")
             if deployment_rpm is None:
-                deployment_rpm = deployment.get("litellm_params", {}).get("rpm")
+                deployment_rpm = deployment.get("remodl_params", {}).get("rpm")
             if deployment_rpm is None:
                 deployment_rpm = deployment.get("model_info", {}).get("rpm")
             if deployment_rpm is None:
                 deployment_rpm = float("inf")
 
             if local_result is not None and local_result >= deployment_rpm:
-                raise litellm.RateLimitError(
+                raise remodl.RateLimitError(
                     message="Deployment over defined rpm limit={}. current usage={}".format(
                         deployment_rpm, local_result
                     ),
                     llm_provider="",
-                    model=deployment.get("litellm_params", {}).get("model"),
+                    model=deployment.get("remodl_params", {}).get("model"),
                     response=httpx.Response(
                         status_code=429,
                         content="{} rpm limit={}. current usage={}. id={}, model_group={}. Get the model info by calling 'router.get_model_info(id)".format(
@@ -108,7 +108,7 @@ class LowestTPMLoggingHandler_v2(BaseRoutingStrategy, CustomLogger):
                             model_id,
                             deployment.get("model_name", ""),
                         ),
-                        request=httpx.Request(method="tpm_rpm_limits", url="https://github.com/BerriAI/litellm"),  # type: ignore
+                        request=httpx.Request(method="tpm_rpm_limits", url="https://github.com/BerriAI/remodl"),  # type: ignore
                     ),
                 )
             else:
@@ -118,12 +118,12 @@ class LowestTPMLoggingHandler_v2(BaseRoutingStrategy, CustomLogger):
                     key=rpm_key, value=1, ttl=self.routing_args.ttl
                 )
                 if result is not None and result > deployment_rpm:
-                    raise litellm.RateLimitError(
+                    raise remodl.RateLimitError(
                         message="Deployment over defined rpm limit={}. current usage={}".format(
                             deployment_rpm, result
                         ),
                         llm_provider="",
-                        model=deployment.get("litellm_params", {}).get("model"),
+                        model=deployment.get("remodl_params", {}).get("model"),
                         response=httpx.Response(
                             status_code=429,
                             content="{} rpm limit={}. current usage={}".format(
@@ -131,12 +131,12 @@ class LowestTPMLoggingHandler_v2(BaseRoutingStrategy, CustomLogger):
                                 deployment_rpm,
                                 result,
                             ),
-                            request=httpx.Request(method="tpm_rpm_limits", url="https://github.com/BerriAI/litellm"),  # type: ignore
+                            request=httpx.Request(method="tpm_rpm_limits", url="https://github.com/BerriAI/remodl"),  # type: ignore
                         ),
                     )
             return deployment
         except Exception as e:
-            if isinstance(e, litellm.RateLimitError):
+            if isinstance(e, remodl.RateLimitError):
                 raise e
             return deployment  # don't fail calls if eg. redis fails to connect
 
@@ -148,7 +148,7 @@ class LowestTPMLoggingHandler_v2(BaseRoutingStrategy, CustomLogger):
         - Used inside semaphore
         - raise rate limit error if deployment over limit
 
-        Why? solves concurrency issue - https://github.com/BerriAI/litellm/issues/2994
+        Why? solves concurrency issue - https://github.com/BerriAI/remodl/issues/2994
 
         Returns - deployment
 
@@ -161,7 +161,7 @@ class LowestTPMLoggingHandler_v2(BaseRoutingStrategy, CustomLogger):
             dt = get_utc_datetime()
             current_minute = dt.strftime("%H-%M")
             model_id = deployment.get("model_info", {}).get("id")
-            deployment_name = deployment.get("litellm_params", {}).get("model")
+            deployment_name = deployment.get("remodl_params", {}).get("model")
 
             rpm_key = f"{model_id}:{deployment_name}:rpm:{current_minute}"
             local_result = await self.router_cache.async_get_cache(
@@ -172,18 +172,18 @@ class LowestTPMLoggingHandler_v2(BaseRoutingStrategy, CustomLogger):
             if deployment_rpm is None:
                 deployment_rpm = deployment.get("rpm")
             if deployment_rpm is None:
-                deployment_rpm = deployment.get("litellm_params", {}).get("rpm")
+                deployment_rpm = deployment.get("remodl_params", {}).get("rpm")
             if deployment_rpm is None:
                 deployment_rpm = deployment.get("model_info", {}).get("rpm")
             if deployment_rpm is None:
                 deployment_rpm = float("inf")
             if local_result is not None and local_result >= deployment_rpm:
-                raise litellm.RateLimitError(
+                raise remodl.RateLimitError(
                     message="Deployment over defined rpm limit={}. current usage={}".format(
                         deployment_rpm, local_result
                     ),
                     llm_provider="",
-                    model=deployment.get("litellm_params", {}).get("model"),
+                    model=deployment.get("remodl_params", {}).get("model"),
                     response=httpx.Response(
                         status_code=429,
                         content="{} rpm limit={}. current usage={}".format(
@@ -192,7 +192,7 @@ class LowestTPMLoggingHandler_v2(BaseRoutingStrategy, CustomLogger):
                             local_result,
                         ),
                         headers={"retry-after": str(60)},  # type: ignore
-                        request=httpx.Request(method="tpm_rpm_limits", url="https://github.com/BerriAI/litellm"),  # type: ignore
+                        request=httpx.Request(method="tpm_rpm_limits", url="https://github.com/BerriAI/remodl"),  # type: ignore
                     ),
                     num_retries=deployment.get("num_retries"),
                 )
@@ -202,12 +202,12 @@ class LowestTPMLoggingHandler_v2(BaseRoutingStrategy, CustomLogger):
                     key=rpm_key, value=1, ttl=self.routing_args.ttl
                 )
                 if result is not None and result > deployment_rpm:
-                    raise litellm.RateLimitError(
+                    raise remodl.RateLimitError(
                         message="Deployment over defined rpm limit={}. current usage={}".format(
                             deployment_rpm, result
                         ),
                         llm_provider="",
-                        model=deployment.get("litellm_params", {}).get("model"),
+                        model=deployment.get("remodl_params", {}).get("model"),
                         response=httpx.Response(
                             status_code=429,
                             content="{} rpm limit={}. current usage={}".format(
@@ -216,13 +216,13 @@ class LowestTPMLoggingHandler_v2(BaseRoutingStrategy, CustomLogger):
                                 result,
                             ),
                             headers={"retry-after": str(60)},  # type: ignore
-                            request=httpx.Request(method="tpm_rpm_limits", url="https://github.com/BerriAI/litellm"),  # type: ignore
+                            request=httpx.Request(method="tpm_rpm_limits", url="https://github.com/BerriAI/remodl"),  # type: ignore
                         ),
                         num_retries=deployment.get("num_retries"),
                     )
             return deployment
         except Exception as e:
-            if isinstance(e, litellm.RateLimitError):
+            if isinstance(e, remodl.RateLimitError):
                 raise e
             return deployment  # don't fail calls if eg. redis fails to connect
 
@@ -237,7 +237,7 @@ class LowestTPMLoggingHandler_v2(BaseRoutingStrategy, CustomLogger):
             if standard_logging_object is None:
                 raise ValueError("standard_logging_object not passed in.")
             model_group = standard_logging_object.get("model_group")
-            model = standard_logging_object["hidden_params"].get("litellm_model_name")
+            model = standard_logging_object["hidden_params"].get("remodl_model_name")
             id = standard_logging_object.get("model_id")
             if model_group is None or id is None or model is None:
                 return
@@ -269,7 +269,7 @@ class LowestTPMLoggingHandler_v2(BaseRoutingStrategy, CustomLogger):
                 self.logged_success += 1
         except Exception as e:
             verbose_logger.exception(
-                "litellm.proxy.hooks.lowest_tpm_rpm_v2.py::log_success_event(): Exception occured - {}".format(
+                "remodl.proxy.hooks.lowest_tpm_rpm_v2.py::log_success_event(): Exception occured - {}".format(
                     str(e)
                 )
             )
@@ -286,7 +286,7 @@ class LowestTPMLoggingHandler_v2(BaseRoutingStrategy, CustomLogger):
             if standard_logging_object is None:
                 raise ValueError("standard_logging_object not passed in.")
             model_group = standard_logging_object.get("model_group")
-            model = standard_logging_object["hidden_params"]["litellm_model_name"]
+            model = standard_logging_object["hidden_params"]["remodl_model_name"]
             id = standard_logging_object.get("model_id")
             if model_group is None or id is None:
                 return
@@ -320,7 +320,7 @@ class LowestTPMLoggingHandler_v2(BaseRoutingStrategy, CustomLogger):
                 self.logged_success += 1
         except Exception as e:
             verbose_logger.exception(
-                "litellm.proxy.hooks.lowest_tpm_rpm_v2.py::async_log_success_event(): Exception occured - {}".format(
+                "remodl.proxy.hooks.lowest_tpm_rpm_v2.py::async_log_success_event(): Exception occured - {}".format(
                     str(e)
                 )
             )
@@ -351,7 +351,7 @@ class LowestTPMLoggingHandler_v2(BaseRoutingStrategy, CustomLogger):
             if _deployment_tpm is None:
                 _deployment_tpm = _deployment.get("tpm")
             if _deployment_tpm is None:
-                _deployment_tpm = _deployment.get("litellm_params", {}).get("tpm")
+                _deployment_tpm = _deployment.get("remodl_params", {}).get("tpm")
             if _deployment_tpm is None:
                 _deployment_tpm = _deployment.get("model_info", {}).get("tpm")
             if _deployment_tpm is None:
@@ -361,7 +361,7 @@ class LowestTPMLoggingHandler_v2(BaseRoutingStrategy, CustomLogger):
             if _deployment_rpm is None:
                 _deployment_rpm = _deployment.get("rpm")
             if _deployment_rpm is None:
-                _deployment_rpm = _deployment.get("litellm_params", {}).get("rpm")
+                _deployment_rpm = _deployment.get("remodl_params", {}).get("rpm")
             if _deployment_rpm is None:
                 _deployment_rpm = _deployment.get("model_info", {}).get("rpm")
             if _deployment_rpm is None:
@@ -469,7 +469,7 @@ class LowestTPMLoggingHandler_v2(BaseRoutingStrategy, CustomLogger):
                 id = m.get("model_info", {}).get(
                     "id"
                 )  # a deployment should always have an 'id'. this is set in router.py
-                deployment_name = m.get("litellm_params", {}).get("model")
+                deployment_name = m.get("remodl_params", {}).get("model")
                 tpm_key = "{}:{}:tpm:{}".format(id, deployment_name, current_minute)
                 rpm_key = "{}:{}:rpm:{}".format(id, deployment_name, current_minute)
 
@@ -514,7 +514,7 @@ class LowestTPMLoggingHandler_v2(BaseRoutingStrategy, CustomLogger):
                     if _deployment_tpm is None:
                         _deployment_tpm = _deployment.get("tpm", None)
                     if _deployment_tpm is None:
-                        _deployment_tpm = _deployment.get("litellm_params", {}).get(
+                        _deployment_tpm = _deployment.get("remodl_params", {}).get(
                             "tpm", None
                         )
                     if _deployment_tpm is None:
@@ -532,7 +532,7 @@ class LowestTPMLoggingHandler_v2(BaseRoutingStrategy, CustomLogger):
                     if _deployment_rpm is None:
                         _deployment_rpm = _deployment.get("rpm", None)
                     if _deployment_rpm is None:
-                        _deployment_rpm = _deployment.get("litellm_params", {}).get(
+                        _deployment_rpm = _deployment.get("remodl_params", {}).get(
                             "rpm", None
                         )
                     if _deployment_rpm is None:
@@ -551,7 +551,7 @@ class LowestTPMLoggingHandler_v2(BaseRoutingStrategy, CustomLogger):
                         "current_rpm": current_rpm,
                         "rpm_limit": _deployment_rpm,
                     }
-            raise litellm.RateLimitError(
+            raise remodl.RateLimitError(
                 message=f"{RouterErrors.no_deployments_available.value}. Passed model={model_group}. Deployments={deployment_dict}",
                 llm_provider="",
                 model=model_group,
@@ -559,7 +559,7 @@ class LowestTPMLoggingHandler_v2(BaseRoutingStrategy, CustomLogger):
                     status_code=429,
                     content="",
                     headers={"retry-after": str(60)},  # type: ignore
-                    request=httpx.Request(method="tpm_rpm_limits", url="https://github.com/BerriAI/litellm"),  # type: ignore
+                    request=httpx.Request(method="tpm_rpm_limits", url="https://github.com/BerriAI/remodl"),  # type: ignore
                 ),
             )
 
@@ -588,7 +588,7 @@ class LowestTPMLoggingHandler_v2(BaseRoutingStrategy, CustomLogger):
                 id = m.get("model_info", {}).get(
                     "id"
                 )  # a deployment should always have an 'id'. this is set in router.py
-                deployment_name = m.get("litellm_params", {}).get("model")
+                deployment_name = m.get("remodl_params", {}).get("model")
                 tpm_key = "{}:{}:tpm:{}".format(id, deployment_name, current_minute)
                 rpm_key = "{}:{}:rpm:{}".format(id, deployment_name, current_minute)
 
@@ -627,7 +627,7 @@ class LowestTPMLoggingHandler_v2(BaseRoutingStrategy, CustomLogger):
                     if _deployment_tpm is None:
                         _deployment_tpm = _deployment.get("tpm", None)
                     if _deployment_tpm is None:
-                        _deployment_tpm = _deployment.get("litellm_params", {}).get(
+                        _deployment_tpm = _deployment.get("remodl_params", {}).get(
                             "tpm", None
                         )
                     if _deployment_tpm is None:
@@ -645,7 +645,7 @@ class LowestTPMLoggingHandler_v2(BaseRoutingStrategy, CustomLogger):
                     if _deployment_rpm is None:
                         _deployment_rpm = _deployment.get("rpm", None)
                     if _deployment_rpm is None:
-                        _deployment_rpm = _deployment.get("litellm_params", {}).get(
+                        _deployment_rpm = _deployment.get("remodl_params", {}).get(
                             "rpm", None
                         )
                     if _deployment_rpm is None:

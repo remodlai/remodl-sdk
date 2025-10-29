@@ -12,8 +12,8 @@ from openai.types.completion_create_params import (
 )
 from openai.types.embedding_create_params import EmbeddingCreateParams
 
-from litellm._logging import verbose_logger
-from litellm.types.rerank import RerankRequest
+from remodl._logging import verbose_logger
+from remodl.types.rerank import RerankRequest
 
 
 class ModelParamHelper:
@@ -54,16 +54,16 @@ class ModelParamHelper:
         Gets the supported kwargs for each call type and combines them
         """
         chat_completion_kwargs = (
-            ModelParamHelper._get_litellm_supported_chat_completion_kwargs()
+            ModelParamHelper._get_remodl_supported_chat_completion_kwargs()
         )
         text_completion_kwargs = (
-            ModelParamHelper._get_litellm_supported_text_completion_kwargs()
+            ModelParamHelper._get_remodl_supported_text_completion_kwargs()
         )
-        embedding_kwargs = ModelParamHelper._get_litellm_supported_embedding_kwargs()
+        embedding_kwargs = ModelParamHelper._get_remodl_supported_embedding_kwargs()
         transcription_kwargs = (
-            ModelParamHelper._get_litellm_supported_transcription_kwargs()
+            ModelParamHelper._get_remodl_supported_transcription_kwargs()
         )
-        rerank_kwargs = ModelParamHelper._get_litellm_supported_rerank_kwargs()
+        rerank_kwargs = ModelParamHelper._get_remodl_supported_rerank_kwargs()
         exclude_kwargs = ModelParamHelper._get_exclude_kwargs()
 
         combined_kwargs = chat_completion_kwargs.union(
@@ -76,13 +76,13 @@ class ModelParamHelper:
         return combined_kwargs
 
     @staticmethod
-    def get_litellm_provider_specific_params_for_chat_params() -> Set[str]:
+    def get_remodl_provider_specific_params_for_chat_params() -> Set[str]:
         return set(["thinking"])
 
     @staticmethod
-    def _get_litellm_supported_chat_completion_kwargs() -> Set[str]:
+    def _get_remodl_supported_chat_completion_kwargs() -> Set[str]:
         """
-        Get the litellm supported chat completion kwargs
+        Get the remodl supported chat completion kwargs
 
         This follows the OpenAI API Spec
         """
@@ -92,18 +92,18 @@ class ModelParamHelper:
         streaming_params: Set[str] = set(
             getattr(CompletionCreateParamsStreaming, "__annotations__", {}).keys()
         )
-        litellm_provider_specific_params: Set[str] = (
-            ModelParamHelper.get_litellm_provider_specific_params_for_chat_params()
+        remodl_provider_specific_params: Set[str] = (
+            ModelParamHelper.get_remodl_provider_specific_params_for_chat_params()
         )
         all_chat_completion_kwargs: Set[str] = non_streaming_params.union(
             streaming_params
-        ).union(litellm_provider_specific_params)
+        ).union(remodl_provider_specific_params)
         return all_chat_completion_kwargs
 
     @staticmethod
-    def _get_litellm_supported_text_completion_kwargs() -> Set[str]:
+    def _get_remodl_supported_text_completion_kwargs() -> Set[str]:
         """
-        Get the litellm supported text completion kwargs
+        Get the remodl supported text completion kwargs
 
         This follows the OpenAI API Spec
         """
@@ -121,25 +121,25 @@ class ModelParamHelper:
         return all_text_completion_kwargs
 
     @staticmethod
-    def _get_litellm_supported_rerank_kwargs() -> Set[str]:
+    def _get_remodl_supported_rerank_kwargs() -> Set[str]:
         """
-        Get the litellm supported rerank kwargs
+        Get the remodl supported rerank kwargs
         """
         return set(RerankRequest.model_fields.keys())
 
     @staticmethod
-    def _get_litellm_supported_embedding_kwargs() -> Set[str]:
+    def _get_remodl_supported_embedding_kwargs() -> Set[str]:
         """
-        Get the litellm supported embedding kwargs
+        Get the remodl supported embedding kwargs
 
         This follows the OpenAI API Spec
         """
         return set(getattr(EmbeddingCreateParams, "__annotations__", {}).keys())
 
     @staticmethod
-    def _get_litellm_supported_transcription_kwargs() -> Set[str]:
+    def _get_remodl_supported_transcription_kwargs() -> Set[str]:
         """
-        Get the litellm supported transcription kwargs
+        Get the remodl supported transcription kwargs
 
         This follows the OpenAI API Spec
         """

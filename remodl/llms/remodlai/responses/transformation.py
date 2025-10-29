@@ -25,21 +25,21 @@ import httpx
 from openai.types.responses import ResponseReasoningItem
 from pydantic import BaseModel
 
-import litellm
-from litellm._logging import verbose_logger
-from litellm.litellm_core_utils.llm_response_utils.convert_dict_to_response import (
+import remodl
+from remodl._logging import verbose_logger
+from remodl.remodl_core_utils.llm_response_utils.convert_dict_to_response import (
     _safe_convert_created_field,
 )
-from litellm.llms.base_llm.chat.transformation import BaseLLMException
-from litellm.llms.base_llm.responses.transformation import BaseResponsesAPIConfig
-from litellm.secret_managers.main import get_secret_str
-from litellm.types.llms.openai import *
-from litellm.types.responses.main import *
-from litellm.types.router import GenericLiteLLMParams
-from litellm.types.utils import LlmProviders
+from remodl.llms.base_llm.chat.transformation import BaseLLMException
+from remodl.llms.base_llm.responses.transformation import BaseResponsesAPIConfig
+from remodl.secret_managers.main import get_secret_str
+from remodl.types.llms.openai import *
+from remodl.types.responses.main import *
+from remodl.types.router import GenericLiteLLMParams
+from remodl.types.utils import LlmProviders
 
 if TYPE_CHECKING:
-    from litellm.litellm_core_utils.litellm_logging import Logging as _LiteLLMLoggingObj
+    from remodl.remodl_core_utils.remodl_logging import Logging as _LiteLLMLoggingObj
 
     LiteLLMLoggingObj = _LiteLLMLoggingObj
 else:
@@ -104,7 +104,7 @@ class RemodlAIResponsesAPIConfig(BaseResponsesAPIConfig):
         model: str,
         input: Union[str, ResponseInputParam],
         response_api_optional_request_params: Dict,
-        litellm_params: GenericLiteLLMParams,
+        remodl_params: GenericLiteLLMParams,
         headers: dict,
     ) -> Dict:
         """No transformation required – just validate the input payload."""
@@ -205,11 +205,11 @@ class RemodlAIResponsesAPIConfig(BaseResponsesAPIConfig):
             return ResponsesAPIResponse.model_construct(**raw_response_json)
 
     def validate_environment(
-        self, headers: dict, model: str, litellm_params: Optional[GenericLiteLLMParams]
+        self, headers: dict, model: str, remodl_params: Optional[GenericLiteLLMParams]
     ) -> dict:
-        litellm_params = litellm_params or GenericLiteLLMParams()
+        remodl_params = remodl_params or GenericLiteLLMParams()
         api_key = (
-            getattr(litellm_params, "api_key", None)
+            getattr(remodl_params, "api_key", None)
             or get_secret_str("REMODL_AI_API_KEY")
             or "fake-api-key"
         )
@@ -224,14 +224,14 @@ class RemodlAIResponsesAPIConfig(BaseResponsesAPIConfig):
     def get_complete_url(
         self,
         api_base: Optional[str],
-        litellm_params: dict,
+        remodl_params: dict,
     ) -> str:
         """
         Hosted RemodlAI exposes an OpenAI-compatible `/v1/responses` endpoint.
         """
         api_base = (
             api_base
-            or litellm.api_base
+            or remodl.api_base
             or get_secret_str("REMODL_AI_API_BASE")
         )
 
@@ -325,7 +325,7 @@ class RemodlAIResponsesAPIConfig(BaseResponsesAPIConfig):
             return False
         if model is not None:
             try:
-                supports_stream = litellm.utils.supports_native_streaming(
+                supports_stream = remodl.utils.supports_native_streaming(
                     model=model,
                     custom_llm_provider=custom_llm_provider
                     or self.custom_llm_provider.value,
@@ -351,7 +351,7 @@ class RemodlAIResponsesAPIConfig(BaseResponsesAPIConfig):
         self,
         response_id: str,
         api_base: str,
-        litellm_params: GenericLiteLLMParams,
+        remodl_params: GenericLiteLLMParams,
         headers: dict,
     ) -> Tuple[str, Dict]:
         url = f"{api_base}/{response_id}"
@@ -381,7 +381,7 @@ class RemodlAIResponsesAPIConfig(BaseResponsesAPIConfig):
         self,
         response_id: str,
         api_base: str,
-        litellm_params: GenericLiteLLMParams,
+        remodl_params: GenericLiteLLMParams,
         headers: dict,
     ) -> Tuple[str, Dict]:
         url = f"{api_base}/{response_id}"
@@ -411,7 +411,7 @@ class RemodlAIResponsesAPIConfig(BaseResponsesAPIConfig):
         self,
         response_id: str,
         api_base: str,
-        litellm_params: GenericLiteLLMParams,
+        remodl_params: GenericLiteLLMParams,
         headers: dict,
         after: Optional[str] = None,
         before: Optional[str] = None,
@@ -455,7 +455,7 @@ class RemodlAIResponsesAPIConfig(BaseResponsesAPIConfig):
         self,
         response_id: str,
         api_base: str,
-        litellm_params: GenericLiteLLMParams,
+        remodl_params: GenericLiteLLMParams,
         headers: dict,
     ) -> Tuple[str, Dict]:
         url = f"{api_base}/{response_id}/cancel"

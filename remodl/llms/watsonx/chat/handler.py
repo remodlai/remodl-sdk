@@ -2,8 +2,8 @@ from typing import Callable, Optional, Union
 
 import httpx
 
-from litellm.llms.custom_httpx.http_handler import AsyncHTTPHandler, HTTPHandler
-from litellm.types.utils import CustomStreamingDecoder, ModelResponse
+from remodl.llms.custom_httpx.http_handler import AsyncHTTPHandler, HTTPHandler
+from remodl.types.utils import CustomStreamingDecoder, ModelResponse
 
 from ...openai_like.chat.handler import OpenAILikeChatHandler
 from ..common_utils import _get_api_params
@@ -31,7 +31,7 @@ class WatsonXChatHandler(OpenAILikeChatHandler):
         logging_obj,
         optional_params: dict,
         acompletion=None,
-        litellm_params: dict = {},
+        remodl_params: dict = {},
         headers: Optional[dict] = None,
         logger_fn=None,
         timeout: Optional[Union[float, httpx.Timeout]] = None,
@@ -49,7 +49,7 @@ class WatsonXChatHandler(OpenAILikeChatHandler):
             messages=messages,
             optional_params=optional_params,
             api_key=api_key,
-            litellm_params=litellm_params,
+            remodl_params=remodl_params,
         )
 
         ## UPDATE PAYLOAD (optional params and special cases for models deployed in spaces)
@@ -65,7 +65,7 @@ class WatsonXChatHandler(OpenAILikeChatHandler):
             api_key=api_key,
             model=model,
             optional_params=optional_params,
-            litellm_params=litellm_params,
+            remodl_params=remodl_params,
             stream=optional_params.get("stream", False),
         )
 
@@ -82,7 +82,7 @@ class WatsonXChatHandler(OpenAILikeChatHandler):
             logging_obj=logging_obj,
             optional_params=optional_params,
             acompletion=acompletion,
-            litellm_params=litellm_params,
+            remodl_params=remodl_params,
             logger_fn=logger_fn,
             headers=headers,
             timeout=timeout,

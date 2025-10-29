@@ -4,22 +4,22 @@ import httpx
 from openai.types.responses import ResponseReasoningItem
 from pydantic import BaseModel
 
-import litellm
-from litellm._logging import verbose_logger
-from litellm.litellm_core_utils.llm_response_utils.convert_dict_to_response import (
+import remodl
+from remodl._logging import verbose_logger
+from remodl.remodl_core_utils.llm_response_utils.convert_dict_to_response import (
     _safe_convert_created_field,
 )
-from litellm.llms.base_llm.responses.transformation import BaseResponsesAPIConfig
-from litellm.secret_managers.main import get_secret_str
-from litellm.types.llms.openai import *
-from litellm.types.responses.main import *
-from litellm.types.router import GenericLiteLLMParams
-from litellm.types.utils import LlmProviders
+from remodl.llms.base_llm.responses.transformation import BaseResponsesAPIConfig
+from remodl.secret_managers.main import get_secret_str
+from remodl.types.llms.openai import *
+from remodl.types.responses.main import *
+from remodl.types.router import GenericLiteLLMParams
+from remodl.types.utils import LlmProviders
 
 from ..common_utils import OpenAIError
 
 if TYPE_CHECKING:
-    from litellm.litellm_core_utils.litellm_logging import Logging as _LiteLLMLoggingObj
+    from remodl.remodl_core_utils.remodl_logging import Logging as _LiteLLMLoggingObj
 
     LiteLLMLoggingObj = _LiteLLMLoggingObj
 else:
@@ -64,7 +64,7 @@ class OpenAIResponsesAPIConfig(BaseResponsesAPIConfig):
         model: str,
         input: Union[str, ResponseInputParam],
         response_api_optional_request_params: Dict,
-        litellm_params: GenericLiteLLMParams,
+        remodl_params: GenericLiteLLMParams,
         headers: dict,
     ) -> Dict:
         """No transform applied since inputs are in OpenAI spec already"""
@@ -113,7 +113,7 @@ class OpenAIResponsesAPIConfig(BaseResponsesAPIConfig):
     def _handle_reasoning_item(self, item: Dict[str, Any]) -> Dict[str, Any]:
         """
         Handle reasoning items specifically to filter out status=None using OpenAI's model.
-        Issue: https://github.com/BerriAI/litellm/issues/13484
+        Issue: https://github.com/BerriAI/remodl/issues/13484
         OpenAI API does not accept ReasoningItem(status=None), so we need to:
         1. Check if the item is a reasoning type
         2. Create a ResponseReasoningItem object with the item data
@@ -180,13 +180,13 @@ class OpenAIResponsesAPIConfig(BaseResponsesAPIConfig):
             return ResponsesAPIResponse.model_construct(**raw_response_json)
 
     def validate_environment(
-        self, headers: dict, model: str, litellm_params: Optional[GenericLiteLLMParams]
+        self, headers: dict, model: str, remodl_params: Optional[GenericLiteLLMParams]
     ) -> dict:
-        litellm_params = litellm_params or GenericLiteLLMParams()
+        remodl_params = remodl_params or GenericLiteLLMParams()
         api_key = (
-            litellm_params.api_key
-            or litellm.api_key
-            or litellm.openai_key
+            remodl_params.api_key
+            or remodl.api_key
+            or remodl.openai_key
             or get_secret_str("OPENAI_API_KEY")
         )
         headers.update(
@@ -199,14 +199,14 @@ class OpenAIResponsesAPIConfig(BaseResponsesAPIConfig):
     def get_complete_url(
         self,
         api_base: Optional[str],
-        litellm_params: dict,
+        remodl_params: dict,
     ) -> str:
         """
         Get the endpoint for OpenAI responses API
         """
         api_base = (
             api_base
-            or litellm.api_base
+            or remodl.api_base
             or get_secret_str("OPENAI_BASE_URL")
             or get_secret_str("OPENAI_API_BASE")
             or "https://api.openai.com/v1"
@@ -300,7 +300,7 @@ class OpenAIResponsesAPIConfig(BaseResponsesAPIConfig):
         if model is not None:
             try:
                 if (
-                    litellm.utils.supports_native_streaming(
+                    remodl.utils.supports_native_streaming(
                         model=model,
                         custom_llm_provider=custom_llm_provider,
                     )
@@ -320,7 +320,7 @@ class OpenAIResponsesAPIConfig(BaseResponsesAPIConfig):
         self,
         response_id: str,
         api_base: str,
-        litellm_params: GenericLiteLLMParams,
+        remodl_params: GenericLiteLLMParams,
         headers: dict,
     ) -> Tuple[str, Dict]:
         """
@@ -356,7 +356,7 @@ class OpenAIResponsesAPIConfig(BaseResponsesAPIConfig):
         self,
         response_id: str,
         api_base: str,
-        litellm_params: GenericLiteLLMParams,
+        remodl_params: GenericLiteLLMParams,
         headers: dict,
     ) -> Tuple[str, Dict]:
         """
@@ -392,7 +392,7 @@ class OpenAIResponsesAPIConfig(BaseResponsesAPIConfig):
         self,
         response_id: str,
         api_base: str,
-        litellm_params: GenericLiteLLMParams,
+        remodl_params: GenericLiteLLMParams,
         headers: dict,
         after: Optional[str] = None,
         before: Optional[str] = None,
@@ -433,7 +433,7 @@ class OpenAIResponsesAPIConfig(BaseResponsesAPIConfig):
         self,
         response_id: str,
         api_base: str,
-        litellm_params: GenericLiteLLMParams,
+        remodl_params: GenericLiteLLMParams,
         headers: dict,
     ) -> Tuple[str, Dict]:
         """

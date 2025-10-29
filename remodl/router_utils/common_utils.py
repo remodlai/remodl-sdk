@@ -3,16 +3,16 @@ import json
 from typing import TYPE_CHECKING, Dict, List, Optional, Union
 
 if TYPE_CHECKING:
-    from litellm.types.llms.openai import OpenAIFileObject
+    from remodl.types.llms.openai import OpenAIFileObject
 
-from litellm.types.router import CredentialLiteLLMParams
+from remodl.types.router import CredentialLiteLLMParams
 
 
-def get_litellm_params_sensitive_credential_hash(litellm_params: dict) -> str:
+def get_remodl_params_sensitive_credential_hash(remodl_params: dict) -> str:
     """
     Hash of the credential params, used for mapping the file id to the right model
     """
-    sensitive_params = CredentialLiteLLMParams(**litellm_params)
+    sensitive_params = CredentialLiteLLMParams(**remodl_params)
     return hashlib.sha256(
         json.dumps(sensitive_params.model_dump()).encode()
     ).hexdigest()
@@ -53,8 +53,8 @@ def filter_team_based_models(
         return healthy_deployments
 
     metadata = request_kwargs.get("metadata") or {}
-    litellm_metadata = request_kwargs.get("litellm_metadata") or {}
-    request_team_id = metadata.get("user_api_key_team_id") or litellm_metadata.get(
+    remodl_metadata = request_kwargs.get("remodl_metadata") or {}
+    request_team_id = metadata.get("user_api_key_team_id") or remodl_metadata.get(
         "user_api_key_team_id"
     )
     ids_to_remove = []

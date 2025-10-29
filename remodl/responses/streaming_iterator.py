@@ -5,14 +5,14 @@ from typing import Any, Dict, Optional
 
 import httpx
 
-import litellm
-from litellm.constants import STREAM_SSE_DONE_STRING
-from litellm.litellm_core_utils.asyncify import run_async_function
-from litellm.litellm_core_utils.litellm_logging import Logging as LiteLLMLoggingObj
-from litellm.litellm_core_utils.thread_pool_executor import executor
-from litellm.llms.base_llm.responses.transformation import BaseResponsesAPIConfig
-from litellm.responses.utils import ResponsesAPIRequestUtils
-from litellm.types.llms.openai import (
+import remodl
+from remodl.constants import STREAM_SSE_DONE_STRING
+from remodl.remodl_core_utils.asyncify import run_async_function
+from remodl.remodl_core_utils.remodl_logging import Logging as LiteLLMLoggingObj
+from remodl.remodl_core_utils.thread_pool_executor import executor
+from remodl.llms.base_llm.responses.transformation import BaseResponsesAPIConfig
+from remodl.responses.utils import ResponsesAPIRequestUtils
+from remodl.types.llms.openai import (
     OutputTextDeltaEvent,
     ResponseAPIUsage,
     ResponseCompletedEvent,
@@ -20,7 +20,7 @@ from litellm.types.llms.openai import (
     ResponsesAPIStreamEvents,
     ResponsesAPIStreamingResponse,
 )
-from litellm.utils import CustomStreamWrapper
+from remodl.utils import CustomStreamWrapper
 
 
 class BaseResponsesAPIStreamingIterator:
@@ -36,7 +36,7 @@ class BaseResponsesAPIStreamingIterator:
         model: str,
         responses_api_provider_config: BaseResponsesAPIConfig,
         logging_obj: LiteLLMLoggingObj,
-        litellm_metadata: Optional[Dict[str, Any]] = None,
+        remodl_metadata: Optional[Dict[str, Any]] = None,
         custom_llm_provider: Optional[str] = None,
     ):
         self.response = response
@@ -48,7 +48,7 @@ class BaseResponsesAPIStreamingIterator:
         self.start_time = datetime.now()
 
         # set request kwargs
-        self.litellm_metadata = litellm_metadata
+        self.remodl_metadata = remodl_metadata
         self.custom_llm_provider = custom_llm_provider
 
     def _process_chunk(self, chunk) -> Optional[ResponsesAPIStreamingResponse]:
@@ -80,12 +80,12 @@ class BaseResponsesAPIStreamingIterator:
                     )
                 )
 
-                # if "response" in parsed_chunk, then encode litellm specific information like custom_llm_provider
+                # if "response" in parsed_chunk, then encode remodl specific information like custom_llm_provider
                 response_object = getattr(openai_responses_api_chunk, "response", None)
                 if response_object:
                     response = ResponsesAPIRequestUtils._update_responses_api_response_id_with_model_id(
                         responses_api_response=response_object,
-                        litellm_metadata=self.litellm_metadata,
+                        remodl_metadata=self.remodl_metadata,
                         custom_llm_provider=self.custom_llm_provider,
                     )
                     setattr(openai_responses_api_chunk, "response", response)
@@ -99,7 +99,7 @@ class BaseResponsesAPIStreamingIterator:
                     self.completed_response = openai_responses_api_chunk
                     # Add cost to usage object if include_cost_in_streaming_usage is True
                     if (
-                        litellm.include_cost_in_streaming_usage
+                        remodl.include_cost_in_streaming_usage
                         and self.logging_obj is not None
                     ):
                         response_obj: Optional[ResponsesAPIResponse] = getattr(
@@ -147,7 +147,7 @@ class ResponsesAPIStreamingIterator(BaseResponsesAPIStreamingIterator):
         model: str,
         responses_api_provider_config: BaseResponsesAPIConfig,
         logging_obj: LiteLLMLoggingObj,
-        litellm_metadata: Optional[Dict[str, Any]] = None,
+        remodl_metadata: Optional[Dict[str, Any]] = None,
         custom_llm_provider: Optional[str] = None,
     ):
         super().__init__(
@@ -155,7 +155,7 @@ class ResponsesAPIStreamingIterator(BaseResponsesAPIStreamingIterator):
             model,
             responses_api_provider_config,
             logging_obj,
-            litellm_metadata,
+            remodl_metadata,
             custom_llm_provider,
         )
         self.stream_iterator = response.aiter_lines()
@@ -217,7 +217,7 @@ class SyncResponsesAPIStreamingIterator(BaseResponsesAPIStreamingIterator):
         model: str,
         responses_api_provider_config: BaseResponsesAPIConfig,
         logging_obj: LiteLLMLoggingObj,
-        litellm_metadata: Optional[Dict[str, Any]] = None,
+        remodl_metadata: Optional[Dict[str, Any]] = None,
         custom_llm_provider: Optional[str] = None,
     ):
         super().__init__(
@@ -225,7 +225,7 @@ class SyncResponsesAPIStreamingIterator(BaseResponsesAPIStreamingIterator):
             model,
             responses_api_provider_config,
             logging_obj,
-            litellm_metadata,
+            remodl_metadata,
             custom_llm_provider,
         )
         self.stream_iterator = response.iter_lines()
@@ -291,7 +291,7 @@ class MockResponsesAPIStreamingIterator(BaseResponsesAPIStreamingIterator):
         model: str,
         responses_api_provider_config: BaseResponsesAPIConfig,
         logging_obj: LiteLLMLoggingObj,
-        litellm_metadata: Optional[Dict[str, Any]] = None,
+        remodl_metadata: Optional[Dict[str, Any]] = None,
         custom_llm_provider: Optional[str] = None,
     ):
         super().__init__(
@@ -299,7 +299,7 @@ class MockResponsesAPIStreamingIterator(BaseResponsesAPIStreamingIterator):
             model=model,
             responses_api_provider_config=responses_api_provider_config,
             logging_obj=logging_obj,
-            litellm_metadata=litellm_metadata,
+            remodl_metadata=remodl_metadata,
             custom_llm_provider=custom_llm_provider,
         )
 

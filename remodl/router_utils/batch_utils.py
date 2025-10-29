@@ -3,7 +3,7 @@ import json
 from os import PathLike
 from typing import Optional
 
-from litellm.types.llms.openai import FileTypes, OpenAIFilesPurpose
+from remodl.types.llms.openai import FileTypes, OpenAIFilesPurpose
 
 
 class InMemoryFile(io.BytesIO):
@@ -75,7 +75,7 @@ def _get_router_metadata_variable_name(function_name: Optional[str]) -> str:
     """
     Helper to return what the "metadata" field should be called in the request data
 
-    For all /thread or /assistant endpoints we need to call this "litellm_metadata"
+    For all /thread or /assistant endpoints we need to call this "remodl_metadata"
 
     For ALL other endpoints we call this "metadata
     """
@@ -85,6 +85,6 @@ def _get_router_metadata_variable_name(function_name: Optional[str]) -> str:
     if function_name and any(
         method in function_name for method in ROUTER_METHODS_USING_LITELLM_METADATA
     ):
-        return "litellm_metadata"
+        return "remodl_metadata"
     else:
         return "metadata"

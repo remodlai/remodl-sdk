@@ -2,12 +2,12 @@ from typing import TYPE_CHECKING, Any, Dict, Optional, Tuple, Union
 
 import httpx
 
-import litellm
-from litellm.llms.custom_httpx.http_handler import get_async_httpx_client
-from litellm.types.utils import LlmProviders
+import remodl
+from remodl.llms.custom_httpx.http_handler import get_async_httpx_client
+from remodl.types.utils import LlmProviders
 
 if TYPE_CHECKING:
-    from litellm.types.google_genai.main import GenerateContentContentListUnionDict
+    from remodl.types.google_genai.main import GenerateContentContentListUnionDict
 else:
     GenerateContentContentListUnionDict = Any
 
@@ -58,18 +58,18 @@ class GoogleAIStudioTokenCounter:
         api_key: Optional[str] = None,
         headers: Optional[Dict[str, Any]] = None,
         model: str = "",
-        litellm_params: Optional[Dict[str, Any]] = None,
+        remodl_params: Optional[Dict[str, Any]] = None,
     ) -> Tuple[Dict[str, Any], str]:
         """
         Returns a Tuple of headers and url for the Google Gen AI Studio countTokens endpoint.
         """
-        from litellm.llms.gemini.google_genai.transformation import GoogleGenAIConfig
+        from remodl.llms.gemini.google_genai.transformation import GoogleGenAIConfig
 
         headers = GoogleGenAIConfig().validate_environment(
             api_key=api_key,
             headers=headers,
             model=model,
-            litellm_params=litellm_params,
+            remodl_params=remodl_params,
         )
 
         url = self._construct_url(model=model, api_base=api_base)
@@ -112,8 +112,8 @@ class GoogleAIStudioTokenCounter:
 
         Raises:
             ValueError: If API key is missing
-            litellm.APIError: If the API call fails
-            litellm.APIConnectionError: If the connection fails
+            remodl.APIError: If the API call fails
+            remodl.APIConnectionError: If the connection fails
             Exception: For any other unexpected errors
         """
 
@@ -123,7 +123,7 @@ class GoogleAIStudioTokenCounter:
             api_base=api_base,
             headers={},
             model=model,
-            litellm_params=kwargs,
+            remodl_params=kwargs,
         )
 
         # Prepare request body - clean up contents to remove unsupported fields
@@ -148,7 +148,7 @@ class GoogleAIStudioTokenCounter:
 
         except httpx.HTTPStatusError as e:
             error_msg = f"Google Gen AI Studio API error: {e.response.status_code} - {e.response.text}"
-            raise litellm.APIError(
+            raise remodl.APIError(
                 message=error_msg,
                 llm_provider="gemini",
                 model=model,
@@ -156,7 +156,7 @@ class GoogleAIStudioTokenCounter:
             ) from e
         except httpx.RequestError as e:
             error_msg = f"Request to Google Gen AI Studio failed: {str(e)}"
-            raise litellm.APIConnectionError(
+            raise remodl.APIConnectionError(
                 message=error_msg, llm_provider="gemini", model=model
             ) from e
         except Exception as e:

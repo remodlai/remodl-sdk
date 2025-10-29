@@ -2,24 +2,24 @@ from typing import TYPE_CHECKING, Any, List, Optional, Union
 
 import httpx
 
-import litellm
-from litellm.constants import REPLICATE_MODEL_NAME_WITH_ID_LENGTH
-from litellm.litellm_core_utils.prompt_templates.common_utils import (
+import remodl
+from remodl.constants import REPLICATE_MODEL_NAME_WITH_ID_LENGTH
+from remodl.remodl_core_utils.prompt_templates.common_utils import (
     convert_content_list_to_str,
 )
-from litellm.litellm_core_utils.prompt_templates.factory import (
+from remodl.remodl_core_utils.prompt_templates.factory import (
     custom_prompt,
     prompt_factory,
 )
-from litellm.llms.base_llm.chat.transformation import BaseConfig, BaseLLMException
-from litellm.types.llms.openai import AllMessageValues
-from litellm.types.utils import ModelResponse, Usage
-from litellm.utils import token_counter
+from remodl.llms.base_llm.chat.transformation import BaseConfig, BaseLLMException
+from remodl.types.llms.openai import AllMessageValues
+from remodl.types.utils import ModelResponse, Usage
+from remodl.utils import token_counter
 
 from ..common_utils import ReplicateError
 
 if TYPE_CHECKING:
-    from litellm.litellm_core_utils.litellm_logging import Logging as LiteLLMLoggingObj
+    from remodl.remodl_core_utils.remodl_logging import Logging as LiteLLMLoggingObj
 
     LoggingClass = LiteLLMLoggingObj
 else:
@@ -143,7 +143,7 @@ class ReplicateConfig(BaseConfig):
         api_key: Optional[str],
         model: str,
         optional_params: dict,
-        litellm_params: dict,
+        remodl_params: dict,
         stream: Optional[bool] = None,
     ) -> str:
         version_id = self.model_to_version_id(model)
@@ -162,11 +162,11 @@ class ReplicateConfig(BaseConfig):
         model: str,
         messages: List[AllMessageValues],
         optional_params: dict,
-        litellm_params: dict,
+        remodl_params: dict,
         headers: dict,
     ) -> dict:
         ## Load Config
-        config = litellm.ReplicateConfig.get_config()
+        config = remodl.ReplicateConfig.get_config()
         for k, v in config.items():
             if (
                 k not in optional_params
@@ -186,9 +186,9 @@ class ReplicateConfig(BaseConfig):
                     system_prompt = convert_content_list_to_str(first_sys_message)
                     break
 
-        if model in litellm.custom_prompt_dict:
+        if model in remodl.custom_prompt_dict:
             # check if the model has a registered custom prompt
-            model_prompt_details = litellm.custom_prompt_dict[model]
+            model_prompt_details = remodl.custom_prompt_dict[model]
             prompt = custom_prompt(
                 role_dict=model_prompt_details.get("roles", {}),
                 initial_prompt_value=model_prompt_details.get(
@@ -241,7 +241,7 @@ class ReplicateConfig(BaseConfig):
         request_data: dict,
         messages: List[AllMessageValues],
         optional_params: dict,
-        litellm_params: dict,
+        remodl_params: dict,
         encoding: Any,
         api_key: Optional[str] = None,
         json_mode: Optional[bool] = None,
@@ -312,7 +312,7 @@ class ReplicateConfig(BaseConfig):
         model: str,
         messages: List[AllMessageValues],
         optional_params: dict,
-        litellm_params: dict,
+        remodl_params: dict,
         api_key: Optional[str] = None,
         api_base: Optional[str] = None,
     ) -> dict:

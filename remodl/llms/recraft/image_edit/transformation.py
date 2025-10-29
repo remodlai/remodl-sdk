@@ -4,17 +4,17 @@ from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple, cast
 import httpx
 from httpx._types import RequestFiles
 
-from litellm.images.utils import ImageEditRequestUtils
-from litellm.llms.base_llm.image_edit.transformation import BaseImageEditConfig
-from litellm.secret_managers.main import get_secret_str
-from litellm.types.images.main import ImageEditOptionalRequestParams
-from litellm.types.llms.recraft import RecraftImageEditRequestParams
-from litellm.types.responses.main import *
-from litellm.types.router import GenericLiteLLMParams
-from litellm.types.utils import FileTypes, ImageObject, ImageResponse
+from remodl.images.utils import ImageEditRequestUtils
+from remodl.llms.base_llm.image_edit.transformation import BaseImageEditConfig
+from remodl.secret_managers.main import get_secret_str
+from remodl.types.images.main import ImageEditOptionalRequestParams
+from remodl.types.llms.recraft import RecraftImageEditRequestParams
+from remodl.types.responses.main import *
+from remodl.types.router import GenericLiteLLMParams
+from remodl.types.utils import FileTypes, ImageObject, ImageResponse
 
 if TYPE_CHECKING:
-    from litellm.litellm_core_utils.litellm_logging import Logging as _LiteLLMLoggingObj
+    from remodl.remodl_core_utils.remodl_logging import Logging as _LiteLLMLoggingObj
 
     LiteLLMLoggingObj = _LiteLLMLoggingObj
 else:
@@ -64,7 +64,7 @@ class RecraftImageEditConfig(BaseImageEditConfig):
         self,
         model: str,
         api_base: Optional[str],
-        litellm_params: dict,
+        remodl_params: dict,
     ) -> str:
         """
         Get the complete url for the request
@@ -104,7 +104,7 @@ class RecraftImageEditConfig(BaseImageEditConfig):
         prompt: str,
         image: FileTypes,
         image_edit_optional_request_params: Dict,
-        litellm_params: GenericLiteLLMParams,
+        remodl_params: GenericLiteLLMParams,
         headers: dict,
     ) -> Tuple[Dict, RequestFiles]:
         """

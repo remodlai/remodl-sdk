@@ -4,18 +4,18 @@ Utility functions for cleaning up async HTTP clients to prevent resource leaks.
 import asyncio
 
 
-async def close_litellm_async_clients():
+async def close_remodl_async_clients():
     """
     Close all cached async HTTP clients to prevent resource leaks.
 
-    This function iterates through all cached clients in litellm's in-memory cache
+    This function iterates through all cached clients in remodl's in-memory cache
     and closes any aiohttp client sessions that are still open.
     """
     # Import here to avoid circular import
-    import litellm
-    from litellm.llms.custom_httpx.aiohttp_handler import BaseLLMAIOHTTPHandler
+    import remodl
+    from remodl.llms.custom_httpx.aiohttp_handler import BaseLLMAIOHTTPHandler
 
-    cache_dict = getattr(litellm.in_memory_llm_clients_cache, "cache_dict", {})
+    cache_dict = getattr(remodl.in_memory_llm_clients_cache, "cache_dict", {})
 
     for key, handler in cache_dict.items():
         # Handle BaseLLMAIOHTTPHandler instances (aiohttp_openai provider)
@@ -66,15 +66,15 @@ def register_async_client_cleanup():
             loop = asyncio.get_event_loop()
             if loop.is_running():
                 # Schedule the cleanup coroutine
-                loop.create_task(close_litellm_async_clients())
+                loop.create_task(close_remodl_async_clients())
             else:
                 # Run the cleanup coroutine
-                loop.run_until_complete(close_litellm_async_clients())
+                loop.run_until_complete(close_remodl_async_clients())
         except Exception:
             # If we can't get an event loop or it's already closed, try creating a new one
             try:
                 loop = asyncio.new_event_loop()
-                loop.run_until_complete(close_litellm_async_clients())
+                loop.run_until_complete(close_remodl_async_clients())
                 loop.close()
             except Exception:
                 # Silently ignore errors during cleanup

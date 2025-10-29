@@ -7,15 +7,15 @@ from typing import Dict, Optional
 
 import httpx
 
-import litellm
-from litellm import verbose_logger
-from litellm.integrations.custom_logger import CustomLogger
-from litellm.llms.custom_httpx.http_handler import (
+import remodl
+from remodl import verbose_logger
+from remodl.integrations.custom_logger import CustomLogger
+from remodl.llms.custom_httpx.http_handler import (
     HTTPHandler,
     get_async_httpx_client,
     httpxSpecialProvider,
 )
-from litellm.utils import print_verbose
+from remodl.utils import print_verbose
 
 API_BASE = "https://api.braintrustdata.com/v1"
 
@@ -107,7 +107,7 @@ class BraintrustLogger(CustomLogger):
 
     async def create_default_project_and_experiment(self):
         project = await self.global_braintrust_http_handler.post(
-            f"{self.api_base}/project", headers=self.headers, json={"name": "litellm"}
+            f"{self.api_base}/project", headers=self.headers, json={"name": "remodl"}
         )
 
         project_dict = project.json()
@@ -116,7 +116,7 @@ class BraintrustLogger(CustomLogger):
 
     def create_sync_default_project_and_experiment(self):
         project = self.global_braintrust_sync_http_handler.post(
-            f"{self.api_base}/project", headers=self.headers, json={"name": "litellm"}
+            f"{self.api_base}/project", headers=self.headers, json={"name": "remodl"}
         )
 
         project_dict = project.json()
@@ -128,7 +128,7 @@ class BraintrustLogger(CustomLogger):
     ):
         verbose_logger.debug("REACHES BRAINTRUST SUCCESS")
         try:
-            litellm_call_id = kwargs.get("litellm_call_id")
+            remodl_call_id = kwargs.get("remodl_call_id")
             standard_logging_object = kwargs.get("standard_logging_object", {})
             prompt = {"messages": kwargs.get("messages")}
 
@@ -136,26 +136,26 @@ class BraintrustLogger(CustomLogger):
             choices = []
             if response_obj is not None and (
                 kwargs.get("call_type", None) == "embedding"
-                or isinstance(response_obj, litellm.EmbeddingResponse)
+                or isinstance(response_obj, remodl.EmbeddingResponse)
             ):
                 output = None
             elif response_obj is not None and isinstance(
-                response_obj, litellm.ModelResponse
+                response_obj, remodl.ModelResponse
             ):
                 output = response_obj["choices"][0]["message"].json()
                 choices = response_obj["choices"]
             elif response_obj is not None and isinstance(
-                response_obj, litellm.TextCompletionResponse
+                response_obj, remodl.TextCompletionResponse
             ):
                 output = response_obj.choices[0].text
                 choices = response_obj.choices
             elif response_obj is not None and isinstance(
-                response_obj, litellm.ImageResponse
+                response_obj, remodl.ImageResponse
             ):
                 output = response_obj["data"]
 
-            litellm_params = kwargs.get("litellm_params", {}) or {}
-            dynamic_metadata = litellm_params.get("metadata", {}) or {}
+            remodl_params = kwargs.get("remodl_params", {}) or {}
+            dynamic_metadata = remodl_params.get("metadata", {}) or {}
 
             # Get project_id from metadata or create default if needed
             project_id = dynamic_metadata.get("project_id")
@@ -176,9 +176,9 @@ class BraintrustLogger(CustomLogger):
                 for key, value in dynamic_metadata.items():
                     # generate langfuse tags - Default Tags sent to Langfuse from LiteLLM Proxy
                     if (
-                        litellm.langfuse_default_tags is not None
-                        and isinstance(litellm.langfuse_default_tags, list)
-                        and key in litellm.langfuse_default_tags
+                        remodl.langfuse_default_tags is not None
+                        and isinstance(remodl.langfuse_default_tags, list)
+                        and key in remodl.langfuse_default_tags
                     ):
                         tags.append(f"{key}:{value}")
 
@@ -191,8 +191,8 @@ class BraintrustLogger(CustomLogger):
 
             metrics: Optional[dict] = None
             usage_obj = getattr(response_obj, "usage", None)
-            if usage_obj and isinstance(usage_obj, litellm.Usage):
-                litellm.utils.get_logging_id(start_time, response_obj)
+            if usage_obj and isinstance(usage_obj, remodl.Usage):
+                remodl.utils.get_logging_id(start_time, response_obj)
                 metrics = {
                     "prompt_tokens": usage_obj.prompt_tokens,
                     "completion_tokens": usage_obj.completion_tokens,
@@ -222,7 +222,7 @@ class BraintrustLogger(CustomLogger):
             }
 
             request_data = {
-                "id": litellm_call_id,
+                "id": remodl_call_id,
                 "input": prompt["messages"],
                 "metadata": standard_logging_object,
                 "tags": tags,
@@ -261,33 +261,33 @@ class BraintrustLogger(CustomLogger):
     ):
         verbose_logger.debug("REACHES BRAINTRUST SUCCESS")
         try:
-            litellm_call_id = kwargs.get("litellm_call_id")
+            remodl_call_id = kwargs.get("remodl_call_id")
             standard_logging_object = kwargs.get("standard_logging_object", {})
             prompt = {"messages": kwargs.get("messages")}
             output = None
             choices = []
             if response_obj is not None and (
                 kwargs.get("call_type", None) == "embedding"
-                or isinstance(response_obj, litellm.EmbeddingResponse)
+                or isinstance(response_obj, remodl.EmbeddingResponse)
             ):
                 output = None
             elif response_obj is not None and isinstance(
-                response_obj, litellm.ModelResponse
+                response_obj, remodl.ModelResponse
             ):
                 output = response_obj["choices"][0]["message"].json()
                 choices = response_obj["choices"]
             elif response_obj is not None and isinstance(
-                response_obj, litellm.TextCompletionResponse
+                response_obj, remodl.TextCompletionResponse
             ):
                 output = response_obj.choices[0].text
                 choices = response_obj.choices
             elif response_obj is not None and isinstance(
-                response_obj, litellm.ImageResponse
+                response_obj, remodl.ImageResponse
             ):
                 output = response_obj["data"]
 
-            litellm_params = kwargs.get("litellm_params", {})
-            dynamic_metadata = litellm_params.get("metadata", {}) or {}
+            remodl_params = kwargs.get("remodl_params", {})
+            dynamic_metadata = remodl_params.get("metadata", {}) or {}
 
             # Get project_id from metadata or create default if needed
             project_id = dynamic_metadata.get("project_id")
@@ -310,9 +310,9 @@ class BraintrustLogger(CustomLogger):
                 for key, value in dynamic_metadata.items():
                     # generate langfuse tags - Default Tags sent to Langfuse from LiteLLM Proxy
                     if (
-                        litellm.langfuse_default_tags is not None
-                        and isinstance(litellm.langfuse_default_tags, list)
-                        and key in litellm.langfuse_default_tags
+                        remodl.langfuse_default_tags is not None
+                        and isinstance(remodl.langfuse_default_tags, list)
+                        and key in remodl.langfuse_default_tags
                     ):
                         tags.append(f"{key}:{value}")
 
@@ -325,8 +325,8 @@ class BraintrustLogger(CustomLogger):
 
             metrics: Optional[dict] = None
             usage_obj = getattr(response_obj, "usage", None)
-            if usage_obj and isinstance(usage_obj, litellm.Usage):
-                litellm.utils.get_logging_id(start_time, response_obj)
+            if usage_obj and isinstance(usage_obj, remodl.Usage):
+                remodl.utils.get_logging_id(start_time, response_obj)
                 metrics = {
                     "prompt_tokens": usage_obj.prompt_tokens,
                     "completion_tokens": usage_obj.completion_tokens,
@@ -352,7 +352,7 @@ class BraintrustLogger(CustomLogger):
             span_name = dynamic_metadata.get("span_name", "Chat Completion")
 
             request_data = {
-                "id": litellm_call_id,
+                "id": remodl_call_id,
                 "input": prompt["messages"],
                 "output": output,
                 "metadata": standard_logging_object,

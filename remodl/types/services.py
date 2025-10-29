@@ -1,5 +1,5 @@
 import enum
-from litellm._uuid import uuid
+from remodl._uuid import uuid
 from typing import List, Optional
 
 from pydantic import BaseModel, Field
@@ -14,7 +14,7 @@ class ServiceMetrics(enum.Enum):
 
 class ServiceTypes(str, enum.Enum):
     """
-    Enum for litellm + litellm-adjacent services (redis/postgres/etc.)
+    Enum for remodl + remodl-adjacent services (redis/postgres/etc.)
     """
 
     REDIS = "redis"

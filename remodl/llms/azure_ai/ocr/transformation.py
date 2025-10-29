@@ -3,14 +3,14 @@ Azure AI OCR transformation implementation.
 """
 from typing import Dict, Optional
 
-from litellm._logging import verbose_logger
-from litellm.litellm_core_utils.prompt_templates.image_handling import (
+from remodl._logging import verbose_logger
+from remodl.remodl_core_utils.prompt_templates.image_handling import (
     async_convert_url_to_base64,
     convert_url_to_base64,
 )
-from litellm.llms.base_llm.ocr.transformation import DocumentType, OCRRequestData
-from litellm.llms.mistral.ocr.transformation import MistralOCRConfig
-from litellm.secret_managers.main import get_secret_str
+from remodl.llms.base_llm.ocr.transformation import DocumentType, OCRRequestData
+from remodl.llms.mistral.ocr.transformation import MistralOCRConfig
+from remodl.secret_managers.main import get_secret_str
 
 
 class AzureAIOCRConfig(MistralOCRConfig):

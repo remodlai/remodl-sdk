@@ -1,5 +1,5 @@
-from litellm._logging import verbose_logger
-from litellm.llms.base_llm.image_generation.transformation import (
+from remodl._logging import verbose_logger
+from remodl.llms.base_llm.image_generation.transformation import (
     BaseImageGenerationConfig,
 )
 

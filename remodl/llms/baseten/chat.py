@@ -1,5 +1,5 @@
 from typing import Optional
-from litellm.llms.openai.chat.gpt_transformation import OpenAIGPTConfig
+from remodl.llms.openai.chat.gpt_transformation import OpenAIGPTConfig
 
 
 class BasetenConfig(OpenAIGPTConfig):

@@ -20,24 +20,24 @@ from typing import (
 import httpx
 from pydantic import BaseModel
 
-from litellm.constants import RESPONSE_FORMAT_TOOL_NAME
-from litellm.litellm_core_utils.llm_response_utils.convert_dict_to_response import (
+from remodl.constants import RESPONSE_FORMAT_TOOL_NAME
+from remodl.remodl_core_utils.llm_response_utils.convert_dict_to_response import (
     _handle_invalid_parallel_tool_calls,
     _should_convert_tool_call_to_json_mode,
 )
-from litellm.litellm_core_utils.prompt_templates.common_utils import (
+from remodl.remodl_core_utils.prompt_templates.common_utils import (
     strip_name_from_messages,
 )
-from litellm.llms.base_llm.base_model_iterator import BaseModelResponseIterator
-from litellm.types.llms.anthropic import AllAnthropicToolsValues
-from litellm.types.llms.databricks import (
+from remodl.llms.base_llm.base_model_iterator import BaseModelResponseIterator
+from remodl.types.llms.anthropic import AllAnthropicToolsValues
+from remodl.types.llms.databricks import (
     AllDatabricksContentValues,
     DatabricksChoice,
     DatabricksFunction,
     DatabricksResponse,
     DatabricksTool,
 )
-from litellm.types.llms.openai import (
+from remodl.types.llms.openai import (
     AllMessageValues,
     ChatCompletionRedactedThinkingBlock,
     ChatCompletionThinkingBlock,
@@ -45,7 +45,7 @@ from litellm.types.llms.openai import (
     ChatCompletionToolChoiceObjectParam,
     ChatCompletionToolParam,
 )
-from litellm.types.utils import (
+from remodl.types.utils import (
     ChatCompletionMessageToolCall,
     Choices,
     Message,
@@ -60,7 +60,7 @@ from ...openai_like.chat.transformation import OpenAILikeChatConfig
 from ..common_utils import DatabricksBase, DatabricksException
 
 if TYPE_CHECKING:
-    from litellm.litellm_core_utils.litellm_logging import Logging as _LiteLLMLoggingObj
+    from remodl.remodl_core_utils.remodl_logging import Logging as _LiteLLMLoggingObj
 
     LiteLLMLoggingObj = _LiteLLMLoggingObj
 else:
@@ -120,7 +120,7 @@ class DatabricksConfig(DatabricksBase, OpenAILikeChatConfig, AnthropicConfig):
         model: str,
         messages: List[AllMessageValues],
         optional_params: dict,
-        litellm_params: dict,
+        remodl_params: dict,
         api_key: Optional[str] = None,
         api_base: Optional[str] = None,
     ) -> dict:
@@ -141,7 +141,7 @@ class DatabricksConfig(DatabricksBase, OpenAILikeChatConfig, AnthropicConfig):
         api_key: Optional[str],
         model: str,
         optional_params: dict,
-        litellm_params: dict,
+        remodl_params: dict,
         stream: Optional[bool] = None,
     ) -> str:
         api_base = self._get_api_base(api_base)
@@ -509,7 +509,7 @@ class DatabricksConfig(DatabricksBase, OpenAILikeChatConfig, AnthropicConfig):
         request_data: dict,
         messages: List[AllMessageValues],
         optional_params: dict,
-        litellm_params: dict,
+        remodl_params: dict,
         encoding: Any,
         api_key: Optional[str] = None,
         json_mode: Optional[bool] = None,
@@ -584,8 +584,8 @@ class DatabricksChatResponseIterator(BaseModelResponseIterator):
                     # 4. Convert json to message
                     # 5. Set content to message.content
                     # 6. Set tool_calls to None
-                    from litellm.constants import RESPONSE_FORMAT_TOOL_NAME
-                    from litellm.llms.base_llm.base_utils import (
+                    from remodl.constants import RESPONSE_FORMAT_TOOL_NAME
+                    from remodl.llms.base_llm.base_utils import (
                         _convert_tool_response_to_message,
                     )
 

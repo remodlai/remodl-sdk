@@ -11,7 +11,7 @@ import warnings
 # Suppress Pydantic serialization warnings for Meta Llama responses
 warnings.filterwarnings("ignore", message="Pydantic serializer warnings")
 
-from litellm.llms.openai.chat.gpt_transformation import OpenAIGPTConfig
+from remodl.llms.openai.chat.gpt_transformation import OpenAIGPTConfig
 
 
 class LlamaAPIConfig(OpenAIGPTConfig):

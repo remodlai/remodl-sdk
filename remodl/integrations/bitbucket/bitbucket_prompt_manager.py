@@ -7,13 +7,13 @@ from typing import Any, Dict, List, Optional, Tuple, Union
 
 from jinja2 import DictLoader, Environment, select_autoescape
 
-from litellm.integrations.custom_prompt_management import CustomPromptManagement
-from litellm.integrations.prompt_management_base import (
+from remodl.integrations.custom_prompt_management import CustomPromptManagement
+from remodl.integrations.prompt_management_base import (
     PromptManagementBase,
     PromptManagementClient,
 )
-from litellm.types.llms.openai import AllMessageValues
-from litellm.types.utils import StandardCallbackDynamicParams
+from remodl.types.llms.openai import AllMessageValues
+from remodl.types.utils import StandardCallbackDynamicParams
 
 from .bitbucket_client import BitBucketClient
 
@@ -181,7 +181,7 @@ class BitBucketPromptManager(CustomPromptManagement):
     BitBucket prompt manager that integrates with LiteLLM's prompt management system.
 
     This class enables using .prompt files from BitBucket repositories with the
-    litellm completion() function by implementing the PromptManagementBase interface.
+    remodl completion() function by implementing the PromptManagementBase interface.
 
     Usage:
         # Configure BitBucket access
@@ -193,7 +193,7 @@ class BitBucketPromptManager(CustomPromptManagement):
         }
 
         # Use with completion
-        response = litellm.completion(
+        response = remodl.completion(
             model="bitbucket/gpt-4",
             prompt_id="my_prompt",
             prompt_variables={"variable": "value"},
@@ -265,7 +265,7 @@ class BitBucketPromptManager(CustomPromptManagement):
         user_id: Optional[str],
         messages: List[AllMessageValues],
         function_call: Optional[Union[Dict[str, Any], str]] = None,
-        litellm_params: Optional[Dict[str, Any]] = None,
+        remodl_params: Optional[Dict[str, Any]] = None,
         prompt_id: Optional[str] = None,
         prompt_variables: Optional[Dict[str, Any]] = None,
         **kwargs,
@@ -274,7 +274,7 @@ class BitBucketPromptManager(CustomPromptManagement):
         Pre-call hook that processes the prompt template before making the LLM call.
         """
         if not prompt_id:
-            return messages, litellm_params
+            return messages, remodl_params
 
         try:
             # Get the rendered prompt and metadata
@@ -295,13 +295,13 @@ class BitBucketPromptManager(CustomPromptManagement):
                     {"role": "user", "content": rendered_prompt}  # type: ignore
                 ] + messages
 
-            # Update litellm_params with prompt metadata
-            if litellm_params is None:
-                litellm_params = {}
+            # Update remodl_params with prompt metadata
+            if remodl_params is None:
+                remodl_params = {}
 
             # Apply model and parameters from prompt metadata
             if prompt_metadata.get("model"):
-                litellm_params["model"] = prompt_metadata["model"]
+                remodl_params["model"] = prompt_metadata["model"]
 
             for param in [
                 "temperature",
@@ -311,18 +311,18 @@ class BitBucketPromptManager(CustomPromptManagement):
                 "presence_penalty",
             ]:
                 if param in prompt_metadata:
-                    litellm_params[param] = prompt_metadata[param]
+                    remodl_params[param] = prompt_metadata[param]
 
-            return final_messages, litellm_params
+            return final_messages, remodl_params
 
         except Exception as e:
             # Log error but don't fail the call
-            import litellm
+            import remodl
 
-            litellm._logging.verbose_proxy_logger.error(
+            remodl._logging.verbose_proxy_logger.error(
                 f"Error in BitBucket prompt pre_call_hook: {e}"
             )
-            return messages, litellm_params
+            return messages, remodl_params
 
     def _parse_prompt_to_messages(self, prompt_content: str) -> List[AllMessageValues]:
         """
@@ -392,7 +392,7 @@ class BitBucketPromptManager(CustomPromptManagement):
         response: Any,
         input_messages: List[AllMessageValues],
         function_call: Optional[Union[Dict[str, Any], str]] = None,
-        litellm_params: Optional[Dict[str, Any]] = None,
+        remodl_params: Optional[Dict[str, Any]] = None,
         prompt_id: Optional[str] = None,
         prompt_variables: Optional[Dict[str, Any]] = None,
         **kwargs,

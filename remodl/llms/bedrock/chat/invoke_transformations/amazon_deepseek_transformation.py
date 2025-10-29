@@ -2,17 +2,17 @@ from typing import Any, List, Optional, cast
 
 from httpx import Response
 
-from litellm import verbose_logger
-from litellm.litellm_core_utils.prompt_templates.common_utils import (
+from remodl import verbose_logger
+from remodl.remodl_core_utils.prompt_templates.common_utils import (
     _parse_content_for_reasoning,
 )
-from litellm.llms.base_llm.base_model_iterator import BaseModelResponseIterator
-from litellm.llms.bedrock.chat.invoke_transformations.base_invoke_transformation import (
+from remodl.llms.base_llm.base_model_iterator import BaseModelResponseIterator
+from remodl.llms.bedrock.chat.invoke_transformations.base_invoke_transformation import (
     LiteLLMLoggingObj,
 )
-from litellm.types.llms.bedrock import AmazonDeepSeekR1StreamingResponse
-from litellm.types.llms.openai import AllMessageValues
-from litellm.types.utils import (
+from remodl.types.llms.bedrock import AmazonDeepSeekR1StreamingResponse
+from remodl.types.llms.openai import AllMessageValues
+from remodl.types.utils import (
     ChatCompletionUsageBlock,
     Choices,
     Delta,
@@ -35,7 +35,7 @@ class AmazonDeepSeekR1Config(AmazonLlamaConfig):
         request_data: dict,
         messages: List[AllMessageValues],
         optional_params: dict,
-        litellm_params: dict,
+        remodl_params: dict,
         encoding: Any,
         api_key: Optional[str] = None,
         json_mode: Optional[bool] = None,
@@ -51,7 +51,7 @@ class AmazonDeepSeekR1Config(AmazonLlamaConfig):
             request_data,
             messages,
             optional_params,
-            litellm_params,
+            remodl_params,
             encoding,
             api_key,
             json_mode,

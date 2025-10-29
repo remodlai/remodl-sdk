@@ -12,10 +12,10 @@ from typing import Any, Callable, Dict, List, Optional, Union, cast
 
 import httpx
 
-from litellm.llms.base_llm.chat.transformation import BaseLLMException
-from litellm.llms.openai.chat.gpt_transformation import OpenAIGPTConfig
-from litellm.types.llms.openai import AllMessageValues
-from litellm.types.utils import ModelResponse
+from remodl.llms.base_llm.chat.transformation import BaseLLMException
+from remodl.llms.openai.chat.gpt_transformation import OpenAIGPTConfig
+from remodl.types.llms.openai import AllMessageValues
+from remodl.types.utils import ModelResponse
 
 
 class VertexGemmaConfig(OpenAIGPTConfig):
@@ -57,7 +57,7 @@ class VertexGemmaConfig(OpenAIGPTConfig):
             MockResponseIterator if stream=True, otherwise the model_response
         """
         if stream:
-            from litellm.llms.base_llm.base_model_iterator import MockResponseIterator
+            from remodl.llms.base_llm.base_model_iterator import MockResponseIterator
             return MockResponseIterator(model_response=model_response)
         return model_response
 
@@ -66,7 +66,7 @@ class VertexGemmaConfig(OpenAIGPTConfig):
         model: str,
         messages: List[AllMessageValues],
         optional_params: dict,
-        litellm_params: dict,
+        remodl_params: dict,
         headers: dict,
     ) -> dict:
         """
@@ -80,7 +80,7 @@ class VertexGemmaConfig(OpenAIGPTConfig):
             model=model,
             messages=messages,
             optional_params=optional_params,
-            litellm_params=litellm_params,
+            remodl_params=remodl_params,
             headers=headers,
         )
         
@@ -129,7 +129,7 @@ class VertexGemmaConfig(OpenAIGPTConfig):
         logging_obj: Any,
         optional_params: dict,
         acompletion: bool,
-        litellm_params: dict,
+        remodl_params: dict,
         logger_fn: Optional[Callable] = None,
         client: Optional[httpx.Client] = None,
         timeout: Optional[Union[float, httpx.Timeout]] = None,
@@ -150,7 +150,7 @@ class VertexGemmaConfig(OpenAIGPTConfig):
                 print_verbose=print_verbose,
                 logging_obj=logging_obj,
                 optional_params=optional_params,
-                litellm_params=litellm_params,
+                remodl_params=remodl_params,
                 timeout=timeout,
                 encoding=encoding,
             )
@@ -164,7 +164,7 @@ class VertexGemmaConfig(OpenAIGPTConfig):
                 print_verbose=print_verbose,
                 logging_obj=logging_obj,
                 optional_params=optional_params,
-                litellm_params=litellm_params,
+                remodl_params=remodl_params,
                 timeout=timeout,
                 encoding=encoding,
             )
@@ -179,13 +179,13 @@ class VertexGemmaConfig(OpenAIGPTConfig):
         print_verbose: Callable,
         logging_obj: Any,
         optional_params: dict,
-        litellm_params: dict,
+        remodl_params: dict,
         timeout: Optional[Union[float, httpx.Timeout]],
         encoding: Any,
     ):
         """Synchronous completion request"""
-        from litellm.llms.custom_httpx.http_handler import HTTPHandler
-        from litellm.utils import convert_to_model_response_object
+        from remodl.llms.custom_httpx.http_handler import HTTPHandler
+        from remodl.utils import convert_to_model_response_object
 
         # Check if streaming is requested (will be faked)
         stream = optional_params.get("stream", False)
@@ -195,7 +195,7 @@ class VertexGemmaConfig(OpenAIGPTConfig):
             model=model,
             messages=messages,
             optional_params=optional_params.copy(),
-            litellm_params=litellm_params,
+            remodl_params=remodl_params,
             headers={},
         )
         
@@ -235,7 +235,7 @@ class VertexGemmaConfig(OpenAIGPTConfig):
         # Unwrap predictions to get OpenAI-compatible response
         openai_response = self._unwrap_predictions_response(response_json)
         
-        # Use litellm's standard response converter
+        # Use remodl's standard response converter
         model_response = cast(
             ModelResponse,
             convert_to_model_response_object(
@@ -269,14 +269,14 @@ class VertexGemmaConfig(OpenAIGPTConfig):
         print_verbose: Callable,
         logging_obj: Any,
         optional_params: dict,
-        litellm_params: dict,
+        remodl_params: dict,
         timeout: Optional[Union[float, httpx.Timeout]],
         encoding: Any,
     ):
         """Asynchronous completion request"""
-        from litellm.llms.custom_httpx.http_handler import get_async_httpx_client
-        from litellm.types.utils import LlmProviders
-        from litellm.utils import convert_to_model_response_object
+        from remodl.llms.custom_httpx.http_handler import get_async_httpx_client
+        from remodl.types.utils import LlmProviders
+        from remodl.utils import convert_to_model_response_object
 
         # Check if streaming is requested (will be faked)
         stream = optional_params.get("stream", False)
@@ -286,7 +286,7 @@ class VertexGemmaConfig(OpenAIGPTConfig):
             model=model,
             messages=messages,
             optional_params=optional_params.copy(),
-            litellm_params=litellm_params,
+            remodl_params=remodl_params,
             headers={},
         )
         
@@ -328,7 +328,7 @@ class VertexGemmaConfig(OpenAIGPTConfig):
         # Unwrap predictions to get OpenAI-compatible response
         openai_response = self._unwrap_predictions_response(response_json)
         
-        # Use litellm's standard response converter
+        # Use remodl's standard response converter
         model_response = cast(
             ModelResponse,
             convert_to_model_response_object(

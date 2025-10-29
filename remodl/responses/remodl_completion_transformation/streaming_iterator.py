@@ -2,14 +2,14 @@ import time
 import uuid
 from typing import List, Optional, Union, cast
 
-import litellm
-from litellm.main import stream_chunk_builder
-from litellm.responses.litellm_completion_transformation.transformation import (
+import remodl
+from remodl.main import stream_chunk_builder
+from remodl.responses.remodl_completion_transformation.transformation import (
     LiteLLMCompletionResponsesConfig,
 )
-from litellm.responses.streaming_iterator import ResponsesAPIStreamingIterator
-from litellm.responses.utils import ResponsesAPIRequestUtils
-from litellm.types.llms.openai import (
+from remodl.responses.streaming_iterator import ResponsesAPIStreamingIterator
+from remodl.responses.utils import ResponsesAPIRequestUtils
+from remodl.types.llms.openai import (
     PART_UNION_TYPES,
     BaseLiteLLMOpenAIResponseObject,
     ContentPartAddedEvent,
@@ -31,8 +31,8 @@ from litellm.types.llms.openai import (
     ResponsesAPIStreamingResponse,
     OutputTextAnnotationAddedEvent
 )
-from litellm.types.utils import Delta as ChatCompletionDelta
-from litellm.types.utils import (
+from remodl.types.utils import Delta as ChatCompletionDelta
+from remodl.types.utils import (
     ModelResponse,
     ModelResponseStream,
     StreamingChoices,
@@ -48,25 +48,25 @@ class LiteLLMCompletionStreamingIterator(ResponsesAPIStreamingIterator):
     def __init__(
         self,
         model: str,
-        litellm_custom_stream_wrapper: litellm.CustomStreamWrapper,
+        remodl_custom_stream_wrapper: remodl.CustomStreamWrapper,
         request_input: Union[str, ResponseInputParam],
         responses_api_request: ResponsesAPIOptionalRequestParams,
         custom_llm_provider: Optional[str] = None,
-        litellm_metadata: Optional[dict] = None,
+        remodl_metadata: Optional[dict] = None,
     ):
         self.model: str = model
-        self.litellm_custom_stream_wrapper: litellm.CustomStreamWrapper = (
-            litellm_custom_stream_wrapper
+        self.remodl_custom_stream_wrapper: remodl.CustomStreamWrapper = (
+            remodl_custom_stream_wrapper
         )
         self.request_input: Union[str, ResponseInputParam] = request_input
         self.responses_api_request: ResponsesAPIOptionalRequestParams = (
             responses_api_request
         )
         self.custom_llm_provider: Optional[str] = custom_llm_provider
-        self.litellm_metadata: Optional[dict] = litellm_metadata or {}
+        self.remodl_metadata: Optional[dict] = remodl_metadata or {}
         self.collected_chat_completion_chunks: List[ModelResponseStream] = []
         self.finished: bool = False
-        self.litellm_logging_obj = litellm_custom_stream_wrapper.logging_obj
+        self.remodl_logging_obj = remodl_custom_stream_wrapper.logging_obj
         self.sent_response_created_event: bool = False
         self.sent_response_in_progress_event: bool = False
         self.sent_output_item_added_event: bool = False
@@ -75,7 +75,7 @@ class LiteLLMCompletionStreamingIterator(ResponsesAPIStreamingIterator):
         self.sent_output_content_part_done_event: bool = False
         self.sent_output_item_done_event: bool = False
         self.sent_annotation_events: bool = False
-        self.litellm_model_response: Optional[
+        self.remodl_model_response: Optional[
             Union[ModelResponse, TextCompletionResponse]
         ] = None
         self.final_text: str = ""
@@ -174,36 +174,36 @@ class LiteLLMCompletionStreamingIterator(ResponsesAPIStreamingIterator):
             ),
         )
 
-    def create_litellm_model_response(
+    def create_remodl_model_response(
         self,
     ) -> Optional[ModelResponse]:
         return cast(
             Optional[ModelResponse],
             stream_chunk_builder(
                 chunks=self.collected_chat_completion_chunks,
-                logging_obj=self.litellm_logging_obj,
+                logging_obj=self.remodl_logging_obj,
             ),
         )
 
     def create_output_text_done_event(
-        self, litellm_complete_object: ModelResponse
+        self, remodl_complete_object: ModelResponse
     ) -> OutputTextDoneEvent:
         return OutputTextDoneEvent(
             type=ResponsesAPIStreamEvents.OUTPUT_TEXT_DONE,
             item_id=f"msg_{str(uuid.uuid4())}",
             output_index=0,
             content_index=0,
-            text=getattr(litellm_complete_object.choices[0].message, "content", "")  # type: ignore
+            text=getattr(remodl_complete_object.choices[0].message, "content", "")  # type: ignore
             or "",
         )
 
     def create_output_content_part_done_event(
-        self, litellm_complete_object: ModelResponse
+        self, remodl_complete_object: ModelResponse
     ) -> ContentPartDoneEvent:
 
-        text = getattr(litellm_complete_object.choices[0].message, "content", "") or ""  # type: ignore
-        reasoning_content = getattr(litellm_complete_object.choices[0].message, "reasoning_content", "") or ""  # type: ignore
-        annotations = getattr(litellm_complete_object.choices[0].message, "annotations", None)  # type: ignore
+        text = getattr(remodl_complete_object.choices[0].message, "content", "") or ""  # type: ignore
+        reasoning_content = getattr(remodl_complete_object.choices[0].message, "reasoning_content", "") or ""  # type: ignore
+        annotations = getattr(remodl_complete_object.choices[0].message, "annotations", None)  # type: ignore
 
         part: Optional[PART_UNION_TYPES] = None
         if reasoning_content:
@@ -232,10 +232,10 @@ class LiteLLMCompletionStreamingIterator(ResponsesAPIStreamingIterator):
         )
 
     def create_output_item_done_event(
-        self, litellm_complete_object: ModelResponse
+        self, remodl_complete_object: ModelResponse
     ) -> OutputItemDoneEvent:
-        text = self.litellm_model_response.choices[0].message.content or ""  # type: ignore
-        annotations = getattr(self.litellm_model_response.choices[0].message, "annotations", None)  # type: ignore
+        text = self.remodl_model_response.choices[0].message.content or ""  # type: ignore
+        annotations = getattr(self.remodl_model_response.choices[0].message, "annotations", None)  # type: ignore
 
         response_annotations = LiteLLMCompletionResponsesConfig._transform_chat_completion_annotations_to_response_output_annotations(
             annotations=annotations
@@ -262,17 +262,17 @@ class LiteLLMCompletionStreamingIterator(ResponsesAPIStreamingIterator):
         )
 
     def return_default_done_events(
-        self, litellm_complete_object: ModelResponse
+        self, remodl_complete_object: ModelResponse
     ) -> Optional[BaseLiteLLMOpenAIResponseObject]:
         if self.sent_output_text_done_event is False:
             self.sent_output_text_done_event = True
-            return self.create_output_text_done_event(litellm_complete_object)
+            return self.create_output_text_done_event(remodl_complete_object)
         if self.sent_output_content_part_done_event is False:
             self.sent_output_content_part_done_event = True
-            return self.create_output_content_part_done_event(litellm_complete_object)
+            return self.create_output_content_part_done_event(remodl_complete_object)
         if self.sent_output_item_done_event is False:
             self.sent_output_item_done_event = True
-            return self.create_output_item_done_event(litellm_complete_object)
+            return self.create_output_item_done_event(remodl_complete_object)
         return None
 
     def return_default_initial_events(
@@ -304,12 +304,12 @@ class LiteLLMCompletionStreamingIterator(ResponsesAPIStreamingIterator):
     def common_done_event_logic(
         self, sync_mode: bool = True
     ) -> BaseLiteLLMOpenAIResponseObject:
-        if not self.litellm_model_response or isinstance(
-            self.litellm_model_response, TextCompletionResponse
+        if not self.remodl_model_response or isinstance(
+            self.remodl_model_response, TextCompletionResponse
         ):
-            self.litellm_model_response = self.create_litellm_model_response()
-        if self.litellm_model_response:
-            done_event = self.return_default_done_events(self.litellm_model_response)
+            self.remodl_model_response = self.create_remodl_model_response()
+        if self.remodl_model_response:
+            done_event = self.return_default_done_events(self.remodl_model_response)
             if done_event:
                 return done_event
         else:
@@ -320,7 +320,7 @@ class LiteLLMCompletionStreamingIterator(ResponsesAPIStreamingIterator):
 
         self.finished = self.is_stream_finished()
         response_completed_event = self._emit_response_completed_event(
-            self.litellm_model_response
+            self.remodl_model_response
         )
         if response_completed_event:
             return response_completed_event
@@ -347,7 +347,7 @@ class LiteLLMCompletionStreamingIterator(ResponsesAPIStreamingIterator):
                     return result
                 # Get the next chunk from the stream
                 try:
-                    chunk = await self.litellm_custom_stream_wrapper.__anext__()
+                    chunk = await self.remodl_custom_stream_wrapper.__anext__()
                     self.collected_chat_completion_chunks.append(chunk)
                     response_api_chunk = (
                         self._transform_chat_completion_chunk_to_response_api_chunk(
@@ -384,7 +384,7 @@ class LiteLLMCompletionStreamingIterator(ResponsesAPIStreamingIterator):
                 if result:
                     return result
                 try:
-                    chunk = self.litellm_custom_stream_wrapper.__next__()
+                    chunk = self.remodl_custom_stream_wrapper.__next__()
                     self.collected_chat_completion_chunks.append(chunk)
                     response_api_chunk = (
                         self._transform_chat_completion_chunk_to_response_api_chunk(
@@ -476,36 +476,36 @@ class LiteLLMCompletionStreamingIterator(ResponsesAPIStreamingIterator):
 
         For now this collected the first choice's delta string.
 
-        It's unclear how users expect litellm to translate multiple-choices-per-chunk to the responses API output.
+        It's unclear how users expect remodl to translate multiple-choices-per-chunk to the responses API output.
         """
         choice = choices[0]
         chat_completion_delta: ChatCompletionDelta = choice.delta
         return chat_completion_delta.content or ""
 
     def _emit_response_completed_event(
-        self, litellm_model_response: ModelResponse
+        self, remodl_model_response: ModelResponse
     ) -> Optional[ResponseCompletedEvent]:
 
-        if litellm_model_response:
+        if remodl_model_response:
             # Add cost to usage object if include_cost_in_streaming_usage is True
             if (
-                litellm.include_cost_in_streaming_usage
-                and self.litellm_logging_obj is not None
+                remodl.include_cost_in_streaming_usage
+                and self.remodl_logging_obj is not None
             ):
-                usage = getattr(litellm_model_response, "usage", None)
+                usage = getattr(remodl_model_response, "usage", None)
                 if usage is not None:
                     setattr(
                         usage,
                         "cost",
-                        self.litellm_logging_obj._response_cost_calculator(
-                            result=litellm_model_response
+                        self.remodl_logging_obj._response_cost_calculator(
+                            result=remodl_model_response
                         ),
                     )
 
             # Transform the response
             responses_api_response = LiteLLMCompletionResponsesConfig.transform_chat_completion_response_to_responses_api_response(
                 request_input=self.request_input,
-                chat_completion_response=litellm_model_response,
+                chat_completion_response=remodl_model_response,
                 responses_api_request=self.responses_api_request,
             )
 
@@ -513,7 +513,7 @@ class LiteLLMCompletionStreamingIterator(ResponsesAPIStreamingIterator):
             encoded_response = ResponsesAPIRequestUtils._update_responses_api_response_id_with_model_id(
                 responses_api_response=responses_api_response,
                 custom_llm_provider=self.custom_llm_provider,
-                litellm_metadata=self.litellm_metadata,
+                remodl_metadata=self.remodl_metadata,
             )
 
             return ResponseCompletedEvent(

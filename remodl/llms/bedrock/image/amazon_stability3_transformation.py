@@ -3,11 +3,11 @@ from typing import List, Optional
 
 from openai.types.image import Image
 
-from litellm.types.llms.bedrock import (
+from remodl.types.llms.bedrock import (
     AmazonStability3TextToImageRequest,
     AmazonStability3TextToImageResponse,
 )
-from litellm.types.utils import ImageResponse
+from remodl.types.utils import ImageResponse
 
 
 class AmazonStability3Config:

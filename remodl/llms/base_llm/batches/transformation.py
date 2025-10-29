@@ -5,14 +5,14 @@ from typing import TYPE_CHECKING, Any, Dict, List, Optional, Union
 import httpx
 from httpx import Headers
 
-from litellm.types.llms.openai import (
+from remodl.types.llms.openai import (
     AllMessageValues,
     CreateBatchRequest,
 )
-from litellm.types.utils import LiteLLMBatch, LlmProviders
+from remodl.types.utils import LiteLLMBatch, LlmProviders
 
 if TYPE_CHECKING:
-    from litellm.litellm_core_utils.litellm_logging import Logging as _LiteLLMLoggingObj
+    from remodl.remodl_core_utils.remodl_logging import Logging as _LiteLLMLoggingObj
 
     from ..chat.transformation import BaseLLMException as _BaseLLMException
 
@@ -67,7 +67,7 @@ class BaseBatchesConfig(ABC):
         model: str,
         messages: List[AllMessageValues],
         optional_params: dict,
-        litellm_params: dict,
+        remodl_params: dict,
         api_key: Optional[str] = None,
         api_base: Optional[str] = None,
     ) -> dict:
@@ -79,7 +79,7 @@ class BaseBatchesConfig(ABC):
             model: Model name
             messages: List of messages
             optional_params: Optional parameters
-            litellm_params: LiteLLM parameters
+            remodl_params: LiteLLM parameters
             api_key: API key
             api_base: API base URL
             
@@ -95,7 +95,7 @@ class BaseBatchesConfig(ABC):
         api_key: Optional[str],
         model: str,
         optional_params: Dict,
-        litellm_params: Dict,
+        remodl_params: Dict,
         data: CreateBatchRequest,
     ) -> str:
         """
@@ -106,7 +106,7 @@ class BaseBatchesConfig(ABC):
             api_key: API key
             model: Model name
             optional_params: Optional parameters
-            litellm_params: LiteLLM parameters
+            remodl_params: LiteLLM parameters
             data: Batch creation request data
             
         Returns:
@@ -120,7 +120,7 @@ class BaseBatchesConfig(ABC):
         model: str,
         create_batch_data: CreateBatchRequest,
         optional_params: dict,
-        litellm_params: dict,
+        remodl_params: dict,
     ) -> Union[bytes, str, Dict[str, Any]]:
         """
         Transform the batch creation request to provider-specific format.
@@ -129,7 +129,7 @@ class BaseBatchesConfig(ABC):
             model: Model name
             create_batch_data: Batch creation request data
             optional_params: Optional parameters
-            litellm_params: LiteLLM parameters
+            remodl_params: LiteLLM parameters
             
         Returns:
             Transformed request data
@@ -142,7 +142,7 @@ class BaseBatchesConfig(ABC):
         model: Optional[str],
         raw_response: httpx.Response,
         logging_obj: LiteLLMLoggingObj,
-        litellm_params: dict,
+        remodl_params: dict,
     ) -> LiteLLMBatch:
         """
         Transform provider-specific batch response to LiteLLM format.
@@ -151,7 +151,7 @@ class BaseBatchesConfig(ABC):
             model: Model name
             raw_response: Raw HTTP response
             logging_obj: Logging object
-            litellm_params: LiteLLM parameters
+            remodl_params: LiteLLM parameters
             
         Returns:
             LiteLLM batch object
@@ -163,7 +163,7 @@ class BaseBatchesConfig(ABC):
         self,
         batch_id: str,
         optional_params: dict,
-        litellm_params: dict,
+        remodl_params: dict,
     ) -> Union[bytes, str, Dict[str, Any]]:
         """
         Transform the batch retrieval request to provider-specific format.
@@ -171,7 +171,7 @@ class BaseBatchesConfig(ABC):
         Args:
             batch_id: Batch ID to retrieve
             optional_params: Optional parameters
-            litellm_params: LiteLLM parameters
+            remodl_params: LiteLLM parameters
             
         Returns:
             Transformed request data
@@ -184,7 +184,7 @@ class BaseBatchesConfig(ABC):
         model: Optional[str],
         raw_response: httpx.Response,
         logging_obj: LiteLLMLoggingObj,
-        litellm_params: dict,
+        remodl_params: dict,
     ) -> LiteLLMBatch:
         """
         Transform provider-specific batch retrieval response to LiteLLM format.
@@ -193,7 +193,7 @@ class BaseBatchesConfig(ABC):
             model: Model name
             raw_response: Raw HTTP response
             logging_obj: Logging object
-            litellm_params: LiteLLM parameters
+            remodl_params: LiteLLM parameters
             
         Returns:
             LiteLLM batch object

@@ -2,18 +2,18 @@ from typing import TYPE_CHECKING, Any, List, Optional
 
 import httpx
 
-from litellm.llms.base_llm.image_generation.transformation import (
+from remodl.llms.base_llm.image_generation.transformation import (
     BaseImageGenerationConfig,
 )
-from litellm.secret_managers.main import get_secret_str
-from litellm.types.llms.openai import (
+from remodl.secret_managers.main import get_secret_str
+from remodl.types.llms.openai import (
     AllMessageValues,
     OpenAIImageGenerationOptionalParams,
 )
-from litellm.types.utils import ImageObject, ImageResponse
+from remodl.types.utils import ImageObject, ImageResponse
 
 if TYPE_CHECKING:
-    from litellm.litellm_core_utils.litellm_logging import Logging as _LiteLLMLoggingObj
+    from remodl.remodl_core_utils.remodl_logging import Logging as _LiteLLMLoggingObj
 
     LiteLLMLoggingObj = _LiteLLMLoggingObj
 else:
@@ -67,7 +67,7 @@ class CometAPIImageGenerationConfig(BaseImageGenerationConfig):
         api_key: Optional[str],
         model: str,
         optional_params: dict,
-        litellm_params: dict,
+        remodl_params: dict,
         stream: Optional[bool] = None,
     ) -> str:
         """
@@ -90,7 +90,7 @@ class CometAPIImageGenerationConfig(BaseImageGenerationConfig):
         model: str,
         messages: List[AllMessageValues],
         optional_params: dict,
-        litellm_params: dict,
+        remodl_params: dict,
         api_key: Optional[str] = None,
         api_base: Optional[str] = None,
     ) -> dict:
@@ -111,7 +111,7 @@ class CometAPIImageGenerationConfig(BaseImageGenerationConfig):
         model: str,
         prompt: str,
         optional_params: dict,
-        litellm_params: dict,
+        remodl_params: dict,
         headers: dict,
     ) -> dict:
         """
@@ -135,13 +135,13 @@ class CometAPIImageGenerationConfig(BaseImageGenerationConfig):
         logging_obj: LiteLLMLoggingObj,
         request_data: dict,
         optional_params: dict,
-        litellm_params: dict,
+        remodl_params: dict,
         encoding: Any,
         api_key: Optional[str] = None,
         json_mode: Optional[bool] = None,
     ) -> ImageResponse:
         """
-        Transform the image generation response to the litellm image response
+        Transform the image generation response to the remodl image response
 
         https://api.cometapi.com/v1/images/generations
         """

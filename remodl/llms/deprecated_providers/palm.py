@@ -6,8 +6,8 @@ from typing import Callable, Optional
 
 import httpx
 
-import litellm
-from litellm.utils import Choices, Message, ModelResponse, Usage
+import remodl
+from remodl.utils import Choices, Message, ModelResponse, Usage
 
 
 class PalmError(Exception):
@@ -96,7 +96,7 @@ def completion(
     encoding,
     logging_obj,
     optional_params: dict,
-    litellm_params=None,
+    remodl_params=None,
     logger_fn=None,
 ):
     try:
@@ -114,7 +114,7 @@ def completion(
     inference_params.pop(
         "stream", None
     )  # palm does not support streaming, so we handle this by fake streaming in main.py
-    config = litellm.PalmConfig.get_config()
+    config = remodl.PalmConfig.get_config()
     for k, v in config.items():
         if (
             k not in inference_params

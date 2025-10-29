@@ -1,14 +1,14 @@
 import types
 from typing import List, Optional, TYPE_CHECKING
 
-from litellm.llms.base_llm.chat.transformation import BaseConfig
-from litellm.llms.bedrock.chat.invoke_transformations.base_invoke_transformation import (
+from remodl.llms.base_llm.chat.transformation import BaseConfig
+from remodl.llms.bedrock.chat.invoke_transformations.base_invoke_transformation import (
     AmazonInvokeConfig,
 )
-from litellm.llms.bedrock.common_utils import BedrockError
+from remodl.llms.bedrock.common_utils import BedrockError
 
 if TYPE_CHECKING:
-    from litellm.types.utils import ModelResponse
+    from remodl.types.utils import ModelResponse
 
 
 class AmazonMistralConfig(AmazonInvokeConfig, BaseConfig):

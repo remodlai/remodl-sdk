@@ -2,15 +2,15 @@ from typing import TYPE_CHECKING, Any, List, Literal, Optional, Union
 
 from httpx import Headers, Response
 
-from litellm.constants import DEFAULT_MAX_TOKENS
-from litellm.llms.base_llm.chat.transformation import BaseConfig, BaseLLMException
-from litellm.types.llms.openai import AllMessageValues
-from litellm.types.utils import ModelResponse
+from remodl.constants import DEFAULT_MAX_TOKENS
+from remodl.llms.base_llm.chat.transformation import BaseConfig, BaseLLMException
+from remodl.types.llms.openai import AllMessageValues
+from remodl.types.utils import ModelResponse
 
 from ..common_utils import PredibaseError
 
 if TYPE_CHECKING:
-    from litellm.litellm_core_utils.litellm_logging import Logging as _LiteLLMLoggingObj
+    from remodl.remodl_core_utils.remodl_logging import Logging as _LiteLLMLoggingObj
 
     LiteLLMLoggingObj = _LiteLLMLoggingObj
 else:
@@ -130,7 +130,7 @@ class PredibaseConfig(BaseConfig):
         request_data: dict,
         messages: List[AllMessageValues],
         optional_params: dict,
-        litellm_params: dict,
+        remodl_params: dict,
         encoding: str,
         api_key: Optional[str] = None,
         json_mode: Optional[bool] = None,
@@ -144,7 +144,7 @@ class PredibaseConfig(BaseConfig):
         model: str,
         messages: List[AllMessageValues],
         optional_params: dict,
-        litellm_params: dict,
+        remodl_params: dict,
         headers: dict,
     ) -> dict:
         raise NotImplementedError(
@@ -164,7 +164,7 @@ class PredibaseConfig(BaseConfig):
         model: str,
         messages: List[AllMessageValues],
         optional_params: dict,
-        litellm_params: dict,
+        remodl_params: dict,
         api_key: Optional[str] = None,
         api_base: Optional[str] = None,
     ) -> dict:

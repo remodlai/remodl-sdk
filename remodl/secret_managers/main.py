@@ -7,14 +7,14 @@ from typing import Any, Optional, Union
 
 import httpx
 
-import litellm
-from litellm._logging import print_verbose, verbose_logger
-from litellm.caching.caching import DualCache
-from litellm.llms.custom_httpx.http_handler import HTTPHandler
-from litellm.secret_managers.get_azure_ad_token_provider import (
+import remodl
+from remodl._logging import print_verbose, verbose_logger
+from remodl.caching.caching import DualCache
+from remodl.llms.custom_httpx.http_handler import HTTPHandler
+from remodl.secret_managers.get_azure_ad_token_provider import (
     get_azure_ad_token_provider,
 )
-from litellm.types.secret_managers.main import KeyManagementSystem
+from remodl.types.secret_managers.main import KeyManagementSystem
 
 oidc_cache = DualCache()
 
@@ -94,8 +94,8 @@ def get_secret(  # noqa: PLR0915
     secret_name: str,
     default_value: Optional[Union[str, bool]] = None,
 ):
-    key_management_system = litellm._key_management_system
-    key_management_settings = litellm._key_management_settings
+    key_management_system = remodl._key_management_system
+    key_management_settings = remodl._key_management_settings
     secret = None
 
     if secret_name.startswith("os.environ/"):
@@ -208,9 +208,9 @@ def get_secret(  # noqa: PLR0915
             raise ValueError("Unsupported OIDC provider")
 
     try:
-        if _should_read_secret_from_secret_manager() and litellm.secret_manager_client is not None:
+        if _should_read_secret_from_secret_manager() and remodl.secret_manager_client is not None:
             try:
-                client = litellm.secret_manager_client
+                client = remodl.secret_manager_client
                 key_manager = "local"
                 if key_management_system is not None:
                     key_manager = key_management_system.value
@@ -245,7 +245,7 @@ def get_secret(  # noqa: PLR0915
                         )  # fix for this vulnerability https://huntr.com/bounties/ae623c2f-b64b-4245-9ed4-f13a0a5824ce
                     response = client.decrypt(
                         request={
-                            "name": litellm._google_kms_resource_name,
+                            "name": remodl._google_kms_resource_name,
                             "ciphertext": ciphertext,
                         }
                     )
@@ -271,7 +271,7 @@ def get_secret(  # noqa: PLR0915
                     if isinstance(secret, str):
                         secret = secret.strip()
                 elif key_manager == KeyManagementSystem.AWS_SECRET_MANAGER.value:
-                    from litellm.secret_managers.aws_secret_manager_v2 import (
+                    from remodl.secret_managers.aws_secret_manager_v2 import (
                         AWSSecretsManagerV2,
                     )
 
@@ -338,11 +338,11 @@ def _should_read_secret_from_secret_manager() -> bool:
     - If the `_key_management_settings` access mode is "read_only" or "read_and_write", return True
     - Otherwise, return False
     """
-    if litellm.secret_manager_client is not None:
-        if litellm._key_management_settings is not None:
+    if remodl.secret_manager_client is not None:
+        if remodl._key_management_settings is not None:
             if (
-                litellm._key_management_settings.access_mode == "read_only"
-                or litellm._key_management_settings.access_mode == "read_and_write"
+                remodl._key_management_settings.access_mode == "read_only"
+                or remodl._key_management_settings.access_mode == "read_and_write"
             ):
                 return True
     return False

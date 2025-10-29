@@ -10,7 +10,7 @@ A powerful prompt management system for LiteLLM that fetches `.prompt` files fro
 - **🎯 YAML frontmatter**: Define model, parameters, and schemas in file headers
 - **🔧 Handlebars templating**: Use `{{variable}}` syntax with Jinja2 backend
 - **✅ Input validation**: Automatic validation against defined schemas
-- **🔗 LiteLLM integration**: Works seamlessly with `litellm.completion()`
+- **🔗 LiteLLM integration**: Works seamlessly with `remodl.completion()`
 - **💬 Smart message parsing**: Converts prompts to proper chat messages
 - **⚙️ Parameter extraction**: Automatically applies model settings from prompts
 
@@ -53,7 +53,7 @@ input:
 #### Option A: Access Token (Recommended)
 
 ```python
-import litellm
+import remodl
 
 # Configure BitBucket access
 bitbucket_config = {
@@ -64,13 +64,13 @@ bitbucket_config = {
 }
 
 # Set global BitBucket configuration
-litellm.set_global_bitbucket_config(bitbucket_config)
+remodl.set_global_bitbucket_config(bitbucket_config)
 ```
 
 #### Option B: Basic Authentication
 
 ```python
-import litellm
+import remodl
 
 # Configure BitBucket access with basic auth
 bitbucket_config = {
@@ -82,14 +82,14 @@ bitbucket_config = {
     "branch": "main"
 }
 
-litellm.set_global_bitbucket_config(bitbucket_config)
+remodl.set_global_bitbucket_config(bitbucket_config)
 ```
 
 ### 4. Use with LiteLLM
 
 ```python
 # Use with completion - the model prefix 'bitbucket/' tells LiteLLM to use BitBucket prompt management
-response = litellm.completion(
+response = remodl.completion(
     model="bitbucket/gpt-4",  # The actual model comes from the .prompt file
     prompt_id="prompts/chat_assistant", # Location of the prompt file
     prompt_variables={
@@ -124,12 +124,12 @@ User: {{user_message}}
 ```yaml
 model_list:
   - model_name: my-bitbucket-model
-    litellm_params:
+    remodl_params:
       model: bitbucket/gpt-4
       prompt_id: "prompts/hello"
       api_key: os.environ/OPENAI_API_KEY
 
-litellm_settings:
+remodl_settings:
   global_bitbucket_config:
     workspace: "your-workspace"
     repository: "your-repo"
@@ -140,7 +140,7 @@ litellm_settings:
 ### 3. Start the proxy
 
 ```bash
-litellm --config config.yaml --detailed_debug
+remodl --config config.yaml --detailed_debug
 ```
 
 ### 4. Test it!
@@ -255,7 +255,7 @@ bitbucket_config = {
 ### LiteLLM Integration
 
 ```python
-response = litellm.completion(
+response = remodl.completion(
     model="bitbucket/<base_model>",  # required (e.g., bitbucket/gpt-4)
     prompt_id=str,                   # required - the .prompt filename without extension
     prompt_variables=dict,           # optional - variables for template rendering
@@ -294,11 +294,11 @@ The BitBucket integration provides detailed error messages for common issues:
 Enable debug logging to troubleshoot issues:
 
 ```python
-import litellm
-litellm.set_verbose = True
+import remodl
+remodl.set_verbose = True
 
 # Your BitBucket prompt calls will now show detailed logs
-response = litellm.completion(
+response = remodl.completion(
     model="bitbucket/gpt-4",
     prompt_id="your_prompt",
     prompt_variables={"key": "value"}

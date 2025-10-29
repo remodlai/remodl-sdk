@@ -11,36 +11,36 @@ from aiohttp import ClientSession, TCPConnector
 from httpx import USE_CLIENT_DEFAULT, AsyncHTTPTransport, HTTPTransport
 from httpx._types import RequestFiles
 
-import litellm
-from litellm._logging import verbose_logger
-from litellm.constants import (
+import remodl
+from remodl._logging import verbose_logger
+from remodl.constants import (
     _DEFAULT_TTL_FOR_HTTPX_CLIENTS,
     AIOHTTP_CONNECTOR_LIMIT,
     AIOHTTP_KEEPALIVE_TIMEOUT,
     AIOHTTP_TTL_DNS_CACHE,
     DEFAULT_SSL_CIPHERS
 )
-from litellm.litellm_core_utils.logging_utils import track_llm_api_timing
-from litellm.types.llms.custom_http import *
+from remodl.remodl_core_utils.logging_utils import track_llm_api_timing
+from remodl.types.llms.custom_http import *
 
 if TYPE_CHECKING:
-    from litellm import LlmProviders
-    from litellm.litellm_core_utils.litellm_logging import (
+    from remodl import LlmProviders
+    from remodl.remodl_core_utils.remodl_logging import (
         Logging as LiteLLMLoggingObject,
     )
-    from litellm.llms.custom_httpx.aiohttp_transport import LiteLLMAiohttpTransport
+    from remodl.llms.custom_httpx.aiohttp_transport import LiteLLMAiohttpTransport
 else:
     LlmProviders = Any
     LiteLLMLoggingObject = Any
     LiteLLMAiohttpTransport = Any
 
 try:
-    from litellm._version import version
+    from remodl._version import version
 except Exception:
     version = "0.0.0"
 
 headers = {
-    "User-Agent": f"litellm/{version}",
+    "User-Agent": f"remodl/{version}",
 }
 
 # https://www.python-httpx.org/advanced/timeouts
@@ -64,7 +64,7 @@ def get_ssl_configuration(
 
     Args:
         ssl_verify: SSL verification setting. Can be:
-            - None: Use default from environment/litellm settings
+            - None: Use default from environment/remodl settings
             - False: Disable SSL verification
             - True: Enable SSL verification
             - str: Path to CA bundle file
@@ -72,22 +72,22 @@ def get_ssl_configuration(
     Returns:
         Union[bool, str, ssl.SSLContext]: Appropriate SSL configuration
     """
-    from litellm.secret_managers.main import str_to_bool
+    from remodl.secret_managers.main import str_to_bool
 
     if isinstance(ssl_verify, ssl.SSLContext):
         # If ssl_verify is already an SSLContext, return it directly
         return ssl_verify
 
-    # Get ssl_verify from environment or litellm settings if not provided
+    # Get ssl_verify from environment or remodl settings if not provided
     if ssl_verify is None:
-        ssl_verify = os.getenv("SSL_VERIFY", litellm.ssl_verify)
+        ssl_verify = os.getenv("SSL_VERIFY", remodl.ssl_verify)
         ssl_verify_bool = (
             str_to_bool(ssl_verify) if isinstance(ssl_verify, str) else ssl_verify
         )
         if ssl_verify_bool is not None:
             ssl_verify = ssl_verify_bool
 
-    ssl_security_level = os.getenv("SSL_SECURITY_LEVEL", litellm.ssl_security_level)
+    ssl_security_level = os.getenv("SSL_SECURITY_LEVEL", remodl.ssl_security_level)
 
     cafile = None
     if isinstance(ssl_verify, str) and os.path.exists(ssl_verify):
@@ -116,9 +116,9 @@ def get_ssl_configuration(
             custom_ssl_context.set_ciphers(DEFAULT_SSL_CIPHERS)
 
         # Configure ECDH curve for key exchange (e.g., to disable PQC and improve performance)
-        # Set SSL_ECDH_CURVE env var or litellm.ssl_ecdh_curve to 'X25519' to disable PQC
+        # Set SSL_ECDH_CURVE env var or remodl.ssl_ecdh_curve to 'X25519' to disable PQC
         # Common valid curves: X25519, prime256v1, secp384r1, secp521r1
-        ssl_ecdh_curve = os.getenv("SSL_ECDH_CURVE", litellm.ssl_ecdh_curve)
+        ssl_ecdh_curve = os.getenv("SSL_ECDH_CURVE", remodl.ssl_ecdh_curve)
         if ssl_ecdh_curve and isinstance(ssl_ecdh_curve, str):
             try:
                 custom_ssl_context.set_ecdh_curve(ssl_ecdh_curve)
@@ -229,7 +229,7 @@ class AsyncHTTPHandler:
 
         # An SSL certificate used by the requested host to authenticate the client.
         # /path/to/client.pem
-        cert = os.getenv("SSL_CERTIFICATE", litellm.ssl_certificate)
+        cert = os.getenv("SSL_CERTIFICATE", remodl.ssl_certificate)
 
         if timeout is None:
             timeout = _DEFAULT_TIMEOUT
@@ -341,10 +341,10 @@ class AsyncHTTPHandler:
                 for key, value in error_response.headers.items():
                     headers["response_headers-{}".format(key)] = value
 
-            raise litellm.Timeout(
+            raise remodl.Timeout(
                 message=f"Connection timed out. Timeout passed={timeout}, time taken={time_delta} seconds",
                 model="default-model-name",
-                llm_provider="litellm-httpx-handler",
+                llm_provider="remodl-httpx-handler",
                 headers=headers,
             )
         except httpx.HTTPStatusError as e:
@@ -405,10 +405,10 @@ class AsyncHTTPHandler:
                 for key, value in error_response.headers.items():
                     headers["response_headers-{}".format(key)] = value
 
-            raise litellm.Timeout(
+            raise remodl.Timeout(
                 message=f"Connection timed out after {timeout} seconds.",
                 model="default-model-name",
-                llm_provider="litellm-httpx-handler",
+                llm_provider="remodl-httpx-handler",
                 headers=headers,
             )
         except httpx.HTTPStatusError as e:
@@ -465,10 +465,10 @@ class AsyncHTTPHandler:
                 for key, value in error_response.headers.items():
                     headers["response_headers-{}".format(key)] = value
 
-            raise litellm.Timeout(
+            raise remodl.Timeout(
                 message=f"Connection timed out after {timeout} seconds.",
                 model="default-model-name",
-                llm_provider="litellm-httpx-handler",
+                llm_provider="remodl-httpx-handler",
                 headers=headers,
             )
         except httpx.HTTPStatusError as e:
@@ -564,9 +564,9 @@ class AsyncHTTPHandler:
     ) -> Optional[Union[LiteLLMAiohttpTransport, AsyncHTTPTransport]]:
         """
         - Creates a transport for httpx.AsyncClient
-            - if litellm.force_ipv4 is True, it will return AsyncHTTPTransport with local_address="0.0.0.0"
+            - if remodl.force_ipv4 is True, it will return AsyncHTTPTransport with local_address="0.0.0.0"
             - [Default] It will return AiohttpTransport
-            - Users can opt out of using AiohttpTransport by setting litellm.use_aiohttp_transport to False
+            - Users can opt out of using AiohttpTransport by setting remodl.use_aiohttp_transport to False
 
 
         Notes on this handler:
@@ -594,21 +594,21 @@ class AsyncHTTPHandler:
     @staticmethod
     def _should_use_aiohttp_transport() -> bool:
         """
-        AiohttpTransport is the default transport for litellm.
+        AiohttpTransport is the default transport for remodl.
 
         Httpx can be used by the following
-            - litellm.disable_aiohttp_transport = True
+            - remodl.disable_aiohttp_transport = True
             - os.getenv("DISABLE_AIOHTTP_TRANSPORT") = "True"
         """
         import os
 
-        from litellm.secret_managers.main import str_to_bool
+        from remodl.secret_managers.main import str_to_bool
 
         #########################################################
         # Check if user disabled aiohttp transport
         ########################################################
         if (
-            litellm.disable_aiohttp_transport is True
+            remodl.disable_aiohttp_transport is True
             or str_to_bool(os.getenv("DISABLE_AIOHTTP_TRANSPORT", "False")) is True
         ):
             return False
@@ -635,7 +635,7 @@ class AsyncHTTPHandler:
             Dict with appropriate SSL configuration for TCPConnector
         """
         connector_kwargs: Dict[str, Any] = {
-            "local_addr": ("0.0.0.0", 0) if litellm.force_ipv4 else None,
+            "local_addr": ("0.0.0.0", 0) if remodl.force_ipv4 else None,
         }
 
         if ssl_context is not None:
@@ -660,8 +660,8 @@ class AsyncHTTPHandler:
         - SSLContext: custom SSL context
         - False: disable SSL verification
         """
-        from litellm.llms.custom_httpx.aiohttp_transport import LiteLLMAiohttpTransport
-        from litellm.secret_managers.main import str_to_bool
+        from remodl.llms.custom_httpx.aiohttp_transport import LiteLLMAiohttpTransport
+        from remodl.secret_managers.main import str_to_bool
 
         connector_kwargs = AsyncHTTPHandler._get_ssl_connector_kwargs(
             ssl_verify=ssl_verify, ssl_context=ssl_context
@@ -670,7 +670,7 @@ class AsyncHTTPHandler:
         # Check if user enabled aiohttp trust env
         # use for HTTP_PROXY, HTTPS_PROXY, etc.
         ########################################################
-        trust_env: bool = litellm.aiohttp_trust_env
+        trust_env: bool = remodl.aiohttp_trust_env
         if str_to_bool(os.getenv("AIOHTTP_TRUST_ENV", "False")) is True:
             trust_env = True
 
@@ -708,7 +708,7 @@ class AsyncHTTPHandler:
         - If force_ipv4 is True, it will create an AsyncHTTPTransport with local_address set to "0.0.0.0"
         - [Default] If force_ipv4 is False, it will return None
         """
-        if litellm.force_ipv4:
+        if remodl.force_ipv4:
             return AsyncHTTPTransport(local_address="0.0.0.0")
         else:
             return None
@@ -730,7 +730,7 @@ class HTTPHandler:
 
         # An SSL certificate used by the requested host to authenticate the client.
         # /path/to/client.pem
-        cert = os.getenv("SSL_CERTIFICATE", litellm.ssl_certificate)
+        cert = os.getenv("SSL_CERTIFICATE", remodl.ssl_certificate)
 
         if client is None:
             transport = self._create_sync_transport()
@@ -818,10 +818,10 @@ class HTTPHandler:
             response.raise_for_status()
             return response
         except httpx.TimeoutException:
-            raise litellm.Timeout(
+            raise remodl.Timeout(
                 message=f"Connection timed out after {timeout} seconds.",
                 model="default-model-name",
-                llm_provider="litellm-httpx-handler",
+                llm_provider="remodl-httpx-handler",
             )
         except httpx.HTTPStatusError as e:
             if stream is True:
@@ -860,10 +860,10 @@ class HTTPHandler:
             response.raise_for_status()
             return response
         except httpx.TimeoutException:
-            raise litellm.Timeout(
+            raise remodl.Timeout(
                 message=f"Connection timed out after {timeout} seconds.",
                 model="default-model-name",
-                llm_provider="litellm-httpx-handler",
+                llm_provider="remodl-httpx-handler",
             )
         except httpx.HTTPStatusError as e:
             if stream is True:
@@ -902,10 +902,10 @@ class HTTPHandler:
             response = self.client.send(req, stream=stream)
             return response
         except httpx.TimeoutException:
-            raise litellm.Timeout(
+            raise remodl.Timeout(
                 message=f"Connection timed out after {timeout} seconds.",
                 model="default-model-name",
-                llm_provider="litellm-httpx-handler",
+                llm_provider="remodl-httpx-handler",
             )
         except Exception as e:
             raise e
@@ -933,10 +933,10 @@ class HTTPHandler:
             response.raise_for_status()
             return response
         except httpx.TimeoutException:
-            raise litellm.Timeout(
+            raise remodl.Timeout(
                 message=f"Connection timed out after {timeout} seconds.",
                 model="default-model-name",
-                llm_provider="litellm-httpx-handler",
+                llm_provider="remodl-httpx-handler",
             )
         except httpx.HTTPStatusError as e:
             if stream is True:
@@ -961,15 +961,15 @@ class HTTPHandler:
 
     def _create_sync_transport(self) -> Optional[HTTPTransport]:
         """
-        Create an HTTP transport with IPv4 only if litellm.force_ipv4 is True.
+        Create an HTTP transport with IPv4 only if remodl.force_ipv4 is True.
         Otherwise, return None.
 
         Some users have seen httpx ConnectionError when using ipv6 - forcing ipv4 resolves the issue for them
         """
-        if litellm.force_ipv4:
+        if remodl.force_ipv4:
             return HTTPTransport(local_address="0.0.0.0")
         else:
-            return getattr(litellm, 'sync_transport', None)
+            return getattr(remodl, 'sync_transport', None)
 
 
 def get_async_httpx_client(
@@ -992,7 +992,7 @@ def get_async_httpx_client(
                 pass
 
     _cache_key_name = "async_httpx_client" + _params_key_name + llm_provider
-    _cached_client = litellm.in_memory_llm_clients_cache.get_cache(_cache_key_name)
+    _cached_client = remodl.in_memory_llm_clients_cache.get_cache(_cache_key_name)
     if _cached_client:
         return _cached_client
 
@@ -1005,7 +1005,7 @@ def get_async_httpx_client(
             shared_session=shared_session,
         )
 
-    litellm.in_memory_llm_clients_cache.set_cache(
+    remodl.in_memory_llm_clients_cache.set_cache(
         key=_cache_key_name,
         value=_new_client,
         ttl=_DEFAULT_TTL_FOR_HTTPX_CLIENTS,
@@ -1030,7 +1030,7 @@ def _get_httpx_client(params: Optional[dict] = None) -> HTTPHandler:
 
     _cache_key_name = "httpx_client" + _params_key_name
 
-    _cached_client = litellm.in_memory_llm_clients_cache.get_cache(_cache_key_name)
+    _cached_client = remodl.in_memory_llm_clients_cache.get_cache(_cache_key_name)
     if _cached_client:
         return _cached_client
 
@@ -1039,7 +1039,7 @@ def _get_httpx_client(params: Optional[dict] = None) -> HTTPHandler:
     else:
         _new_client = HTTPHandler(timeout=httpx.Timeout(timeout=600.0, connect=5.0))
 
-    litellm.in_memory_llm_clients_cache.set_cache(
+    remodl.in_memory_llm_clients_cache.set_cache(
         key=_cache_key_name,
         value=_new_client,
         ttl=_DEFAULT_TTL_FOR_HTTPX_CLIENTS,

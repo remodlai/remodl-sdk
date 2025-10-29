@@ -3,12 +3,12 @@ import json
 from datetime import datetime
 from typing import Any, AsyncIterator, List, Union
 
-from litellm.litellm_core_utils.litellm_logging import Logging as LiteLLMLoggingObj
-from litellm.proxy.pass_through_endpoints.success_handler import (
+from remodl.remodl_core_utils.remodl_logging import Logging as LiteLLMLoggingObj
+from remodl.proxy.pass_through_endpoints.success_handler import (
     PassThroughEndpointLogging,
 )
-from litellm.types.passthrough_endpoints.pass_through_endpoints import EndpointType
-from litellm.types.utils import GenericStreamingChunk, ModelResponseStream
+from remodl.types.passthrough_endpoints.pass_through_endpoints import EndpointType
+from remodl.types.utils import GenericStreamingChunk, ModelResponseStream
 
 GLOBAL_PASS_THROUGH_SUCCESS_HANDLER_OBJ = PassThroughEndpointLogging()
 
@@ -20,24 +20,24 @@ class BaseAnthropicMessagesStreamingIterator:
 
     def __init__(
         self,
-        litellm_logging_obj: LiteLLMLoggingObj,
+        remodl_logging_obj: LiteLLMLoggingObj,
         request_body: dict,
     ):
-        self.litellm_logging_obj = litellm_logging_obj
+        self.remodl_logging_obj = remodl_logging_obj
         self.request_body = request_body
         self.start_time = datetime.now()
 
 
     async def _handle_streaming_logging(self, collected_chunks: List[bytes]):
         """Handle the logging after all chunks have been collected."""
-        from litellm.proxy.pass_through_endpoints.streaming_handler import (
+        from remodl.proxy.pass_through_endpoints.streaming_handler import (
             PassThroughStreamingHandler,
         )
 
         end_time = datetime.now()
         asyncio.create_task(
             PassThroughStreamingHandler._route_streaming_logging_to_handler(
-                litellm_logging_obj=self.litellm_logging_obj,
+                remodl_logging_obj=self.remodl_logging_obj,
                 passthrough_success_handler_obj=GLOBAL_PASS_THROUGH_SUCCESS_HANDLER_OBJ,
                 url_route="/v1/messages",
                 request_body=self.request_body or {},
@@ -52,10 +52,10 @@ class BaseAnthropicMessagesStreamingIterator:
         self,
         httpx_response,
         request_body: dict,
-        litellm_logging_obj: LiteLLMLoggingObj,
+        remodl_logging_obj: LiteLLMLoggingObj,
     ) -> AsyncIterator:
         """Helper function to handle Anthropic streaming responses using the existing logging handlers"""
-        from litellm.proxy.pass_through_endpoints.streaming_handler import (
+        from remodl.proxy.pass_through_endpoints.streaming_handler import (
             PassThroughStreamingHandler,
         )
 
@@ -63,7 +63,7 @@ class BaseAnthropicMessagesStreamingIterator:
         return PassThroughStreamingHandler.chunk_processor(
             response=httpx_response,
             request_body=request_body,
-            litellm_logging_obj=litellm_logging_obj,
+            remodl_logging_obj=remodl_logging_obj,
             endpoint_type=EndpointType.ANTHROPIC,
             start_time=self.start_time,
             passthrough_success_handler_obj=GLOBAL_PASS_THROUGH_SUCCESS_HANDLER_OBJ,

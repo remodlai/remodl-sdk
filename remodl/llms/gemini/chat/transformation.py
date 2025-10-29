@@ -1,15 +1,15 @@
 from typing import List, Optional, cast
 
-from litellm.litellm_core_utils.prompt_templates.factory import (
+from remodl.remodl_core_utils.prompt_templates.factory import (
     convert_generic_image_chunk_to_openai_image_obj,
     convert_to_anthropic_image_obj,
 )
-from litellm.litellm_core_utils.prompt_templates.image_handling import (
+from remodl.remodl_core_utils.prompt_templates.image_handling import (
     convert_url_to_base64,
 )
-from litellm.types.llms.openai import AllMessageValues, ChatCompletionFileObject
-from litellm.types.llms.vertex_ai import ContentType, PartType
-from litellm.utils import supports_reasoning
+from remodl.types.llms.openai import AllMessageValues, ChatCompletionFileObject
+from remodl.types.llms.vertex_ai import ContentType, PartType
+from remodl.utils import supports_reasoning
 
 from ...vertex_ai.gemini.transformation import _gemini_convert_messages_with_history
 from ...vertex_ai.gemini.vertex_and_google_ai_studio_gemini import VertexGeminiConfig

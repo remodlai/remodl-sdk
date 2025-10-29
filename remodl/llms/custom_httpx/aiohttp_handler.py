@@ -4,26 +4,26 @@ import aiohttp
 import httpx  # type: ignore
 from aiohttp import ClientSession, FormData
 
-import litellm
-import litellm.litellm_core_utils
-import litellm.types
-import litellm.types.utils
-from litellm.llms.base_llm.chat.transformation import BaseConfig
-from litellm.llms.base_llm.image_variations.transformation import (
+import remodl
+import remodl.remodl_core_utils
+import remodl.types
+import remodl.types.utils
+from remodl.llms.base_llm.chat.transformation import BaseConfig
+from remodl.llms.base_llm.image_variations.transformation import (
     BaseImageVariationConfig,
 )
-from litellm.llms.custom_httpx.http_handler import (
+from remodl.llms.custom_httpx.http_handler import (
     AsyncHTTPHandler,
     HTTPHandler,
     _get_httpx_client,
 )
-from litellm.llms.custom_httpx.aiohttp_transport import LiteLLMAiohttpTransport
-from litellm.types.llms.openai import FileTypes
-from litellm.types.utils import HttpHandlerRequestFields, ImageResponse, LlmProviders
-from litellm.utils import CustomStreamWrapper, ModelResponse, ProviderConfigManager
+from remodl.llms.custom_httpx.aiohttp_transport import LiteLLMAiohttpTransport
+from remodl.types.llms.openai import FileTypes
+from remodl.types.utils import HttpHandlerRequestFields, ImageResponse, LlmProviders
+from remodl.utils import CustomStreamWrapper, ModelResponse, ProviderConfigManager
 
 if TYPE_CHECKING:
-    from litellm.litellm_core_utils.litellm_logging import Logging as _LiteLLMLoggingObj
+    from remodl.remodl_core_utils.remodl_logging import Logging as _LiteLLMLoggingObj
 
     LiteLLMLoggingObj = _LiteLLMLoggingObj
 else:
@@ -142,7 +142,7 @@ class BaseLLMAIOHTTPHandler:
         headers: dict,
         data: Optional[dict],
         timeout: Union[float, httpx.Timeout],
-        litellm_params: dict,
+        remodl_params: dict,
         form_data: Optional[FormData] = None,
         stream: bool = False,
     ) -> aiohttp.ClientResponse:
@@ -190,7 +190,7 @@ class BaseLLMAIOHTTPHandler:
         headers: dict,
         data: dict,
         timeout: Optional[Union[float, httpx.Timeout]],
-        litellm_params: dict,
+        remodl_params: dict,
         stream: bool = False,
         files: Optional[dict] = None,
         content: Any = None,
@@ -217,7 +217,7 @@ class BaseLLMAIOHTTPHandler:
             except httpx.HTTPStatusError as e:
                 hit_max_retry = i + 1 == max_retry_on_unprocessable_entity_error
                 should_retry = provider_config.should_retry_llm_api_inside_llm_translation_on_http_error(
-                    e=e, litellm_params=litellm_params
+                    e=e, remodl_params=remodl_params
                 )
                 if should_retry and not hit_max_retry:
                     data = (
@@ -254,7 +254,7 @@ class BaseLLMAIOHTTPHandler:
         logging_obj: LiteLLMLoggingObj,
         messages: list,
         optional_params: dict,
-        litellm_params: dict,
+        remodl_params: dict,
         encoding: Any,
         api_key: Optional[str] = None,
         client: Optional[ClientSession] = None,
@@ -266,7 +266,7 @@ class BaseLLMAIOHTTPHandler:
             headers=headers,
             data=data,
             timeout=timeout,
-            litellm_params=litellm_params,
+            remodl_params=remodl_params,
             stream=False,
         )
         _transformed_response = await provider_config.transform_response(  # type: ignore
@@ -278,7 +278,7 @@ class BaseLLMAIOHTTPHandler:
             request_data=data,
             messages=messages,
             optional_params=optional_params,
-            litellm_params=litellm_params,
+            remodl_params=remodl_params,
             encoding=encoding,
         )
         return _transformed_response
@@ -294,7 +294,7 @@ class BaseLLMAIOHTTPHandler:
         logging_obj: LiteLLMLoggingObj,
         optional_params: dict,
         timeout: Union[float, httpx.Timeout],
-        litellm_params: dict,
+        remodl_params: dict,
         acompletion: bool,
         stream: Optional[bool] = False,
         fake_stream: bool = False,
@@ -303,7 +303,7 @@ class BaseLLMAIOHTTPHandler:
         client: Optional[Union[HTTPHandler, AsyncHTTPHandler, ClientSession]] = None,
     ):
         provider_config = ProviderConfigManager.get_provider_chat_config(
-            model=model, provider=litellm.LlmProviders(custom_llm_provider)
+            model=model, provider=remodl.LlmProviders(custom_llm_provider)
         )
         if provider_config is None:
             raise ValueError(
@@ -316,7 +316,7 @@ class BaseLLMAIOHTTPHandler:
             model=model,
             messages=messages,
             optional_params=optional_params,
-            litellm_params=litellm_params,
+            remodl_params=remodl_params,
             api_base=api_base,
         )
 
@@ -325,7 +325,7 @@ class BaseLLMAIOHTTPHandler:
             api_key=api_key,
             model=model,
             optional_params=optional_params,
-            litellm_params=litellm_params,
+            remodl_params=remodl_params,
             stream=stream,
         )
 
@@ -333,7 +333,7 @@ class BaseLLMAIOHTTPHandler:
             model=model,
             messages=messages,
             optional_params=optional_params,
-            litellm_params=litellm_params,
+            remodl_params=remodl_params,
             headers=headers,
         )
 
@@ -362,7 +362,7 @@ class BaseLLMAIOHTTPHandler:
                 api_key=api_key,
                 messages=messages,
                 optional_params=optional_params,
-                litellm_params=litellm_params,
+                remodl_params=remodl_params,
                 encoding=encoding,
                 client=(
                     client
@@ -389,7 +389,7 @@ class BaseLLMAIOHTTPHandler:
                     if client is not None and isinstance(client, HTTPHandler)
                     else None
                 ),
-                litellm_params=litellm_params,
+                remodl_params=remodl_params,
             )
             return CustomStreamWrapper(
                 completion_stream=completion_stream,
@@ -409,7 +409,7 @@ class BaseLLMAIOHTTPHandler:
             api_base=api_base,
             headers=headers,
             timeout=timeout,
-            litellm_params=litellm_params,
+            remodl_params=remodl_params,
             data=data,
         )
         return provider_config.transform_response(
@@ -421,7 +421,7 @@ class BaseLLMAIOHTTPHandler:
             request_data=data,
             messages=messages,
             optional_params=optional_params,
-            litellm_params=litellm_params,
+            remodl_params=remodl_params,
             encoding=encoding,
         )
 
@@ -434,7 +434,7 @@ class BaseLLMAIOHTTPHandler:
         model: str,
         messages: list,
         logging_obj,
-        litellm_params: dict,
+        remodl_params: dict,
         timeout: Union[float, httpx.Timeout],
         fake_stream: bool = False,
         client: Optional[HTTPHandler] = None,
@@ -454,7 +454,7 @@ class BaseLLMAIOHTTPHandler:
             headers=headers,
             data=data,
             timeout=timeout,
-            litellm_params=litellm_params,
+            remodl_params=remodl_params,
             stream=stream,
         )
 
@@ -485,7 +485,7 @@ class BaseLLMAIOHTTPHandler:
         headers: dict,
         data: HttpHandlerRequestFields,
         timeout: float,
-        litellm_params: dict,
+        remodl_params: dict,
         model_response: ImageResponse,
         logging_obj: LiteLLMLoggingObj,
         api_key: str,
@@ -511,7 +511,7 @@ class BaseLLMAIOHTTPHandler:
             data=None if form_data is not None else cast(dict, data),
             form_data=form_data,
             timeout=timeout,
-            litellm_params=litellm_params,
+            remodl_params=remodl_params,
             stream=False,
         )
 
@@ -534,7 +534,7 @@ class BaseLLMAIOHTTPHandler:
             request_data=cast(dict, data),
             image=image,
             optional_params=optional_params,
-            litellm_params=litellm_params,
+            remodl_params=remodl_params,
             encoding=None,
             api_key=api_key,
         )
@@ -549,7 +549,7 @@ class BaseLLMAIOHTTPHandler:
         custom_llm_provider: str,
         logging_obj: LiteLLMLoggingObj,
         optional_params: dict,
-        litellm_params: dict,
+        remodl_params: dict,
         print_verbose: Optional[Callable] = None,
         api_base: Optional[str] = None,
         aimage_variation: bool = False,
@@ -576,7 +576,7 @@ class BaseLLMAIOHTTPHandler:
             api_key=api_key,
             model=model,
             optional_params=optional_params,
-            litellm_params=litellm_params,
+            remodl_params=remodl_params,
             stream=False,
         )
 
@@ -586,7 +586,7 @@ class BaseLLMAIOHTTPHandler:
             model=model,
             messages=[{"role": "user", "content": "test"}],
             optional_params=optional_params,
-            litellm_params=litellm_params,
+            remodl_params=remodl_params,
             api_base=api_base,
         )
 
@@ -608,7 +608,7 @@ class BaseLLMAIOHTTPHandler:
             },
         )
 
-        if litellm_params.get("async_call", False):
+        if remodl_params.get("async_call", False):
             return self.async_image_variations(
                 api_base=api_base,
                 data=data,
@@ -619,7 +619,7 @@ class BaseLLMAIOHTTPHandler:
                 timeout=timeout,
                 client=client,
                 optional_params=optional_params,
-                litellm_params=litellm_params,
+                remodl_params=remodl_params,
                 image=image,
                 provider_config=provider_config,
             )  # type: ignore
@@ -635,7 +635,7 @@ class BaseLLMAIOHTTPHandler:
             api_base=api_base,
             headers=headers,
             timeout=timeout,
-            litellm_params=litellm_params,
+            remodl_params=remodl_params,
             stream=False,
             data=data.get("data") or {},
             files=data.get("files"),
@@ -662,7 +662,7 @@ class BaseLLMAIOHTTPHandler:
             request_data=cast(dict, data),
             image=image,
             optional_params=optional_params,
-            litellm_params=litellm_params,
+            remodl_params=remodl_params,
             encoding=None,
             api_key=api_key,
         )

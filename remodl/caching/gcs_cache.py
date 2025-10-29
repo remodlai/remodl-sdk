@@ -5,9 +5,9 @@ import json
 import asyncio
 from typing import Optional
 
-from litellm._logging import print_verbose, verbose_logger
-from litellm.integrations.gcs_bucket.gcs_bucket_base import GCSBucketBase
-from litellm.llms.custom_httpx.http_handler import (
+from remodl._logging import print_verbose, verbose_logger
+from remodl.integrations.gcs_bucket.gcs_bucket_base import GCSBucketBase
+from remodl.llms.custom_httpx.http_handler import (
     get_async_httpx_client,
     _get_httpx_client,
     httpxSpecialProvider,

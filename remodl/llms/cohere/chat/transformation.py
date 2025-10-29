@@ -4,17 +4,17 @@ from typing import TYPE_CHECKING, Any, AsyncIterator, Iterator, List, Optional, 
 
 import httpx
 
-import litellm
-from litellm.litellm_core_utils.prompt_templates.factory import cohere_messages_pt_v2
-from litellm.llms.base_llm.chat.transformation import BaseConfig, BaseLLMException
-from litellm.types.llms.openai import AllMessageValues
-from litellm.types.utils import ModelResponse, Usage
+import remodl
+from remodl.remodl_core_utils.prompt_templates.factory import cohere_messages_pt_v2
+from remodl.llms.base_llm.chat.transformation import BaseConfig, BaseLLMException
+from remodl.types.llms.openai import AllMessageValues
+from remodl.types.utils import ModelResponse, Usage
 
 from ..common_utils import ModelResponseIterator as CohereModelResponseIterator
 from ..common_utils import validate_environment as cohere_validate_environment
 
 if TYPE_CHECKING:
-    from litellm.litellm_core_utils.litellm_logging import Logging as _LiteLLMLoggingObj
+    from remodl.remodl_core_utils.remodl_logging import Logging as _LiteLLMLoggingObj
 
     LiteLLMLoggingObj = _LiteLLMLoggingObj
 else:
@@ -118,7 +118,7 @@ class CohereChatConfig(BaseConfig):
         model: str,
         messages: List[AllMessageValues],
         optional_params: dict,
-        litellm_params: dict,
+        remodl_params: dict,
         api_key: Optional[str] = None,
         api_base: Optional[str] = None,
     ) -> dict:
@@ -184,11 +184,11 @@ class CohereChatConfig(BaseConfig):
         model: str,
         messages: List[AllMessageValues],
         optional_params: dict,
-        litellm_params: dict,
+        remodl_params: dict,
         headers: dict,
     ) -> dict:
         ## Load Config
-        for k, v in litellm.CohereChatConfig.get_config().items():
+        for k, v in remodl.CohereChatConfig.get_config().items():
             if (
                 k not in optional_params
             ):  # completion(top_k=3) > cohere_config(top_k=3) <- allows for dynamic variables to be passed in
@@ -223,7 +223,7 @@ class CohereChatConfig(BaseConfig):
         request_data: dict,
         messages: List[AllMessageValues],
         optional_params: dict,
-        litellm_params: dict,
+        remodl_params: dict,
         encoding: Any,
         api_key: Optional[str] = None,
         json_mode: Optional[bool] = None,
@@ -258,7 +258,7 @@ class CohereChatConfig(BaseConfig):
                     },
                 }
                 tool_calls.append(tool_call)
-            _message = litellm.Message(
+            _message = remodl.Message(
                 tool_calls=tool_calls,
                 content=None,
             )

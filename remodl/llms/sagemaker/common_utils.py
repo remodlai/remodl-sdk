@@ -3,11 +3,11 @@ from typing import AsyncIterator, Iterator, List, Optional, Union
 
 import httpx
 
-import litellm
-from litellm import verbose_logger
-from litellm.llms.base_llm.chat.transformation import BaseLLMException
-from litellm.types.utils import GenericStreamingChunk as GChunk
-from litellm.types.utils import StreamingChatCompletionChunk
+import remodl
+from remodl import verbose_logger
+from remodl.llms.base_llm.chat.transformation import BaseLLMException
+from remodl.types.utils import GenericStreamingChunk as GChunk
+from remodl.types.utils import StreamingChatCompletionChunk
 
 _response_stream_shape_cache = None
 
@@ -81,7 +81,7 @@ class AWSEventStreamDecoder:
                 if message:
                     # remove data: prefix and "\n\n" at the end
                     message = (
-                        litellm.CustomStreamWrapper._strip_sse_data_from_chunk(message)
+                        remodl.CustomStreamWrapper._strip_sse_data_from_chunk(message)
                         or ""
                     )
                     message = message.replace("\n\n", "")
@@ -137,7 +137,7 @@ class AWSEventStreamDecoder:
                         )
                         # remove data: prefix and "\n\n" at the end
                         message = (
-                            litellm.CustomStreamWrapper._strip_sse_data_from_chunk(
+                            remodl.CustomStreamWrapper._strip_sse_data_from_chunk(
                                 message
                             )
                             or ""

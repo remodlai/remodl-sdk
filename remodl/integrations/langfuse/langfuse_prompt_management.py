@@ -9,13 +9,13 @@ from typing import TYPE_CHECKING, Any, Dict, List, Literal, Optional, Tuple, Uni
 from packaging.version import Version
 from typing_extensions import TypeAlias
 
-from litellm.integrations.custom_logger import CustomLogger
-from litellm.integrations.prompt_management_base import PromptManagementClient
-from litellm.litellm_core_utils.asyncify import run_async_function
-from litellm.types.llms.openai import AllMessageValues, ChatCompletionSystemMessage
-from litellm.types.utils import StandardCallbackDynamicParams, StandardLoggingPayload
+from remodl.integrations.custom_logger import CustomLogger
+from remodl.integrations.prompt_management_base import PromptManagementClient
+from remodl.remodl_core_utils.asyncify import run_async_function
+from remodl.types.llms.openai import AllMessageValues, ChatCompletionSystemMessage
+from remodl.types.utils import StandardCallbackDynamicParams, StandardLoggingPayload
 
-from ...litellm_core_utils.specialty_caches.dynamic_logging_cache import (
+from ...remodl_core_utils.specialty_caches.dynamic_logging_cache import (
     DynamicLoggingCache,
 )
 from ..prompt_management_base import PromptManagementBase
@@ -26,7 +26,7 @@ if TYPE_CHECKING:
     from langfuse import Langfuse
     from langfuse.client import ChatPromptClient, TextPromptClient
 
-    from litellm.litellm_core_utils.litellm_logging import Logging as LiteLLMLoggingObj
+    from remodl.remodl_core_utils.remodl_logging import Logging as LiteLLMLoggingObj
 
     LangfuseClass: TypeAlias = Langfuse
 
@@ -100,7 +100,7 @@ def langfuse_client_init(
     }
 
     if Version(langfuse.version.__version__) >= Version("2.6.0"):
-        parameters["sdk_integration"] = "litellm"
+        parameters["sdk_integration"] = "remodl"
 
     client = Langfuse(**parameters)
 
@@ -183,7 +183,7 @@ class LangfusePromptManagement(LangFuseLogger, PromptManagementBase, CustomLogge
         prompt_id: Optional[str],
         prompt_variables: Optional[dict],
         dynamic_callback_params: StandardCallbackDynamicParams,
-        litellm_logging_obj: LiteLLMLoggingObj,
+        remodl_logging_obj: LiteLLMLoggingObj,
         tools: Optional[List[Dict]] = None,
         prompt_label: Optional[str] = None,
         prompt_version: Optional[int] = None,

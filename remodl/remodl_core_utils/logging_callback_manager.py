@@ -1,20 +1,20 @@
 from typing import TYPE_CHECKING, Callable, List, Optional, Set, Type, Union
 
-import litellm
-from litellm._logging import verbose_logger
-from litellm.integrations.additional_logging_utils import AdditionalLoggingUtils
-from litellm.integrations.custom_logger import CustomLogger
-from litellm.types.utils import CallbacksByType
+import remodl
+from remodl._logging import verbose_logger
+from remodl.integrations.additional_logging_utils import AdditionalLoggingUtils
+from remodl.integrations.custom_logger import CustomLogger
+from remodl.types.utils import CallbacksByType
 
 if TYPE_CHECKING:
-    from litellm import _custom_logger_compatible_callbacks_literal
+    from remodl import _custom_logger_compatible_callbacks_literal
 else:
     _custom_logger_compatible_callbacks_literal = str
 
 
 class LoggingCallbackManager:
     """
-    A centralized class that allows easy add / remove callbacks for litellm.
+    A centralized class that allows easy add / remove callbacks for remodl.
 
     Goals of this class:
     - Prevent adding duplicate callbacks / success_callback / failure_callback
@@ -24,72 +24,72 @@ class LoggingCallbackManager:
     # healthy maximum number of callbacks - unlikely someone needs more than 20
     MAX_CALLBACKS = 30
 
-    def add_litellm_input_callback(self, callback: Union[CustomLogger, str]):
+    def add_remodl_input_callback(self, callback: Union[CustomLogger, str]):
         """
-        Add a input callback to litellm.input_callback
+        Add a input callback to remodl.input_callback
         """
         self._safe_add_callback_to_list(
-            callback=callback, parent_list=litellm.input_callback
+            callback=callback, parent_list=remodl.input_callback
         )
 
-    def add_litellm_service_callback(
+    def add_remodl_service_callback(
         self, callback: Union[CustomLogger, str, Callable]
     ):
         """
-        Add a service callback to litellm.service_callback
+        Add a service callback to remodl.service_callback
         """
         self._safe_add_callback_to_list(
-            callback=callback, parent_list=litellm.service_callback
+            callback=callback, parent_list=remodl.service_callback
         )
 
-    def add_litellm_callback(self, callback: Union[CustomLogger, str, Callable]):
+    def add_remodl_callback(self, callback: Union[CustomLogger, str, Callable]):
         """
-        Add a callback to litellm.callbacks
+        Add a callback to remodl.callbacks
 
         Ensures no duplicates are added.
         """
         self._safe_add_callback_to_list(
-            callback=callback, parent_list=litellm.callbacks  # type: ignore
+            callback=callback, parent_list=remodl.callbacks  # type: ignore
         )
 
-    def add_litellm_success_callback(
+    def add_remodl_success_callback(
         self, callback: Union[CustomLogger, str, Callable]
     ):
         """
-        Add a success callback to `litellm.success_callback`
+        Add a success callback to `remodl.success_callback`
         """
         self._safe_add_callback_to_list(
-            callback=callback, parent_list=litellm.success_callback
+            callback=callback, parent_list=remodl.success_callback
         )
 
-    def add_litellm_failure_callback(
+    def add_remodl_failure_callback(
         self, callback: Union[CustomLogger, str, Callable]
     ):
         """
-        Add a failure callback to `litellm.failure_callback`
+        Add a failure callback to `remodl.failure_callback`
         """
         self._safe_add_callback_to_list(
-            callback=callback, parent_list=litellm.failure_callback
+            callback=callback, parent_list=remodl.failure_callback
         )
 
-    def add_litellm_async_success_callback(
+    def add_remodl_async_success_callback(
         self, callback: Union[CustomLogger, Callable, str]
     ):
         """
-        Add a success callback to litellm._async_success_callback
+        Add a success callback to remodl._async_success_callback
         """
         self._safe_add_callback_to_list(
-            callback=callback, parent_list=litellm._async_success_callback
+            callback=callback, parent_list=remodl._async_success_callback
         )
 
-    def add_litellm_async_failure_callback(
+    def add_remodl_async_failure_callback(
         self, callback: Union[CustomLogger, Callable, str]
     ):
         """
-        Add a failure callback to litellm._async_failure_callback
+        Add a failure callback to remodl._async_failure_callback
         """
         self._safe_add_callback_to_list(
-            callback=callback, parent_list=litellm._async_failure_callback
+            callback=callback, parent_list=remodl._async_failure_callback
         )
 
     def remove_callback_from_list_by_object(
@@ -225,23 +225,23 @@ class LoggingCallbackManager:
 
         Note: this is an internal function and should be used sparingly.
         """
-        litellm.input_callback = []
-        litellm.success_callback = []
-        litellm.failure_callback = []
-        litellm._async_success_callback = []
-        litellm._async_failure_callback = []
-        litellm.callbacks = []
+        remodl.input_callback = []
+        remodl.success_callback = []
+        remodl.failure_callback = []
+        remodl._async_success_callback = []
+        remodl._async_failure_callback = []
+        remodl.callbacks = []
 
     def _get_all_callbacks(self) -> List[Union[CustomLogger, Callable, str]]:
         """
-        Get all callbacks from litellm.callbacks, litellm.success_callback, litellm.failure_callback, litellm._async_success_callback, litellm._async_failure_callback
+        Get all callbacks from remodl.callbacks, remodl.success_callback, remodl.failure_callback, remodl._async_success_callback, remodl._async_failure_callback
         """
         return (
-            litellm.callbacks
-            + litellm.success_callback
-            + litellm.failure_callback
-            + litellm._async_success_callback
-            + litellm._async_failure_callback
+            remodl.callbacks
+            + remodl.success_callback
+            + remodl.failure_callback
+            + remodl._async_success_callback
+            + remodl._async_failure_callback
         )
 
     def get_active_additional_logging_utils_from_custom_logger(
@@ -296,12 +296,12 @@ class LoggingCallbackManager:
         """
         # Get callback lists
         success_callbacks = set(
-            litellm.success_callback + litellm._async_success_callback
+            remodl.success_callback + remodl._async_success_callback
         )
         failure_callbacks = set(
-            litellm.failure_callback + litellm._async_failure_callback
+            remodl.failure_callback + remodl._async_failure_callback
         )
-        general_callbacks = set(litellm.callbacks)
+        general_callbacks = set(remodl.callbacks)
 
         # Get all unique callbacks
         all_callbacks = success_callbacks | failure_callbacks | general_callbacks
@@ -332,7 +332,7 @@ class LoggingCallbackManager:
         return result
 
     def _get_callback_string(self, callback: Union[CustomLogger, Callable, str]) -> str:
-        from litellm.litellm_core_utils.custom_logger_registry import (
+        from remodl.remodl_core_utils.custom_logger_registry import (
             CustomLoggerRegistry,
         )
 
@@ -357,7 +357,7 @@ class LoggingCallbackManager:
         """
         Get the active custom logger for a given callback name
         """
-        from litellm.litellm_core_utils.custom_logger_registry import (
+        from remodl.remodl_core_utils.custom_logger_registry import (
             CustomLoggerRegistry,
         )
 

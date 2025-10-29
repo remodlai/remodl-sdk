@@ -2,7 +2,7 @@
 *New config* for using aiohttp to make the request to the custom OpenAI-like provider
 
 This leads to 10x higher RPS than httpx
-https://github.com/BerriAI/litellm/issues/6592
+https://github.com/BerriAI/remodl/issues/6592
 
 New config to ensure we introduce this without causing breaking changes for users
 """
@@ -11,12 +11,12 @@ from typing import TYPE_CHECKING, Any, List, Optional
 
 from aiohttp import ClientResponse
 
-from litellm.llms.openai_like.chat.transformation import OpenAILikeChatConfig
-from litellm.types.llms.openai import AllMessageValues
-from litellm.types.utils import Choices, ModelResponse
+from remodl.llms.openai_like.chat.transformation import OpenAILikeChatConfig
+from remodl.types.llms.openai import AllMessageValues
+from remodl.types.utils import Choices, ModelResponse
 
 if TYPE_CHECKING:
-    from litellm.litellm_core_utils.litellm_logging import Logging as _LiteLLMLoggingObj
+    from remodl.remodl_core_utils.remodl_logging import Logging as _LiteLLMLoggingObj
 
     LiteLLMLoggingObj = _LiteLLMLoggingObj
 else:
@@ -30,7 +30,7 @@ class AiohttpOpenAIChatConfig(OpenAILikeChatConfig):
         api_key: Optional[str],
         model: str,
         optional_params: dict,
-        litellm_params: dict,
+        remodl_params: dict,
         stream: Optional[bool] = None,
     ) -> str:
         """
@@ -50,7 +50,7 @@ class AiohttpOpenAIChatConfig(OpenAILikeChatConfig):
         model: str,
         messages: List[AllMessageValues],
         optional_params: dict,
-        litellm_params: dict,
+        remodl_params: dict,
         api_key: Optional[str] = None,
         api_base: Optional[str] = None,
     ) -> dict:
@@ -65,7 +65,7 @@ class AiohttpOpenAIChatConfig(OpenAILikeChatConfig):
         request_data: dict,
         messages: List[AllMessageValues],
         optional_params: dict,
-        litellm_params: dict,
+        remodl_params: dict,
         encoding: Any,
         api_key: Optional[str] = None,
         json_mode: Optional[bool] = None,

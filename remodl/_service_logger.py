@@ -2,8 +2,8 @@ import asyncio
 from datetime import datetime, timedelta
 from typing import TYPE_CHECKING, Any, Optional, Union
 
-import litellm
-from litellm._logging import verbose_logger
+import remodl
+from remodl._logging import verbose_logger
 
 from .integrations.custom_logger import CustomLogger
 from .integrations.datadog.datadog import DataDogLogger
@@ -14,7 +14,7 @@ from .types.services import ServiceLoggerPayload, ServiceTypes
 if TYPE_CHECKING:
     from opentelemetry.trace import Span as _Span
 
-    from litellm.proxy._types import UserAPIKeyAuth
+    from remodl.proxy._types import UserAPIKeyAuth
 
     Span = Union[_Span, Any]
     OTELClass = OpenTelemetry
@@ -26,7 +26,7 @@ else:
 
 class ServiceLogging(CustomLogger):
     """
-    Separate class used for monitoring health of litellm-adjacent services (redis/postgres).
+    Separate class used for monitoring health of remodl-adjacent services (redis/postgres).
     """
 
     def __init__(self, mock_testing: bool = False) -> None:
@@ -35,7 +35,7 @@ class ServiceLogging(CustomLogger):
         self.mock_testing_async_success_hook = 0
         self.mock_testing_sync_failure_hook = 0
         self.mock_testing_async_failure_hook = 0
-        if "prometheus_system" in litellm.service_callback:
+        if "prometheus_system" in remodl.service_callback:
             self.prometheusServicesLogger = PrometheusServicesLogger()
 
     def service_success_hook(
@@ -129,7 +129,7 @@ class ServiceLogging(CustomLogger):
             event_metadata=event_metadata,
         )
 
-        for callback in litellm.service_callback:
+        for callback in remodl.service_callback:
             if callback == "prometheus_system":
                 await self.init_prometheus_services_logger_if_none()
                 await self.prometheusServicesLogger.async_service_success_hook(
@@ -145,7 +145,7 @@ class ServiceLogging(CustomLogger):
                     event_metadata=event_metadata,
                 )
             elif callback == "otel" or isinstance(callback, OpenTelemetry):
-                from litellm.proxy.proxy_server import open_telemetry_logger
+                from remodl.proxy.proxy_server import open_telemetry_logger
 
                 await self.init_otel_logger_if_none()
 
@@ -178,7 +178,7 @@ class ServiceLogging(CustomLogger):
         initializes dd_logger if it is None or no attribute exists on ServiceLogging Object
 
         """
-        from litellm.integrations.datadog.datadog import DataDogLogger
+        from remodl.integrations.datadog.datadog import DataDogLogger
 
         if not hasattr(self, "dd_logger"):
             self.dd_logger: DataDogLogger = DataDogLogger()
@@ -190,7 +190,7 @@ class ServiceLogging(CustomLogger):
         initializes otel_logger if it is None or no attribute exists on ServiceLogging Object
 
         """
-        from litellm.proxy.proxy_server import open_telemetry_logger
+        from remodl.proxy.proxy_server import open_telemetry_logger
 
         if not hasattr(self, "otel_logger"):
             if open_telemetry_logger is not None and isinstance(
@@ -235,7 +235,7 @@ class ServiceLogging(CustomLogger):
             event_metadata=event_metadata,
         )
 
-        for callback in litellm.service_callback:
+        for callback in remodl.service_callback:
             if callback == "prometheus_system":
                 await self.init_prometheus_services_logger_if_none()
                 await self.prometheusServicesLogger.async_service_failure_hook(
@@ -253,7 +253,7 @@ class ServiceLogging(CustomLogger):
                     event_metadata=event_metadata,
                 )
             elif callback == "otel" or isinstance(callback, OpenTelemetry):
-                from litellm.proxy.proxy_server import open_telemetry_logger
+                from remodl.proxy.proxy_server import open_telemetry_logger
 
                 await self.init_otel_logger_if_none()
 
@@ -281,7 +281,7 @@ class ServiceLogging(CustomLogger):
         traceback_str: Optional[str] = None,
     ):
         """
-        Hook to track failed litellm-service calls
+        Hook to track failed remodl-service calls
         """
         return await super().async_post_call_failure_hook(
             request_data,
@@ -291,7 +291,7 @@ class ServiceLogging(CustomLogger):
 
     async def async_log_success_event(self, kwargs, response_obj, start_time, end_time):
         """
-        Hook to track latency for litellm proxy llm api calls
+        Hook to track latency for remodl proxy llm api calls
         """
         try:
             _duration = end_time - start_time

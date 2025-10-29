@@ -7,8 +7,8 @@ Handles tiered pricing and prompt caching scenarios.
 from dataclasses import dataclass
 from typing import List, Optional, Tuple
 
-from litellm.types.utils import ModelInfo, Usage
-from litellm.utils import get_model_info
+from remodl.types.utils import ModelInfo, Usage
+from remodl.utils import get_model_info
 
 
 @dataclass

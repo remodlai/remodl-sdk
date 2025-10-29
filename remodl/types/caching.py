@@ -73,7 +73,7 @@ class CachePingResponse(BaseModel):
     cache_type: str
     ping_response: Optional[bool] = None
     set_cache_response: Optional[str] = None
-    litellm_cache_params: Optional[str] = None
+    remodl_cache_params: Optional[str] = None
 
     # intentionally a dict, since we run masker.mask_dict() on HealthCheckCacheParams
     health_check_cache_params: Optional[dict] = None

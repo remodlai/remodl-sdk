@@ -3,13 +3,13 @@ from typing import Callable, List, Optional, Union
 
 from openai import AsyncOpenAI, OpenAI
 
-import litellm
-from litellm.litellm_core_utils.litellm_logging import Logging as LiteLLMLoggingObj
-from litellm.litellm_core_utils.streaming_handler import CustomStreamWrapper
-from litellm.llms.base import BaseLLM
-from litellm.types.llms.openai import AllMessageValues, OpenAITextCompletionUserMessage
-from litellm.types.utils import LlmProviders, ModelResponse, TextCompletionResponse
-from litellm.utils import ProviderConfigManager
+import remodl
+from remodl.remodl_core_utils.remodl_logging import Logging as LiteLLMLoggingObj
+from remodl.remodl_core_utils.streaming_handler import CustomStreamWrapper
+from remodl.llms.base import BaseLLM
+from remodl.types.llms.openai import AllMessageValues, OpenAITextCompletionUserMessage
+from remodl.types.utils import LlmProviders, ModelResponse, TextCompletionResponse
+from remodl.utils import ProviderConfigManager
 
 from ..common_utils import OpenAIError
 from .transformation import OpenAITextCompletionConfig
@@ -42,7 +42,7 @@ class OpenAITextCompletion(BaseLLM):
         print_verbose: Optional[Callable] = None,
         api_base: Optional[str] = None,
         acompletion: bool = False,
-        litellm_params=None,
+        remodl_params=None,
         logger_fn=None,
         client=None,
         organization: Optional[str] = None,
@@ -114,7 +114,7 @@ class OpenAITextCompletion(BaseLLM):
                     openai_client = OpenAI(
                         api_key=api_key,
                         base_url=api_base,
-                        http_client=litellm.client_session,
+                        http_client=remodl.client_session,
                         timeout=timeout,
                         max_retries=max_retries,  # type: ignore
                         organization=organization,
@@ -168,7 +168,7 @@ class OpenAITextCompletion(BaseLLM):
                 openai_aclient = AsyncOpenAI(
                     api_key=api_key,
                     base_url=api_base,
-                    http_client=litellm.aclient_session,
+                    http_client=remodl.aclient_session,
                     timeout=timeout,
                     max_retries=max_retries,
                     organization=organization,
@@ -224,7 +224,7 @@ class OpenAITextCompletion(BaseLLM):
             openai_client = OpenAI(
                 api_key=api_key,
                 base_url=api_base,
-                http_client=litellm.client_session,
+                http_client=remodl.client_session,
                 timeout=timeout,
                 max_retries=max_retries,  # type: ignore
                 organization=organization,
@@ -285,7 +285,7 @@ class OpenAITextCompletion(BaseLLM):
             openai_client = AsyncOpenAI(
                 api_key=api_key,
                 base_url=api_base,
-                http_client=litellm.aclient_session,
+                http_client=remodl.aclient_session,
                 timeout=timeout,
                 max_retries=max_retries,
                 organization=organization,

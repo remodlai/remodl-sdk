@@ -17,17 +17,17 @@ from typing import (
 import httpx
 from pydantic import BaseModel
 
-import litellm
-from litellm._logging import verbose_logger
-from litellm.constants import request_timeout
-from litellm.litellm_core_utils.litellm_logging import Logging as LiteLLMLoggingObj
-from litellm.llms.base_llm.responses.transformation import BaseResponsesAPIConfig
-from litellm.llms.custom_httpx.llm_http_handler import BaseLLMHTTPHandler
-from litellm.responses.litellm_completion_transformation.handler import (
+import remodl
+from remodl._logging import verbose_logger
+from remodl.constants import request_timeout
+from remodl.remodl_core_utils.remodl_logging import Logging as LiteLLMLoggingObj
+from remodl.llms.base_llm.responses.transformation import BaseResponsesAPIConfig
+from remodl.llms.custom_httpx.llm_http_handler import BaseLLMHTTPHandler
+from remodl.responses.remodl_completion_transformation.handler import (
     LiteLLMCompletionTransformationHandler,
 )
-from litellm.responses.utils import ResponsesAPIRequestUtils
-from litellm.types.llms.openai import (
+from remodl.responses.utils import ResponsesAPIRequestUtils
+from remodl.types.llms.openai import (
     PromptObject,
     Reasoning,
     ResponseIncludable,
@@ -40,12 +40,12 @@ from litellm.types.llms.openai import (
 
 # Handle ResponseText import with fallback
 if TYPE_CHECKING:
-    from litellm.types.llms.openai import ResponseText  # type: ignore
+    from remodl.types.llms.openai import ResponseText  # type: ignore
 else:
     ResponseText = str  # Fallback for ResponseText import
-from litellm.types.responses.main import *
-from litellm.types.router import GenericLiteLLMParams
-from litellm.utils import ProviderConfigManager, client
+from remodl.types.responses.main import *
+from remodl.types.router import GenericLiteLLMParams
+from remodl.utils import ProviderConfigManager, client
 
 if TYPE_CHECKING:
     from mcp.types import Tool as MCPTool
@@ -57,7 +57,7 @@ from .streaming_iterator import BaseResponsesAPIStreamingIterator
 ####### ENVIRONMENT VARIABLES ###################
 # Initialize any necessary instances or variables here
 base_llm_http_handler = BaseLLMHTTPHandler()
-litellm_completion_transformation_handler = LiteLLMCompletionTransformationHandler()
+remodl_completion_transformation_handler = LiteLLMCompletionTransformationHandler()
 #################################################
 
 
@@ -147,19 +147,19 @@ async def aresponses_api_with_mcp(
     """
     Async version of responses API with MCP integration.
 
-    When MCP tools with server_url="litellm_proxy" are provided, this function will:
+    When MCP tools with server_url="remodl_proxy" are provided, this function will:
     1. Get available tools from the MCP server manager
     2. Insert the tools into the messages/input
     3. Call the standard responses API
     4. If require_approval="never" and tool calls are returned, automatically execute them
     """
-    from litellm.responses.mcp.litellm_proxy_mcp_handler import (
+    from remodl.responses.mcp.remodl_proxy_mcp_handler import (
         LiteLLM_Proxy_MCP_Handler,
     )
 
     # Parse MCP tools and separate from other tools
     (
-        mcp_tools_with_litellm_proxy,
+        mcp_tools_with_remodl_proxy,
         other_tools,
     ) = LiteLLM_Proxy_MCP_Handler._parse_mcp_tools(tools)
 
@@ -170,7 +170,7 @@ async def aresponses_api_with_mcp(
     original_mcp_tools = (
         await LiteLLM_Proxy_MCP_Handler._process_mcp_tools_without_openai_transform(
             user_api_key_auth=user_api_key_auth,
-            mcp_tools_with_litellm_proxy=mcp_tools_with_litellm_proxy,
+            mcp_tools_with_remodl_proxy=mcp_tools_with_remodl_proxy,
         )
     )
     openai_tools = LiteLLM_Proxy_MCP_Handler._transform_mcp_tools_to_openai(
@@ -207,16 +207,16 @@ async def aresponses_api_with_mcp(
     }
 
     # Handle MCP streaming if requested
-    if stream and mcp_tools_with_litellm_proxy:
+    if stream and mcp_tools_with_remodl_proxy:
         # Generate MCP discovery events using the already processed tools
-        from litellm._uuid import uuid
-        from litellm.responses.mcp.mcp_streaming_iterator import (
+        from remodl._uuid import uuid
+        from remodl.responses.mcp.mcp_streaming_iterator import (
             create_mcp_list_tools_events,
         )
 
         base_item_id = f"mcp_{uuid.uuid4().hex[:8]}"
         mcp_discovery_events = await create_mcp_list_tools_events(
-            mcp_tools_with_litellm_proxy=mcp_tools_with_litellm_proxy,
+            mcp_tools_with_remodl_proxy=mcp_tools_with_remodl_proxy,
             user_api_key_auth=user_api_key_auth,
             base_item_id=base_item_id,
             pre_processed_mcp_tools=original_mcp_tools,
@@ -226,7 +226,7 @@ async def aresponses_api_with_mcp(
             input=input,
             model=model,
             all_tools=all_tools,
-            mcp_tools_with_litellm_proxy=mcp_tools_with_litellm_proxy,
+            mcp_tools_with_remodl_proxy=mcp_tools_with_remodl_proxy,
             mcp_discovery_events=mcp_discovery_events,
             call_params=call_params,
             previous_response_id=previous_response_id,
@@ -235,9 +235,9 @@ async def aresponses_api_with_mcp(
 
     # Determine if we should auto-execute tools
     should_auto_execute = bool(
-        mcp_tools_with_litellm_proxy
+        mcp_tools_with_remodl_proxy
     ) and LiteLLM_Proxy_MCP_Handler._should_auto_execute_tools(
-        mcp_tools_with_litellm_proxy=mcp_tools_with_litellm_proxy
+        mcp_tools_with_remodl_proxy=mcp_tools_with_remodl_proxy
     )
 
     # Prepare parameters for the initial call
@@ -270,7 +270,7 @@ async def aresponses_api_with_mcp(
         )
 
         if tool_calls:
-            user_api_key_auth = kwargs.get("litellm_metadata", {}).get(
+            user_api_key_auth = kwargs.get("remodl_metadata", {}).get(
                 "user_api_key_auth"
             )
             tool_results = await LiteLLM_Proxy_MCP_Handler._execute_tool_calls(
@@ -315,7 +315,7 @@ async def aresponses_api_with_mcp(
                         or hasattr(final_response, "__iter__")
                     )
                 ):
-                    from litellm.responses.mcp.mcp_streaming_iterator import (
+                    from remodl.responses.mcp.mcp_streaming_iterator import (
                         MCPEnhancedStreamingIterator,
                     )
 
@@ -328,7 +328,7 @@ async def aresponses_api_with_mcp(
                     # Fetch MCP tools again for output elements (without OpenAI transformation)
                     mcp_tools_for_output = await LiteLLM_Proxy_MCP_Handler._process_mcp_tools_without_openai_transform(
                         user_api_key_auth=user_api_key_auth,
-                        mcp_tools_with_litellm_proxy=mcp_tools_with_litellm_proxy,
+                        mcp_tools_with_remodl_proxy=mcp_tools_with_remodl_proxy,
                     )
                     final_response = (
                         LiteLLM_Proxy_MCP_Handler._add_mcp_output_elements_to_response(
@@ -395,7 +395,7 @@ async def aresponses(
 
         # get custom llm provider so we can use this for mapping exceptions
         if custom_llm_provider is None:
-            _, custom_llm_provider, _, _ = litellm.get_llm_provider(
+            _, custom_llm_provider, _, _ = remodl.get_llm_provider(
                 model=model, api_base=local_vars.get("base_url", None)
             )
 
@@ -444,7 +444,7 @@ async def aresponses(
         if isinstance(response, ResponsesAPIResponse):
             response = ResponsesAPIRequestUtils._update_responses_api_response_id_with_model_id(
                 responses_api_response=response,
-                litellm_metadata=kwargs.get("litellm_metadata", {}),
+                remodl_metadata=kwargs.get("remodl_metadata", {}),
                 custom_llm_provider=custom_llm_provider,
             )
 
@@ -455,7 +455,7 @@ async def aresponses(
 
         return response
     except Exception as e:
-        raise litellm.exception_type(
+        raise remodl.exception_type(
             model=model,
             custom_llm_provider=custom_llm_provider,
             original_exception=e,
@@ -505,13 +505,13 @@ def responses(
     Uses the synchronous HTTP handler to make requests.
     """
     local_vars = locals()
-    from litellm.responses.mcp.litellm_proxy_mcp_handler import (
+    from remodl.responses.mcp.remodl_proxy_mcp_handler import (
         LiteLLM_Proxy_MCP_Handler,
     )
 
     try:
-        litellm_logging_obj: LiteLLMLoggingObj = kwargs.pop("litellm_logging_obj")  # type: ignore
-        litellm_call_id: Optional[str] = kwargs.get("litellm_call_id", None)
+        remodl_logging_obj: LiteLLMLoggingObj = kwargs.pop("remodl_logging_obj")  # type: ignore
+        remodl_call_id: Optional[str] = kwargs.get("remodl_call_id", None)
         _is_async = kwargs.pop("aresponses", False) is True
 
         # Convert text_format to text parameter if provided
@@ -523,16 +523,16 @@ def responses(
             local_vars["text"] = text
 
         # get llm provider logic
-        litellm_params = GenericLiteLLMParams(**kwargs)
+        remodl_params = GenericLiteLLMParams(**kwargs)
 
         #########################################################
         # MOCK RESPONSE LOGIC
         #########################################################
-        if litellm_params.mock_response and isinstance(
-            litellm_params.mock_response, str
+        if remodl_params.mock_response and isinstance(
+            remodl_params.mock_response, str
         ):
             return mock_responses_api_response(
-                mock_response=litellm_params.mock_response
+                mock_response=remodl_params.mock_response
             )
 
         (
@@ -540,16 +540,16 @@ def responses(
             custom_llm_provider,
             dynamic_api_key,
             dynamic_api_base,
-        ) = litellm.get_llm_provider(
+        ) = remodl.get_llm_provider(
             model=model,
             custom_llm_provider=custom_llm_provider,
-            api_base=litellm_params.api_base,
-            api_key=litellm_params.api_key,
+            api_base=remodl_params.api_base,
+            api_key=remodl_params.api_key,
         )
         #########################################################
         # Native MCP Responses API
         #########################################################
-        if LiteLLM_Proxy_MCP_Handler._should_use_litellm_mcp_gateway(tools=tools):
+        if LiteLLM_Proxy_MCP_Handler._should_use_remodl_mcp_gateway(tools=tools):
             return aresponses_api_with_mcp(
                 input=input,
                 model=model,
@@ -583,7 +583,7 @@ def responses(
         responses_api_provider_config: Optional[BaseResponsesAPIConfig] = (
             ProviderConfigManager.get_provider_responses_api_config(
                 model=model,
-                provider=litellm.LlmProviders(custom_llm_provider),
+                provider=remodl.LlmProviders(custom_llm_provider),
             )
         )
 
@@ -596,7 +596,7 @@ def responses(
         )
 
         if responses_api_provider_config is None:
-            return litellm_completion_transformation_handler.response_api_handler(
+            return remodl_completion_transformation_handler.response_api_handler(
                 model=model,
                 input=input,
                 responses_api_request=response_api_optional_params,
@@ -618,13 +618,13 @@ def responses(
         )
 
         # Pre Call logging
-        litellm_logging_obj.update_environment_variables(
+        remodl_logging_obj.update_environment_variables(
             model=model,
             user=user,
             optional_params=dict(responses_api_request_params),
-            litellm_params={
+            remodl_params={
                 **responses_api_request_params,
-                "litellm_call_id": litellm_call_id,
+                "remodl_call_id": remodl_call_id,
                 "metadata": metadata,
             },
             custom_llm_provider=custom_llm_provider,
@@ -637,8 +637,8 @@ def responses(
             responses_api_provider_config=responses_api_provider_config,
             response_api_optional_request_params=responses_api_request_params,
             custom_llm_provider=custom_llm_provider,
-            litellm_params=litellm_params,
-            logging_obj=litellm_logging_obj,
+            remodl_params=remodl_params,
+            logging_obj=remodl_logging_obj,
             extra_headers=extra_headers,
             extra_body=extra_body,
             timeout=timeout or request_timeout,
@@ -647,20 +647,20 @@ def responses(
             fake_stream=responses_api_provider_config.should_fake_stream(
                 model=model, stream=stream, custom_llm_provider=custom_llm_provider
             ),
-            litellm_metadata=kwargs.get("litellm_metadata", {}),
+            remodl_metadata=kwargs.get("remodl_metadata", {}),
         )
 
         # Update the responses_api_response_id with the model_id
         if isinstance(response, ResponsesAPIResponse):
             response = ResponsesAPIRequestUtils._update_responses_api_response_id_with_model_id(
                 responses_api_response=response,
-                litellm_metadata=kwargs.get("litellm_metadata", {}),
+                remodl_metadata=kwargs.get("remodl_metadata", {}),
                 custom_llm_provider=custom_llm_provider,
             )
 
         return response
     except Exception as e:
-        raise litellm.exception_type(
+        raise remodl.exception_type(
             model=model,
             custom_llm_provider=custom_llm_provider,
             original_exception=e,
@@ -725,7 +725,7 @@ async def adelete_responses(
             response = init_response
         return response
     except Exception as e:
-        raise litellm.exception_type(
+        raise remodl.exception_type(
             model=None,
             custom_llm_provider=custom_llm_provider,
             original_exception=e,
@@ -755,12 +755,12 @@ def delete_responses(
     """
     local_vars = locals()
     try:
-        litellm_logging_obj: LiteLLMLoggingObj = kwargs.get("litellm_logging_obj")  # type: ignore
-        litellm_call_id: Optional[str] = kwargs.get("litellm_call_id", None)
+        remodl_logging_obj: LiteLLMLoggingObj = kwargs.get("remodl_logging_obj")  # type: ignore
+        remodl_call_id: Optional[str] = kwargs.get("remodl_call_id", None)
         _is_async = kwargs.pop("adelete_responses", False) is True
 
         # get llm provider logic
-        litellm_params = GenericLiteLLMParams(**kwargs)
+        remodl_params = GenericLiteLLMParams(**kwargs)
 
         # get custom llm provider from response_id
         decoded_response_id: DecodedResponseId = (
@@ -780,7 +780,7 @@ def delete_responses(
         responses_api_provider_config: Optional[BaseResponsesAPIConfig] = (
             ProviderConfigManager.get_provider_responses_api_config(
                 model=None,
-                provider=litellm.LlmProviders(custom_llm_provider),
+                provider=remodl.LlmProviders(custom_llm_provider),
             )
         )
 
@@ -792,13 +792,13 @@ def delete_responses(
         local_vars.update(kwargs)
 
         # Pre Call logging
-        litellm_logging_obj.update_environment_variables(
+        remodl_logging_obj.update_environment_variables(
             model=None,
             optional_params={
                 "response_id": response_id,
             },
-            litellm_params={
-                "litellm_call_id": litellm_call_id,
+            remodl_params={
+                "remodl_call_id": remodl_call_id,
             },
             custom_llm_provider=custom_llm_provider,
         )
@@ -808,8 +808,8 @@ def delete_responses(
             response_id=response_id,
             custom_llm_provider=custom_llm_provider,
             responses_api_provider_config=responses_api_provider_config,
-            litellm_params=litellm_params,
-            logging_obj=litellm_logging_obj,
+            remodl_params=remodl_params,
+            logging_obj=remodl_logging_obj,
             extra_headers=extra_headers,
             extra_body=extra_body,
             timeout=timeout or request_timeout,
@@ -819,7 +819,7 @@ def delete_responses(
 
         return response
     except Exception as e:
-        raise litellm.exception_type(
+        raise remodl.exception_type(
             model=None,
             custom_llm_provider=custom_llm_provider,
             original_exception=e,
@@ -893,12 +893,12 @@ async def aget_responses(
         if isinstance(response, ResponsesAPIResponse):
             response = ResponsesAPIRequestUtils._update_responses_api_response_id_with_model_id(
                 responses_api_response=response,
-                litellm_metadata=kwargs.get("litellm_metadata", {}),
+                remodl_metadata=kwargs.get("remodl_metadata", {}),
                 custom_llm_provider=custom_llm_provider,
             )
         return response
     except Exception as e:
-        raise litellm.exception_type(
+        raise remodl.exception_type(
             model=None,
             custom_llm_provider=custom_llm_provider,
             original_exception=e,
@@ -934,12 +934,12 @@ def get_responses(
     """
     local_vars = locals()
     try:
-        litellm_logging_obj: LiteLLMLoggingObj = kwargs.get("litellm_logging_obj")  # type: ignore
-        litellm_call_id: Optional[str] = kwargs.get("litellm_call_id", None)
+        remodl_logging_obj: LiteLLMLoggingObj = kwargs.get("remodl_logging_obj")  # type: ignore
+        remodl_call_id: Optional[str] = kwargs.get("remodl_call_id", None)
         _is_async = kwargs.pop("aget_responses", False) is True
 
         # get llm provider logic
-        litellm_params = GenericLiteLLMParams(**kwargs)
+        remodl_params = GenericLiteLLMParams(**kwargs)
 
         # get custom llm provider from response_id
         decoded_response_id: DecodedResponseId = (
@@ -959,7 +959,7 @@ def get_responses(
         responses_api_provider_config: Optional[BaseResponsesAPIConfig] = (
             ProviderConfigManager.get_provider_responses_api_config(
                 model=None,
-                provider=litellm.LlmProviders(custom_llm_provider),
+                provider=remodl.LlmProviders(custom_llm_provider),
             )
         )
 
@@ -971,13 +971,13 @@ def get_responses(
         local_vars.update(kwargs)
 
         # Pre Call logging
-        litellm_logging_obj.update_environment_variables(
+        remodl_logging_obj.update_environment_variables(
             model=None,
             optional_params={
                 "response_id": response_id,
             },
-            litellm_params={
-                "litellm_call_id": litellm_call_id,
+            remodl_params={
+                "remodl_call_id": remodl_call_id,
             },
             custom_llm_provider=custom_llm_provider,
         )
@@ -987,8 +987,8 @@ def get_responses(
             response_id=response_id,
             custom_llm_provider=custom_llm_provider,
             responses_api_provider_config=responses_api_provider_config,
-            litellm_params=litellm_params,
-            logging_obj=litellm_logging_obj,
+            remodl_params=remodl_params,
+            logging_obj=remodl_logging_obj,
             extra_headers=extra_headers,
             extra_body=extra_body,
             timeout=timeout or request_timeout,
@@ -1000,13 +1000,13 @@ def get_responses(
         if isinstance(response, ResponsesAPIResponse):
             response = ResponsesAPIRequestUtils._update_responses_api_response_id_with_model_id(
                 responses_api_response=response,
-                litellm_metadata=kwargs.get("litellm_metadata", {}),
+                remodl_metadata=kwargs.get("remodl_metadata", {}),
                 custom_llm_provider=custom_llm_provider,
             )
 
         return response
     except Exception as e:
-        raise litellm.exception_type(
+        raise remodl.exception_type(
             model=None,
             custom_llm_provider=custom_llm_provider,
             original_exception=e,
@@ -1068,7 +1068,7 @@ async def alist_input_items(
             response = init_response
         return response
     except Exception as e:
-        raise litellm.exception_type(
+        raise remodl.exception_type(
             model=None,
             custom_llm_provider=custom_llm_provider,
             original_exception=e,
@@ -1093,11 +1093,11 @@ def list_input_items(
     """List input items for a response"""
     local_vars = locals()
     try:
-        litellm_logging_obj: LiteLLMLoggingObj = kwargs.get("litellm_logging_obj")  # type: ignore
-        litellm_call_id: Optional[str] = kwargs.get("litellm_call_id", None)
+        remodl_logging_obj: LiteLLMLoggingObj = kwargs.get("remodl_logging_obj")  # type: ignore
+        remodl_call_id: Optional[str] = kwargs.get("remodl_call_id", None)
         _is_async = kwargs.pop("alist_input_items", False) is True
 
-        litellm_params = GenericLiteLLMParams(**kwargs)
+        remodl_params = GenericLiteLLMParams(**kwargs)
 
         decoded_response_id = (
             ResponsesAPIRequestUtils._decode_responses_api_response_id(
@@ -1115,7 +1115,7 @@ def list_input_items(
         responses_api_provider_config: Optional[BaseResponsesAPIConfig] = (
             ProviderConfigManager.get_provider_responses_api_config(
                 model=None,
-                provider=litellm.LlmProviders(custom_llm_provider),
+                provider=remodl.LlmProviders(custom_llm_provider),
             )
         )
 
@@ -1126,10 +1126,10 @@ def list_input_items(
 
         local_vars.update(kwargs)
 
-        litellm_logging_obj.update_environment_variables(
+        remodl_logging_obj.update_environment_variables(
             model=None,
             optional_params={"response_id": response_id},
-            litellm_params={"litellm_call_id": litellm_call_id},
+            remodl_params={"remodl_call_id": remodl_call_id},
             custom_llm_provider=custom_llm_provider,
         )
 
@@ -1137,8 +1137,8 @@ def list_input_items(
             response_id=response_id,
             custom_llm_provider=custom_llm_provider,
             responses_api_provider_config=responses_api_provider_config,
-            litellm_params=litellm_params,
-            logging_obj=litellm_logging_obj,
+            remodl_params=remodl_params,
+            logging_obj=remodl_logging_obj,
             after=after,
             before=before,
             include=include,
@@ -1152,7 +1152,7 @@ def list_input_items(
 
         return response
     except Exception as e:
-        raise litellm.exception_type(
+        raise remodl.exception_type(
             model=None,
             custom_llm_provider=custom_llm_provider,
             original_exception=e,
@@ -1217,7 +1217,7 @@ async def acancel_responses(
             response = init_response
         return response
     except Exception as e:
-        raise litellm.exception_type(
+        raise remodl.exception_type(
             model=None,
             custom_llm_provider=custom_llm_provider,
             original_exception=e,
@@ -1247,12 +1247,12 @@ def cancel_responses(
     """
     local_vars = locals()
     try:
-        litellm_logging_obj: LiteLLMLoggingObj = kwargs.get("litellm_logging_obj")  # type: ignore
-        litellm_call_id: Optional[str] = kwargs.get("litellm_call_id", None)
+        remodl_logging_obj: LiteLLMLoggingObj = kwargs.get("remodl_logging_obj")  # type: ignore
+        remodl_call_id: Optional[str] = kwargs.get("remodl_call_id", None)
         _is_async = kwargs.pop("acancel_responses", False) is True
 
         # get llm provider logic
-        litellm_params = GenericLiteLLMParams(**kwargs)
+        remodl_params = GenericLiteLLMParams(**kwargs)
 
         # get custom llm provider from response_id
         decoded_response_id: DecodedResponseId = (
@@ -1272,7 +1272,7 @@ def cancel_responses(
         responses_api_provider_config: Optional[BaseResponsesAPIConfig] = (
             ProviderConfigManager.get_provider_responses_api_config(
                 model=None,
-                provider=litellm.LlmProviders(custom_llm_provider),
+                provider=remodl.LlmProviders(custom_llm_provider),
             )
         )
 
@@ -1284,13 +1284,13 @@ def cancel_responses(
         local_vars.update(kwargs)
 
         # Pre Call logging
-        litellm_logging_obj.update_environment_variables(
+        remodl_logging_obj.update_environment_variables(
             model=None,
             optional_params={
                 "response_id": response_id,
             },
-            litellm_params={
-                "litellm_call_id": litellm_call_id,
+            remodl_params={
+                "remodl_call_id": remodl_call_id,
             },
             custom_llm_provider=custom_llm_provider,
         )
@@ -1300,8 +1300,8 @@ def cancel_responses(
             response_id=response_id,
             custom_llm_provider=custom_llm_provider,
             responses_api_provider_config=responses_api_provider_config,
-            litellm_params=litellm_params,
-            logging_obj=litellm_logging_obj,
+            remodl_params=remodl_params,
+            logging_obj=remodl_logging_obj,
             extra_headers=extra_headers,
             extra_body=extra_body,
             timeout=timeout or request_timeout,
@@ -1311,7 +1311,7 @@ def cancel_responses(
 
         return response
     except Exception as e:
-        raise litellm.exception_type(
+        raise remodl.exception_type(
             model=None,
             custom_llm_provider=custom_llm_provider,
             original_exception=e,

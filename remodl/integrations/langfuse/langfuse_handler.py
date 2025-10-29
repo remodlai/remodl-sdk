@@ -8,12 +8,12 @@ Handles Key/Team Based Langfuse Logging
 
 from typing import TYPE_CHECKING, Any, Dict, Optional
 
-from litellm.litellm_core_utils.litellm_logging import StandardCallbackDynamicParams
+from remodl.remodl_core_utils.remodl_logging import StandardCallbackDynamicParams
 
 from .langfuse import LangFuseLogger, LangfuseLoggingConfig
 
 if TYPE_CHECKING:
-    from litellm.litellm_core_utils.litellm_logging import DynamicLoggingCache
+    from remodl.remodl_core_utils.remodl_logging import DynamicLoggingCache
 else:
     DynamicLoggingCache = Any
 
@@ -76,7 +76,7 @@ class LangFuseHandler:
         in_memory_dynamic_logger_cache: DynamicLoggingCache,
     ) -> LangFuseLogger:
         """
-        Returns the Global LangfuseLogger set on litellm
+        Returns the Global LangfuseLogger set on remodl
 
         (this is the default langfuse logger - used when no dynamic credentials are passed)
 

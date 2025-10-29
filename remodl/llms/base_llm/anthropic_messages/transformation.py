@@ -3,14 +3,14 @@ from typing import TYPE_CHECKING, Any, AsyncIterator, Dict, List, Optional, Tupl
 
 import httpx
 
-from litellm.types.llms.anthropic_messages.anthropic_response import (
+from remodl.types.llms.anthropic_messages.anthropic_response import (
     AnthropicMessagesResponse,
 )
-from litellm.types.router import GenericLiteLLMParams
+from remodl.types.router import GenericLiteLLMParams
 
 if TYPE_CHECKING:
-    from litellm.litellm_core_utils.litellm_logging import Logging as _LiteLLMLoggingObj
-    from litellm.llms.base_llm.chat.transformation import BaseLLMException
+    from remodl.remodl_core_utils.remodl_logging import Logging as _LiteLLMLoggingObj
+    from remodl.llms.base_llm.chat.transformation import BaseLLMException
 
     LiteLLMLoggingObj = _LiteLLMLoggingObj
 else:
@@ -25,7 +25,7 @@ class BaseAnthropicMessagesConfig(ABC):
         model: str,
         messages: List[Any],
         optional_params: dict,
-        litellm_params: dict,
+        remodl_params: dict,
         api_key: Optional[str] = None,
         api_base: Optional[str] = None,
     ) -> Tuple[dict, Optional[str]]:
@@ -47,7 +47,7 @@ class BaseAnthropicMessagesConfig(ABC):
         api_key: Optional[str],
         model: str,
         optional_params: dict,
-        litellm_params: dict,
+        remodl_params: dict,
         stream: Optional[bool] = None,
     ) -> str:
         """
@@ -69,7 +69,7 @@ class BaseAnthropicMessagesConfig(ABC):
         model: str,
         messages: List[Dict],
         anthropic_messages_optional_request_params: Dict,
-        litellm_params: GenericLiteLLMParams,
+        remodl_params: GenericLiteLLMParams,
         headers: dict,
     ) -> Dict:
         pass
@@ -108,14 +108,14 @@ class BaseAnthropicMessagesConfig(ABC):
         model: str,
         httpx_response: httpx.Response,
         request_body: dict,
-        litellm_logging_obj: LiteLLMLoggingObj,
+        remodl_logging_obj: LiteLLMLoggingObj,
     ) -> AsyncIterator:
         raise NotImplementedError("Subclasses must implement this method")
 
     def get_error_class(
         self, error_message: str, status_code: int, headers: Union[dict, httpx.Headers]
     ) -> "BaseLLMException":
-        from litellm.llms.base_llm.chat.transformation import BaseLLMException
+        from remodl.llms.base_llm.chat.transformation import BaseLLMException
 
         return BaseLLMException(
             message=error_message, status_code=status_code, headers=headers

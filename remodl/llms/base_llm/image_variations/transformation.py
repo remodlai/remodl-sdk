@@ -4,12 +4,12 @@ from typing import TYPE_CHECKING, Any, List, Optional
 import httpx
 from aiohttp import ClientResponse
 
-from litellm.llms.base_llm.chat.transformation import BaseConfig
-from litellm.types.llms.openai import (
+from remodl.llms.base_llm.chat.transformation import BaseConfig
+from remodl.types.llms.openai import (
     AllMessageValues,
     OpenAIImageVariationOptionalParams,
 )
-from litellm.types.utils import (
+from remodl.types.utils import (
     FileTypes,
     HttpHandlerRequestFields,
     ImageResponse,
@@ -17,7 +17,7 @@ from litellm.types.utils import (
 )
 
 if TYPE_CHECKING:
-    from litellm.litellm_core_utils.litellm_logging import Logging as _LiteLLMLoggingObj
+    from remodl.remodl_core_utils.remodl_logging import Logging as _LiteLLMLoggingObj
 
     LiteLLMLoggingObj = _LiteLLMLoggingObj
 else:
@@ -37,7 +37,7 @@ class BaseImageVariationConfig(BaseConfig, ABC):
         api_key: Optional[str],
         model: str,
         optional_params: dict,
-        litellm_params: dict,
+        remodl_params: dict,
         stream: Optional[bool] = None,
     ) -> str:
         """
@@ -65,7 +65,7 @@ class BaseImageVariationConfig(BaseConfig, ABC):
         model: str,
         messages: List[AllMessageValues],
         optional_params: dict,
-        litellm_params: dict,
+        remodl_params: dict,
         api_key: Optional[str] = None,
         api_base: Optional[str] = None,
     ) -> dict:
@@ -81,7 +81,7 @@ class BaseImageVariationConfig(BaseConfig, ABC):
         request_data: dict,
         image: FileTypes,
         optional_params: dict,
-        litellm_params: dict,
+        remodl_params: dict,
         encoding: Any,
         api_key: Optional[str] = None,
     ) -> ImageResponse:
@@ -97,7 +97,7 @@ class BaseImageVariationConfig(BaseConfig, ABC):
         request_data: dict,
         image: FileTypes,
         optional_params: dict,
-        litellm_params: dict,
+        remodl_params: dict,
         encoding: Any,
         api_key: Optional[str] = None,
     ) -> ImageResponse:
@@ -108,7 +108,7 @@ class BaseImageVariationConfig(BaseConfig, ABC):
         model: str,
         messages: List[AllMessageValues],
         optional_params: dict,
-        litellm_params: dict,
+        remodl_params: dict,
         headers: dict,
     ) -> dict:
         raise NotImplementedError(
@@ -124,7 +124,7 @@ class BaseImageVariationConfig(BaseConfig, ABC):
         request_data: dict,
         messages: List[AllMessageValues],
         optional_params: dict,
-        litellm_params: dict,
+        remodl_params: dict,
         encoding: Any,
         api_key: Optional[str] = None,
         json_mode: Optional[bool] = None,

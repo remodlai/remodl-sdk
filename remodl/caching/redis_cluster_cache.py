@@ -7,7 +7,7 @@ Key differences:
 
 from typing import TYPE_CHECKING, Any, List, Optional, Union
 
-from litellm.caching.redis_cache import RedisCache
+from remodl.caching.redis_cache import RedisCache
 
 if TYPE_CHECKING:
     from opentelemetry.trace import Span as _Span

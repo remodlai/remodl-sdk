@@ -10,15 +10,15 @@ from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple, Union
 
 import httpx
 
-from litellm._logging import verbose_logger
-from litellm._uuid import uuid
-from litellm.litellm_core_utils.prompt_templates.common_utils import (
+from remodl._logging import verbose_logger
+from remodl._uuid import uuid
+from remodl.remodl_core_utils.prompt_templates.common_utils import (
     convert_content_list_to_str,
 )
-from litellm.llms.base_llm.chat.transformation import BaseConfig, BaseLLMException
-from litellm.llms.bedrock.base_aws_llm import BaseAWSLLM
-from litellm.llms.bedrock.common_utils import BedrockError
-from litellm.types.llms.bedrock_invoke_agents import (
+from remodl.llms.base_llm.chat.transformation import BaseConfig, BaseLLMException
+from remodl.llms.bedrock.base_aws_llm import BaseAWSLLM
+from remodl.llms.bedrock.common_utils import BedrockError
+from remodl.types.llms.bedrock_invoke_agents import (
     InvokeAgentChunkPayload,
     InvokeAgentEvent,
     InvokeAgentEventHeaders,
@@ -32,11 +32,11 @@ from litellm.types.llms.bedrock_invoke_agents import (
     InvokeAgentTracePayload,
     InvokeAgentUsage,
 )
-from litellm.types.llms.openai import AllMessageValues
-from litellm.types.utils import Choices, Message, ModelResponse
+from remodl.types.llms.openai import AllMessageValues
+from remodl.types.utils import Choices, Message, ModelResponse
 
 if TYPE_CHECKING:
-    from litellm.litellm_core_utils.litellm_logging import Logging as _LiteLLMLoggingObj
+    from remodl.remodl_core_utils.remodl_logging import Logging as _LiteLLMLoggingObj
 
     LiteLLMLoggingObj = _LiteLLMLoggingObj
 else:
@@ -76,7 +76,7 @@ class AmazonInvokeAgentConfig(BaseConfig, BaseAWSLLM):
         api_key: Optional[str],
         model: str,
         optional_params: dict,
-        litellm_params: dict,
+        remodl_params: dict,
         stream: Optional[bool] = None,
     ) -> str:
         """
@@ -149,7 +149,7 @@ class AmazonInvokeAgentConfig(BaseConfig, BaseAWSLLM):
         model: str,
         messages: List[AllMessageValues],
         optional_params: dict,
-        litellm_params: dict,
+        remodl_params: dict,
         headers: dict,
     ) -> dict:
         # use the last message content as the query
@@ -294,7 +294,7 @@ class AmazonInvokeAgentConfig(BaseConfig, BaseAWSLLM):
         """Get the response stream shape for parsing, reusing existing logic."""
         try:
             # Try to reuse the cached shape from the existing decoder
-            from litellm.llms.bedrock.chat.invoke_handler import (
+            from remodl.llms.bedrock.chat.invoke_handler import (
                 get_response_stream_shape,
             )
 
@@ -461,7 +461,7 @@ class AmazonInvokeAgentConfig(BaseConfig, BaseAWSLLM):
 
         # Add usage information if available
         if usage_info:
-            from litellm.types.utils import Usage
+            from remodl.types.utils import Usage
 
             usage = Usage(
                 prompt_tokens=usage_info.get("inputTokens", 0),
@@ -482,7 +482,7 @@ class AmazonInvokeAgentConfig(BaseConfig, BaseAWSLLM):
         request_data: dict,
         messages: List[AllMessageValues],
         optional_params: dict,
-        litellm_params: dict,
+        remodl_params: dict,
         encoding: Any,
         api_key: Optional[str] = None,
         json_mode: Optional[bool] = None,
@@ -527,7 +527,7 @@ class AmazonInvokeAgentConfig(BaseConfig, BaseAWSLLM):
         model: str,
         messages: List[AllMessageValues],
         optional_params: dict,
-        litellm_params: dict,
+        remodl_params: dict,
         api_key: Optional[str] = None,
         api_base: Optional[str] = None,
     ) -> dict:

@@ -4,12 +4,12 @@ from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple, Union
 import httpx
 from typing_extensions import TypedDict
 
-import litellm
-from litellm._uuid import uuid
-from litellm.llms.base_llm.chat.transformation import BaseLLMException
-from litellm.llms.base_llm.rerank.transformation import BaseRerankConfig
-from litellm.secret_managers.main import get_secret_str
-from litellm.types.rerank import (
+import remodl
+from remodl._uuid import uuid
+from remodl.llms.base_llm.chat.transformation import BaseLLMException
+from remodl.llms.base_llm.rerank.transformation import BaseRerankConfig
+from remodl.secret_managers.main import get_secret_str
+from remodl.types.rerank import (
     OptionalRerankParams,
     RerankBilledUnits,
     RerankResponse,
@@ -18,12 +18,12 @@ from litellm.types.rerank import (
     RerankResponseResult,
     RerankTokens,
 )
-from litellm.utils import token_counter
+from remodl.utils import token_counter
 
 from ..common_utils import HuggingFaceError
 
 if TYPE_CHECKING:
-    from litellm.litellm_core_utils.litellm_logging import Logging as LiteLLMLoggingObj
+    from remodl.remodl_core_utils.remodl_logging import Logging as LiteLLMLoggingObj
 
     LoggingClass = LiteLLMLoggingObj
 else:
@@ -168,7 +168,7 @@ class HuggingFaceRerankConfig(BaseRerankConfig):
         api_key: Optional[str] = None,
         request_data: dict = {},
         optional_params: dict = {},
-        litellm_params: dict = {},
+        remodl_params: dict = {},
     ) -> RerankResponse:
         try:
             raw_response_json: HuggingFaceRerankResponseList = raw_response.json()
@@ -178,7 +178,7 @@ class HuggingFaceRerankConfig(BaseRerankConfig):
                 status_code=getattr(raw_response, "status_code", 500),
             )
 
-        # Use standard litellm token counter for proper token estimation
+        # Use standard remodl token counter for proper token estimation
         input_text = request_data.get("query", "")
         try:
             # Calculate tokens for the raw response JSON string
@@ -281,13 +281,13 @@ class HuggingFaceRerankConfig(BaseRerankConfig):
         """
         # Get API key from multiple sources
         final_api_key = (
-            api_key or litellm.huggingface_key or get_secret_str("HUGGINGFACE_API_KEY")
+            api_key or remodl.huggingface_key or get_secret_str("HUGGINGFACE_API_KEY")
         )
 
         # Get API base from multiple sources
         final_api_base = (
             api_base
-            or litellm.api_base
+            or remodl.api_base
             or get_secret_str("HF_API_BASE")
             or get_secret_str("HUGGINGFACE_API_BASE")
         )

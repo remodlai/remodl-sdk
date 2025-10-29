@@ -4,16 +4,16 @@ from typing import AsyncIterator, Iterator, List, Optional, Union
 
 import httpx
 
-import litellm
-from litellm.llms.base_llm.base_model_iterator import BaseModelResponseIterator
-from litellm.llms.base_llm.chat.transformation import (
+import remodl
+from remodl.llms.base_llm.base_model_iterator import BaseModelResponseIterator
+from remodl.llms.base_llm.chat.transformation import (
     BaseConfig,
     BaseLLMException,
     LiteLLMLoggingObj,
 )
-from litellm.secret_managers.main import get_secret_str
-from litellm.types.llms.openai import AllMessageValues
-from litellm.types.utils import (
+from remodl.secret_managers.main import get_secret_str
+from remodl.types.llms.openai import AllMessageValues
+from remodl.types.utils import (
     ChatCompletionToolCallChunk,
     ChatCompletionUsageBlock,
     GenericStreamingChunk,
@@ -60,7 +60,7 @@ class CloudflareChatConfig(BaseConfig):
         model: str,
         messages: List[AllMessageValues],
         optional_params: dict,
-        litellm_params: dict,
+        remodl_params: dict,
         api_key: Optional[str] = None,
         api_base: Optional[str] = None,
     ) -> dict:
@@ -81,7 +81,7 @@ class CloudflareChatConfig(BaseConfig):
         api_key: Optional[str],
         model: str,
         optional_params: dict,
-        litellm_params: dict,
+        remodl_params: dict,
         stream: Optional[bool] = None,
     ) -> str:
         if api_base is None:
@@ -117,10 +117,10 @@ class CloudflareChatConfig(BaseConfig):
         model: str,
         messages: List[AllMessageValues],
         optional_params: dict,
-        litellm_params: dict,
+        remodl_params: dict,
         headers: dict,
     ) -> dict:
-        config = litellm.CloudflareChatConfig.get_config()
+        config = remodl.CloudflareChatConfig.get_config()
         for k, v in config.items():
             if k not in optional_params:
                 optional_params[k] = v
@@ -140,7 +140,7 @@ class CloudflareChatConfig(BaseConfig):
         request_data: dict,
         messages: List[AllMessageValues],
         optional_params: dict,
-        litellm_params: dict,
+        remodl_params: dict,
         encoding: str,
         api_key: Optional[str] = None,
         json_mode: Optional[bool] = None,
@@ -151,7 +151,7 @@ class CloudflareChatConfig(BaseConfig):
             "response"
         ]
 
-        prompt_tokens = litellm.utils.get_token_count(messages=messages, model=model)
+        prompt_tokens = remodl.utils.get_token_count(messages=messages, model=model)
         completion_tokens = len(
             encoding.encode(model_response["choices"][0]["message"].get("content", ""))
         )

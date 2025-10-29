@@ -8,9 +8,9 @@ import json
 import traceback
 from typing import Dict, List
 
-from litellm._logging import verbose_logger
-from litellm.integrations.custom_batch_logger import CustomBatchLogger
-from litellm.llms.custom_httpx.http_handler import (
+from remodl._logging import verbose_logger
+from remodl.integrations.custom_batch_logger import CustomBatchLogger
+from remodl.llms.custom_httpx.http_handler import (
     _get_httpx_client,
     get_async_httpx_client,
     httpxSpecialProvider,
@@ -187,11 +187,11 @@ class OpikLogger(CustomBatchLogger):
         self, kwargs, response_obj, start_time, end_time
     ) -> List[Dict]:
         # Get metadata
-        _litellm_params = kwargs.get("litellm_params", {}) or {}
-        litellm_params_metadata = _litellm_params.get("metadata", {}) or {}
+        _remodl_params = kwargs.get("remodl_params", {}) or {}
+        remodl_params_metadata = _remodl_params.get("metadata", {}) or {}
 
         # Extract opik metadata
-        litellm_opik_metadata = litellm_params_metadata.get("opik", {})
+        remodl_opik_metadata = remodl_params_metadata.get("opik", {})
         
         # Use standard_logging_object to create metadata and input/output data
         standard_logging_object = kwargs.get("standard_logging_object", None)
@@ -201,7 +201,7 @@ class OpikLogger(CustomBatchLogger):
             )
             return []
 
-        # Update litellm_opik_metadata with opik metadata from requester
+        # Update remodl_opik_metadata with opik metadata from requester
         standard_logging_metadata = standard_logging_object.get("metadata", {}) or {}
         requester_metadata = standard_logging_metadata.get("requester_metadata", {}) or {}
 
@@ -212,16 +212,16 @@ class OpikLogger(CustomBatchLogger):
             ) or {}
 
         requester_opik_metadata = requester_metadata.get("opik", {}) or {}
-        litellm_opik_metadata.update(requester_opik_metadata)
+        remodl_opik_metadata.update(requester_opik_metadata)
 
         verbose_logger.debug(
-            f"litellm_opik_metadata - {json.dumps(litellm_opik_metadata, default=str)}"
+            f"remodl_opik_metadata - {json.dumps(remodl_opik_metadata, default=str)}"
         )
         
-        project_name = litellm_opik_metadata.get("project_name", self.opik_project_name)
+        project_name = remodl_opik_metadata.get("project_name", self.opik_project_name)
 
         # Extract trace_id and parent_span_id
-        current_span_data = litellm_opik_metadata.get("current_span_data", None)
+        current_span_data = remodl_opik_metadata.get("current_span_data", None)
         if isinstance(current_span_data, dict):
             trace_id = current_span_data.get("trace_id", None)
             parent_span_id = current_span_data.get("id", None)
@@ -233,15 +233,15 @@ class OpikLogger(CustomBatchLogger):
             parent_span_id = None
         
         # Create Opik tags
-        opik_tags = litellm_opik_metadata.get("tags", [])
+        opik_tags = remodl_opik_metadata.get("tags", [])
         if kwargs.get("custom_llm_provider"):
             opik_tags.append(kwargs["custom_llm_provider"])
         
         # Get thread_id if present
-        thread_id = litellm_opik_metadata.get("thread_id", None)
+        thread_id = remodl_opik_metadata.get("thread_id", None)
 
         # Override with any opik_ headers from proxy request
-        proxy_server_request = _litellm_params.get("proxy_server_request", {}) or {}
+        proxy_server_request = _remodl_params.get("proxy_server_request", {}) or {}
         proxy_headers = proxy_server_request.get("headers", {}) or {}
         for key, value in proxy_headers.items():
             if key.startswith("opik_"):
@@ -275,10 +275,10 @@ class OpikLogger(CustomBatchLogger):
 
         # Create metadata object, we add the opik metadata first and then
         # update it with the standard_logging_object metadata
-        metadata = litellm_opik_metadata
+        metadata = remodl_opik_metadata
         if "current_span_data" in metadata:
             del metadata["current_span_data"]
-        metadata["created_from"] = "litellm"
+        metadata["created_from"] = "remodl"
 
         metadata.update(standard_logging_metadata)
         if "call_type" in standard_logging_object:

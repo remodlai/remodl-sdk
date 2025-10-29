@@ -4,7 +4,7 @@ Utility functions for ModelResponse and ModelResponseStream objects.
 
 from typing import Any
 
-from litellm.types.utils import Delta, ModelResponseBase, ModelResponseStream
+from remodl.types.utils import Delta, ModelResponseBase, ModelResponseStream
 
 
 def is_model_response_stream_empty(model_response: ModelResponseStream) -> bool:

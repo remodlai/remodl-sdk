@@ -2,11 +2,11 @@ from typing import List, Optional
 
 import httpx
 
-import litellm
-from litellm.llms.base_llm.base_utils import BaseLLMModelInfo
-from litellm.secret_managers.main import get_secret_str
-from litellm.types.llms.openai import AllMessageValues
-from litellm.types.utils import ProviderSpecificModelInfo
+import remodl
+from remodl.llms.base_llm.base_utils import BaseLLMModelInfo
+from remodl.secret_managers.main import get_secret_str
+from remodl.types.llms.openai import AllMessageValues
+from remodl.types.utils import ProviderSpecificModelInfo
 
 
 class XAIModelInfo(BaseLLMModelInfo):
@@ -27,7 +27,7 @@ class XAIModelInfo(BaseLLMModelInfo):
         model: str,
         messages: List[AllMessageValues],
         optional_params: dict,
-        litellm_params: dict,
+        remodl_params: dict,
         api_key: Optional[str] = None,
         api_base: Optional[str] = None,
     ) -> dict:
@@ -61,7 +61,7 @@ class XAIModelInfo(BaseLLMModelInfo):
             raise ValueError(
                 "XAI_API_BASE or XAI_API_KEY is not set. Please set the environment variable, to query XAI's `/models` endpoint."
             )
-        response = litellm.module_level_client.get(
+        response = remodl.module_level_client.get(
             url=f"{api_base}/v1/models",
             headers={"Authorization": f"Bearer {api_key}"},
         )
@@ -75,9 +75,9 @@ class XAIModelInfo(BaseLLMModelInfo):
 
         models = response.json()["data"]
 
-        litellm_model_names = []
+        remodl_model_names = []
         for model in models:
             stripped_model_name = model["id"]
-            litellm_model_name = "xai/" + stripped_model_name
-            litellm_model_names.append(litellm_model_name)
-        return litellm_model_names
+            remodl_model_name = "xai/" + stripped_model_name
+            remodl_model_names.append(remodl_model_name)
+        return remodl_model_names

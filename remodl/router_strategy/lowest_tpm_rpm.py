@@ -4,12 +4,12 @@ import traceback
 from datetime import datetime
 from typing import Dict, List, Optional, Union
 
-from litellm import token_counter
-from litellm._logging import verbose_router_logger
-from litellm.caching.caching import DualCache
-from litellm.integrations.custom_logger import CustomLogger
-from litellm.types.utils import LiteLLMPydanticObjectBase
-from litellm.utils import print_verbose
+from remodl import token_counter
+from remodl._logging import verbose_router_logger
+from remodl.caching.caching import DualCache
+from remodl.integrations.custom_logger import CustomLogger
+from remodl.types.utils import LiteLLMPydanticObjectBase
+from remodl.utils import print_verbose
 
 
 class RoutingArgs(LiteLLMPydanticObjectBase):
@@ -33,14 +33,14 @@ class LowestTPMLoggingHandler(CustomLogger):
             """
             Update TPM/RPM usage on success
             """
-            if kwargs["litellm_params"].get("metadata") is None:
+            if kwargs["remodl_params"].get("metadata") is None:
                 pass
             else:
-                model_group = kwargs["litellm_params"]["metadata"].get(
+                model_group = kwargs["remodl_params"]["metadata"].get(
                     "model_group", None
                 )
 
-                id = kwargs["litellm_params"].get("model_info", {}).get("id", None)
+                id = kwargs["remodl_params"].get("model_info", {}).get("id", None)
                 if model_group is None or id is None:
                     return
                 elif isinstance(id, int):
@@ -80,7 +80,7 @@ class LowestTPMLoggingHandler(CustomLogger):
                     self.logged_success += 1
         except Exception as e:
             verbose_router_logger.error(
-                "litellm.router_strategy.lowest_tpm_rpm.py::async_log_success_event(): Exception occured - {}".format(
+                "remodl.router_strategy.lowest_tpm_rpm.py::async_log_success_event(): Exception occured - {}".format(
                     str(e)
                 )
             )
@@ -92,16 +92,16 @@ class LowestTPMLoggingHandler(CustomLogger):
             """
             Update TPM/RPM usage on success
             """
-            if kwargs["litellm_params"].get("metadata") is None:
+            if kwargs["remodl_params"].get("metadata") is None:
                 pass
             else:
-                if "litellm_params" not in kwargs:
+                if "remodl_params" not in kwargs:
                     return
-                model_group = kwargs["litellm_params"]["metadata"].get(
+                model_group = kwargs["remodl_params"]["metadata"].get(
                     "model_group", None
                 )
 
-                id = kwargs["litellm_params"].get("model_info", {}).get("id", None)
+                id = kwargs["remodl_params"].get("model_info", {}).get("id", None)
                 if model_group is None or id is None:
                     return
                 elif isinstance(id, int):
@@ -148,7 +148,7 @@ class LowestTPMLoggingHandler(CustomLogger):
                     self.logged_success += 1
         except Exception as e:
             verbose_router_logger.exception(
-                "litellm.router_strategy.lowest_tpm_rpm.py::async_log_success_event(): Exception occured - {}".format(
+                "remodl.router_strategy.lowest_tpm_rpm.py::async_log_success_event(): Exception occured - {}".format(
                     str(e)
                 )
             )
@@ -217,7 +217,7 @@ class LowestTPMLoggingHandler(CustomLogger):
             if _deployment_tpm is None:
                 _deployment_tpm = _deployment.get("tpm")
             if _deployment_tpm is None:
-                _deployment_tpm = _deployment.get("litellm_params", {}).get("tpm")
+                _deployment_tpm = _deployment.get("remodl_params", {}).get("tpm")
             if _deployment_tpm is None:
                 _deployment_tpm = _deployment.get("model_info", {}).get("tpm")
             if _deployment_tpm is None:
@@ -227,7 +227,7 @@ class LowestTPMLoggingHandler(CustomLogger):
             if _deployment_rpm is None:
                 _deployment_rpm = _deployment.get("rpm")
             if _deployment_rpm is None:
-                _deployment_rpm = _deployment.get("litellm_params", {}).get("rpm")
+                _deployment_rpm = _deployment.get("remodl_params", {}).get("rpm")
             if _deployment_rpm is None:
                 _deployment_rpm = _deployment.get("model_info", {}).get("rpm")
             if _deployment_rpm is None:

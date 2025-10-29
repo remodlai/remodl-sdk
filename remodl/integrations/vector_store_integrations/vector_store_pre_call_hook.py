@@ -7,13 +7,13 @@ It searches the vector store for relevant context and appends it to the messages
 
 from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple, cast
 
-import litellm
-import litellm.vector_stores
-from litellm._logging import verbose_logger
-from litellm.integrations.custom_logger import CustomLogger
-from litellm.types.llms.openai import AllMessageValues, ChatCompletionUserMessage
-from litellm.types.utils import StandardCallbackDynamicParams
-from litellm.types.vector_stores import (
+import remodl
+import remodl.vector_stores
+from remodl._logging import verbose_logger
+from remodl.integrations.custom_logger import CustomLogger
+from remodl.types.llms.openai import AllMessageValues, ChatCompletionUserMessage
+from remodl.types.utils import StandardCallbackDynamicParams
+from remodl.types.vector_stores import (
     LiteLLM_ManagedVectorStore,
     VectorStoreResultContent,
     VectorStoreSearchResponse,
@@ -21,7 +21,7 @@ from litellm.types.vector_stores import (
 )
 
 if TYPE_CHECKING:
-    from litellm.litellm_core_utils.litellm_logging import Logging as LiteLLMLoggingObj
+    from remodl.remodl_core_utils.remodl_logging import Logging as LiteLLMLoggingObj
 else:
     LiteLLMLoggingObj = None
 
@@ -33,7 +33,7 @@ class VectorStorePreCallHook(CustomLogger):
     
     When a vector store is configured, this hook:
     1. Extracts the query from the last user message
-    2. Calls litellm.vector_stores.search() to get relevant context
+    2. Calls remodl.vector_stores.search() to get relevant context
     3. Appends the search results as context to the messages
     """
 
@@ -48,7 +48,7 @@ class VectorStorePreCallHook(CustomLogger):
         prompt_id: Optional[str],
         prompt_variables: Optional[dict],
         dynamic_callback_params: StandardCallbackDynamicParams,
-        litellm_logging_obj: LiteLLMLoggingObj,
+        remodl_logging_obj: LiteLLMLoggingObj,
         tools: Optional[List[Dict]] = None,
         prompt_label: Optional[str] = None,
         prompt_version: Optional[int] = None,
@@ -71,11 +71,11 @@ class VectorStorePreCallHook(CustomLogger):
         """
         try:
             # Check if vector store is configured
-            if litellm.vector_store_registry is None:
+            if remodl.vector_store_registry is None:
                 return model, messages, non_default_params
 
             vector_stores_to_run: List[LiteLLM_ManagedVectorStore] = (
-                litellm.vector_store_registry.pop_vector_stores_to_run(
+                remodl.vector_store_registry.pop_vector_stores_to_run(
                     non_default_params=non_default_params, tools=tools
                 )
             )
@@ -100,16 +100,16 @@ class VectorStorePreCallHook(CustomLogger):
                 # Get vector store id from the vector store config
                 vector_store_id = vector_store_to_run.get("vector_store_id", "")
                 custom_llm_provider = vector_store_to_run.get("custom_llm_provider")
-                litellm_params_for_vector_store = (
-                    vector_store_to_run.get("litellm_params", {}) or {}
+                remodl_params_for_vector_store = (
+                    vector_store_to_run.get("remodl_params", {}) or {}
                 )
-                # Call litellm.vector_stores.search() with the required parameters
-                search_response = await litellm.vector_stores.asearch(
+                # Call remodl.vector_stores.search() with the required parameters
+                search_response = await remodl.vector_stores.asearch(
                     **{
                         "vector_store_id": vector_store_id,
                         "query": query,
                         "custom_llm_provider": custom_llm_provider,
-                        **litellm_params_for_vector_store,
+                        **remodl_params_for_vector_store,
                     },
                 )
 
@@ -131,8 +131,8 @@ class VectorStorePreCallHook(CustomLogger):
                 )
 
             # Store search results as-is (already in OpenAI-compatible format)
-            if litellm_logging_obj and all_search_results:
-                litellm_logging_obj.model_call_details["search_results"] = (
+            if remodl_logging_obj and all_search_results:
+                remodl_logging_obj.model_call_details["search_results"] = (
                     all_search_results
                 )
 
@@ -243,18 +243,18 @@ class VectorStorePreCallHook(CustomLogger):
             )
 
             # Get logging object from request_data
-            litellm_logging_obj = request_data.get("litellm_logging_obj")
-            if not litellm_logging_obj:
-                verbose_logger.debug("No litellm_logging_obj in request_data")
+            remodl_logging_obj = request_data.get("remodl_logging_obj")
+            if not remodl_logging_obj:
+                verbose_logger.debug("No remodl_logging_obj in request_data")
                 return None
 
             verbose_logger.debug(
-                f"model_call_details keys: {list(litellm_logging_obj.model_call_details.keys())}"
+                f"model_call_details keys: {list(remodl_logging_obj.model_call_details.keys())}"
             )
 
             # Get search results from model_call_details (already in OpenAI format)
             search_results: Optional[List[VectorStoreSearchResponse]] = (
-                litellm_logging_obj.model_call_details.get("search_results")
+                remodl_logging_obj.model_call_details.get("search_results")
             )
 
             verbose_logger.debug(f"Search results found: {search_results is not None}")

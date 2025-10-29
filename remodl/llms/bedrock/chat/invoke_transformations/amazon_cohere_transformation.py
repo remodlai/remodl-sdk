@@ -1,10 +1,10 @@
 import types
 from typing import List, Optional
 
-from litellm.llms.bedrock.chat.invoke_transformations.base_invoke_transformation import (
+from remodl.llms.bedrock.chat.invoke_transformations.base_invoke_transformation import (
     AmazonInvokeConfig,
 )
-from litellm.llms.cohere.chat.transformation import CohereChatConfig
+from remodl.llms.cohere.chat.transformation import CohereChatConfig
 
 
 class AmazonCohereConfig(AmazonInvokeConfig, CohereChatConfig):

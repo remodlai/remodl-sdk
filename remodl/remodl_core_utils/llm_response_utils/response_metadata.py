@@ -1,10 +1,10 @@
 import datetime
 from typing import Any, Optional, Union
 
-from litellm.litellm_core_utils.core_helpers import process_response_headers
-from litellm.litellm_core_utils.llm_response_utils.get_api_base import get_api_base
-from litellm.litellm_core_utils.logging_utils import LiteLLMLoggingObject
-from litellm.types.utils import (
+from remodl.remodl_core_utils.core_helpers import process_response_headers
+from remodl.remodl_core_utils.llm_response_utils.get_api_base import get_api_base
+from remodl.remodl_core_utils.logging_utils import LiteLLMLoggingObject
+from remodl.types.utils import (
     EmbeddingResponse,
     HiddenParams,
     ModelResponse,
@@ -14,7 +14,7 @@ from litellm.types.utils import (
 
 class ResponseMetadata:
     """
-    Handles setting and managing `_hidden_params`, `response_time_ms`, and `litellm_overhead_time_ms` for LiteLLM responses
+    Handles setting and managing `_hidden_params`, `response_time_ms`, and `remodl_overhead_time_ms` for LiteLLM responses
     """
 
     def __init__(self, result: Any):
@@ -41,16 +41,16 @@ class ResponseMetadata:
         model_info = kwargs.get("model_info", {}) or {}
         model_id = model_info.get("id", None)
         new_params = {
-            "litellm_call_id": getattr(logging_obj, "litellm_call_id", None),
+            "remodl_call_id": getattr(logging_obj, "remodl_call_id", None),
             "api_base": get_api_base(model=model or "", optional_params=kwargs),
             "model_id": model_id,
             "response_cost": logging_obj._response_cost_calculator(
-                result=self.result, litellm_model_name=model, router_model_id=model_id
+                result=self.result, remodl_model_name=model, router_model_id=model_id
             ),
             "additional_headers": process_response_headers(
                 self._get_value_from_hidden_params("additional_headers") or {}
             ),
-            "litellm_model_name": model,
+            "remodl_model_name": model,
         }
         self._update_hidden_params(new_params)
 
@@ -103,13 +103,13 @@ class ResponseMetadata:
             overhead_ms = round(total_response_time_ms - llm_api_duration_ms, 4)
             self._update_hidden_params(
                 {
-                    "litellm_overhead_time_ms": overhead_ms,
+                    "remodl_overhead_time_ms": overhead_ms,
                 }
             )
 
         #########################################################
         # 3. Add duration for reading from cache
-        # In this case overhead from litellm is the difference between the cache read duration and the total response time
+        # In this case overhead from remodl is the difference between the cache read duration and the total response time
         #########################################################
         if (
             logging_obj.caching_details is not None
@@ -124,7 +124,7 @@ class ResponseMetadata:
             overhead_ms = total_response_time_ms - cache_duration_ms
             self._update_hidden_params(
                 {
-                    "litellm_overhead_time_ms": overhead_ms,
+                    "remodl_overhead_time_ms": overhead_ms,
                 }
             )
 
@@ -146,7 +146,7 @@ def update_response_metadata(
     Updates response metadata including hidden params and timing metrics
     Updates response metadata, adds the following:
         - response._hidden_params
-        - response._hidden_params["litellm_overhead_time_ms"]
+        - response._hidden_params["remodl_overhead_time_ms"]
         - response.response_time_ms
     """
     if result is None:

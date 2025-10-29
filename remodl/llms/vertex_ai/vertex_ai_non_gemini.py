@@ -5,12 +5,12 @@ from typing import Any, Callable, Optional, cast
 
 import httpx
 
-import litellm
-from litellm.litellm_core_utils.core_helpers import map_finish_reason
-from litellm.llms.bedrock.common_utils import ModelResponseIterator
-from litellm.llms.custom_httpx.http_handler import _DEFAULT_TTL_FOR_HTTPX_CLIENTS
-from litellm.types.llms.vertex_ai import *
-from litellm.utils import CustomStreamWrapper, ModelResponse, Usage
+import remodl
+from remodl.remodl_core_utils.core_helpers import map_finish_reason
+from remodl.llms.bedrock.common_utils import ModelResponseIterator
+from remodl.llms.custom_httpx.http_handler import _DEFAULT_TTL_FOR_HTTPX_CLIENTS
+from remodl.types.llms.vertex_ai import *
+from remodl.utils import CustomStreamWrapper, ModelResponse, Usage
 
 
 class VertexAIError(Exception):
@@ -66,11 +66,11 @@ def _get_client_cache_key(
 
 
 def _get_client_from_cache(client_cache_key: str):
-    return litellm.in_memory_llm_clients_cache.get_cache(client_cache_key)
+    return remodl.in_memory_llm_clients_cache.get_cache(client_cache_key)
 
 
 def _set_client_in_cache(client_cache_key: str, vertex_llm_model: Any):
-    litellm.in_memory_llm_clients_cache.set_cache(
+    remodl.in_memory_llm_clients_cache.set_cache(
         key=client_cache_key,
         value=vertex_llm_model,
         ttl=_DEFAULT_TTL_FOR_HTTPX_CLIENTS,
@@ -88,7 +88,7 @@ def completion(  # noqa: PLR0915
     vertex_project=None,
     vertex_location=None,
     vertex_credentials=None,
-    litellm_params=None,
+    remodl_params=None,
     logger_fn=None,
     acompletion: bool = False,
 ):
@@ -163,7 +163,7 @@ def completion(  # noqa: PLR0915
             )
 
         ## Load Config
-        config = litellm.VertexAIConfig.get_config()
+        config = remodl.VertexAIConfig.get_config()
         for k, v in config.items():
             if k not in optional_params:
                 optional_params[k] = v
@@ -200,30 +200,30 @@ def completion(  # noqa: PLR0915
         }
         fake_stream = False
         if (
-            model in litellm.vertex_language_models
-            or model in litellm.vertex_vision_models
+            model in remodl.vertex_language_models
+            or model in remodl.vertex_vision_models
         ):
             llm_model: Any = _vertex_llm_model_object or GenerativeModel(model)
             mode = "vision"
             request_str += f"llm_model = GenerativeModel({model})\n"
-        elif model in litellm.vertex_chat_models:
+        elif model in remodl.vertex_chat_models:
             llm_model = _vertex_llm_model_object or ChatModel.from_pretrained(model)
             mode = "chat"
             request_str += f"llm_model = ChatModel.from_pretrained({model})\n"
-        elif model in litellm.vertex_text_models:
+        elif model in remodl.vertex_text_models:
             llm_model = _vertex_llm_model_object or TextGenerationModel.from_pretrained(
                 model
             )
             mode = "text"
             request_str += f"llm_model = TextGenerationModel.from_pretrained({model})\n"
-        elif model in litellm.vertex_code_text_models:
+        elif model in remodl.vertex_code_text_models:
             llm_model = _vertex_llm_model_object or CodeGenerationModel.from_pretrained(
                 model
             )
             mode = "text"
             request_str += f"llm_model = CodeGenerationModel.from_pretrained({model})\n"
             fake_stream = True
-        elif model in litellm.vertex_code_chat_models:  # vertex_code_llm_models
+        elif model in remodl.vertex_code_chat_models:  # vertex_code_llm_models
             llm_model = _vertex_llm_model_object or CodeChatModel.from_pretrained(model)
             mode = "chat"
             request_str += f"llm_model = CodeChatModel.from_pretrained({model})\n"
@@ -429,14 +429,14 @@ def completion(  # noqa: PLR0915
         )
 
         ## RESPONSE OBJECT
-        if isinstance(completion_response, litellm.Message):
+        if isinstance(completion_response, remodl.Message):
             model_response.choices[0].message = completion_response  # type: ignore
         elif len(str(completion_response)) > 0:
             model_response.choices[0].message.content = str(completion_response)  # type: ignore
         model_response.created = int(time.time())
         model_response.model = model
         ## CALCULATING USAGE
-        if model in litellm.vertex_language_models and response_obj is not None:
+        if model in remodl.vertex_language_models and response_obj is not None:
             model_response.choices[0].finish_reason = map_finish_reason(
                 response_obj.candidates[0].finish_reason.name
             )
@@ -447,7 +447,7 @@ def completion(  # noqa: PLR0915
             )
         else:
             # init prompt tokens
-            # this block attempts to get usage from response_obj if it exists, if not it uses the litellm token counter
+            # this block attempts to get usage from response_obj if it exists, if not it uses the remodl token counter
             prompt_tokens, completion_tokens, _ = 0, 0, 0
             if response_obj is not None:
                 if hasattr(response_obj, "usage_metadata") and hasattr(
@@ -478,7 +478,7 @@ def completion(  # noqa: PLR0915
     except Exception as e:
         if isinstance(e, VertexAIError):
             raise e
-        raise litellm.APIConnectionError(
+        raise remodl.APIConnectionError(
             message=str(e), llm_provider="vertex_ai", model=model
         )
 
@@ -598,7 +598,7 @@ async def async_completion(  # noqa: PLR0915
         )
 
         ## RESPONSE OBJECT
-        if isinstance(completion_response, litellm.Message):
+        if isinstance(completion_response, remodl.Message):
             model_response.choices[0].message = completion_response  # type: ignore
         elif len(str(completion_response)) > 0:
             model_response.choices[0].message.content = str(  # type: ignore
@@ -607,7 +607,7 @@ async def async_completion(  # noqa: PLR0915
         model_response.created = int(time.time())
         model_response.model = model
         ## CALCULATING USAGE
-        if model in litellm.vertex_language_models and response_obj is not None:
+        if model in remodl.vertex_language_models and response_obj is not None:
             model_response.choices[0].finish_reason = map_finish_reason(
                 response_obj.candidates[0].finish_reason.name
             )
@@ -618,7 +618,7 @@ async def async_completion(  # noqa: PLR0915
             )
         else:
             # init prompt tokens
-            # this block attempts to get usage from response_obj if it exists, if not it uses the litellm token counter
+            # this block attempts to get usage from response_obj if it exists, if not it uses the remodl token counter
             prompt_tokens, completion_tokens, _ = 0, 0, 0
             if response_obj is not None and (
                 hasattr(response_obj, "usage_metadata")

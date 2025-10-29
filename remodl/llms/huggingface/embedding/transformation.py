@@ -6,25 +6,25 @@ from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple, Union
 
 import httpx
 
-import litellm
-from litellm.litellm_core_utils.prompt_templates.common_utils import (
+import remodl
+from remodl.remodl_core_utils.prompt_templates.common_utils import (
     convert_content_list_to_str,
 )
-from litellm.litellm_core_utils.prompt_templates.factory import (
+from remodl.remodl_core_utils.prompt_templates.factory import (
     custom_prompt,
     prompt_factory,
 )
-from litellm.litellm_core_utils.streaming_handler import CustomStreamWrapper
-from litellm.llms.base_llm.chat.transformation import BaseConfig, BaseLLMException
-from litellm.secret_managers.main import get_secret_str
-from litellm.types.llms.openai import AllMessageValues
-from litellm.types.utils import Choices, Message, ModelResponse, Usage
-from litellm.utils import token_counter
+from remodl.remodl_core_utils.streaming_handler import CustomStreamWrapper
+from remodl.llms.base_llm.chat.transformation import BaseConfig, BaseLLMException
+from remodl.secret_managers.main import get_secret_str
+from remodl.types.llms.openai import AllMessageValues
+from remodl.types.utils import Choices, Message, ModelResponse, Usage
+from remodl.utils import token_counter
 
 from ..common_utils import HuggingFaceError, hf_task_list, hf_tasks, output_parser
 
 if TYPE_CHECKING:
-    from litellm.litellm_core_utils.litellm_logging import Logging as LiteLLMLoggingObj
+    from remodl.remodl_core_utils.remodl_logging import Logging as LiteLLMLoggingObj
 
     LoggingClass = LiteLLMLoggingObj
 else:
@@ -41,7 +41,7 @@ class HuggingFaceEmbeddingConfig(BaseConfig):
     """
 
     hf_task: Optional[hf_tasks] = (
-        None  # litellm-specific param, used to know the api spec to use when calling huggingface api
+        None  # remodl-specific param, used to know the api spec to use when calling huggingface api
     )
     best_of: Optional[int] = None
     decoder_input_details: Optional[bool] = None
@@ -206,10 +206,10 @@ class HuggingFaceEmbeddingConfig(BaseConfig):
         model: str,
         messages: List[AllMessageValues],
         optional_params: dict,
-        litellm_params: dict,
+        remodl_params: dict,
         headers: dict,
     ) -> dict:
-        task = litellm_params.get("task", None)
+        task = remodl_params.get("task", None)
         ## VALIDATE API FORMAT
         if task is None or not isinstance(task, str) or task not in hf_task_list:
             raise Exception(
@@ -217,7 +217,7 @@ class HuggingFaceEmbeddingConfig(BaseConfig):
             )
 
         ## Load Config
-        config = litellm.HuggingFaceEmbeddingConfig.get_config()
+        config = remodl.HuggingFaceEmbeddingConfig.get_config()
         for k, v in config.items():
             if (
                 k not in optional_params
@@ -264,9 +264,9 @@ class HuggingFaceEmbeddingConfig(BaseConfig):
 
         elif task == "text-generation-inference":
             # always send "details" and "return_full_text" as params
-            if model in litellm.custom_prompt_dict:
+            if model in remodl.custom_prompt_dict:
                 # check if the model has a registered custom prompt
-                model_prompt_details = litellm.custom_prompt_dict[model]
+                model_prompt_details = remodl.custom_prompt_dict[model]
                 prompt = custom_prompt(
                     role_dict=model_prompt_details.get("roles") or {},
                     initial_prompt_value=model_prompt_details.get(
@@ -293,9 +293,9 @@ class HuggingFaceEmbeddingConfig(BaseConfig):
         else:
             # Non TGI and Conversational llms
             # We need this branch, it removes 'details' and 'return_full_text' from params
-            if model in litellm.custom_prompt_dict:
+            if model in remodl.custom_prompt_dict:
                 # check if the model has a registered custom prompt
-                model_prompt_details = litellm.custom_prompt_dict[model]
+                model_prompt_details = remodl.custom_prompt_dict[model]
                 prompt = custom_prompt(
                     role_dict=model_prompt_details.get("roles", {}),
                     initial_prompt_value=model_prompt_details.get(
@@ -355,7 +355,7 @@ class HuggingFaceEmbeddingConfig(BaseConfig):
         model: str,
         messages: List[AllMessageValues],
         optional_params: Dict,
-        litellm_params: dict,
+        remodl_params: dict,
         api_key: Optional[str] = None,
         api_base: Optional[str] = None,
     ) -> Dict:
@@ -532,13 +532,13 @@ class HuggingFaceEmbeddingConfig(BaseConfig):
         request_data: Dict,
         messages: List[AllMessageValues],
         optional_params: Dict,
-        litellm_params: Dict,
+        remodl_params: Dict,
         encoding: Any,
         api_key: Optional[str] = None,
         json_mode: Optional[bool] = None,
     ) -> ModelResponse:
         ## Some servers might return streaming responses even though stream was not set to true. (e.g. Baseten)
-        task = litellm_params.get("task", None)
+        task = remodl_params.get("task", None)
         is_streamed = False
         if (
             raw_response.__dict__["headers"].get("Content-Type", "")

@@ -1,7 +1,7 @@
 from typing import Union
 import httpx
 
-from litellm.llms.base_llm.chat.transformation import BaseLLMException
+from remodl.llms.base_llm.chat.transformation import BaseLLMException
 
 
 class InfinityError(BaseLLMException):

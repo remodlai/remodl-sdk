@@ -6,17 +6,17 @@ Why separate file? Make it easy to see how transformation works
 
 from typing import List
 
-from litellm import EmbeddingResponse
-from litellm.types.llms.openai import EmbeddingInput
-from litellm.types.llms.vertex_ai import (
+from remodl import EmbeddingResponse
+from remodl.types.llms.openai import EmbeddingInput
+from remodl.types.llms.vertex_ai import (
     ContentType,
     EmbedContentRequest,
     PartType,
     VertexAIBatchEmbeddingsRequestBody,
     VertexAIBatchEmbeddingsResponseObject,
 )
-from litellm.types.utils import Embedding, Usage
-from litellm.utils import get_formatted_prompt, token_counter
+from remodl.types.utils import Embedding, Usage
+from remodl.utils import get_formatted_prompt, token_counter
 
 
 def transform_openai_input_gemini_content(

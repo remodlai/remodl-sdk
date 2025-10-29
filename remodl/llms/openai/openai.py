@@ -27,23 +27,23 @@ from openai.types.file_deleted import FileDeleted
 from pydantic import BaseModel
 from typing_extensions import overload
 
-import litellm
-from litellm import LlmProviders
-from litellm._logging import verbose_logger
-from litellm.constants import DEFAULT_MAX_RETRIES
-from litellm.litellm_core_utils.litellm_logging import Logging as LiteLLMLoggingObj
-from litellm.litellm_core_utils.logging_utils import track_llm_api_timing
-from litellm.llms.base_llm.base_model_iterator import BaseModelResponseIterator
-from litellm.llms.base_llm.chat.transformation import BaseConfig, BaseLLMException
-from litellm.llms.bedrock.chat.invoke_handler import MockResponseIterator
-from litellm.types.utils import (
+import remodl
+from remodl import LlmProviders
+from remodl._logging import verbose_logger
+from remodl.constants import DEFAULT_MAX_RETRIES
+from remodl.remodl_core_utils.remodl_logging import Logging as LiteLLMLoggingObj
+from remodl.remodl_core_utils.logging_utils import track_llm_api_timing
+from remodl.llms.base_llm.base_model_iterator import BaseModelResponseIterator
+from remodl.llms.base_llm.chat.transformation import BaseConfig, BaseLLMException
+from remodl.llms.bedrock.chat.invoke_handler import MockResponseIterator
+from remodl.types.utils import (
     EmbeddingResponse,
     ImageResponse,
     LiteLLMBatch,
     ModelResponse,
     ModelResponseStream,
 )
-from litellm.utils import (
+from remodl.utils import (
     CustomStreamWrapper,
     ProviderConfigManager,
     convert_to_model_response_object,
@@ -191,10 +191,10 @@ class OpenAIConfig(BaseConfig):
             return openaiOSeriesConfig.get_supported_openai_params(model=model)
         elif openAIGPT5Config.is_model_gpt_5_model(model=model):
             return openAIGPT5Config.get_supported_openai_params(model=model)
-        elif litellm.openAIGPTAudioConfig.is_model_gpt_audio_model(model=model):
-            return litellm.openAIGPTAudioConfig.get_supported_openai_params(model=model)
+        elif remodl.openAIGPTAudioConfig.is_model_gpt_audio_model(model=model):
+            return remodl.openAIGPTAudioConfig.get_supported_openai_params(model=model)
         else:
-            return litellm.openAIGPTConfig.get_supported_openai_params(model=model)
+            return remodl.openAIGPTConfig.get_supported_openai_params(model=model)
 
     def _map_openai_params(
         self, non_default_params: dict, optional_params: dict, model: str
@@ -232,15 +232,15 @@ class OpenAIConfig(BaseConfig):
                 model=model,
                 drop_params=drop_params,
             )
-        elif litellm.openAIGPTAudioConfig.is_model_gpt_audio_model(model=model):
-            return litellm.openAIGPTAudioConfig.map_openai_params(
+        elif remodl.openAIGPTAudioConfig.is_model_gpt_audio_model(model=model):
+            return remodl.openAIGPTAudioConfig.map_openai_params(
                 non_default_params=non_default_params,
                 optional_params=optional_params,
                 model=model,
                 drop_params=drop_params,
             )
 
-        return litellm.openAIGPTConfig.map_openai_params(
+        return remodl.openAIGPTConfig.map_openai_params(
             non_default_params=non_default_params,
             optional_params=optional_params,
             model=model,
@@ -261,7 +261,7 @@ class OpenAIConfig(BaseConfig):
         model: str,
         messages: List[AllMessageValues],
         optional_params: dict,
-        litellm_params: dict,
+        remodl_params: dict,
         headers: dict,
     ) -> dict:
         messages = self._transform_messages(messages=messages, model=model)
@@ -276,7 +276,7 @@ class OpenAIConfig(BaseConfig):
         request_data: dict,
         messages: List[AllMessageValues],
         optional_params: dict,
-        litellm_params: dict,
+        remodl_params: dict,
         encoding: Any,
         api_key: Optional[str] = None,
         json_mode: Optional[bool] = None,
@@ -301,7 +301,7 @@ class OpenAIConfig(BaseConfig):
         model: str,
         messages: List[AllMessageValues],
         optional_params: dict,
-        litellm_params: dict,
+        remodl_params: dict,
         api_key: Optional[str] = None,
         api_base: Optional[str] = None,
     ) -> dict:
@@ -427,7 +427,7 @@ class OpenAIChatCompletion(BaseLLM, BaseOpenAILLM):
     ) -> Tuple[dict, BaseModel]:
         """
         Helper to:
-        - call chat.completions.create.with_raw_response when litellm.return_response_headers is True
+        - call chat.completions.create.with_raw_response when remodl.return_response_headers is True
         - call chat.completions.create by default
         """
         start_time = time.time()
@@ -463,7 +463,7 @@ class OpenAIChatCompletion(BaseLLM, BaseOpenAILLM):
     ) -> Tuple[dict, BaseModel]:
         """
         Helper to:
-        - call chat.completions.create.with_raw_response when litellm.return_response_headers is True
+        - call chat.completions.create.with_raw_response when remodl.return_response_headers is True
         - call chat.completions.create by default
         """
         raw_response = None
@@ -511,7 +511,7 @@ class OpenAIChatCompletion(BaseLLM, BaseOpenAILLM):
         model_response: ModelResponse,
         timeout: Union[float, httpx.Timeout],
         optional_params: dict,
-        litellm_params: dict,
+        remodl_params: dict,
         logging_obj: Any,
         model: Optional[str] = None,
         messages: Optional[list] = None,
@@ -582,7 +582,7 @@ class OpenAIChatCompletion(BaseLLM, BaseOpenAILLM):
                                 headers=headers,
                                 messages=messages,
                                 optional_params=inference_params,
-                                litellm_params=litellm_params,
+                                remodl_params=remodl_params,
                                 provider_config=provider_config,
                                 model=model,
                                 api_base=api_base,
@@ -599,7 +599,7 @@ class OpenAIChatCompletion(BaseLLM, BaseOpenAILLM):
                             return self.acompletion(
                                 messages=messages,
                                 optional_params=inference_params,
-                                litellm_params=litellm_params,
+                                remodl_params=remodl_params,
                                 provider_config=provider_config,
                                 headers=headers,
                                 model=model,
@@ -621,7 +621,7 @@ class OpenAIChatCompletion(BaseLLM, BaseOpenAILLM):
                         model=model,
                         messages=messages,
                         optional_params=inference_params,
-                        litellm_params=litellm_params,
+                        remodl_params=remodl_params,
                         headers=headers or {},
                     )
                     if stream is True and fake_stream is False:
@@ -701,8 +701,8 @@ class OpenAIChatCompletion(BaseLLM, BaseOpenAILLM):
 
                         return final_response_obj
                 except openai.UnprocessableEntityError as e:
-                    ## check if body contains unprocessable params - related issue https://github.com/BerriAI/litellm/issues/4800
-                    if litellm.drop_params is True or drop_params is True:
+                    ## check if body contains unprocessable params - related issue https://github.com/BerriAI/remodl/issues/4800
+                    if remodl.drop_params is True or drop_params is True:
                         inference_params = drop_params_from_unprocessable_entity_error(
                             e, inference_params
                         )
@@ -740,7 +740,7 @@ class OpenAIChatCompletion(BaseLLM, BaseOpenAILLM):
                     elif "unknown field: parameter index is not a valid field" in str(
                         e
                     ):
-                        litellm.remove_index_from_tool_calls(messages=messages)
+                        remodl.remove_index_from_tool_calls(messages=messages)
                     else:
                         raise e
         except OpenAIError as e:
@@ -764,7 +764,7 @@ class OpenAIChatCompletion(BaseLLM, BaseOpenAILLM):
         self,
         messages: list,
         optional_params: dict,
-        litellm_params: dict,
+        remodl_params: dict,
         provider_config: BaseConfig,
         model: str,
         model_response: ModelResponse,
@@ -787,7 +787,7 @@ class OpenAIChatCompletion(BaseLLM, BaseOpenAILLM):
             model=model,
             messages=messages,
             optional_params=optional_params,
-            litellm_params=litellm_params,
+            remodl_params=remodl_params,
             headers=headers or {},
         )
         for _ in range(
@@ -852,8 +852,8 @@ class OpenAIChatCompletion(BaseLLM, BaseOpenAILLM):
 
                 return final_response_obj
             except openai.UnprocessableEntityError as e:
-                ## check if body contains unprocessable params - related issue https://github.com/BerriAI/litellm/issues/4800
-                if litellm.drop_params is True or drop_params is True:
+                ## check if body contains unprocessable params - related issue https://github.com/BerriAI/remodl/issues/4800
+                if remodl.drop_params is True or drop_params is True:
                     data = drop_params_from_unprocessable_entity_error(e, data)
                 else:
                     raise e
@@ -938,7 +938,7 @@ class OpenAIChatCompletion(BaseLLM, BaseOpenAILLM):
         timeout: Union[float, httpx.Timeout],
         messages: list,
         optional_params: dict,
-        litellm_params: dict,
+        remodl_params: dict,
         provider_config: BaseConfig,
         model: str,
         logging_obj: LiteLLMLoggingObj,
@@ -957,7 +957,7 @@ class OpenAIChatCompletion(BaseLLM, BaseOpenAILLM):
             model=model,
             messages=messages,
             optional_params=optional_params,
-            litellm_params=litellm_params,
+            remodl_params=remodl_params,
             headers=headers or {},
         )
         data["stream"] = True
@@ -1005,8 +1005,8 @@ class OpenAIChatCompletion(BaseLLM, BaseOpenAILLM):
                 )
                 return streamwrapper
             except openai.UnprocessableEntityError as e:
-                ## check if body contains unprocessable params - related issue https://github.com/BerriAI/litellm/issues/4800
-                if litellm.drop_params is True or drop_params is True:
+                ## check if body contains unprocessable params - related issue https://github.com/BerriAI/remodl/issues/4800
+                if remodl.drop_params is True or drop_params is True:
                     data = drop_params_from_unprocessable_entity_error(e, data)
                 else:
                     raise e
@@ -1061,7 +1061,7 @@ class OpenAIChatCompletion(BaseLLM, BaseOpenAILLM):
         if stream_options is not None:
             return {"stream_options": stream_options}
         else:
-            # by default litellm will include usage for openai endpoints
+            # by default remodl will include usage for openai endpoints
             if api_base is None or urlparse(api_base).hostname == "api.openai.com":
                 return {"stream_options": {"include_usage": True}}
         return {}
@@ -1077,7 +1077,7 @@ class OpenAIChatCompletion(BaseLLM, BaseOpenAILLM):
     ):
         """
         Helper to:
-        - call embeddings.create.with_raw_response when litellm.return_response_headers is True
+        - call embeddings.create.with_raw_response when remodl.return_response_headers is True
         - call embeddings.create by default
         """
         try:
@@ -1100,7 +1100,7 @@ class OpenAIChatCompletion(BaseLLM, BaseOpenAILLM):
     ):
         """
         Helper to:
-        - call embeddings.create.with_raw_response when litellm.return_response_headers is True
+        - call embeddings.create.with_raw_response when remodl.return_response_headers is True
         - call embeddings.create by default
         """
         try:
@@ -1204,7 +1204,7 @@ class OpenAIChatCompletion(BaseLLM, BaseOpenAILLM):
         super().embedding()
         try:
             data = {"model": model, "input": input, **optional_params}
-            max_retries = max_retries or litellm.DEFAULT_MAX_RETRIES
+            max_retries = max_retries or remodl.DEFAULT_MAX_RETRIES
             if not isinstance(max_retries, int):
                 raise OpenAIError(status_code=422, message="max retries must be an int")
             ## LOGGING
@@ -2549,7 +2549,7 @@ class OpenAIAssistantsAPI(BaseLLM):
         """
         Here's an example:
         ```
-        from litellm.llms.openai.openai import OpenAIAssistantsAPI, MessageData
+        from remodl.llms.openai.openai import OpenAIAssistantsAPI, MessageData
 
         # create thread
         message: MessageData = {"role": "user", "content": "Hey, how's it going?"}

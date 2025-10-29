@@ -1,6 +1,6 @@
 from typing import Optional, Union
 
-from litellm.llms.openai_like.chat.transformation import OpenAILikeChatConfig
+from remodl.llms.openai_like.chat.transformation import OpenAILikeChatConfig
 
 
 class VolcEngineChatConfig(OpenAILikeChatConfig):

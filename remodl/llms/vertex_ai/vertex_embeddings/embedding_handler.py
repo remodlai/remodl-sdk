@@ -2,18 +2,18 @@ from typing import Literal, Optional, Union
 
 import httpx
 
-import litellm
-from litellm.litellm_core_utils.litellm_logging import Logging as LiteLLMLoggingObject
-from litellm.llms.custom_httpx.http_handler import (
+import remodl
+from remodl.remodl_core_utils.remodl_logging import Logging as LiteLLMLoggingObject
+from remodl.llms.custom_httpx.http_handler import (
     AsyncHTTPHandler,
     HTTPHandler,
     _get_httpx_client,
     get_async_httpx_client,
 )
-from litellm.llms.vertex_ai.vertex_ai_non_gemini import VertexAIError
-from litellm.llms.vertex_ai.vertex_llm_base import VertexBase
-from litellm.types.llms.vertex_ai import *
-from litellm.types.utils import EmbeddingResponse
+from remodl.llms.vertex_ai.vertex_ai_non_gemini import VertexAIError
+from remodl.llms.vertex_ai.vertex_llm_base import VertexBase
+from remodl.types.llms.vertex_ai import *
+from remodl.types.utils import EmbeddingResponse
 
 from .types import *
 
@@ -87,7 +87,7 @@ class VertexEmbedding(VertexBase):
         )
         headers = self.set_headers(auth_header=auth_header, extra_headers=extra_headers)
         vertex_request: VertexEmbeddingRequest = (
-            litellm.vertexAITextEmbeddingConfig.transform_openai_request_to_vertex_embedding_request(
+            remodl.vertexAITextEmbeddingConfig.transform_openai_request_to_vertex_embedding_request(
                 input=input, optional_params=optional_params, model=model
             )
         )
@@ -126,7 +126,7 @@ class VertexEmbedding(VertexBase):
         )
 
         model_response = (
-            litellm.vertexAITextEmbeddingConfig.transform_vertex_response_to_openai(
+            remodl.vertexAITextEmbeddingConfig.transform_vertex_response_to_openai(
                 response=_json_response, model=model, model_response=model_response
             )
         )
@@ -137,7 +137,7 @@ class VertexEmbedding(VertexBase):
         self,
         model: str,
         input: Union[list, str],
-        model_response: litellm.EmbeddingResponse,
+        model_response: remodl.EmbeddingResponse,
         logging_obj: LiteLLMLoggingObject,
         optional_params: dict,
         custom_llm_provider: Literal[
@@ -152,7 +152,7 @@ class VertexEmbedding(VertexBase):
         gemini_api_key: Optional[str] = None,
         extra_headers: Optional[dict] = None,
         encoding=None,
-    ) -> litellm.EmbeddingResponse:
+    ) -> remodl.EmbeddingResponse:
         """
         Async embedding implementation
         """
@@ -179,7 +179,7 @@ class VertexEmbedding(VertexBase):
         )
         headers = self.set_headers(auth_header=auth_header, extra_headers=extra_headers)
         vertex_request: VertexEmbeddingRequest = (
-            litellm.vertexAITextEmbeddingConfig.transform_openai_request_to_vertex_embedding_request(
+            remodl.vertexAITextEmbeddingConfig.transform_openai_request_to_vertex_embedding_request(
                 input=input, optional_params=optional_params, model=model
             )
         )
@@ -189,7 +189,7 @@ class VertexEmbedding(VertexBase):
             _async_client_params["timeout"] = timeout
         if client is None or not isinstance(client, AsyncHTTPHandler):
             client = get_async_httpx_client(
-                params=_async_client_params, llm_provider=litellm.LlmProviders.VERTEX_AI
+                params=_async_client_params, llm_provider=remodl.LlmProviders.VERTEX_AI
             )
         else:
             client = client  # type: ignore
@@ -220,7 +220,7 @@ class VertexEmbedding(VertexBase):
         )
 
         model_response = (
-            litellm.vertexAITextEmbeddingConfig.transform_vertex_response_to_openai(
+            remodl.vertexAITextEmbeddingConfig.transform_vertex_response_to_openai(
                 response=_json_response, model=model, model_response=model_response
             )
         )

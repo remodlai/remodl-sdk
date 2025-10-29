@@ -1,5 +1,5 @@
 """
-Handler for transforming /chat/completions api requests to litellm.responses requests
+Handler for transforming /chat/completions api requests to remodl.responses requests
 """
 
 import json
@@ -20,33 +20,33 @@ from typing import (
 
 from openai.types.responses.tool_param import FunctionToolParam
 
-from litellm import ModelResponse
-from litellm._logging import verbose_logger
-from litellm.llms.base_llm.base_model_iterator import BaseModelResponseIterator
-from litellm.llms.base_llm.bridges.completion_transformation import (
+from remodl import ModelResponse
+from remodl._logging import verbose_logger
+from remodl.llms.base_llm.base_model_iterator import BaseModelResponseIterator
+from remodl.llms.base_llm.bridges.completion_transformation import (
     CompletionTransformationBridge,
 )
-from litellm.types.llms.openai import ChatCompletionToolParamFunctionChunk, Reasoning
+from remodl.types.llms.openai import ChatCompletionToolParamFunctionChunk, Reasoning
 
 if TYPE_CHECKING:
     from openai.types.responses import ResponseInputImageParam
     from pydantic import BaseModel
 
-    from litellm import LiteLLMLoggingObj, ModelResponse
-    from litellm.llms.base_llm.base_model_iterator import BaseModelResponseIterator
-    from litellm.types.llms.openai import (
+    from remodl import LiteLLMLoggingObj, ModelResponse
+    from remodl.llms.base_llm.base_model_iterator import BaseModelResponseIterator
+    from remodl.types.llms.openai import (
         ALL_RESPONSES_API_TOOL_PARAMS,
         AllMessageValues,
         ChatCompletionImageObject,
         ChatCompletionThinkingBlock,
         OpenAIMessageContentListBlock,
     )
-    from litellm.types.utils import GenericStreamingChunk, ModelResponseStream
+    from remodl.types.utils import GenericStreamingChunk, ModelResponseStream
 
 
 class LiteLLMResponsesTransformationHandler(CompletionTransformationBridge):
     """
-    Handler for transforming /chat/completions api requests to litellm.responses requests
+    Handler for transforming /chat/completions api requests to remodl.responses requests
     """
 
     def __init__(self):
@@ -65,7 +65,7 @@ class LiteLLMResponsesTransformationHandler(CompletionTransformationBridge):
         Returns:
             Tuple of (Choice object or None, updated index)
         """
-        from litellm.types.utils import Choices, Message
+        from remodl.types.utils import Choices, Message
 
         item_type = item.get("type")
 
@@ -160,12 +160,12 @@ class LiteLLMResponsesTransformationHandler(CompletionTransformationBridge):
         model: str,
         messages: List["AllMessageValues"],
         optional_params: dict,
-        litellm_params: dict,
+        remodl_params: dict,
         headers: dict,
-        litellm_logging_obj: "LiteLLMLoggingObj",
+        remodl_logging_obj: "LiteLLMLoggingObj",
         client: Optional[Any] = None,
     ) -> dict:
-        from litellm.types.llms.openai import ResponsesAPIOptionalRequestParams
+        from remodl.types.llms.openai import ResponsesAPIOptionalRequestParams
 
         (
             input_items,
@@ -201,8 +201,8 @@ class LiteLLMResponsesTransformationHandler(CompletionTransformationBridge):
             elif key == "reasoning_effort":
                 responses_api_request["reasoning"] = self._map_reasoning_effort(value)
 
-        # Get stream parameter from litellm_params if not in optional_params
-        stream = optional_params.get("stream") or litellm_params.get("stream", False)
+        # Get stream parameter from remodl_params if not in optional_params
+        stream = optional_params.get("stream") or remodl_params.get("stream", False)
         verbose_logger.debug(f"Chat provider: Stream parameter: {stream}")
 
         # Ensure stream is properly set in the request
@@ -221,15 +221,15 @@ class LiteLLMResponsesTransformationHandler(CompletionTransformationBridge):
 
         api_model = model
 
-        from litellm.types.utils import CallTypes
+        from remodl.types.utils import CallTypes
 
-        setattr(litellm_logging_obj, "call_type", CallTypes.responses.value)
+        setattr(remodl_logging_obj, "call_type", CallTypes.responses.value)
 
         request_data = {
             "model": api_model,
             "input": input_items,
-            "litellm_logging_obj": litellm_logging_obj,
-            **litellm_params,
+            "remodl_logging_obj": remodl_logging_obj,
+            **remodl_params,
             "client": client,
         }
 
@@ -261,7 +261,7 @@ class LiteLLMResponsesTransformationHandler(CompletionTransformationBridge):
         request_data: dict,
         messages: List["AllMessageValues"],
         optional_params: dict,
-        litellm_params: dict,
+        remodl_params: dict,
         encoding: Any,
         api_key: Optional[str] = None,
         json_mode: Optional[bool] = None,
@@ -273,9 +273,9 @@ class LiteLLMResponsesTransformationHandler(CompletionTransformationBridge):
             ResponseReasoningItem,
         )
 
-        from litellm.responses.utils import ResponseAPILoggingUtils
-        from litellm.types.llms.openai import ResponsesAPIResponse
-        from litellm.types.utils import Choices, Message
+        from remodl.responses.utils import ResponseAPILoggingUtils
+        from remodl.types.llms.openai import ResponsesAPIResponse
+        from remodl.types.utils import Choices, Message
 
         if not isinstance(raw_response, ResponsesAPIResponse):
             raise ValueError(f"Unexpected response type: {type(raw_response)}")
@@ -433,7 +433,7 @@ class LiteLLMResponsesTransformationHandler(CompletionTransformationBridge):
         role: str,
     ) -> List[Dict[str, Any]]:
         """Convert chat completion content to responses API format"""
-        from litellm.types.llms.openai import ChatCompletionImageObject
+        from remodl.types.llms.openai import ChatCompletionImageObject
 
         verbose_logger.debug(
             f"Chat provider: Converting content to responses format - input type: {type(content)}"
@@ -594,8 +594,8 @@ class OpenAiResponsesToChatCompletionStreamIterator(BaseModelResponseIterator):
         self, chunk: dict
     ) -> Union["GenericStreamingChunk", "ModelResponseStream"]:
         # Transform responses API streaming chunk to chat completion format
-        from litellm.types.llms.openai import ChatCompletionToolCallFunctionChunk
-        from litellm.types.utils import (
+        from remodl.types.llms.openai import ChatCompletionToolCallFunctionChunk
+        from remodl.types.utils import (
             ChatCompletionToolCallChunk,
             GenericStreamingChunk,
         )
@@ -711,7 +711,7 @@ class OpenAiResponsesToChatCompletionStreamIterator(BaseModelResponseIterator):
         elif event_type == "response.reasoning_summary_text.delta":
             content_part = parsed_chunk.get("delta", None)
             if content_part:
-                from litellm.types.utils import (
+                from remodl.types.utils import (
                     Delta,
                     ModelResponseStream,
                     StreamingChoices,

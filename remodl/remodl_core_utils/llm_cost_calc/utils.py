@@ -3,9 +3,9 @@
 
 from typing import Any, Literal, Optional, Tuple, TypedDict, cast
 
-import litellm
-from litellm._logging import verbose_logger
-from litellm.types.utils import (
+import remodl
+from remodl._logging import verbose_logger
+from remodl.types.utils import (
     CacheCreationTokenDetails,
     CallTypes,
     ImageResponse,
@@ -14,7 +14,7 @@ from litellm.types.utils import (
     Usage,
     ServiceTier,
 )
-from litellm.utils import get_model_info
+from remodl.utils import get_model_info
 
 
 def _is_above_128k(tokens: float) -> bool:
@@ -67,7 +67,7 @@ def _generic_cost_per_character(
         Exception if 'input_cost_per_character' or 'output_cost_per_character' is missing from model_info
     """
     ## GET MODEL INFO
-    model_info = litellm.get_model_info(
+    model_info = remodl.get_model_info(
         model=model, custom_llm_provider=custom_llm_provider
     )
 
@@ -85,7 +85,7 @@ def _generic_cost_per_character(
         prompt_cost = prompt_characters * custom_prompt_cost
     except Exception as e:
         verbose_logger.exception(
-            "litellm.litellm_core_utils.llm_cost_calc.utils.py::cost_per_character(): Exception occured - {}\nDefaulting to None".format(
+            "remodl.remodl_core_utils.llm_cost_calc.utils.py::cost_per_character(): Exception occured - {}\nDefaulting to None".format(
                 str(e)
             )
         )
@@ -105,7 +105,7 @@ def _generic_cost_per_character(
         completion_cost = completion_characters * custom_completion_cost
     except Exception as e:
         verbose_logger.exception(
-            "litellm.litellm_core_utils.llm_cost_calc.utils.py::cost_per_character(): Exception occured - {}\nDefaulting to None".format(
+            "remodl.remodl_core_utils.llm_cost_calc.utils.py::cost_per_character(): Exception occured - {}\nDefaulting to None".format(
                 str(e)
             )
         )
@@ -276,7 +276,7 @@ def _get_cost_per_unit(
             return float(cost_per_unit)
         except ValueError:
             verbose_logger.exception(
-                f"litellm.litellm_core_utils.llm_cost_calc.utils.py::calculate_cost_per_component(): Exception occured - {cost_per_unit}\nDefaulting to 0.0"
+                f"remodl.remodl_core_utils.llm_cost_calc.utils.py::calculate_cost_per_component(): Exception occured - {cost_per_unit}\nDefaulting to 0.0"
             )
     
     # If the service tier key doesn't exist or is None, try to fall back to the standard key
@@ -297,7 +297,7 @@ def _get_cost_per_unit(
                         return float(fallback_cost)
                     except ValueError:
                         verbose_logger.exception(
-                            f"litellm.litellm_core_utils.llm_cost_calc.utils.py::_get_cost_per_unit(): Exception occured - {fallback_cost}\nDefaulting to 0.0"
+                            f"remodl.remodl_core_utils.llm_cost_calc.utils.py::_get_cost_per_unit(): Exception occured - {fallback_cost}\nDefaulting to 0.0"
                         )
                 break  # Only try the first matching suffix
     
@@ -641,30 +641,30 @@ class CostCalculatorUtils:
         """
         Route the image generation cost calculator based on the custom_llm_provider
         """
-        from litellm.cost_calculator import default_image_cost_calculator
-        from litellm.llms.azure_ai.image_generation.cost_calculator import (
+        from remodl.cost_calculator import default_image_cost_calculator
+        from remodl.llms.azure_ai.image_generation.cost_calculator import (
             cost_calculator as azure_ai_image_cost_calculator,
         )
-        from litellm.llms.bedrock.image.cost_calculator import (
+        from remodl.llms.bedrock.image.cost_calculator import (
             cost_calculator as bedrock_image_cost_calculator,
         )
-        from litellm.llms.gemini.image_generation.cost_calculator import (
+        from remodl.llms.gemini.image_generation.cost_calculator import (
             cost_calculator as gemini_image_cost_calculator,
         )
-        from litellm.llms.recraft.cost_calculator import (
+        from remodl.llms.recraft.cost_calculator import (
             cost_calculator as recraft_image_cost_calculator,
         )
-        from litellm.llms.vertex_ai.image_generation.cost_calculator import (
+        from remodl.llms.vertex_ai.image_generation.cost_calculator import (
             cost_calculator as vertex_ai_image_cost_calculator,
         )
 
-        if custom_llm_provider == litellm.LlmProviders.VERTEX_AI.value:
+        if custom_llm_provider == remodl.LlmProviders.VERTEX_AI.value:
             if isinstance(completion_response, ImageResponse):
                 return vertex_ai_image_cost_calculator(
                     model=model,
                     image_response=completion_response,
                 )
-        elif custom_llm_provider == litellm.LlmProviders.BEDROCK.value:
+        elif custom_llm_provider == remodl.LlmProviders.BEDROCK.value:
             if isinstance(completion_response, ImageResponse):
                 return bedrock_image_cost_calculator(
                     model=model,
@@ -675,8 +675,8 @@ class CostCalculatorUtils:
             raise TypeError(
                 "completion_response must be of type ImageResponse for bedrock image cost calculation"
             )
-        elif custom_llm_provider == litellm.LlmProviders.RECRAFT.value:
-            from litellm.llms.recraft.cost_calculator import (
+        elif custom_llm_provider == remodl.LlmProviders.RECRAFT.value:
+            from remodl.llms.recraft.cost_calculator import (
                 cost_calculator as recraft_image_cost_calculator,
             )
 
@@ -684,8 +684,8 @@ class CostCalculatorUtils:
                 model=model,
                 image_response=completion_response,
             )
-        elif custom_llm_provider == litellm.LlmProviders.AIML.value:
-            from litellm.llms.aiml.image_generation.cost_calculator import (
+        elif custom_llm_provider == remodl.LlmProviders.AIML.value:
+            from remodl.llms.aiml.image_generation.cost_calculator import (
                 cost_calculator as aiml_image_cost_calculator,
             )
 
@@ -693,8 +693,8 @@ class CostCalculatorUtils:
                 model=model,
                 image_response=completion_response,
             )
-        elif custom_llm_provider == litellm.LlmProviders.COMETAPI.value:
-            from litellm.llms.cometapi.image_generation.cost_calculator import (
+        elif custom_llm_provider == remodl.LlmProviders.COMETAPI.value:
+            from remodl.llms.cometapi.image_generation.cost_calculator import (
                 cost_calculator as cometapi_image_cost_calculator,
             )
 
@@ -702,8 +702,8 @@ class CostCalculatorUtils:
                 model=model,
                 image_response=completion_response,
             )
-        elif custom_llm_provider == litellm.LlmProviders.GEMINI.value:
-            from litellm.llms.gemini.image_generation.cost_calculator import (
+        elif custom_llm_provider == remodl.LlmProviders.GEMINI.value:
+            from remodl.llms.gemini.image_generation.cost_calculator import (
                 cost_calculator as gemini_image_cost_calculator,
             )
 
@@ -711,7 +711,7 @@ class CostCalculatorUtils:
                 model=model,
                 image_response=completion_response,
             )
-        elif custom_llm_provider == litellm.LlmProviders.AZURE_AI.value:
+        elif custom_llm_provider == remodl.LlmProviders.AZURE_AI.value:
             return azure_ai_image_cost_calculator(
                 model=model,
                 image_response=completion_response,

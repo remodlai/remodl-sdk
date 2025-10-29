@@ -2,8 +2,8 @@ from typing import List, Optional, Union
 
 from httpx import Headers
 
-from litellm.secret_managers.main import get_secret_str
-from litellm.types.llms.openai import AllMessageValues
+from remodl.secret_managers.main import get_secret_str
+from remodl.types.llms.openai import AllMessageValues
 
 from ..base_llm.chat.transformation import BaseLLMException
 
@@ -41,7 +41,7 @@ class FireworksAIMixin:
         model: str,
         messages: List[AllMessageValues],
         optional_params: dict,
-        litellm_params: dict,
+        remodl_params: dict,
         api_key: Optional[str] = None,
         api_base: Optional[str] = None,
     ) -> dict:

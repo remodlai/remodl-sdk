@@ -6,12 +6,12 @@ from typing import Any, List, Mapping, Optional, Tuple, Union
 from aiohttp import ClientResponse
 from httpx import Headers, Response
 
-from litellm.llms.base_llm.chat.transformation import (
+from remodl.llms.base_llm.chat.transformation import (
     BaseLLMException,
     LiteLLMLoggingObj,
 )
-from litellm.types.llms.openai import OpenAIImageVariationOptionalParams
-from litellm.types.utils import (
+from remodl.types.llms.openai import OpenAIImageVariationOptionalParams
+from remodl.types.utils import (
     FileTypes,
     HttpHandlerRequestFields,
     ImageObject,
@@ -34,7 +34,7 @@ class TopazImageVariationConfig(TopazModelInfo, BaseImageVariationConfig):
         api_key: Optional[str],
         model: str,
         optional_params: dict,
-        litellm_params: dict,
+        remodl_params: dict,
         stream: Optional[bool] = None,
     ) -> str:
         api_base = api_base or "https://api.topazlabs.com"
@@ -136,7 +136,7 @@ class TopazImageVariationConfig(TopazModelInfo, BaseImageVariationConfig):
         request_data: dict,
         image: FileTypes,
         optional_params: dict,
-        litellm_params: dict,
+        remodl_params: dict,
         encoding: Any,
         api_key: Optional[str] = None,
     ) -> ImageResponse:
@@ -157,7 +157,7 @@ class TopazImageVariationConfig(TopazModelInfo, BaseImageVariationConfig):
         request_data: dict,
         image: FileTypes,
         optional_params: dict,
-        litellm_params: dict,
+        remodl_params: dict,
         encoding: Any,
         api_key: Optional[str] = None,
     ) -> ImageResponse:

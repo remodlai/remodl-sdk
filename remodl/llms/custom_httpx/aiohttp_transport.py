@@ -11,9 +11,9 @@ import aiohttp.http_exceptions
 import httpx
 from aiohttp.client import ClientResponse, ClientSession
 
-import litellm
-from litellm._logging import verbose_logger
-from litellm.secret_managers.main import str_to_bool
+import remodl
+from remodl._logging import verbose_logger
+from remodl.secret_managers.main import str_to_bool
 
 AIOHTTP_EXC_MAP: Dict = {
     # Order matters here, most specific exception first
@@ -311,7 +311,7 @@ class LiteLLMAiohttpTransport(AiohttpTransport):
     async def _get_proxy_settings(self, request: httpx.Request):
         proxy = None
         if not (
-            litellm.disable_aiohttp_trust_env
+            remodl.disable_aiohttp_trust_env
             or str_to_bool(os.getenv("DISABLE_AIOHTTP_TRUST_ENV", "False"))
         ):
             try:

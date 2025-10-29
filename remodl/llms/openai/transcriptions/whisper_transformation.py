@@ -2,17 +2,17 @@ from typing import List, Optional, Union
 
 from httpx import Headers, Response
 
-from litellm.llms.base_llm.audio_transcription.transformation import (
+from remodl.llms.base_llm.audio_transcription.transformation import (
     AudioTranscriptionRequestData,
     BaseAudioTranscriptionConfig,
 )
-from litellm.llms.base_llm.chat.transformation import BaseLLMException
-from litellm.secret_managers.main import get_secret_str
-from litellm.types.llms.openai import (
+from remodl.llms.base_llm.chat.transformation import BaseLLMException
+from remodl.secret_managers.main import get_secret_str
+from remodl.types.llms.openai import (
     AllMessageValues,
     OpenAIAudioTranscriptionOptionalParams,
 )
-from litellm.types.utils import FileTypes, TranscriptionResponse
+from remodl.types.utils import FileTypes, TranscriptionResponse
 
 from ..common_utils import OpenAIError
 
@@ -24,7 +24,7 @@ class OpenAIWhisperAudioTranscriptionConfig(BaseAudioTranscriptionConfig):
         api_key: Optional[str],
         model: str,
         optional_params: dict,
-        litellm_params: dict,
+        remodl_params: dict,
         stream: Optional[bool] = None,
     ) -> str:
         """
@@ -82,7 +82,7 @@ class OpenAIWhisperAudioTranscriptionConfig(BaseAudioTranscriptionConfig):
         model: str,
         messages: List[AllMessageValues],
         optional_params: dict,
-        litellm_params: dict,
+        remodl_params: dict,
         api_key: Optional[str] = None,
         api_base: Optional[str] = None,
     ) -> dict:
@@ -100,7 +100,7 @@ class OpenAIWhisperAudioTranscriptionConfig(BaseAudioTranscriptionConfig):
         model: str,
         audio_file: FileTypes,
         optional_params: dict,
-        litellm_params: dict,
+        remodl_params: dict,
     ) -> AudioTranscriptionRequestData:
         """
         Transform the audio transcription request

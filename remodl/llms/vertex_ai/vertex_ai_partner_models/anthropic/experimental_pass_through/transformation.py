@@ -1,10 +1,10 @@
 from typing import Any, Dict, List, Optional, Tuple
 
-from litellm.llms.anthropic.experimental_pass_through.messages.transformation import (
+from remodl.llms.anthropic.experimental_pass_through.messages.transformation import (
     AnthropicMessagesConfig,
 )
-from litellm.types.llms.vertex_ai import VertexPartnerProvider
-from litellm.types.router import GenericLiteLLMParams
+from remodl.types.llms.vertex_ai import VertexPartnerProvider
+from remodl.types.router import GenericLiteLLMParams
 
 from ....vertex_llm_base import VertexBase
 
@@ -16,7 +16,7 @@ class VertexAIPartnerModelsAnthropicMessagesConfig(AnthropicMessagesConfig, Vert
         model: str,
         messages: List[Any],
         optional_params: dict,
-        litellm_params: dict,
+        remodl_params: dict,
         api_key: Optional[str] = None,
         api_base: Optional[str] = None,
     ) -> Tuple[dict, Optional[str]]:
@@ -26,9 +26,9 @@ class VertexAIPartnerModelsAnthropicMessagesConfig(AnthropicMessagesConfig, Vert
         Validate the environment for the request
         """
         if "Authorization" not in headers:
-            vertex_ai_project = VertexBase.get_vertex_ai_project(litellm_params)
-            vertex_credentials = VertexBase.get_vertex_ai_credentials(litellm_params)
-            vertex_ai_location = VertexBase.get_vertex_ai_location(litellm_params)
+            vertex_ai_project = VertexBase.get_vertex_ai_project(remodl_params)
+            vertex_credentials = VertexBase.get_vertex_ai_credentials(remodl_params)
+            vertex_ai_location = VertexBase.get_vertex_ai_location(remodl_params)
 
             access_token, project_id = self._ensure_access_token(
                 credentials=vertex_credentials,
@@ -57,7 +57,7 @@ class VertexAIPartnerModelsAnthropicMessagesConfig(AnthropicMessagesConfig, Vert
         api_key: Optional[str],
         model: str,
         optional_params: dict,
-        litellm_params: dict,
+        remodl_params: dict,
         stream: Optional[bool] = None,
     ) -> str:
         if api_base is None:
@@ -71,14 +71,14 @@ class VertexAIPartnerModelsAnthropicMessagesConfig(AnthropicMessagesConfig, Vert
         model: str,
         messages: List[Dict],
         anthropic_messages_optional_request_params: Dict,
-        litellm_params: GenericLiteLLMParams,
+        remodl_params: GenericLiteLLMParams,
         headers: dict,
     ) -> Dict:
         anthropic_messages_request = super().transform_anthropic_messages_request(
             model=model,
             messages=messages,
             anthropic_messages_optional_request_params=anthropic_messages_optional_request_params,
-            litellm_params=litellm_params,
+            remodl_params=remodl_params,
             headers=headers,
         )
 

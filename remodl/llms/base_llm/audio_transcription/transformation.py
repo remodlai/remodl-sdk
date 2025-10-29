@@ -4,15 +4,15 @@ from typing import TYPE_CHECKING, Any, List, Optional, Union
 
 import httpx
 
-from litellm.llms.base_llm.chat.transformation import BaseConfig
-from litellm.types.llms.openai import (
+from remodl.llms.base_llm.chat.transformation import BaseConfig
+from remodl.types.llms.openai import (
     AllMessageValues,
     OpenAIAudioTranscriptionOptionalParams,
 )
-from litellm.types.utils import FileTypes, ModelResponse, TranscriptionResponse
+from remodl.types.utils import FileTypes, ModelResponse, TranscriptionResponse
 
 if TYPE_CHECKING:
-    from litellm.litellm_core_utils.litellm_logging import Logging as _LiteLLMLoggingObj
+    from remodl.remodl_core_utils.remodl_logging import Logging as _LiteLLMLoggingObj
 
     LiteLLMLoggingObj = _LiteLLMLoggingObj
 else:
@@ -48,7 +48,7 @@ class BaseAudioTranscriptionConfig(BaseConfig, ABC):
         api_key: Optional[str],
         model: str,
         optional_params: dict,
-        litellm_params: dict,
+        remodl_params: dict,
         stream: Optional[bool] = None,
     ) -> str:
         """
@@ -66,7 +66,7 @@ class BaseAudioTranscriptionConfig(BaseConfig, ABC):
         model: str,
         audio_file: FileTypes,
         optional_params: dict,
-        litellm_params: dict,
+        remodl_params: dict,
     ) -> AudioTranscriptionRequestData:
         raise NotImplementedError(
             "AudioTranscriptionConfig needs a request transformation for audio transcription models"
@@ -85,7 +85,7 @@ class BaseAudioTranscriptionConfig(BaseConfig, ABC):
         model: str,
         messages: List[AllMessageValues],
         optional_params: dict,
-        litellm_params: dict,
+        remodl_params: dict,
         headers: dict,
     ) -> dict:
         raise NotImplementedError(
@@ -101,7 +101,7 @@ class BaseAudioTranscriptionConfig(BaseConfig, ABC):
         request_data: dict,
         messages: List[AllMessageValues],
         optional_params: dict,
-        litellm_params: dict,
+        remodl_params: dict,
         encoding: Any,
         api_key: Optional[str] = None,
         json_mode: Optional[bool] = None,
@@ -158,7 +158,7 @@ class BaseAudioTranscriptionConfig(BaseConfig, ABC):
         # Parameters that are handled elsewhere or not relevant to Deepgram API
         excluded_params = {
             "model",  # Already in the URL path
-            "OPENAI_TRANSCRIPTION_PARAMS",  # Internal litellm parameter
+            "OPENAI_TRANSCRIPTION_PARAMS",  # Internal remodl parameter
         }
 
         # Skip if it's an excluded parameter

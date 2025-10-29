@@ -1,13 +1,13 @@
-# used for monitoring litellm services health on `/metrics` endpoint on LiteLLM Proxy
+# used for monitoring remodl services health on `/metrics` endpoint on LiteLLM Proxy
 #### What this does ####
-#    On success + failure, log events to Prometheus for litellm / adjacent services (litellm, redis, postgres, llm api providers)
+#    On success + failure, log events to Prometheus for remodl / adjacent services (remodl, redis, postgres, llm api providers)
 
 
 from typing import Dict, List, Optional, Union
 
-from litellm._logging import print_verbose, verbose_logger
-from litellm.types.integrations.prometheus import LATENCY_BUCKETS
-from litellm.types.services import (
+from remodl._logging import print_verbose, verbose_logger
+from remodl.types.integrations.prometheus import LATENCY_BUCKETS
+from remodl.types.services import (
     DEFAULT_SERVICE_CONFIGS,
     ServiceLoggerPayload,
     ServiceMetrics,
@@ -19,7 +19,7 @@ FAILED_REQUESTS_LABELS = ["error_class", "function_name"]
 
 class PrometheusServicesLogger:
     # Class variables or attributes
-    litellm_service_latency = None  # Class-level attribute to store the Histogram
+    remodl_service_latency = None  # Class-level attribute to store the Histogram
 
     def __init__(
         self,
@@ -117,7 +117,7 @@ class PrometheusServicesLogger:
         return self.REGISTRY._names_to_collectors.get(metric_name)
 
     def create_histogram(self, service: str, type_of_request: str):
-        metric_name = "litellm_{}_{}".format(service, type_of_request)
+        metric_name = "remodl_{}_{}".format(service, type_of_request)
         is_registered = self.is_metric_registered(metric_name)
         if is_registered:
             return self._get_metric(metric_name)
@@ -129,7 +129,7 @@ class PrometheusServicesLogger:
         )
 
     def create_gauge(self, service: str, type_of_request: str):
-        metric_name = "litellm_{}_{}".format(service, type_of_request)
+        metric_name = "remodl_{}_{}".format(service, type_of_request)
         is_registered = self.is_metric_registered(metric_name)
         if is_registered:
             return self._get_metric(metric_name)
@@ -143,7 +143,7 @@ class PrometheusServicesLogger:
         type_of_request: str,
         additional_labels: Optional[List[str]] = None,
     ):
-        metric_name = "litellm_{}_{}".format(service, type_of_request)
+        metric_name = "remodl_{}_{}".format(service, type_of_request)
         is_registered = self.is_metric_registered(metric_name)
         if is_registered:
             return self._get_metric(metric_name)

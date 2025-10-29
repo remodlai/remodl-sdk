@@ -10,41 +10,41 @@ from typing import TYPE_CHECKING, Any, Dict, List, Literal, Optional, Tuple, Uni
 
 from openai import APIError
 
-import litellm
-import litellm.litellm_core_utils
-import litellm.litellm_core_utils.litellm_logging
-import litellm.types
-from litellm._logging import verbose_logger, verbose_proxy_logger
-from litellm.caching.caching import DualCache
-from litellm.constants import HOURS_IN_A_DAY
-from litellm.integrations.custom_batch_logger import CustomBatchLogger
-from litellm.integrations.SlackAlerting.budget_alert_types import get_budget_alert_type
-from litellm.integrations.SlackAlerting.hanging_request_check import (
+import remodl
+import remodl.remodl_core_utils
+import remodl.remodl_core_utils.remodl_logging
+import remodl.types
+from remodl._logging import verbose_logger, verbose_proxy_logger
+from remodl.caching.caching import DualCache
+from remodl.constants import HOURS_IN_A_DAY
+from remodl.integrations.custom_batch_logger import CustomBatchLogger
+from remodl.integrations.SlackAlerting.budget_alert_types import get_budget_alert_type
+from remodl.integrations.SlackAlerting.hanging_request_check import (
     AlertingHangingRequestCheck,
 )
-from litellm.litellm_core_utils.duration_parser import duration_in_seconds
-from litellm.litellm_core_utils.exception_mapping_utils import (
+from remodl.remodl_core_utils.duration_parser import duration_in_seconds
+from remodl.remodl_core_utils.exception_mapping_utils import (
     _add_key_name_and_team_to_alert,
 )
-from litellm.llms.custom_httpx.http_handler import (
+from remodl.llms.custom_httpx.http_handler import (
     get_async_httpx_client,
     httpxSpecialProvider,
 )
-from litellm.proxy._types import (
+from remodl.proxy._types import (
     AlertType,
     CallInfo,
     Litellm_EntityType,
     VirtualKeyEvent,
     WebhookEvent,
 )
-from litellm.types.integrations.slack_alerting import *
+from remodl.types.integrations.slack_alerting import *
 
 from ..email_templates.templates import *
 from .batching_handler import send_to_webhook, squash_payloads
 from .utils import process_slack_alerting_variables
 
 if TYPE_CHECKING:
-    from litellm.router import Router as _Router
+    from remodl.router import Router as _Router
 
     Router = _Router
 else:
@@ -177,9 +177,9 @@ class SlackAlerting(CustomBatchLogger):
             time_difference = end_time - start_time
             # Convert the timedelta to float (in seconds)
             time_difference_float = time_difference.total_seconds()
-            litellm_params = kwargs.get("litellm_params", {})
+            remodl_params = kwargs.get("remodl_params", {})
             model = kwargs.get("model", "")
-            api_base = litellm.get_api_base(model=model, optional_params=litellm_params)
+            api_base = remodl.get_api_base(model=model, optional_params=remodl_params)
             messages = kwargs.get("messages", None)
             # if messages does not exist fallback to "input"
             if messages is None:
@@ -246,8 +246,8 @@ class SlackAlerting(CustomBatchLogger):
             start_time=start_time,
             end_time=end_time,
         )
-        if litellm.turn_off_message_logging or litellm.redact_messages_in_exceptions:
-            messages = "Message not logged. litellm.redact_messages_in_exceptions=True"
+        if remodl.turn_off_message_logging or remodl.redact_messages_in_exceptions:
+            messages = "Message not logged. remodl.redact_messages_in_exceptions=True"
         request_info = f"\nRequest Model: `{model}`\nAPI Base: `{api_base}`\nMessages: `{messages}`"
         slow_message = f"`Responses are slow - {round(time_difference_float,2)}s response time > Alerting threshold: {self.alerting_threshold}s`"
         alerting_metadata: dict = {}
@@ -255,10 +255,10 @@ class SlackAlerting(CustomBatchLogger):
             # add deployment latencies to alert
             if (
                 kwargs is not None
-                and "litellm_params" in kwargs
-                and "metadata" in kwargs["litellm_params"]
+                and "remodl_params" in kwargs
+                and "metadata" in kwargs["remodl_params"]
             ):
-                _metadata: dict = kwargs["litellm_params"]["metadata"]
+                _metadata: dict = kwargs["remodl_params"]["metadata"]
                 request_info = _add_key_name_and_team_to_alert(
                     request_info=request_info, metadata=_metadata
                 )
@@ -412,7 +412,7 @@ class SlackAlerting(CustomBatchLogger):
             index for index in top_5_slowest if replaced_slowest_values[index] > 0
         ]
 
-        # format alert -> return the litellm model name + api base
+        # format alert -> return the remodl model name + api base
         message = f"\n\nTime: `{time.time()}`s\nHere are today's key metrics 📈: \n\n"
 
         message += "\n\n*❗️ Top Deployments with Most Failed Requests:*\n\n"
@@ -422,14 +422,14 @@ class SlackAlerting(CustomBatchLogger):
             key = failed_request_keys[top_5_failed[i]].split(":")[0]
             _deployment = router.get_model_info(key)
             if isinstance(_deployment, dict):
-                deployment_name = _deployment["litellm_params"].get("model", "")
+                deployment_name = _deployment["remodl_params"].get("model", "")
             else:
                 return False
 
-            api_base = litellm.get_api_base(
+            api_base = remodl.get_api_base(
                 model=deployment_name,
                 optional_params=(
-                    _deployment["litellm_params"] if _deployment is not None else {}
+                    _deployment["remodl_params"] if _deployment is not None else {}
                 ),
             )
             if api_base is None:
@@ -444,13 +444,13 @@ class SlackAlerting(CustomBatchLogger):
             key = latency_keys[top_5_slowest[i]].split(":")[0]
             _deployment = router.get_model_info(key)
             if _deployment is not None:
-                deployment_name = _deployment["litellm_params"].get("model", "")
+                deployment_name = _deployment["remodl_params"].get("model", "")
             else:
                 deployment_name = ""
-            api_base = litellm.get_api_base(
+            api_base = remodl.get_api_base(
                 model=deployment_name,
                 optional_params=(
-                    _deployment["litellm_params"] if _deployment is not None else {}
+                    _deployment["remodl_params"] if _deployment is not None else {}
                 ),
             )
             value = round(replaced_slowest_values[top_5_slowest[i]], 3)
@@ -540,7 +540,7 @@ class SlackAlerting(CustomBatchLogger):
             type: The type of budget alert to send
             user_info: The user info to send the alert for
         """
-        ## PREVENTITIVE ALERTING ## - https://github.com/BerriAI/litellm/issues/2727
+        ## PREVENTITIVE ALERTING ## - https://github.com/BerriAI/remodl/issues/2727
         # - Alert once within 24hr period
         # - Cache this information
         # - Don't re-alert, if alert already sent
@@ -807,17 +807,17 @@ class SlackAlerting(CustomBatchLogger):
         if deployment is None:
             return
 
-        model = deployment.litellm_params.model
+        model = deployment.remodl_params.model
         ### GET PROVIDER ###
-        provider = deployment.litellm_params.custom_llm_provider
+        provider = deployment.remodl_params.custom_llm_provider
         if provider is None:
-            model, provider, _, _ = litellm.get_llm_provider(model=model)
+            model, provider, _, _ = remodl.get_llm_provider(model=model)
 
         ### GET REGION ###
-        region_name = deployment.litellm_params.region_name
+        region_name = deployment.remodl_params.region_name
         if region_name is None:
-            region_name = litellm.utils._get_model_region(
-                custom_llm_provider=provider, litellm_params=deployment.litellm_params
+            region_name = remodl.utils._get_model_region(
+                custom_llm_provider=provider, remodl_params=deployment.remodl_params
             )
 
         if region_name is None:
@@ -969,15 +969,15 @@ class SlackAlerting(CustomBatchLogger):
             if deployment is None:
                 return
 
-            model = deployment.litellm_params.model
-            provider = deployment.litellm_params.custom_llm_provider
+            model = deployment.remodl_params.model
+            provider = deployment.remodl_params.custom_llm_provider
             if provider is None:
                 try:
-                    model, provider, _, _ = litellm.get_llm_provider(model=model)
+                    model, provider, _, _ = remodl.get_llm_provider(model=model)
                 except Exception:
                     provider = ""
-            api_base = litellm.get_api_base(
-                model=model, optional_params=deployment.litellm_params
+            api_base = remodl.get_api_base(
+                model=model, optional_params=deployment.remodl_params
             )
 
             if outage_value is None:
@@ -1063,16 +1063,16 @@ class SlackAlerting(CustomBatchLogger):
             pass
 
     async def model_added_alert(
-        self, model_name: str, litellm_model_name: str, passed_model_info: Any
+        self, model_name: str, remodl_model_name: str, passed_model_info: Any
     ):
         base_model_from_user = getattr(passed_model_info, "base_model", None)
         model_info = {}
         base_model = ""
         if base_model_from_user is not None:
-            model_info = litellm.model_cost.get(base_model_from_user, {})
+            model_info = remodl.model_cost.get(base_model_from_user, {})
             base_model = f"Base Model: `{base_model_from_user}`\n"
         else:
-            model_info = litellm.model_cost.get(litellm_model_name, {})
+            model_info = remodl.model_cost.get(remodl_model_name, {})
         model_info_str = ""
         for k, v in model_info.items():
             if k == "input_cost_per_token" or k == "output_cost_per_token":
@@ -1161,7 +1161,7 @@ Model Info:
         email_logo_url: Optional[str] = None,
         email_support_contact: Optional[str] = None,
     ):
-        from litellm.proxy.proxy_server import CommonProxyErrors, premium_user
+        from remodl.proxy.proxy_server import CommonProxyErrors, premium_user
 
         if premium_user is not True:
             if email_logo_url is not None or email_support_contact is not None:
@@ -1174,7 +1174,7 @@ Model Info:
         self, webhook_event: WebhookEvent
     ) -> bool:
         try:
-            from litellm.proxy.utils import send_email
+            from remodl.proxy.utils import send_email
 
             if self.alerting is None or "email" not in self.alerting:
                 # do nothing if user does not want email alerts
@@ -1183,7 +1183,7 @@ Model Info:
                     self.alerting,
                 )
                 return False
-            from litellm.proxy.proxy_server import premium_user, prisma_client
+            from remodl.proxy.proxy_server import premium_user, prisma_client
 
             email_logo_url = os.getenv(
                 "SMTP_SENDER_LOGO", os.getenv("EMAIL_LOGO_URL", None)
@@ -1205,7 +1205,7 @@ Model Info:
                 and recipient_user_id is not None
                 and prisma_client is not None
             ):
-                user_row = await prisma_client.db.litellm_usertable.find_unique(
+                user_row = await prisma_client.db.remodl_usertable.find_unique(
                     where={"user_id": recipient_user_id}
                 )
 
@@ -1237,7 +1237,7 @@ Model Info:
                 team_id = webhook_event.team_id
                 team_name = "Default Team"
                 if team_id is not None and prisma_client is not None:
-                    team_row = await prisma_client.db.litellm_teamtable.find_unique(
+                    team_row = await prisma_client.db.remodl_teamtable.find_unique(
                         where={"team_id": team_id}
                     )
                     if team_row is not None:
@@ -1284,8 +1284,8 @@ Model Info:
 
         Returns -> True if sent, False if not.
         """
-        from litellm.proxy.proxy_server import premium_user
-        from litellm.proxy.utils import send_email
+        from remodl.proxy.proxy_server import premium_user
+        from remodl.proxy.utils import send_email
 
         email_logo_url = os.getenv(
             "SMTP_SENDER_LOGO", os.getenv("EMAIL_LOGO_URL", None)
@@ -1339,7 +1339,7 @@ Model Info:
             html=email_event["html"],
         )
         if webhook_event.event_group == "team":
-            from litellm.integrations.email_alerting import send_team_budget_alert
+            from remodl.integrations.email_alerting import send_team_budget_alert
 
             await send_team_budget_alert(webhook_event=webhook_event)
 
@@ -1355,7 +1355,7 @@ Model Info:
         **kwargs,
     ):
         """
-        Alerting based on thresholds: - https://github.com/BerriAI/litellm/issues/1298
+        Alerting based on thresholds: - https://github.com/BerriAI/remodl/issues/1298
 
         - Responses taking too long
         - Requests are hanging
@@ -1474,14 +1474,14 @@ Model Info:
         """Log deployment latency"""
         try:
             if "daily_reports" in self.alert_types:
-                litellm_params = kwargs.get("litellm_params", {}) or {}
-                model_info = litellm_params.get("model_info", {}) or {}
+                remodl_params = kwargs.get("remodl_params", {}) or {}
+                model_info = remodl_params.get("model_info", {}) or {}
                 model_id = model_info.get("id", "") or ""
                 response_s: timedelta = end_time - start_time
 
                 final_value = response_s
 
-                if isinstance(response_obj, litellm.ModelResponse) and (
+                if isinstance(response_obj, remodl.ModelResponse) and (
                     hasattr(response_obj, "usage")
                     and response_obj.usage is not None  # type: ignore
                     and hasattr(response_obj.usage, "completion_tokens")  # type: ignore
@@ -1499,7 +1499,7 @@ Model Info:
                         id=model_id,
                         failed_request=False,
                         latency_per_output_token=final_value,
-                        updated_at=litellm.utils.get_utc_datetime(),
+                        updated_at=remodl.utils.get_utc_datetime(),
                     )
                 )
         except Exception as e:
@@ -1510,8 +1510,8 @@ Model Info:
 
     async def async_log_failure_event(self, kwargs, response_obj, start_time, end_time):
         """Log failure + deployment latency"""
-        _litellm_params = kwargs.get("litellm_params", {})
-        _model_info = _litellm_params.get("model_info", {}) or {}
+        _remodl_params = kwargs.get("remodl_params", {})
+        _model_info = _remodl_params.get("model_info", {}) or {}
         model_id = _model_info.get("id", "")
         try:
             if "daily_reports" in self.alert_types:
@@ -1521,7 +1521,7 @@ Model Info:
                             id=model_id,
                             failed_request=True,
                             latency_per_output_token=None,
-                            updated_at=litellm.utils.get_utc_datetime(),
+                            updated_at=remodl.utils.get_utc_datetime(),
                         )
                     )
                 except Exception as e:
@@ -1612,7 +1612,7 @@ Model Info:
             return
 
         try:
-            from litellm.proxy.spend_tracking.spend_management_endpoints import (
+            from remodl.proxy.spend_tracking.spend_management_endpoints import (
                 _get_spend_report_for_time_range,
             )
 
@@ -1676,7 +1676,7 @@ Model Info:
         try:
             from calendar import monthrange
 
-            from litellm.proxy.spend_tracking.spend_management_endpoints import (
+            from remodl.proxy.spend_tracking.spend_management_endpoints import (
                 _get_spend_report_for_time_range,
             )
 
@@ -1746,7 +1746,7 @@ Model Info:
         This runs once per day and sends an overview of all the fallback statistics
         """
         try:
-            from litellm.integrations.prometheus_helpers.prometheus_api import (
+            from remodl.integrations.prometheus_helpers.prometheus_api import (
                 get_fallback_metric_from_prometheus,
             )
 
@@ -1826,13 +1826,13 @@ Model Info:
             return False
 
         if (
-            request_data.get("litellm_status", "") != "success"
-            and request_data.get("litellm_status", "") != "fail"
+            request_data.get("remodl_status", "") != "success"
+            and request_data.get("remodl_status", "") != "fail"
         ):
             ## CHECK IF CACHE IS UPDATED
-            litellm_call_id = request_data.get("litellm_call_id", "")
+            remodl_call_id = request_data.get("remodl_call_id", "")
             status: Optional[str] = await self.internal_usage_cache.async_get_cache(
-                key="request_status:{}".format(litellm_call_id), local_only=True
+                key="request_status:{}".format(remodl_call_id), local_only=True
             )
             if status is not None and (status == "success" or status == "fail"):
                 return True

@@ -2,11 +2,11 @@ from typing import Optional
 
 import httpx
 
-import litellm
-from litellm.llms.azure_ai.common_utils import AzureFoundryModelInfo
-from litellm.llms.openai.image_edit.transformation import OpenAIImageEditConfig
-from litellm.secret_managers.main import get_secret_str
-from litellm.utils import _add_path_to_api_base
+import remodl
+from remodl.llms.azure_ai.common_utils import AzureFoundryModelInfo
+from remodl.llms.openai.image_edit.transformation import OpenAIImageEditConfig
+from remodl.secret_managers.main import get_secret_str
+from remodl.utils import _add_path_to_api_base
 
 
 class AzureFoundryFluxImageEditConfig(OpenAIImageEditConfig):
@@ -48,7 +48,7 @@ class AzureFoundryFluxImageEditConfig(OpenAIImageEditConfig):
         self,
         model: str,
         api_base: Optional[str],
-        litellm_params: dict,
+        remodl_params: dict,
     ) -> str:
         """
         Constructs a complete URL for Azure AI Foundry image edits API request.
@@ -59,7 +59,7 @@ class AzureFoundryFluxImageEditConfig(OpenAIImageEditConfig):
         Args:
         - model: Model name (deployment name for Azure AI Foundry)
         - api_base: Base URL for Azure AI endpoint
-        - litellm_params: Additional parameters including api_version
+        - remodl_params: Additional parameters including api_version
 
         Returns:
         - Complete URL for the image edits endpoint
@@ -71,7 +71,7 @@ class AzureFoundryFluxImageEditConfig(OpenAIImageEditConfig):
                 "Azure AI API base is required. Set AZURE_AI_API_BASE environment variable or pass api_base parameter."
             )
 
-        api_version = (litellm_params.get("api_version") or litellm.api_version
+        api_version = (remodl_params.get("api_version") or remodl.api_version
                 or get_secret_str("AZURE_AI_API_VERSION")
             )
         if api_version is None:

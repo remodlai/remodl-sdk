@@ -61,8 +61,8 @@ The handler is automatically discovered and registered for `CallTypes.responses`
 ### Example
 
 ```python
-from litellm.llms import get_guardrail_translation_mapping
-from litellm.types.utils import CallTypes
+from remodl.llms import get_guardrail_translation_mapping
+from remodl.types.utils import CallTypes
 
 # Get the handler
 handler_class = get_guardrail_translation_mapping(CallTypes.responses)
@@ -73,7 +73,7 @@ data = {"input": "User message", "model": "gpt-4"}
 processed_data = await handler.process_input_messages(data, guardrail_instance)
 
 # Process output
-response = await litellm.aresponses(**processed_data)
+response = await remodl.aresponses(**processed_data)
 processed_response = await handler.process_output_response(response, guardrail_instance)
 ```
 

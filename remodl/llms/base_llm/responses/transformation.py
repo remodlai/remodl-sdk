@@ -4,18 +4,18 @@ from typing import TYPE_CHECKING, Any, Dict, Optional, Tuple, Union
 
 import httpx
 
-from litellm.types.llms.openai import (
+from remodl.types.llms.openai import (
     ResponseInputParam,
     ResponsesAPIOptionalRequestParams,
     ResponsesAPIResponse,
     ResponsesAPIStreamingResponse,
 )
-from litellm.types.responses.main import *
-from litellm.types.router import GenericLiteLLMParams
-from litellm.types.utils import LlmProviders
+from remodl.types.responses.main import *
+from remodl.types.router import GenericLiteLLMParams
+from remodl.types.utils import LlmProviders
 
 if TYPE_CHECKING:
-    from litellm.litellm_core_utils.litellm_logging import Logging as _LiteLLMLoggingObj
+    from remodl.remodl_core_utils.remodl_logging import Logging as _LiteLLMLoggingObj
 
     from ..chat.transformation import BaseLLMException as _BaseLLMException
 
@@ -69,7 +69,7 @@ class BaseResponsesAPIConfig(ABC):
 
     @abstractmethod
     def validate_environment(
-        self, headers: dict, model: str, litellm_params: Optional[GenericLiteLLMParams]
+        self, headers: dict, model: str, remodl_params: Optional[GenericLiteLLMParams]
     ) -> dict:
         return {}
 
@@ -77,7 +77,7 @@ class BaseResponsesAPIConfig(ABC):
     def get_complete_url(
         self,
         api_base: Optional[str],
-        litellm_params: dict,
+        remodl_params: dict,
     ) -> str:
         """
         OPTIONAL
@@ -96,7 +96,7 @@ class BaseResponsesAPIConfig(ABC):
         model: str,
         input: Union[str, ResponseInputParam],
         response_api_optional_request_params: Dict,
-        litellm_params: GenericLiteLLMParams,
+        remodl_params: GenericLiteLLMParams,
         headers: dict,
     ) -> Dict:
         pass
@@ -130,7 +130,7 @@ class BaseResponsesAPIConfig(ABC):
         self,
         response_id: str,
         api_base: str,
-        litellm_params: GenericLiteLLMParams,
+        remodl_params: GenericLiteLLMParams,
         headers: dict,
     ) -> Tuple[str, Dict]:
         pass
@@ -155,7 +155,7 @@ class BaseResponsesAPIConfig(ABC):
         self,
         response_id: str,
         api_base: str,
-        litellm_params: GenericLiteLLMParams,
+        remodl_params: GenericLiteLLMParams,
         headers: dict,
     ) -> Tuple[str, Dict]:
         pass
@@ -176,7 +176,7 @@ class BaseResponsesAPIConfig(ABC):
         self,
         response_id: str,
         api_base: str,
-        litellm_params: GenericLiteLLMParams,
+        remodl_params: GenericLiteLLMParams,
         headers: dict,
         after: Optional[str] = None,
         before: Optional[str] = None,
@@ -215,7 +215,7 @@ class BaseResponsesAPIConfig(ABC):
         stream: Optional[bool],
         custom_llm_provider: Optional[str] = None,
     ) -> bool:
-        """Returns True if litellm should fake a stream for the given model and stream value"""
+        """Returns True if remodl should fake a stream for the given model and stream value"""
         return False
 
     #########################################################
@@ -226,7 +226,7 @@ class BaseResponsesAPIConfig(ABC):
         self,
         response_id: str,
         api_base: str,
-        litellm_params: GenericLiteLLMParams,
+        remodl_params: GenericLiteLLMParams,
         headers: dict,
     ) -> Tuple[str, Dict]:
         pass

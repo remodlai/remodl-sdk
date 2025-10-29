@@ -13,14 +13,14 @@ import threading
 import time
 from typing import Literal, Optional
 
-import litellm
-from litellm.constants import (
+import remodl
+from remodl.constants import (
     DAYS_IN_A_MONTH,
     DAYS_IN_A_WEEK,
     DAYS_IN_A_YEAR,
     HOURS_IN_A_DAY,
 )
-from litellm.utils import ModelResponse
+from remodl.utils import ModelResponse
 
 
 class BudgetManager:
@@ -33,14 +33,14 @@ class BudgetManager:
     ):
         self.client_type = client_type
         self.project_name = project_name
-        self.api_base = api_base or "https://api.litellm.ai"
+        self.api_base = api_base or "https://api.remodl.ai"
         self.headers = headers or {"Content-Type": "application/json"}
         ## load the data or init the initial dictionaries
         self.load_data()
 
     def print_verbose(self, print_statement):
         try:
-            if litellm.set_verbose:
+            if remodl.set_verbose:
                 import logging
 
                 logging.info(print_statement)
@@ -62,7 +62,7 @@ class BudgetManager:
             # Load the user_dict from hosted db
             url = self.api_base + "/get_budget"
             data = {"project_name": self.project_name}
-            response = litellm.module_level_client.post(
+            response = remodl.module_level_client.post(
                 url, headers=self.headers, json=data
             )
             response = response.json()
@@ -107,8 +107,8 @@ class BudgetManager:
 
     def projected_cost(self, model: str, messages: list, user: str):
         text = "".join(message["content"] for message in messages)
-        prompt_tokens = litellm.token_counter(model=model, text=text)
-        prompt_cost, _ = litellm.cost_per_token(
+        prompt_tokens = remodl.token_counter(model=model, text=text)
+        prompt_cost, _ = remodl.cost_per_token(
             model=model, prompt_tokens=prompt_tokens, completion_tokens=0
         )
         current_cost = self.user_dict[user].get("current_cost", 0)
@@ -127,29 +127,29 @@ class BudgetManager:
         output_text: Optional[str] = None,
     ):
         if model and input_text and output_text:
-            prompt_tokens = litellm.token_counter(
+            prompt_tokens = remodl.token_counter(
                 model=model, messages=[{"role": "user", "content": input_text}]
             )
-            completion_tokens = litellm.token_counter(
+            completion_tokens = remodl.token_counter(
                 model=model, messages=[{"role": "user", "content": output_text}]
             )
             (
                 prompt_tokens_cost_usd_dollar,
                 completion_tokens_cost_usd_dollar,
-            ) = litellm.cost_per_token(
+            ) = remodl.cost_per_token(
                 model=model,
                 prompt_tokens=prompt_tokens,
                 completion_tokens=completion_tokens,
             )
             cost = prompt_tokens_cost_usd_dollar + completion_tokens_cost_usd_dollar
         elif completion_obj:
-            cost = litellm.completion_cost(completion_response=completion_obj)
+            cost = remodl.completion_cost(completion_response=completion_obj)
             model = completion_obj[
                 "model"
             ]  # if this throws an error try, model = completion_obj['model']
         else:
             raise ValueError(
-                "Either a chat completion object or the text response needs to be passed in. Learn more - https://docs.litellm.ai/docs/budget_manager"
+                "Either a chat completion object or the text response needs to be passed in. Learn more - https://docs.remodl.ai/docs/budget_manager"
             )
 
         self.user_dict[user]["current_cost"] = cost + self.user_dict[user].get(
@@ -223,7 +223,7 @@ class BudgetManager:
         elif self.client_type == "hosted":
             url = self.api_base + "/set_budget"
             data = {"project_name": self.project_name, "user_dict": self.user_dict}
-            response = litellm.module_level_client.post(
+            response = remodl.module_level_client.post(
                 url, headers=self.headers, json=data
             )
             response = response.json()

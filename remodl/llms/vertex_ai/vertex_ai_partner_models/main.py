@@ -5,10 +5,10 @@ from typing import Callable, Optional, Union
 
 import httpx  # type: ignore
 
-import litellm
-from litellm import LlmProviders
-from litellm.types.llms.vertex_ai import VertexPartnerProvider
-from litellm.utils import ModelResponse
+import remodl
+from remodl import LlmProviders
+from remodl.types.llms.vertex_ai import VertexPartnerProvider
+from remodl.utils import ModelResponse
 
 from ...custom_httpx.llm_http_handler import BaseLLMHTTPHandler
 from ..vertex_llm_base import VertexBase
@@ -90,7 +90,7 @@ class VertexAIPartnerModels(VertexBase):
         custom_prompt_dict: dict,
         headers: Optional[dict],
         timeout: Union[float, httpx.Timeout],
-        litellm_params: dict,
+        remodl_params: dict,
         vertex_project=None,
         vertex_location=None,
         vertex_credentials=None,
@@ -101,12 +101,12 @@ class VertexAIPartnerModels(VertexBase):
         try:
             import vertexai
 
-            from litellm.llms.anthropic.chat import AnthropicChatCompletion
-            from litellm.llms.codestral.completion.handler import (
+            from remodl.llms.anthropic.chat import AnthropicChatCompletion
+            from remodl.llms.codestral.completion.handler import (
                 CodestralTextCompletion,
             )
-            from litellm.llms.openai_like.chat.handler import OpenAILikeChatHandler
-            from litellm.llms.vertex_ai.gemini.vertex_and_google_ai_studio_gemini import (
+            from remodl.llms.openai_like.chat.handler import OpenAILikeChatHandler
+            from remodl.llms.vertex_ai.gemini.vertex_and_google_ai_studio_gemini import (
                 VertexLLM,
             )
         except Exception as e:
@@ -164,9 +164,9 @@ class VertexAIPartnerModels(VertexBase):
             if "codestral" in model or "mistral" in model:
                 model = model.split("@")[0]
 
-            if "codestral" in model and litellm_params.get("text_completion") is True:
+            if "codestral" in model and remodl_params.get("text_completion") is True:
                 optional_params["model"] = model
-                text_completion_model_response = litellm.TextCompletionResponse(
+                text_completion_model_response = remodl.TextCompletionResponse(
                     stream=stream
                 )
                 return codestral_fim_completions.completion(
@@ -180,7 +180,7 @@ class VertexAIPartnerModels(VertexBase):
                     logging_obj=logging_obj,
                     optional_params=optional_params,
                     acompletion=acompletion,
-                    litellm_params=litellm_params,
+                    remodl_params=remodl_params,
                     logger_fn=logger_fn,
                     timeout=timeout,
                     encoding=encoding,
@@ -202,11 +202,11 @@ class VertexAIPartnerModels(VertexBase):
                     messages=messages,
                     api_base=api_base,
                     acompletion=acompletion,
-                    custom_prompt_dict=litellm.custom_prompt_dict,
+                    custom_prompt_dict=remodl.custom_prompt_dict,
                     model_response=model_response,
                     print_verbose=print_verbose,
                     optional_params=optional_params,
-                    litellm_params=litellm_params,
+                    remodl_params=remodl_params,
                     logger_fn=logger_fn,
                     encoding=encoding,  # for calculating input/output tokens
                     api_key=access_token,
@@ -225,7 +225,7 @@ class VertexAIPartnerModels(VertexBase):
                     api_base=api_base,
                     model_response=model_response,
                     optional_params=optional_params,
-                    litellm_params=litellm_params,
+                    remodl_params=remodl_params,
                     custom_llm_provider="vertex_ai",
                     timeout=timeout,
                     headers=headers,
@@ -245,7 +245,7 @@ class VertexAIPartnerModels(VertexBase):
                 logging_obj=logging_obj,
                 optional_params=optional_params,
                 acompletion=acompletion,
-                litellm_params=litellm_params,
+                remodl_params=remodl_params,
                 logger_fn=logger_fn,
                 client=client,
                 timeout=timeout,

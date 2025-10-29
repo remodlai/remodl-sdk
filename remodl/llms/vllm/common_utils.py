@@ -2,12 +2,12 @@ from typing import List, Optional, Union
 
 import httpx
 
-import litellm
-from litellm.llms.base_llm.base_utils import BaseLLMModelInfo
-from litellm.llms.base_llm.chat.transformation import BaseLLMException
-from litellm.secret_managers.main import get_secret_str
-from litellm.types.llms.openai import AllMessageValues
-from litellm.utils import _add_path_to_api_base
+import remodl
+from remodl.llms.base_llm.base_utils import BaseLLMModelInfo
+from remodl.llms.base_llm.chat.transformation import BaseLLMException
+from remodl.secret_managers.main import get_secret_str
+from remodl.types.llms.openai import AllMessageValues
+from remodl.utils import _add_path_to_api_base
 
 
 class VLLMError(BaseLLMException):
@@ -35,7 +35,7 @@ class VLLMModelInfo(BaseLLMModelInfo):
         model: str,
         messages: List[AllMessageValues],
         optional_params: dict,
-        litellm_params: dict,
+        remodl_params: dict,
         api_key: Optional[str] = None,
         api_base: Optional[str] = None,
     ) -> dict:
@@ -72,7 +72,7 @@ class VLLMModelInfo(BaseLLMModelInfo):
             )
 
         url = _add_path_to_api_base(api_base, endpoint)
-        response = litellm.module_level_client.get(
+        response = remodl.module_level_client.get(
             url=url,
         )
 

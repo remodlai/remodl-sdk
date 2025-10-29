@@ -29,47 +29,47 @@ from typing import (
 from httpx import Response
 from pydantic import BaseModel
 
-import litellm
-from litellm import (
+import remodl
+from remodl import (
     _custom_logger_compatible_callbacks_literal,
     json_logs,
     log_raw_request_response,
     turn_off_message_logging,
 )
-from litellm._logging import _is_debugging_on, verbose_logger
-from litellm._uuid import uuid
-from litellm.batches.batch_utils import _handle_completed_batch
-from litellm.caching.caching import DualCache, InMemoryCache
-from litellm.caching.caching_handler import LLMCachingHandler
-from litellm.constants import (
+from remodl._logging import _is_debugging_on, verbose_logger
+from remodl._uuid import uuid
+from remodl.batches.batch_utils import _handle_completed_batch
+from remodl.caching.caching import DualCache, InMemoryCache
+from remodl.caching.caching_handler import LLMCachingHandler
+from remodl.constants import (
     DEFAULT_MOCK_RESPONSE_COMPLETION_TOKEN_COUNT,
     DEFAULT_MOCK_RESPONSE_PROMPT_TOKEN_COUNT,
     SENTRY_DENYLIST,
     SENTRY_PII_DENYLIST,
 )
-from litellm.cost_calculator import (
+from remodl.cost_calculator import (
     RealtimeAPITokenUsageProcessor,
     _select_model_name_for_cost_calc,
 )
-from litellm.integrations.agentops import AgentOps
-from litellm.integrations.anthropic_cache_control_hook import AnthropicCacheControlHook
-from litellm.integrations.arize.arize import ArizeLogger
-from litellm.integrations.custom_guardrail import CustomGuardrail
-from litellm.integrations.custom_logger import CustomLogger
-from litellm.integrations.deepeval.deepeval import DeepEvalLogger
-from litellm.integrations.mlflow import MlflowLogger
-from litellm.integrations.sqs import SQSLogger
-from litellm.litellm_core_utils.get_litellm_params import get_litellm_params
-from litellm.litellm_core_utils.llm_cost_calc.tool_call_cost_tracking import (
+from remodl.integrations.agentops import AgentOps
+from remodl.integrations.anthropic_cache_control_hook import AnthropicCacheControlHook
+from remodl.integrations.arize.arize import ArizeLogger
+from remodl.integrations.custom_guardrail import CustomGuardrail
+from remodl.integrations.custom_logger import CustomLogger
+from remodl.integrations.deepeval.deepeval import DeepEvalLogger
+from remodl.integrations.mlflow import MlflowLogger
+from remodl.integrations.sqs import SQSLogger
+from remodl.remodl_core_utils.get_remodl_params import get_remodl_params
+from remodl.remodl_core_utils.llm_cost_calc.tool_call_cost_tracking import (
     StandardBuiltInToolCostTracking,
 )
-from litellm.litellm_core_utils.model_param_helper import ModelParamHelper
-from litellm.litellm_core_utils.redact_messages import (
+from remodl.remodl_core_utils.model_param_helper import ModelParamHelper
+from remodl.remodl_core_utils.redact_messages import (
     redact_message_input_output_from_custom_logger,
     redact_message_input_output_from_logging,
 )
-from litellm.responses.utils import ResponseAPILoggingUtils
-from litellm.types.llms.openai import (
+from remodl.responses.utils import ResponseAPILoggingUtils
+from remodl.types.llms.openai import (
     AllMessageValues,
     Batch,
     FineTuningJob,
@@ -79,9 +79,9 @@ from litellm.types.llms.openai import (
     ResponseCompletedEvent,
     ResponsesAPIResponse,
 )
-from litellm.types.mcp import MCPPostCallResponseObject
-from litellm.types.rerank import RerankResponse
-from litellm.types.utils import (
+from remodl.types.mcp import MCPPostCallResponseObject
+from remodl.types.rerank import RerankResponse
+from remodl.types.utils import (
     CachingDetails,
     CallTypes,
     CostBreakdown,
@@ -115,8 +115,8 @@ from litellm.types.utils import (
     TranscriptionResponse,
     Usage,
 )
-from litellm.types.videos.main import VideoObject
-from litellm.utils import _get_base_model_from_metadata, executor, print_verbose
+from remodl.types.videos.main import VideoObject
+from remodl.utils import _get_base_model_from_metadata, executor, print_verbose
 
 from ..integrations.argilla import ArgillaLogger
 from ..integrations.arize.arize_phoenix import ArizePhoenixLogger
@@ -156,25 +156,25 @@ from .initialize_dynamic_callback_params import (
 from .specialty_caches.dynamic_logging_cache import DynamicLoggingCache
 
 if TYPE_CHECKING:
-    from litellm.llms.base_llm.passthrough.transformation import BasePassthroughConfig
+    from remodl.llms.base_llm.passthrough.transformation import BasePassthroughConfig
 try:
-    from litellm_enterprise.enterprise_callbacks.callback_controls import (
+    from remodl_enterprise.enterprise_callbacks.callback_controls import (
         EnterpriseCallbackControls,
     )
-    from litellm_enterprise.enterprise_callbacks.generic_api_callback import (
+    from remodl_enterprise.enterprise_callbacks.generic_api_callback import (
         GenericAPILogger,
     )
-    from litellm_enterprise.enterprise_callbacks.pagerduty.pagerduty import (
+    from remodl_enterprise.enterprise_callbacks.pagerduty.pagerduty import (
         PagerDutyAlerting,
     )
-    from litellm_enterprise.enterprise_callbacks.send_emails.resend_email import (
+    from remodl_enterprise.enterprise_callbacks.send_emails.resend_email import (
         ResendEmailLogger,
     )
-    from litellm_enterprise.enterprise_callbacks.send_emails.smtp_email import (
+    from remodl_enterprise.enterprise_callbacks.send_emails.smtp_email import (
         SMTPEmailLogger,
     )
-    from litellm_enterprise.integrations.prometheus import PrometheusLogger
-    from litellm_enterprise.litellm_core_utils.litellm_logging import (
+    from remodl_enterprise.integrations.prometheus import PrometheusLogger
+    from remodl_enterprise.remodl_core_utils.remodl_logging import (
         StandardLoggingPayloadSetup as EnterpriseStandardLoggingPayloadSetup,
     )
 
@@ -231,13 +231,13 @@ class ServiceTraceIDCache:
     def __init__(self) -> None:
         self.cache = InMemoryCache()
 
-    def get_cache(self, litellm_call_id: str, service_name: str) -> Optional[str]:
-        key_name = "{}:{}".format(service_name, litellm_call_id)
+    def get_cache(self, remodl_call_id: str, service_name: str) -> Optional[str]:
+        key_name = "{}:{}".format(service_name, remodl_call_id)
         response = self.cache.get_cache(key=key_name)
         return response
 
-    def set_cache(self, litellm_call_id: str, service_name: str, trace_id: str) -> None:
-        key_name = "{}:{}".format(service_name, litellm_call_id)
+    def set_cache(self, remodl_call_id: str, service_name: str, trace_id: str) -> None:
+        key_name = "{}:{}".format(service_name, remodl_call_id)
         self.cache.set_cache(key=key_name, value=trace_id)
         return None
 
@@ -250,7 +250,7 @@ class Logging(LiteLLMLoggingBaseClass):
     global supabaseClient, promptLayerLogger, weightsBiasesLogger, logfireLogger, capture_exception, add_breadcrumb, lunaryLogger, logfireLogger, prometheusLogger, slack_app
     custom_pricing: bool = False
     stream_options = None
-    litellm_request_debug: bool = False
+    remodl_request_debug: bool = False
 
     def __init__(
         self,
@@ -259,9 +259,9 @@ class Logging(LiteLLMLoggingBaseClass):
         stream,
         call_type,
         start_time,
-        litellm_call_id: str,
+        remodl_call_id: str,
         function_id: str,
-        litellm_trace_id: Optional[str] = None,
+        remodl_trace_id: Optional[str] = None,
         dynamic_input_callbacks: Optional[
             List[Union[str, Callable, CustomLogger]]
         ] = None,
@@ -301,8 +301,8 @@ class Logging(LiteLLMLoggingBaseClass):
         self.stream = stream
         self.start_time = start_time  # log the call start time
         self.call_type = call_type
-        self.litellm_call_id = litellm_call_id
-        self.litellm_trace_id: str = litellm_trace_id or str(uuid.uuid4())
+        self.remodl_call_id = remodl_call_id
+        self.remodl_trace_id: str = remodl_trace_id or str(uuid.uuid4())
         self.function_id = function_id
         self.streaming_chunks: List[Any] = []  # for generating complete stream response
         self.sync_streaming_chunks: List[Any] = (
@@ -342,12 +342,12 @@ class Logging(LiteLLMLoggingBaseClass):
         self._llm_caching_handler: Optional[LLMCachingHandler] = None
 
         # INITIAL LITELLM_PARAMS
-        litellm_params = {}
+        remodl_params = {}
         if kwargs is not None:
-            litellm_params = get_litellm_params(**kwargs)
-            litellm_params = scrub_sensitive_keys_in_metadata(litellm_params)
+            remodl_params = get_remodl_params(**kwargs)
+            remodl_params = scrub_sensitive_keys_in_metadata(remodl_params)
 
-        self.litellm_params = litellm_params
+        self.remodl_params = remodl_params
 
         # Initialize cost breakdown field
         self.cost_breakdown: Optional[CostBreakdown] = None
@@ -356,10 +356,10 @@ class Logging(LiteLLMLoggingBaseClass):
         self.caching_details: Optional[CachingDetails] = None
 
         self.model_call_details: Dict[str, Any] = {
-            "litellm_trace_id": litellm_trace_id,
-            "litellm_call_id": litellm_call_id,
+            "remodl_trace_id": remodl_trace_id,
+            "remodl_call_id": remodl_call_id,
             "input": _input,
-            "litellm_params": litellm_params,
+            "remodl_params": remodl_params,
             "applied_guardrails": applied_guardrails,
             "model": model,
         }
@@ -368,7 +368,7 @@ class Logging(LiteLLMLoggingBaseClass):
         """
         Initializes CustomLogger compatible callbacks in self.dynamic_* callbacks
 
-        If a callback is in litellm._known_custom_logger_compatible_callbacks, it needs to be intialized and added to the respective dynamic_* callback list.
+        If a callback is in remodl._known_custom_logger_compatible_callbacks, it needs to be intialized and added to the respective dynamic_* callback list.
         """
         # Process input callbacks
         self.dynamic_input_callbacks = self._process_dynamic_callback_list(
@@ -405,7 +405,7 @@ class Logging(LiteLLMLoggingBaseClass):
         """
         Helper function to initialize CustomLogger compatible callbacks in self.dynamic_* callbacks
 
-        - If a callback is in litellm._known_custom_logger_compatible_callbacks,
+        - If a callback is in remodl._known_custom_logger_compatible_callbacks,
         replace the string with the initialized callback class.
         - If dynamic callback is a "success" callback that is a known_custom_logger_compatible_callbacks then add it to dynamic_async_success_callbacks
         - If dynamic callback is a "failure" callback that is a known_custom_logger_compatible_callbacks then add it to dynamic_failure_callbacks
@@ -417,7 +417,7 @@ class Logging(LiteLLMLoggingBaseClass):
         for callback in callback_list:
             if (
                 isinstance(callback, str)
-                and callback in litellm._known_custom_logger_compatible_callbacks
+                and callback in remodl._known_custom_logger_compatible_callbacks
             ):
                 callback_class = _init_custom_logger_compatible_class(
                     callback, internal_usage_cache=None, llm_router=None  # type: ignore
@@ -468,7 +468,7 @@ class Logging(LiteLLMLoggingBaseClass):
 
     def update_environment_variables(
         self,
-        litellm_params: Dict,
+        remodl_params: Dict,
         optional_params: Dict,
         model: Optional[str] = None,
         user: Optional[str] = None,
@@ -478,12 +478,12 @@ class Logging(LiteLLMLoggingBaseClass):
         if model is not None:
             self.model = model
         self.user = user
-        self.litellm_params = {
-            **self.litellm_params,
-            **scrub_sensitive_keys_in_metadata(litellm_params),
+        self.remodl_params = {
+            **self.remodl_params,
+            **scrub_sensitive_keys_in_metadata(remodl_params),
         }
-        self.litellm_request_debug = litellm_params.get("litellm_request_debug", False)
-        self.logger_fn = litellm_params.get("logger_fn", None)
+        self.remodl_request_debug = remodl_params.get("remodl_request_debug", False)
+        self.logger_fn = remodl_params.get("logger_fn", None)
         verbose_logger.debug(f"self.optional_params: {self.optional_params}")
 
         self.model_call_details.update(
@@ -491,12 +491,12 @@ class Logging(LiteLLMLoggingBaseClass):
                 "model": self.model,
                 "messages": self.messages,
                 "optional_params": self.optional_params,
-                "litellm_params": self.litellm_params,
+                "remodl_params": self.remodl_params,
                 "start_time": self.start_time,
                 "stream": self.stream,
                 "user": user,
                 "call_type": str(self.call_type),
-                "litellm_call_id": self.litellm_call_id,
+                "remodl_call_id": self.remodl_call_id,
                 "completion_start_time": self.completion_start_time,
                 "standard_callback_dynamic_params": self.standard_callback_dynamic_params,
                 **self.optional_params,
@@ -510,7 +510,7 @@ class Logging(LiteLLMLoggingBaseClass):
         ## check if custom pricing set ##
         custom_pricing_keys = CustomPricingLiteLLMParams.model_fields.keys()
         for key in custom_pricing_keys:
-            if litellm_params.get(key) is not None:
+            if remodl_params.get(key) is not None:
                 self.custom_pricing = True
 
         if "custom_llm_provider" in self.model_call_details:
@@ -562,8 +562,8 @@ class Logging(LiteLLMLoggingBaseClass):
         #############################################################################
         # Check if Vector Store / Knowledge Base hooks should be applied to the prompt
         #############################################################################
-        if litellm.vector_store_registry is not None:
-            if litellm.vector_store_registry.get_vector_store_to_run(
+        if remodl.vector_store_registry is not None:
+            if remodl.vector_store_registry.get_vector_store_to_run(
                 non_default_params=non_default_params, tools=tools
             ):
                 return True
@@ -636,7 +636,7 @@ class Logging(LiteLLMLoggingBaseClass):
                 prompt_id=prompt_id,
                 prompt_variables=prompt_variables,
                 dynamic_callback_params=self.standard_callback_dynamic_params,
-                litellm_logging_obj=self,
+                remodl_logging_obj=self,
                 tools=tools,
                 prompt_label=prompt_label,
                 prompt_version=prompt_version,
@@ -657,7 +657,7 @@ class Logging(LiteLLMLoggingBaseClass):
             A CustomLogger instance if one is found, None otherwise
         """
         # First check if model starts with a known custom logger compatible callback
-        for callback_name in litellm._known_custom_logger_compatible_callbacks:
+        for callback_name in remodl._known_custom_logger_compatible_callbacks:
             if model.startswith(callback_name):
                 custom_logger = _init_custom_logger_compatible_class(
                     logging_integration=callback_name,
@@ -670,7 +670,7 @@ class Logging(LiteLLMLoggingBaseClass):
 
         # Then check for any registered CustomPromptManagement loggers
         prompt_management_loggers = (
-            litellm.logging_callback_manager.get_custom_loggers_for_type(
+            remodl.logging_callback_manager.get_custom_loggers_for_type(
                 callback_type=CustomPromptManagement
             )
         )
@@ -691,7 +691,7 @@ class Logging(LiteLLMLoggingBaseClass):
         #########################################################
         # Vector Store / Knowledge Base hooks
         #########################################################
-        if litellm.vector_store_registry is not None:
+        if remodl.vector_store_registry is not None:
             vector_store_custom_logger = _init_custom_logger_compatible_class(
                 logging_integration="vector_store_pre_call_hook",
                 internal_usage_cache=None,
@@ -703,9 +703,9 @@ class Logging(LiteLLMLoggingBaseClass):
             # Add to global callbacks so post-call hooks are invoked
             if (
                 vector_store_custom_logger
-                and vector_store_custom_logger not in litellm.callbacks
+                and vector_store_custom_logger not in remodl.callbacks
             ):
-                litellm.logging_callback_manager.add_litellm_callback(
+                remodl.logging_callback_manager.add_remodl_callback(
                     vector_store_custom_logger
                 )
             return vector_store_custom_logger
@@ -759,13 +759,13 @@ class Logging(LiteLLMLoggingBaseClass):
             model
         ):  # if model name was changes pre-call, overwrite the initial model call name with the new one
             self.model_call_details["model"] = model
-        self.model_call_details["litellm_params"]["api_base"] = (
+        self.model_call_details["remodl_params"]["api_base"] = (
             self._get_masked_api_base(additional_args.get("api_base", ""))
         )
 
     def pre_call(self, input, api_key, model=None, additional_args={}):  # noqa: PLR0915
         # Log the exact input to the LLM API
-        litellm.error_logs["PRE_CALL"] = locals()
+        remodl.error_logs["PRE_CALL"] = locals()
         try:
             self._pre_call(
                 input=input,
@@ -785,14 +785,14 @@ class Logging(LiteLLMLoggingBaseClass):
                 self.log_raw_request_response is True
                 or log_raw_request_response is True
             ):
-                _litellm_params = self.model_call_details.get("litellm_params", {})
-                _metadata = _litellm_params.get("metadata", {}) or {}
+                _remodl_params = self.model_call_details.get("remodl_params", {})
+                _metadata = _remodl_params.get("metadata", {}) or {}
                 try:
                     # [Non-blocking Extra Debug Information in metadata]
                     if turn_off_message_logging is True:
                         _metadata["raw_request"] = (
-                            "redacted by litellm. \
-                            'litellm.turn_off_message_logging=True'"
+                            "redacted by remodl. \
+                            'remodl.turn_off_message_logging=True'"
                         )
                     else:
                         curl_command = self._get_request_curl_command(
@@ -845,7 +845,7 @@ class Logging(LiteLLMLoggingBaseClass):
 
             self.model_call_details["api_call_start_time"] = datetime.datetime.now()
             # Input Integration Logging -> If you want to log the fact that an attempt to call the model was made
-            callbacks = litellm.input_callback + (self.dynamic_input_callbacks or [])
+            callbacks = remodl.input_callback + (self.dynamic_input_callbacks or [])
             for callback in callbacks:
                 try:
                     if callback == "supabase" and supabaseClient is not None:
@@ -857,7 +857,7 @@ class Logging(LiteLLMLoggingBaseClass):
                             model=model,
                             messages=messages,
                             end_user=self.model_call_details.get("user", "default"),
-                            litellm_call_id=self.litellm_params["litellm_call_id"],
+                            remodl_call_id=self.remodl_params["remodl_call_id"],
                             print_verbose=print_verbose,
                         )
                     elif callback == "sentry" and add_breadcrumb:
@@ -865,14 +865,14 @@ class Logging(LiteLLMLoggingBaseClass):
                             details_to_log = copy.deepcopy(self.model_call_details)
                         except Exception:
                             details_to_log = self.model_call_details
-                        if litellm.turn_off_message_logging:
+                        if remodl.turn_off_message_logging:
                             # make a copy of the _model_Call_details and log it
                             details_to_log.pop("messages", None)
                             details_to_log.pop("input", None)
                             details_to_log.pop("prompt", None)
 
                         add_breadcrumb(
-                            category="litellm.llm_call",
+                            category="remodl.llm_call",
                             message=f"Model Call Details pre-call: {details_to_log}",
                             level="info",
                         )
@@ -895,7 +895,7 @@ class Logging(LiteLLMLoggingBaseClass):
                         )
                 except Exception as e:
                     verbose_logger.exception(
-                        "litellm.Logging.pre_call(): Exception occured - {}".format(
+                        "remodl.Logging.pre_call(): Exception occured - {}".format(
                             str(e)
                         )
                     )
@@ -927,10 +927,10 @@ class Logging(LiteLLMLoggingBaseClass):
 
         Prints the RAW curl command sent from LiteLLM
         """
-        if _is_debugging_on() or self.litellm_request_debug:
+        if _is_debugging_on() or self.remodl_request_debug:
             if json_logs:
                 masked_headers = self._get_masked_headers(headers)
-                if self.litellm_request_debug:
+                if self.remodl_request_debug:
                     verbose_logger.warning(  # .warning ensures this shows up in all environments
                         "POST Request Sent from LiteLLM",
                         extra={"api_base": {api_base}, **masked_headers},
@@ -952,7 +952,7 @@ class Logging(LiteLLMLoggingBaseClass):
                     additional_args=additional_args,
                     data=data,
                 )
-                if self.litellm_request_debug:
+                if self.remodl_request_debug:
                     verbose_logger.warning(
                         f"\033[92m{curl_command}\033[0m\n"
                     )  # .warning ensures this shows up in all environments
@@ -1004,7 +1004,7 @@ class Logging(LiteLLMLoggingBaseClass):
         self, original_response, input=None, api_key=None, additional_args={}
     ):
         # Log the exact result from the LLM API, for streaming - log the type of response received
-        litellm.error_logs["POST_CALL"] = locals()
+        remodl.error_logs["POST_CALL"] = locals()
         if isinstance(original_response, dict):
             original_response = json.dumps(original_response)
         try:
@@ -1014,7 +1014,7 @@ class Logging(LiteLLMLoggingBaseClass):
             self.model_call_details["additional_args"] = additional_args
             self.model_call_details["log_event_type"] = "post_api_call"
 
-            if self.litellm_request_debug:
+            if self.remodl_request_debug:
                 attr = "warning"
             else:
                 attr = "debug"
@@ -1058,7 +1058,7 @@ class Logging(LiteLLMLoggingBaseClass):
             )
             # Input Integration Logging -> If you want to log the fact that an attempt to call the model was made
 
-            callbacks = litellm.input_callback + (self.dynamic_input_callbacks or [])
+            callbacks = remodl.input_callback + (self.dynamic_input_callbacks or [])
             for callback in callbacks:
                 try:
                     if callback == "sentry" and add_breadcrumb:
@@ -1067,14 +1067,14 @@ class Logging(LiteLLMLoggingBaseClass):
                             details_to_log = copy.deepcopy(self.model_call_details)
                         except Exception:
                             details_to_log = self.model_call_details
-                        if litellm.turn_off_message_logging:
+                        if remodl.turn_off_message_logging:
                             # make a copy of the _model_Call_details and log it
                             details_to_log.pop("messages", None)
                             details_to_log.pop("input", None)
                             details_to_log.pop("prompt", None)
 
                         add_breadcrumb(
-                            category="litellm.llm_call",
+                            category="remodl.llm_call",
                             message=f"Model Call Details post-call: {details_to_log}",
                             level="info",
                         )
@@ -1115,12 +1115,12 @@ class Logging(LiteLLMLoggingBaseClass):
 
         Use this to modify the MCP tool call response before it is returned to the user.
         """
-        from litellm.types.llms.base import HiddenParams
-        from litellm.types.mcp import MCPPostCallResponseObject
+        from remodl.types.llms.base import HiddenParams
+        from remodl.types.mcp import MCPPostCallResponseObject
 
         callbacks = self.get_combined_callback_list(
             dynamic_success_callbacks=self.dynamic_success_callbacks,
-            global_callbacks=litellm.success_callback,
+            global_callbacks=remodl.success_callback,
         )
         post_mcp_tool_call_response_obj: MCPPostCallResponseObject = (
             MCPPostCallResponseObject(
@@ -1232,7 +1232,7 @@ class Logging(LiteLLMLoggingBaseClass):
             OpenAIModerationResponse,
         ],
         cache_hit: Optional[bool] = None,
-        litellm_model_name: Optional[str] = None,
+        remodl_model_name: Optional[str] = None,
         router_model_id: Optional[str] = None,
     ) -> Optional[float]:
         """
@@ -1254,8 +1254,8 @@ class Logging(LiteLLMLoggingBaseClass):
 
         ## RESPONSE COST ##
         custom_pricing = use_custom_pricing_for_model(
-            litellm_params=(
-                self.litellm_params if hasattr(self, "litellm_params") else None
+            remodl_params=(
+                self.remodl_params if hasattr(self, "remodl_params") else None
             )
         )
 
@@ -1270,7 +1270,7 @@ class Logging(LiteLLMLoggingBaseClass):
         try:
             response_cost_calculator_kwargs = {
                 "response_object": result,
-                "model": litellm_model_name or self.model,
+                "model": remodl_model_name or self.model,
                 "cache_hit": cache_hit,
                 "custom_llm_provider": self.model_call_details.get(
                     "custom_llm_provider", None
@@ -1284,7 +1284,7 @@ class Logging(LiteLLMLoggingBaseClass):
                 "prompt": prompt,
                 "standard_built_in_tools_params": self.standard_built_in_tools_params,
                 "router_model_id": router_model_id,
-                "litellm_logging_obj": self,
+                "remodl_logging_obj": self,
                 "service_tier": (
                     self.optional_params.get("service_tier")
                     if self.optional_params
@@ -1306,7 +1306,7 @@ class Logging(LiteLLMLoggingBaseClass):
 
         try:
 
-            response_cost = litellm.response_cost_calculator(
+            response_cost = remodl.response_cost_calculator(
                 **response_cost_calculator_kwargs
             )
             verbose_logger.debug(f"response_cost: {response_cost}")
@@ -1381,12 +1381,12 @@ class Logging(LiteLLMLoggingBaseClass):
         return
 
     def should_run_callback(
-        self, callback: litellm.CALLBACK_TYPES, litellm_params: dict, event_hook: str
+        self, callback: remodl.CALLBACK_TYPES, remodl_params: dict, event_hook: str
     ) -> bool:
-        if litellm.global_disable_no_log_param:
+        if remodl.global_disable_no_log_param:
             return True
 
-        if litellm_params.get("no-log", False) is True:
+        if remodl_params.get("no-log", False) is True:
             # proxy cost tracking cal backs should run
 
             if not (
@@ -1403,7 +1403,7 @@ class Logging(LiteLLMLoggingBaseClass):
             EnterpriseCallbackControls is not None
             and EnterpriseCallbackControls.is_callback_disabled_dynamically(
                 callback=callback,
-                litellm_params=litellm_params,
+                remodl_params=remodl_params,
                 standard_callback_dynamic_params=self.standard_callback_dynamic_params,
             )
         ):
@@ -1439,7 +1439,7 @@ class Logging(LiteLLMLoggingBaseClass):
             self.call_type == CallTypes.llm_passthrough_route.value
             or self.call_type == CallTypes.allm_passthrough_route.value
         ) and isinstance(result, Response):
-            from litellm.utils import ProviderConfigManager
+            from remodl.utils import ProviderConfigManager
 
             provider_config = ProviderConfigManager.get_provider_passthrough_config(
                 provider=self.model_call_details.get("custom_llm_provider", ""),
@@ -1505,19 +1505,19 @@ class Logging(LiteLLMLoggingBaseClass):
                     hidden_params = getattr(logging_result, "_hidden_params", {})
                     if hidden_params:
                         # add to metadata for logging
-                        if self.model_call_details.get("litellm_params") is not None:
-                            self.model_call_details["litellm_params"].setdefault(
+                        if self.model_call_details.get("remodl_params") is not None:
+                            self.model_call_details["remodl_params"].setdefault(
                                 "metadata", {}
                             )
                             if (
-                                self.model_call_details["litellm_params"]["metadata"]
+                                self.model_call_details["remodl_params"]["metadata"]
                                 is None
                             ):
-                                self.model_call_details["litellm_params"][
+                                self.model_call_details["remodl_params"][
                                     "metadata"
                                 ] = {}
 
-                            self.model_call_details["litellm_params"]["metadata"][  # type: ignore
+                            self.model_call_details["remodl_params"]["metadata"][  # type: ignore
                                 "hidden_params"
                             ] = getattr(
                                 logging_result, "_hidden_params", {}
@@ -1577,7 +1577,7 @@ class Logging(LiteLLMLoggingBaseClass):
                 )
 
             if (
-                litellm.max_budget
+                remodl.max_budget
                 and self.stream is False
                 and result is not None
                 and isinstance(result, dict)
@@ -1585,7 +1585,7 @@ class Logging(LiteLLMLoggingBaseClass):
             ):
                 time_diff = (end_time - start_time).total_seconds()
                 float_diff = float(time_diff)
-                litellm._current_cost += litellm.completion_cost(
+                remodl._current_cost += remodl.completion_cost(
                     model=self.model,
                     prompt="",
                     completion=getattr(result, "content", ""),
@@ -1635,7 +1635,7 @@ class Logging(LiteLLMLoggingBaseClass):
         all_chunks = provider_config._convert_raw_bytes_to_str_lines(raw_bytes)
         complete_streaming_response = provider_config.handle_logging_collected_chunks(
             all_chunks=all_chunks,
-            litellm_logging_obj=self,
+            remodl_logging_obj=self,
             model=self.model,
             custom_llm_provider=self.model_call_details.get("custom_llm_provider", ""),
             endpoint=self.model_call_details.get("endpoint", ""),
@@ -1734,7 +1734,7 @@ class Logging(LiteLLMLoggingBaseClass):
                 )
             callbacks = self.get_combined_callback_list(
                 dynamic_success_callbacks=self.dynamic_success_callbacks,
-                global_callbacks=litellm.success_callback,
+                global_callbacks=remodl.success_callback,
             )
 
             ## REDACT MESSAGES ##
@@ -1758,10 +1758,10 @@ class Logging(LiteLLMLoggingBaseClass):
             self.has_run_logging(event_type="sync_success")
             for callback in callbacks:
                 try:
-                    litellm_params = self.model_call_details.get("litellm_params", {})
+                    remodl_params = self.model_call_details.get("remodl_params", {})
                     should_run = self.should_run_callback(
                         callback=callback,
-                        litellm_params=litellm_params,
+                        remodl_params=remodl_params,
                         event_hook="success_handler",
                     )
                     if not should_run:
@@ -1790,7 +1790,7 @@ class Logging(LiteLLMLoggingBaseClass):
                         model = kwargs["model"]
                         messages = kwargs["messages"]
                         optional_params = kwargs.get("optional_params", {})
-                        litellm_params = kwargs.get("litellm_params", {})
+                        remodl_params = kwargs.get("remodl_params", {})
                         supabaseClient.log_event(
                             model=model,
                             messages=messages,
@@ -1798,11 +1798,11 @@ class Logging(LiteLLMLoggingBaseClass):
                             response_obj=result,
                             start_time=start_time,
                             end_time=end_time,
-                            litellm_call_id=(
+                            remodl_call_id=(
                                 current_call_id
                                 if (
-                                    current_call_id := litellm_params.get(
-                                        "litellm_call_id"
+                                    current_call_id := remodl_params.get(
+                                        "remodl_call_id"
                                     )
                                 )
                                 is not None
@@ -1877,7 +1877,7 @@ class Logging(LiteLLMLoggingBaseClass):
                             response_obj=result,
                             start_time=start_time,
                             end_time=end_time,
-                            run_id=self.litellm_call_id,
+                            run_id=self.remodl_call_id,
                             print_verbose=print_verbose,
                         )
                     if callback == "helicone" and heliconeLogger is not None:
@@ -1940,7 +1940,7 @@ class Logging(LiteLLMLoggingBaseClass):
                                 _trace_id = _response.get("trace_id", None)
                                 if _trace_id is not None:
                                     in_memory_trace_id_cache.set_cache(
-                                        litellm_call_id=self.litellm_call_id,
+                                        remodl_call_id=self.remodl_call_id,
                                         service_name="langfuse",
                                         trace_id=_trace_id,
                                     )
@@ -2028,19 +2028,19 @@ class Logging(LiteLLMLoggingBaseClass):
 
                     if (
                         callback == "openmeter"
-                        and self.model_call_details.get("litellm_params", {}).get(
+                        and self.model_call_details.get("remodl_params", {}).get(
                             "acompletion", False
                         )
                         is not True
-                        and self.model_call_details.get("litellm_params", {}).get(
+                        and self.model_call_details.get("remodl_params", {}).get(
                             "aembedding", False
                         )
                         is not True
-                        and self.model_call_details.get("litellm_params", {}).get(
+                        and self.model_call_details.get("remodl_params", {}).get(
                             "aimage_generation", False
                         )
                         is not True
-                        and self.model_call_details.get("litellm_params", {}).get(
+                        and self.model_call_details.get("remodl_params", {}).get(
                             "atranscription", False
                         )
                         is not True
@@ -2072,19 +2072,19 @@ class Logging(LiteLLMLoggingBaseClass):
                             )
                     if (
                         isinstance(callback, CustomLogger)
-                        and self.model_call_details.get("litellm_params", {}).get(
+                        and self.model_call_details.get("remodl_params", {}).get(
                             "acompletion", False
                         )
                         is not True
-                        and self.model_call_details.get("litellm_params", {}).get(
+                        and self.model_call_details.get("remodl_params", {}).get(
                             "aembedding", False
                         )
                         is not True
-                        and self.model_call_details.get("litellm_params", {}).get(
+                        and self.model_call_details.get("remodl_params", {}).get(
                             "aimage_generation", False
                         )
                         is not True
-                        and self.model_call_details.get("litellm_params", {}).get(
+                        and self.model_call_details.get("remodl_params", {}).get(
                             "atranscription", False
                         )
                         is not True
@@ -2115,19 +2115,19 @@ class Logging(LiteLLMLoggingBaseClass):
                             )
                     if (
                         callable(callback) is True
-                        and self.model_call_details.get("litellm_params", {}).get(
+                        and self.model_call_details.get("remodl_params", {}).get(
                             "acompletion", False
                         )
                         is not True
-                        and self.model_call_details.get("litellm_params", {}).get(
+                        and self.model_call_details.get("remodl_params", {}).get(
                             "aembedding", False
                         )
                         is not True
-                        and self.model_call_details.get("litellm_params", {}).get(
+                        and self.model_call_details.get("remodl_params", {}).get(
                             "aimage_generation", False
                         )
                         is not True
-                        and self.model_call_details.get("litellm_params", {}).get(
+                        and self.model_call_details.get("remodl_params", {}).get(
                             "atranscription", False
                         )
                         is not True
@@ -2182,14 +2182,14 @@ class Logging(LiteLLMLoggingBaseClass):
         if self.call_type == CallTypes.aretrieve_batch.value and isinstance(
             result, LiteLLMBatch
         ):
-            litellm_params = self.litellm_params or {}
-            litellm_metadata = litellm_params.get("litellm_metadata", {})
+            remodl_params = self.remodl_params or {}
+            remodl_metadata = remodl_params.get("remodl_metadata", {})
             if (
-                litellm_metadata.get("batch_ignore_default_logging", False) is True
+                remodl_metadata.get("batch_ignore_default_logging", False) is True
             ):  # polling job will query these frequently, don't spam db logs
                 return
 
-            from litellm.proxy.openai_files_endpoints.common_utils import (
+            from remodl.proxy.openai_files_endpoints.common_utils import (
                 _is_base64_encoded_unified_file_id,
             )
 
@@ -2263,7 +2263,7 @@ class Logging(LiteLLMLoggingBaseClass):
                 verbose_logger.debug(
                     f"Model={self.model}; cost={self.model_call_details['response_cost']}"
                 )
-            except litellm.NotFoundError:
+            except remodl.NotFoundError:
                 verbose_logger.warning(
                     f"Model={self.model} not found in completion cost map. Setting 'response_cost' to None"
                 )
@@ -2283,7 +2283,7 @@ class Logging(LiteLLMLoggingBaseClass):
             )
         callbacks = self.get_combined_callback_list(
             dynamic_success_callbacks=self.dynamic_async_success_callbacks,
-            global_callbacks=litellm._async_success_callback,
+            global_callbacks=remodl._async_success_callback,
         )
 
         result = redact_message_input_output_from_logging(
@@ -2297,7 +2297,7 @@ class Logging(LiteLLMLoggingBaseClass):
 
         for callback in callbacks:
             if isinstance(callback, CustomGuardrail):
-                from litellm.types.guardrails import GuardrailEventHooks
+                from remodl.types.guardrails import GuardrailEventHooks
 
                 if (
                     callback.should_run_guardrail(
@@ -2315,7 +2315,7 @@ class Logging(LiteLLMLoggingBaseClass):
                 )
             elif isinstance(callback, CustomLogger):
                 result = redact_message_input_output_from_custom_logger(
-                    result=result, litellm_logging_obj=self, custom_logger=callback
+                    result=result, remodl_logging_obj=self, custom_logger=callback
                 )
                 self.model_call_details, result = await callback.async_logging_hook(
                     kwargs=self.model_call_details,
@@ -2327,10 +2327,10 @@ class Logging(LiteLLMLoggingBaseClass):
 
         for callback in callbacks:
             # check if callback can run for this request
-            litellm_params = self.model_call_details.get("litellm_params", {})
+            remodl_params = self.model_call_details.get("remodl_params", {})
             should_run = self.should_run_callback(
                 callback=callback,
-                litellm_params=litellm_params,
+                remodl_params=remodl_params,
                 event_hook="async_success_handler",
             )
             if not should_run:
@@ -2484,9 +2484,9 @@ class Logging(LiteLLMLoggingBaseClass):
         self.model_call_details["response_cost"] = 0
 
         if hasattr(exception, "headers") and isinstance(exception.headers, dict):
-            self.model_call_details.setdefault("litellm_params", {})
+            self.model_call_details.setdefault("remodl_params", {})
             metadata = (
-                self.model_call_details["litellm_params"].get("metadata", {}) or {}
+                self.model_call_details["remodl_params"].get("metadata", {}) or {}
             )
             metadata.update(exception.headers)
 
@@ -2513,10 +2513,10 @@ class Logging(LiteLLMLoggingBaseClass):
 
         Currently just for router model group rate limit error
         """
-        from litellm.types.router import RouterErrors
+        from remodl.types.router import RouterErrors
 
-        litellm_params: dict = self.model_call_details.get("litellm_params") or {}
-        metadata = litellm_params.get("metadata") or {}
+        remodl_params: dict = self.model_call_details.get("remodl_params") or {}
+        metadata = remodl_params.get("metadata") or {}
 
         ## BASE CASE ## check if rate limit error for model group size 1
         is_base_case = False
@@ -2534,7 +2534,7 @@ class Logging(LiteLLMLoggingBaseClass):
         ## get original model group ##
 
         model_group = metadata.get("model_group") or None
-        for callback in litellm._async_failure_callback:
+        for callback in remodl._async_failure_callback:
             if isinstance(callback, CustomLogger):  # custom logger class
                 await callback.log_model_group_rate_limit_error(
                     exception=exception,
@@ -2546,7 +2546,7 @@ class Logging(LiteLLMLoggingBaseClass):
         self, exception, traceback_exception, start_time=None, end_time=None
     ):
         verbose_logger.debug(
-            f"Logging Details LiteLLM-Failure Call: {litellm.failure_callback}"
+            f"Logging Details LiteLLM-Failure Call: {remodl.failure_callback}"
         )
         if not self.should_run_logging(
             event_type="sync_failure"
@@ -2561,7 +2561,7 @@ class Logging(LiteLLMLoggingBaseClass):
             )
             callbacks = self.get_combined_callback_list(
                 dynamic_success_callbacks=self.dynamic_failure_callbacks,
-                global_callbacks=litellm.failure_callback,
+                global_callbacks=remodl.failure_callback,
             )
 
             result = None  # result sent to all loggers, init this to None incase it's not created
@@ -2577,10 +2577,10 @@ class Logging(LiteLLMLoggingBaseClass):
             self.has_run_logging(event_type="sync_failure")
             for callback in callbacks:
                 try:
-                    litellm_params = self.model_call_details.get("litellm_params", {})
+                    remodl_params = self.model_call_details.get("remodl_params", {})
                     should_run = self.should_run_callback(
                         callback=callback,
-                        litellm_params=litellm_params,
+                        remodl_params=remodl_params,
                         event_hook="failure_handler",
                     )
                     if not should_run:
@@ -2606,7 +2606,7 @@ class Logging(LiteLLMLoggingBaseClass):
                             model=model,
                             input=input,
                             error=traceback_exception,
-                            run_id=self.litellm_call_id,
+                            run_id=self.remodl_call_id,
                             start_time=start_time,
                             end_time=end_time,
                             print_verbose=print_verbose,
@@ -2629,7 +2629,7 @@ class Logging(LiteLLMLoggingBaseClass):
                             response_obj=result,
                             start_time=start_time,
                             end_time=end_time,
-                            litellm_call_id=self.model_call_details["litellm_call_id"],
+                            remodl_call_id=self.model_call_details["remodl_call_id"],
                             print_verbose=print_verbose,
                         )
                     if (
@@ -2645,11 +2645,11 @@ class Logging(LiteLLMLoggingBaseClass):
                         )
                     if (
                         isinstance(callback, CustomLogger)
-                        and self.model_call_details.get("litellm_params", {}).get(
+                        and self.model_call_details.get("remodl_params", {}).get(
                             "acompletion", False
                         )
                         is not True
-                        and self.model_call_details.get("litellm_params", {}).get(
+                        and self.model_call_details.get("remodl_params", {}).get(
                             "aembedding", False
                         )
                         is not True
@@ -2688,7 +2688,7 @@ class Logging(LiteLLMLoggingBaseClass):
                             _trace_id = _response.get("trace_id", None)
                             if _trace_id is not None:
                                 in_memory_trace_id_cache.set_cache(
-                                    litellm_call_id=self.litellm_call_id,
+                                    remodl_call_id=self.remodl_call_id,
                                     service_name="langfuse",
                                     trace_id=_trace_id,
                                 )
@@ -2758,7 +2758,7 @@ class Logging(LiteLLMLoggingBaseClass):
 
         callbacks = self.get_combined_callback_list(
             dynamic_success_callbacks=self.dynamic_async_failure_callbacks,
-            global_callbacks=litellm._async_failure_callback,
+            global_callbacks=remodl._async_failure_callback,
         )
 
         result = None  # result sent to all loggers, init this to None incase it's not created
@@ -2766,10 +2766,10 @@ class Logging(LiteLLMLoggingBaseClass):
         self.has_run_logging(event_type="async_failure")
         for callback in callbacks:
             try:
-                litellm_params = self.model_call_details.get("litellm_params", {})
+                remodl_params = self.model_call_details.get("remodl_params", {})
                 should_run = self.should_run_callback(
                     callback=callback,
-                    litellm_params=litellm_params,
+                    remodl_params=remodl_params,
                     event_hook="async_failure_handler",
                 )
                 if not should_run:
@@ -2813,7 +2813,7 @@ class Logging(LiteLLMLoggingBaseClass):
         trace_id: Optional[str] = None
         if service_name == "langfuse":
             trace_id = in_memory_trace_id_cache.get_cache(
-                litellm_call_id=self.litellm_call_id, service_name=service_name
+                remodl_call_id=self.remodl_call_id, service_name=service_name
             )
 
         return trace_id
@@ -2892,12 +2892,12 @@ class Logging(LiteLLMLoggingBaseClass):
         """
         _combined_sync_callbacks = self.get_combined_callback_list(
             dynamic_success_callbacks=self.dynamic_success_callbacks,
-            global_callbacks=litellm.success_callback,
+            global_callbacks=remodl.success_callback,
         )
         _filtered_success_callbacks = self._remove_internal_custom_logger_callbacks(
             _combined_sync_callbacks
         )
-        _filtered_success_callbacks = self._remove_internal_litellm_callbacks(
+        _filtered_success_callbacks = self._remove_internal_remodl_callbacks(
             _filtered_success_callbacks
         )
         return len(_filtered_success_callbacks) > 0
@@ -2909,7 +2909,7 @@ class Logging(LiteLLMLoggingBaseClass):
             return global_callbacks
         return list(set(dynamic_success_callbacks + global_callbacks))
 
-    def _remove_internal_litellm_callbacks(self, callbacks: List) -> List:
+    def _remove_internal_remodl_callbacks(self, callbacks: List) -> List:
         """
         Creates a filtered list of callbacks, excluding internal LiteLLM callbacks.
 
@@ -2920,7 +2920,7 @@ class Logging(LiteLLMLoggingBaseClass):
             List of filtered callbacks with internal ones removed
         """
         filtered = [
-            cb for cb in callbacks if not self._is_internal_litellm_proxy_callback(cb)
+            cb for cb in callbacks if not self._is_internal_remodl_proxy_callback(cb)
         ]
 
         verbose_logger.debug(f"Filtered callbacks: {filtered}")
@@ -2942,7 +2942,7 @@ class Logging(LiteLLMLoggingBaseClass):
             return cb.__func__.__name__
         return str(cb)
 
-    def _is_internal_litellm_proxy_callback(self, cb) -> bool:
+    def _is_internal_remodl_proxy_callback(self, cb) -> bool:
         """Helper to check if a callback is internal"""
         INTERNAL_PREFIXES = [
             "_PROXY",
@@ -2968,7 +2968,7 @@ class Logging(LiteLLMLoggingBaseClass):
                 continue
             elif (
                 isinstance(_c, str)
-                and _c in litellm._known_custom_logger_compatible_callbacks
+                and _c in remodl._known_custom_logger_compatible_callbacks
             ):
                 continue
             _new_callbacks.append(_c)
@@ -3020,32 +3020,32 @@ class Logging(LiteLLMLoggingBaseClass):
 
         httpx_response = self.model_call_details.get("httpx_response", None)
         if httpx_response and isinstance(httpx_response, httpx.Response):
-            result = litellm.AnthropicConfig().transform_response(
+            result = remodl.AnthropicConfig().transform_response(
                 raw_response=httpx_response,
-                model_response=litellm.ModelResponse(),
+                model_response=remodl.ModelResponse(),
                 model=self.model,
                 messages=[],
                 logging_obj=self,
                 optional_params={},
                 api_key="",
                 request_data={},
-                encoding=litellm.encoding,
+                encoding=remodl.encoding,
                 json_mode=False,
-                litellm_params={},
+                remodl_params={},
             )
         else:
-            from litellm.types.llms.anthropic import AnthropicResponse
+            from remodl.types.llms.anthropic import AnthropicResponse
 
             pydantic_result = AnthropicResponse.model_validate(result)
             import httpx
 
-            result = litellm.AnthropicConfig().transform_parsed_response(
+            result = remodl.AnthropicConfig().transform_parsed_response(
                 completion_response=pydantic_result.model_dump(),
                 raw_response=httpx.Response(
                     status_code=200,
                     headers={},
                 ),
-                model_response=litellm.ModelResponse(),
+                model_response=remodl.ModelResponse(),
                 json_mode=None,
             )
         return result
@@ -3062,9 +3062,9 @@ class Logging(LiteLLMLoggingBaseClass):
         if httpx_response is None:
             raise ValueError("Google GenAI Generate Content: httpx_response is None")
         dict_result = httpx_response.json()
-        result = litellm.VertexGeminiConfig()._transform_google_generate_content_to_openai_model_response(
+        result = remodl.VertexGeminiConfig()._transform_google_generate_content_to_openai_model_response(
             completion_response=dict_result,
-            model_response=litellm.ModelResponse(),
+            model_response=remodl.ModelResponse(),
             model=self.model,
             logging_obj=self,
             raw_response=httpx.Response(
@@ -3216,7 +3216,7 @@ def set_callbacks(callback_list, function_id=None):  # noqa: PLR0915
             elif callback == "s3":
                 s3Logger = S3Logger()
             elif callback == "wandb":
-                from litellm.integrations.weights_biases import WeightsBiasesLogger
+                from remodl.integrations.weights_biases import WeightsBiasesLogger
 
                 weightsBiasesLogger = WeightsBiasesLogger()
             elif callback == "logfire":
@@ -3239,7 +3239,7 @@ def _init_custom_logger_compatible_class(  # noqa: PLR0915
     internal_usage_cache: Optional[DualCache],
     llm_router: Optional[
         Any
-    ],  # expect litellm.Router, but typing errors due to circular import
+    ],  # expect remodl.Router, but typing errors due to circular import
     custom_logger_init_args: Optional[dict] = {},
 ) -> Optional[CustomLogger]:
     """
@@ -3280,7 +3280,7 @@ def _init_custom_logger_compatible_class(  # noqa: PLR0915
             _in_memory_loggers.append(_posthog_logger)
             return _posthog_logger  # type: ignore
         elif logging_integration == "braintrust":
-            from litellm.integrations.braintrust_logging import BraintrustLogger
+            from remodl.integrations.braintrust_logging import BraintrustLogger
 
             for callback in _in_memory_loggers:
                 if isinstance(callback, BraintrustLogger):
@@ -3376,7 +3376,7 @@ def _init_custom_logger_compatible_class(  # noqa: PLR0915
             _in_memory_loggers.append(_opik_logger)
             return _opik_logger  # type: ignore
         elif logging_integration == "arize":
-            from litellm.integrations.opentelemetry import (
+            from remodl.integrations.opentelemetry import (
                 OpenTelemetry,
                 OpenTelemetryConfig,
             )
@@ -3404,7 +3404,7 @@ def _init_custom_logger_compatible_class(  # noqa: PLR0915
             _in_memory_loggers.append(_arize_otel_logger)
             return _arize_otel_logger  # type: ignore
         elif logging_integration == "arize_phoenix":
-            from litellm.integrations.opentelemetry import (
+            from remodl.integrations.opentelemetry import (
                 OpenTelemetry,
                 OpenTelemetryConfig,
             )
@@ -3433,7 +3433,7 @@ def _init_custom_logger_compatible_class(  # noqa: PLR0915
             _in_memory_loggers.append(_otel_logger)
             return _otel_logger  # type: ignore
         elif logging_integration == "otel":
-            from litellm.integrations.opentelemetry import OpenTelemetry
+            from remodl.integrations.opentelemetry import OpenTelemetry
 
             for callback in _in_memory_loggers:
                 if isinstance(callback, OpenTelemetry):
@@ -3455,7 +3455,7 @@ def _init_custom_logger_compatible_class(  # noqa: PLR0915
             _in_memory_loggers.append(galileo_logger)
             return galileo_logger  # type: ignore
         elif logging_integration == "cloudzero":
-            from litellm.integrations.cloudzero.cloudzero import CloudZeroLogger
+            from remodl.integrations.cloudzero.cloudzero import CloudZeroLogger
 
             for callback in _in_memory_loggers:
                 if isinstance(callback, CloudZeroLogger):
@@ -3474,7 +3474,7 @@ def _init_custom_logger_compatible_class(  # noqa: PLR0915
         elif logging_integration == "logfire":
             if "LOGFIRE_TOKEN" not in os.environ:
                 raise ValueError("LOGFIRE_TOKEN not found in environment variables")
-            from litellm.integrations.opentelemetry import (
+            from remodl.integrations.opentelemetry import (
                 OpenTelemetry,
                 OpenTelemetryConfig,
             )
@@ -3491,7 +3491,7 @@ def _init_custom_logger_compatible_class(  # noqa: PLR0915
             _in_memory_loggers.append(_otel_logger)
             return _otel_logger  # type: ignore
         elif logging_integration == "dynamic_rate_limiter":
-            from litellm.proxy.hooks.dynamic_rate_limiter import (
+            from remodl.proxy.hooks.dynamic_rate_limiter import (
                 _PROXY_DynamicRateLimitHandler,
             )
 
@@ -3510,12 +3510,12 @@ def _init_custom_logger_compatible_class(  # noqa: PLR0915
                 internal_usage_cache=internal_usage_cache
             )
 
-            if llm_router is not None and isinstance(llm_router, litellm.Router):
+            if llm_router is not None and isinstance(llm_router, remodl.Router):
                 dynamic_rate_limiter_obj.update_variables(llm_router=llm_router)
             _in_memory_loggers.append(dynamic_rate_limiter_obj)
             return dynamic_rate_limiter_obj  # type: ignore
         elif logging_integration == "dynamic_rate_limiter_v3":
-            from litellm.proxy.hooks.dynamic_rate_limiter_v3 import (
+            from remodl.proxy.hooks.dynamic_rate_limiter_v3 import (
                 _PROXY_DynamicRateLimitHandlerV3,
             )
 
@@ -3534,7 +3534,7 @@ def _init_custom_logger_compatible_class(  # noqa: PLR0915
                 internal_usage_cache=internal_usage_cache
             )
 
-            if llm_router is not None and isinstance(llm_router, litellm.Router):
+            if llm_router is not None and isinstance(llm_router, remodl.Router):
                 dynamic_rate_limiter_obj_v3.update_variables(llm_router=llm_router)
             _in_memory_loggers.append(dynamic_rate_limiter_obj_v3)
             return dynamic_rate_limiter_obj_v3  # type: ignore
@@ -3542,7 +3542,7 @@ def _init_custom_logger_compatible_class(  # noqa: PLR0915
             if "LANGTRACE_API_KEY" not in os.environ:
                 raise ValueError("LANGTRACE_API_KEY not found in environment variables")
 
-            from litellm.integrations.opentelemetry import (
+            from remodl.integrations.opentelemetry import (
                 OpenTelemetry,
                 OpenTelemetryConfig,
             )
@@ -3581,8 +3581,8 @@ def _init_custom_logger_compatible_class(  # noqa: PLR0915
             _in_memory_loggers.append(langfuse_logger)
             return langfuse_logger  # type: ignore
         elif logging_integration == "langfuse_otel":
-            from litellm.integrations.langfuse.langfuse_otel import LangfuseOtelLogger
-            from litellm.integrations.opentelemetry import (
+            from remodl.integrations.langfuse.langfuse_otel import LangfuseOtelLogger
+            from remodl.integrations.opentelemetry import (
                 OpenTelemetry,
                 OpenTelemetryConfig,
             )
@@ -3621,7 +3621,7 @@ def _init_custom_logger_compatible_class(  # noqa: PLR0915
             _in_memory_loggers.append(anthropic_cache_control_hook)
             return anthropic_cache_control_hook  # type: ignore
         elif logging_integration == "vector_store_pre_call_hook":
-            from litellm.integrations.vector_store_integrations.vector_store_pre_call_hook import (
+            from remodl.integrations.vector_store_integrations.vector_store_pre_call_hook import (
                 VectorStorePreCallHook,
             )
 
@@ -3676,7 +3676,7 @@ def _init_custom_logger_compatible_class(  # noqa: PLR0915
             _in_memory_loggers.append(dotprompt_logger)
             return dotprompt_logger  # type: ignore
         elif logging_integration == "bitbucket":
-            from litellm.integrations.bitbucket.bitbucket_prompt_manager import (
+            from remodl.integrations.bitbucket.bitbucket_prompt_manager import (
                 BitBucketPromptManager,
             )
 
@@ -3685,17 +3685,17 @@ def _init_custom_logger_compatible_class(  # noqa: PLR0915
                     return callback
 
             # Get global BitBucket config
-            bitbucket_config = getattr(litellm, "global_bitbucket_config", None)
+            bitbucket_config = getattr(remodl, "global_bitbucket_config", None)
             if bitbucket_config is None:
                 raise ValueError(
-                    "BitBucket configuration not found. Please set litellm.global_bitbucket_config first."
+                    "BitBucket configuration not found. Please set remodl.global_bitbucket_config first."
                 )
 
             bitbucket_logger = BitBucketPromptManager(bitbucket_config=bitbucket_config)
             _in_memory_loggers.append(bitbucket_logger)
             return bitbucket_logger  # type: ignore
         elif logging_integration == "gitlab":
-            from litellm.integrations.gitlab.gitlab_prompt_manager import (
+            from remodl.integrations.gitlab.gitlab_prompt_manager import (
                 GitLabPromptManager,
             )
 
@@ -3704,10 +3704,10 @@ def _init_custom_logger_compatible_class(  # noqa: PLR0915
                     return callback
 
             # Get global BitBucket config
-            gitlab_config = getattr(litellm, "global_gitlab_config", None)
+            gitlab_config = getattr(remodl, "global_gitlab_config", None)
             if gitlab_config is None:
                 raise ValueError(
-                    "Gitlab configuration not found. Please set litellm.global_gitlab_config first."
+                    "Gitlab configuration not found. Please set remodl.global_gitlab_config first."
                 )
 
             gitlab_logger = GitLabPromptManager(gitlab_config=gitlab_config)
@@ -3735,7 +3735,7 @@ def get_custom_logger_compatible_class(  # noqa: PLR0915
                 if isinstance(callback, OpenMeterLogger):
                     return callback
         elif logging_integration == "braintrust":
-            from litellm.integrations.braintrust_logging import BraintrustLogger
+            from remodl.integrations.braintrust_logging import BraintrustLogger
 
             for callback in _in_memory_loggers:
                 if isinstance(callback, BraintrustLogger):
@@ -3745,7 +3745,7 @@ def get_custom_logger_compatible_class(  # noqa: PLR0915
                 if isinstance(callback, GalileoObserve):
                     return callback
         elif logging_integration == "cloudzero":
-            from litellm.integrations.cloudzero.cloudzero import CloudZeroLogger
+            from remodl.integrations.cloudzero.cloudzero import CloudZeroLogger
 
             for callback in _in_memory_loggers:
                 if isinstance(callback, CloudZeroLogger):
@@ -3806,7 +3806,7 @@ def get_custom_logger_compatible_class(  # noqa: PLR0915
                 if isinstance(callback, LangfusePromptManagement):
                     return callback
         elif logging_integration == "otel":
-            from litellm.integrations.opentelemetry import OpenTelemetry
+            from remodl.integrations.opentelemetry import OpenTelemetry
 
             for callback in _in_memory_loggers:
                 if isinstance(callback, OpenTelemetry):
@@ -3825,14 +3825,14 @@ def get_custom_logger_compatible_class(  # noqa: PLR0915
         elif logging_integration == "logfire":
             if "LOGFIRE_TOKEN" not in os.environ:
                 raise ValueError("LOGFIRE_TOKEN not found in environment variables")
-            from litellm.integrations.opentelemetry import OpenTelemetry
+            from remodl.integrations.opentelemetry import OpenTelemetry
 
             for callback in _in_memory_loggers:
                 if isinstance(callback, OpenTelemetry):
                     return callback  # type: ignore
 
         elif logging_integration == "dynamic_rate_limiter":
-            from litellm.proxy.hooks.dynamic_rate_limiter import (
+            from remodl.proxy.hooks.dynamic_rate_limiter import (
                 _PROXY_DynamicRateLimitHandler,
             )
 
@@ -3840,7 +3840,7 @@ def get_custom_logger_compatible_class(  # noqa: PLR0915
                 if isinstance(callback, _PROXY_DynamicRateLimitHandler):
                     return callback  # type: ignore
         elif logging_integration == "dynamic_rate_limiter_v3":
-            from litellm.proxy.hooks.dynamic_rate_limiter_v3 import (
+            from remodl.proxy.hooks.dynamic_rate_limiter_v3 import (
                 _PROXY_DynamicRateLimitHandlerV3,
             )
 
@@ -3849,7 +3849,7 @@ def get_custom_logger_compatible_class(  # noqa: PLR0915
                     return callback  # type: ignore
 
         elif logging_integration == "langtrace":
-            from litellm.integrations.opentelemetry import OpenTelemetry
+            from remodl.integrations.opentelemetry import OpenTelemetry
 
             if "LANGTRACE_API_KEY" not in os.environ:
                 raise ValueError("LANGTRACE_API_KEY not found in environment variables")
@@ -3874,7 +3874,7 @@ def get_custom_logger_compatible_class(  # noqa: PLR0915
                 if isinstance(callback, AnthropicCacheControlHook):
                     return callback
         elif logging_integration == "vector_store_pre_call_hook":
-            from litellm.integrations.vector_store_integrations.vector_store_pre_call_hook import (
+            from remodl.integrations.vector_store_integrations.vector_store_pre_call_hook import (
                 VectorStorePreCallHook,
             )
 
@@ -3916,28 +3916,28 @@ def _get_custom_logger_settings_from_proxy_server(callback_name: str) -> Dict:
         otel:
             message_logging: False
     """
-    from litellm.proxy.proxy_server import callback_settings
+    from remodl.proxy.proxy_server import callback_settings
 
     if callback_settings:
         return dict(callback_settings.get(callback_name, {}))
     return {}
 
 
-def use_custom_pricing_for_model(litellm_params: Optional[dict]) -> bool:
+def use_custom_pricing_for_model(remodl_params: Optional[dict]) -> bool:
     """
     Check if the model uses custom pricing
 
-    Returns True if any of `SPECIAL_MODEL_INFO_PARAMS` are present in `litellm_params` or `model_info`
+    Returns True if any of `SPECIAL_MODEL_INFO_PARAMS` are present in `remodl_params` or `model_info`
     """
-    if litellm_params is None:
+    if remodl_params is None:
         return False
 
-    metadata: dict = litellm_params.get("metadata", {}) or {}
+    metadata: dict = remodl_params.get("metadata", {}) or {}
     model_info: dict = metadata.get("model_info", {}) or {}
 
     custom_pricing_keys = CustomPricingLiteLLMParams.model_fields.keys()
     for key in custom_pricing_keys:
-        if litellm_params.get(key, None) is not None:
+        if remodl_params.get(key, None) is not None:
             return True
         elif model_info.get(key, None) is not None:
             return True
@@ -3999,7 +3999,7 @@ class StandardLoggingPayloadSetup:
     @staticmethod
     def get_standard_logging_metadata(
         metadata: Optional[Dict[str, Any]],
-        litellm_params: Optional[dict] = None,
+        remodl_params: Optional[dict] = None,
         prompt_integration: Optional[str] = None,
         applied_guardrails: Optional[List[str]] = None,
         mcp_tool_call_metadata: Optional[StandardLoggingMCPToolCall] = None,
@@ -4028,10 +4028,10 @@ class StandardLoggingPayloadSetup:
         prompt_management_metadata: Optional[
             StandardLoggingPromptManagementMetadata
         ] = None
-        if litellm_params is not None:
-            prompt_id = cast(Optional[str], litellm_params.get("prompt_id", None))
+        if remodl_params is not None:
+            prompt_id = cast(Optional[str], remodl_params.get("prompt_id", None))
             prompt_variables = cast(
-                Optional[dict], litellm_params.get("prompt_variables", None)
+                Optional[dict], remodl_params.get("prompt_variables", None)
             )
 
             if prompt_id is not None and prompt_integration is not None:
@@ -4081,7 +4081,7 @@ class StandardLoggingPayloadSetup:
                     )  # this is the hash
             _potential_requester_metadata = metadata.get(
                 "metadata", None
-            )  # check if user passed metadata in the sdk request - e.g. metadata for langsmith logging - https://docs.litellm.ai/docs/observability/langsmith_integration#set-langsmith-fields
+            )  # check if user passed metadata in the sdk request - e.g. metadata for langsmith logging - https://docs.remodl.ai/docs/observability/langsmith_integration#set-langsmith-fields
             if (
                 clean_metadata["requester_metadata"] is None
                 and _potential_requester_metadata is not None
@@ -4167,7 +4167,7 @@ class StandardLoggingPayloadSetup:
             )
         else:
             try:
-                _model_cost_information = litellm.get_model_info(
+                _model_cost_information = remodl.get_model_info(
                     model=model_cost_name, custom_llm_provider=custom_llm_provider
                 )
                 model_cost_information = StandardLoggingModelInformation(
@@ -4244,9 +4244,9 @@ class StandardLoggingPayloadSetup:
             api_base=None,
             response_cost=None,
             additional_headers=None,
-            litellm_overhead_time_ms=None,
+            remodl_overhead_time_ms=None,
             batch_models=None,
-            litellm_model_name=None,
+            remodl_model_name=None,
             usage_object=None,
         )
         if hidden_params is not None:
@@ -4286,15 +4286,15 @@ class StandardLoggingPayloadSetup:
             Optional[str]: The generated object key or None if cold storage not configured
         """
         # Generate object key in same format as S3Logger
-        from litellm.integrations.s3 import get_s3_object_key
+        from remodl.integrations.s3 import get_s3_object_key
 
         # Only generate object key if cold storage is configured
-        cold_storage_custom_logger = litellm.cold_storage_custom_logger
+        cold_storage_custom_logger = remodl.cold_storage_custom_logger
         if cold_storage_custom_logger is None:
             return None
 
         try:
-            # Generate file name in same format as litellm.utils.get_logging_id
+            # Generate file name in same format as remodl.utils.get_logging_id
             s3_file_name = f"time-{start_time.strftime('%H-%M-%S-%f')}_{response_id}"
 
             # Get the actual s3_path from the configured cold storage logger instance
@@ -4302,7 +4302,7 @@ class StandardLoggingPayloadSetup:
 
             # Try to get the actual logger instance from the logger name
             try:
-                custom_logger = litellm.logging_callback_manager.get_active_custom_logger_for_callback_name(
+                custom_logger = remodl.logging_callback_manager.get_active_custom_logger_for_callback_name(
                     cold_storage_custom_logger
                 )
                 if (
@@ -4332,7 +4332,7 @@ class StandardLoggingPayloadSetup:
         original_exception: Optional[Exception],
         traceback_str: Optional[str] = None,
     ) -> StandardLoggingPayloadErrorInformation:
-        from litellm.constants import MAXIMUM_TRACEBACK_LINES_TO_LOG
+        from remodl.constants import MAXIMUM_TRACEBACK_LINES_TO_LOG
 
         error_status: str = str(getattr(original_exception, "status_code", ""))
         error_class: str = (
@@ -4388,31 +4388,31 @@ class StandardLoggingPayloadSetup:
     @staticmethod
     def _get_standard_logging_payload_trace_id(
         logging_obj: Logging,
-        litellm_params: dict,
+        remodl_params: dict,
     ) -> str:
         """
-        Returns the `litellm_trace_id` for this request
+        Returns the `remodl_trace_id` for this request
 
         This helps link sessions when multiple requests are made in a single session
         """
-        dynamic_litellm_session_id = litellm_params.get("litellm_session_id")
-        dynamic_litellm_trace_id = litellm_params.get("litellm_trace_id")
+        dynamic_remodl_session_id = remodl_params.get("remodl_session_id")
+        dynamic_remodl_trace_id = remodl_params.get("remodl_trace_id")
 
-        # Note: we recommend using `litellm_session_id` for session tracking
-        # `litellm_trace_id` is an internal litellm param
-        if dynamic_litellm_session_id:
-            return str(dynamic_litellm_session_id)
-        elif dynamic_litellm_trace_id:
-            return str(dynamic_litellm_trace_id)
+        # Note: we recommend using `remodl_session_id` for session tracking
+        # `remodl_trace_id` is an internal remodl param
+        if dynamic_remodl_session_id:
+            return str(dynamic_remodl_session_id)
+        elif dynamic_remodl_trace_id:
+            return str(dynamic_remodl_trace_id)
         else:
-            return logging_obj.litellm_trace_id
+            return logging_obj.remodl_trace_id
 
     @staticmethod
     def _get_user_agent_tags(proxy_server_request: dict) -> Optional[List[str]]:
         """
         Return the user agent tags from the proxy server request for spend tracking
         """
-        if litellm.disable_add_user_agent_to_request_tags is True:
+        if remodl.disable_add_user_agent_to_request_tags is True:
             return None
         user_agent_tags: Optional[List[str]] = None
         headers = proxy_server_request.get("headers", {})
@@ -4436,7 +4436,7 @@ class StandardLoggingPayloadSetup:
         """
         Extract additional header tags for spend tracking based on config.
         """
-        extra_headers: List[str] = litellm.extra_spend_tag_headers or []
+        extra_headers: List[str] = remodl.extra_spend_tag_headers or []
         if not extra_headers:
             return None
 
@@ -4454,15 +4454,15 @@ class StandardLoggingPayloadSetup:
 
     @staticmethod
     def _get_request_tags(
-        litellm_params: dict, proxy_server_request: dict
+        remodl_params: dict, proxy_server_request: dict
     ) -> List[str]:
-        # check for 'tags' in both 'metadata' and 'litellm_metadata'
-        metadata = litellm_params.get("metadata") or {}
-        litellm_metadata = litellm_params.get("litellm_metadata") or {}
+        # check for 'tags' in both 'metadata' and 'remodl_metadata'
+        metadata = remodl_params.get("metadata") or {}
+        remodl_metadata = remodl_params.get("remodl_metadata") or {}
         if metadata.get("tags", []):
             request_tags = metadata.get("tags", [])
-        elif litellm_metadata.get("tags", []):
-            request_tags = litellm_metadata.get("tags", [])
+        elif remodl_metadata.get("tags", []):
+            request_tags = remodl_metadata.get("tags", [])
         else:
             request_tags = []
         user_agent_tags = StandardLoggingPayloadSetup._get_user_agent_tags(
@@ -4557,20 +4557,20 @@ def get_standard_logging_object_payload(
                         cache_key=None,
                         api_base=None,
                         response_cost=None,
-                        litellm_overhead_time_ms=None,
+                        remodl_overhead_time_ms=None,
                         batch_models=None,
-                        litellm_model_name=None,
+                        remodl_model_name=None,
                         usage_object=None,
                     )
                 )
 
         # standardize this function to be used across, s3, dynamoDB, langfuse logging
-        litellm_params = kwargs.get("litellm_params", {}) or {}
-        proxy_server_request = litellm_params.get("proxy_server_request") or {}
+        remodl_params = kwargs.get("remodl_params", {}) or {}
+        proxy_server_request = remodl_params.get("proxy_server_request") or {}
 
         metadata: dict = (
-            litellm_params.get("litellm_metadata")
-            or litellm_params.get("metadata", None)
+            remodl_params.get("remodl_metadata")
+            or remodl_params.get("metadata", None)
             or {}
         )
 
@@ -4584,13 +4584,13 @@ def get_standard_logging_object_payload(
             ),
         )
 
-        id = response_obj.get("id", kwargs.get("litellm_call_id"))
+        id = response_obj.get("id", kwargs.get("remodl_call_id"))
 
         _model_id = metadata.get("model_info", {}).get("id", "")
         _model_group = metadata.get("model_group", "")
 
         request_tags = StandardLoggingPayloadSetup._get_request_tags(
-            litellm_params=litellm_params, proxy_server_request=proxy_server_request
+            remodl_params=remodl_params, proxy_server_request=proxy_server_request
         )
 
         # cleanup timestamps
@@ -4609,15 +4609,15 @@ def get_standard_logging_object_payload(
             completion_start_time_float=completion_start_time_float,
             stream=kwargs.get("stream", False),
         )
-        # clean up litellm hidden params
+        # clean up remodl hidden params
         clean_hidden_params = StandardLoggingPayloadSetup.get_hidden_params(
             hidden_params
         )
 
-        # clean up litellm metadata
+        # clean up remodl metadata
         clean_metadata = StandardLoggingPayloadSetup.get_standard_logging_metadata(
             metadata=metadata,
-            litellm_params=litellm_params,
+            remodl_params=remodl_params,
             prompt_integration=kwargs.get("prompt_integration", None),
             applied_guardrails=kwargs.get("applied_guardrails", None),
             mcp_tool_call_metadata=kwargs.get("mcp_tool_call_metadata", None),
@@ -4646,7 +4646,7 @@ def get_standard_logging_object_payload(
 
         ## Get model cost information ##
         base_model = _get_base_model_from_metadata(model_call_details=kwargs)
-        custom_pricing = use_custom_pricing_for_model(litellm_params=litellm_params)
+        custom_pricing = use_custom_pricing_for_model(remodl_params=remodl_params)
 
         model_cost_information = StandardLoggingPayloadSetup.get_model_cost_information(
             base_model=base_model,
@@ -4678,7 +4678,7 @@ def get_standard_logging_object_payload(
             id=str(id),
             trace_id=StandardLoggingPayloadSetup._get_standard_logging_payload_trace_id(
                 logging_obj=logging_obj,
-                litellm_params=litellm_params,
+                remodl_params=remodl_params,
             ),
             call_type=call_type or "",
             cache_hit=cache_hit,
@@ -4708,7 +4708,7 @@ def get_standard_logging_object_payload(
             request_tags=request_tags,
             end_user=end_user_id or "",
             api_base=StandardLoggingPayloadSetup.strip_trailing_slash(
-                litellm_params.get("api_base", "")
+                remodl_params.get("api_base", "")
             )
             or "",
             model_group=_model_group,
@@ -4802,11 +4802,11 @@ def get_standard_logging_metadata(
     return clean_metadata
 
 
-def scrub_sensitive_keys_in_metadata(litellm_params: Optional[dict]):
-    if litellm_params is None:
-        litellm_params = {}
+def scrub_sensitive_keys_in_metadata(remodl_params: Optional[dict]):
+    if remodl_params is None:
+        remodl_params = {}
 
-    metadata = litellm_params.get("metadata", {}) or {}
+    metadata = remodl_params.get("metadata", {}) or {}
 
     ## check user_api_key_metadata for sensitive logging keys
     cleaned_user_api_key_metadata = {}
@@ -4816,15 +4816,15 @@ def scrub_sensitive_keys_in_metadata(litellm_params: Optional[dict]):
         for k, v in metadata["user_api_key_metadata"].items():
             if k == "logging":  # prevent logging user logging keys
                 cleaned_user_api_key_metadata[k] = (
-                    "scrubbed_by_litellm_for_sensitive_keys"
+                    "scrubbed_by_remodl_for_sensitive_keys"
                 )
             else:
                 cleaned_user_api_key_metadata[k] = v
 
         metadata["user_api_key_metadata"] = cleaned_user_api_key_metadata
-        litellm_params["metadata"] = metadata
+        remodl_params["metadata"] = metadata
 
-    return litellm_params
+    return remodl_params
 
 
 # integration helper function
@@ -4874,9 +4874,9 @@ def create_dummy_standard_logging_payload() -> StandardLoggingPayload:
         api_base=None,
         response_cost=None,
         additional_headers=None,
-        litellm_overhead_time_ms=None,
+        remodl_overhead_time_ms=None,
         batch_models=None,
-        litellm_model_name=None,
+        remodl_model_name=None,
         usage_object=None,
     )
 

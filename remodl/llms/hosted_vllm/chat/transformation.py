@@ -4,12 +4,12 @@ Translate from OpenAI's `/v1/chat/completions` to VLLM's `/v1/chat/completions`
 
 from typing import Any, Coroutine, List, Literal, Optional, Tuple, Union, cast, overload
 
-from litellm.litellm_core_utils.prompt_templates.common_utils import (
+from remodl.remodl_core_utils.prompt_templates.common_utils import (
     _get_image_mime_type_from_url,
 )
-from litellm.litellm_core_utils.prompt_templates.factory import _parse_mime_type
-from litellm.secret_managers.main import get_secret_str
-from litellm.types.llms.openai import (
+from remodl.remodl_core_utils.prompt_templates.factory import _parse_mime_type
+from remodl.secret_managers.main import get_secret_str
+from remodl.types.llms.openai import (
     AllMessageValues,
     ChatCompletionFileObject,
     ChatCompletionVideoObject,

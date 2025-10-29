@@ -6,14 +6,14 @@ from typing import Any, Coroutine, Optional, Union, cast
 
 import httpx
 
-from litellm.llms.azure.azure import AsyncAzureOpenAI, AzureOpenAI
-from litellm.types.llms.openai import (
+from remodl.llms.azure.azure import AsyncAzureOpenAI, AzureOpenAI
+from remodl.types.llms.openai import (
     Batch,
     CancelBatchRequest,
     CreateBatchRequest,
     RetrieveBatchRequest,
 )
-from litellm.types.utils import LiteLLMBatch
+from remodl.types.utils import LiteLLMBatch
 
 from ..common_utils import BaseAzureLLM
 
@@ -48,7 +48,7 @@ class AzureBatchesAPI(BaseAzureLLM):
         timeout: Union[float, httpx.Timeout],
         max_retries: Optional[int],
         client: Optional[Union[AzureOpenAI, AsyncAzureOpenAI]] = None,
-        litellm_params: Optional[dict] = None,
+        remodl_params: Optional[dict] = None,
     ) -> Union[LiteLLMBatch, Coroutine[Any, Any, LiteLLMBatch]]:
         azure_client: Optional[
             Union[AzureOpenAI, AsyncAzureOpenAI]
@@ -58,7 +58,7 @@ class AzureBatchesAPI(BaseAzureLLM):
             api_version=api_version,
             client=client,
             _is_async=_is_async,
-            litellm_params=litellm_params or {},
+            remodl_params=remodl_params or {},
         )
         if azure_client is None:
             raise ValueError(
@@ -94,7 +94,7 @@ class AzureBatchesAPI(BaseAzureLLM):
         timeout: Union[float, httpx.Timeout],
         max_retries: Optional[int],
         client: Optional[AzureOpenAI] = None,
-        litellm_params: Optional[dict] = None,
+        remodl_params: Optional[dict] = None,
     ):
         azure_client: Optional[
             Union[AzureOpenAI, AsyncAzureOpenAI]
@@ -104,7 +104,7 @@ class AzureBatchesAPI(BaseAzureLLM):
             api_version=api_version,
             client=client,
             _is_async=_is_async,
-            litellm_params=litellm_params or {},
+            remodl_params=remodl_params or {},
         )
         if azure_client is None:
             raise ValueError(
@@ -142,7 +142,7 @@ class AzureBatchesAPI(BaseAzureLLM):
         timeout: Union[float, httpx.Timeout],
         max_retries: Optional[int],
         client: Optional[AzureOpenAI] = None,
-        litellm_params: Optional[dict] = None,
+        remodl_params: Optional[dict] = None,
     ):
         azure_client: Optional[
             Union[AzureOpenAI, AsyncAzureOpenAI]
@@ -152,7 +152,7 @@ class AzureBatchesAPI(BaseAzureLLM):
             api_version=api_version,
             client=client,
             _is_async=_is_async,
-            litellm_params=litellm_params or {},
+            remodl_params=remodl_params or {},
         )
         if azure_client is None:
             raise ValueError(
@@ -181,7 +181,7 @@ class AzureBatchesAPI(BaseAzureLLM):
         after: Optional[str] = None,
         limit: Optional[int] = None,
         client: Optional[AzureOpenAI] = None,
-        litellm_params: Optional[dict] = None,
+        remodl_params: Optional[dict] = None,
     ):
         azure_client: Optional[
             Union[AzureOpenAI, AsyncAzureOpenAI]
@@ -191,7 +191,7 @@ class AzureBatchesAPI(BaseAzureLLM):
             api_version=api_version,
             client=client,
             _is_async=_is_async,
-            litellm_params=litellm_params or {},
+            remodl_params=remodl_params or {},
         )
         if azure_client is None:
             raise ValueError(

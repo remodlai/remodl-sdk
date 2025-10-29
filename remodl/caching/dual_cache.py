@@ -15,11 +15,11 @@ from concurrent.futures import ThreadPoolExecutor
 from typing import TYPE_CHECKING, Any, List, Optional, Union
 
 if TYPE_CHECKING:
-    from litellm.types.caching import RedisPipelineIncrementOperation
+    from remodl.types.caching import RedisPipelineIncrementOperation
 
-import litellm
-from litellm._logging import print_verbose, verbose_logger
-from litellm.constants import DEFAULT_MAX_REDIS_BATCH_CACHE_SIZE
+import remodl
+from remodl._logging import print_verbose, verbose_logger
+from remodl.constants import DEFAULT_MAX_REDIS_BATCH_CACHE_SIZE
 
 from .base_cache import BaseCache
 from .in_memory_cache import InMemoryCache
@@ -73,13 +73,13 @@ class DualCache(BaseCache):
         )
         self.redis_batch_cache_expiry = (
             default_redis_batch_cache_expiry
-            or litellm.default_redis_batch_cache_expiry
+            or remodl.default_redis_batch_cache_expiry
             or 10
         )
         self.default_in_memory_ttl = (
-            default_in_memory_ttl or litellm.default_in_memory_ttl
+            default_in_memory_ttl or remodl.default_in_memory_ttl
         )
-        self.default_redis_ttl = default_redis_ttl or litellm.default_redis_ttl
+        self.default_redis_ttl = default_redis_ttl or remodl.default_redis_ttl
 
     def update_cache_ttl(
         self, default_in_memory_ttl: Optional[float], default_redis_ttl: Optional[float]

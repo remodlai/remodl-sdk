@@ -6,7 +6,7 @@ This prevents cost calculation errors when using models not in model_prices_and_
 """
 from typing import Tuple
 
-from litellm.types.utils import Usage
+from remodl.types.utils import Usage
 
 
 def cost_per_token(

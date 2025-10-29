@@ -5,22 +5,22 @@ import os
 import random
 import traceback
 import types
-from litellm._uuid import uuid
+from remodl._uuid import uuid
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
 
 import httpx
 from pydantic import BaseModel  # type: ignore
 
-import litellm
-from litellm._logging import verbose_logger
-from litellm.integrations.custom_batch_logger import CustomBatchLogger
-from litellm.llms.custom_httpx.http_handler import (
+import remodl
+from remodl._logging import verbose_logger
+from remodl.integrations.custom_batch_logger import CustomBatchLogger
+from remodl.llms.custom_httpx.http_handler import (
     get_async_httpx_client,
     httpxSpecialProvider,
 )
-from litellm.types.integrations.langsmith import *
-from litellm.types.utils import StandardCallbackDynamicParams, StandardLoggingPayload
+from remodl.types.integrations.langsmith import *
+from remodl.types.utils import StandardCallbackDynamicParams, StandardLoggingPayload
 
 
 def is_serializable(value):
@@ -63,7 +63,7 @@ class LangsmithLogger(CustomBatchLogger):
             llm_provider=httpxSpecialProvider.LoggingCallback
         )
         _batch_size = (
-            os.getenv("LANGSMITH_BATCH_SIZE", None) or litellm.langsmith_batch_size
+            os.getenv("LANGSMITH_BATCH_SIZE", None) or remodl.langsmith_batch_size
         )
 
         if _batch_size:
@@ -79,7 +79,7 @@ class LangsmithLogger(CustomBatchLogger):
     ) -> LangsmithCredentialsObject:
         _credentials_api_key = langsmith_api_key or os.getenv("LANGSMITH_API_KEY")
         _credentials_project = (
-            langsmith_project or os.getenv("LANGSMITH_PROJECT") or "litellm-completion"
+            langsmith_project or os.getenv("LANGSMITH_PROJECT") or "remodl-completion"
         )
         _credentials_base_url = (
             langsmith_base_url
@@ -102,8 +102,8 @@ class LangsmithLogger(CustomBatchLogger):
         credentials: LangsmithCredentialsObject,
     ):
         try:
-            _litellm_params = kwargs.get("litellm_params", {}) or {}
-            metadata = _litellm_params.get("metadata", {}) or {}
+            _remodl_params = kwargs.get("remodl_params", {}) or {}
+            metadata = _remodl_params.get("metadata", {}) or {}
             project_name = metadata.get(
                 "project_name", credentials["LANGSMITH_PROJECT"]
             )
@@ -131,7 +131,7 @@ class LangsmithLogger(CustomBatchLogger):
 
             data = {
                 "name": run_name,
-                "run_type": "llm",  # this should always be llm, since litellm always logs llm calls. Langsmith allow us to log "chain"
+                "run_type": "llm",  # this should always be llm, since remodl always logs llm calls. Langsmith allow us to log "chain"
                 "inputs": payload,
                 "outputs": payload["response"],
                 "session_name": project_name,
@@ -495,7 +495,7 @@ class LangsmithLogger(CustomBatchLogger):
         langsmith_api_base = self.default_credentials["LANGSMITH_BASE_URL"]
 
         url = f"{langsmith_api_base}/runs/{run_id}"
-        response = litellm.module_level_client.get(
+        response = remodl.module_level_client.get(
             url=url,
             headers={"x-api-key": langsmith_api_key},
         )

@@ -20,19 +20,19 @@ from typing import (
 import httpx
 from httpx._types import CookieTypes, QueryParamTypes, RequestFiles
 
-import litellm
-from litellm.litellm_core_utils.get_llm_provider_logic import get_llm_provider
-from litellm.llms.custom_httpx.http_handler import AsyncHTTPHandler, HTTPHandler
-from litellm.llms.custom_httpx.llm_http_handler import BaseLLMHTTPHandler
-from litellm.passthrough.utils import CommonUtils
-from litellm.utils import client
+import remodl
+from remodl.remodl_core_utils.get_llm_provider_logic import get_llm_provider
+from remodl.llms.custom_httpx.http_handler import AsyncHTTPHandler, HTTPHandler
+from remodl.llms.custom_httpx.llm_http_handler import BaseLLMHTTPHandler
+from remodl.passthrough.utils import CommonUtils
+from remodl.utils import client
 
 base_llm_http_handler = BaseLLMHTTPHandler()
 from .utils import BasePassthroughUtils
 
 if TYPE_CHECKING:
-    from litellm.litellm_core_utils.litellm_logging import Logging as LiteLLMLoggingObj
-    from litellm.llms.base_llm.passthrough.transformation import BasePassthroughConfig
+    from remodl.remodl_core_utils.remodl_logging import Logging as LiteLLMLoggingObj
+    from remodl.llms.base_llm.passthrough.transformation import BasePassthroughConfig
 
 
 @client
@@ -69,8 +69,8 @@ async def allm_passthrough_route(
             api_key=api_key,
         )
 
-        from litellm.types.utils import LlmProviders
-        from litellm.utils import ProviderConfigManager
+        from remodl.types.utils import LlmProviders
+        from remodl.utils import ProviderConfigManager
 
         provider_config = cast(
             Optional["BasePassthroughConfig"], kwargs.get("provider_config")
@@ -125,8 +125,8 @@ async def allm_passthrough_route(
         raise e
     except Exception as e:
         # For other exceptions, use provider-specific error handling
-        from litellm.types.utils import LlmProviders
-        from litellm.utils import ProviderConfigManager
+        from remodl.types.utils import LlmProviders
+        from remodl.utils import ProviderConfigManager
 
         # Get the provider using the same logic as llm_passthrough_route
         _, resolved_custom_llm_provider, _, _ = get_llm_provider(
@@ -194,19 +194,19 @@ def llm_passthrough_route(
     Step 2. Send the request
     Step 3. Return the response
     """
-    from litellm.litellm_core_utils.get_litellm_params import get_litellm_params
-    from litellm.types.utils import LlmProviders
-    from litellm.utils import ProviderConfigManager
+    from remodl.remodl_core_utils.get_remodl_params import get_remodl_params
+    from remodl.types.utils import LlmProviders
+    from remodl.utils import ProviderConfigManager
 
     _is_async = allm_passthrough_route
 
     if client is None:
         if _is_async:
-            client = litellm.module_level_aclient
+            client = remodl.module_level_aclient
         else:
-            client = litellm.module_level_client
+            client = remodl.module_level_client
 
-    litellm_logging_obj = cast("LiteLLMLoggingObj", kwargs.get("litellm_logging_obj"))
+    remodl_logging_obj = cast("LiteLLMLoggingObj", kwargs.get("remodl_logging_obj"))
 
     model, custom_llm_provider, api_key, api_base = get_llm_provider(
         model=model,
@@ -215,10 +215,10 @@ def llm_passthrough_route(
         api_key=api_key,
     )
 
-    litellm_params_dict = get_litellm_params(**kwargs)
-    litellm_logging_obj.update_environment_variables(
+    remodl_params_dict = get_remodl_params(**kwargs)
+    remodl_logging_obj.update_environment_variables(
         model=model,
-        litellm_params=litellm_params_dict,
+        remodl_params=remodl_params_dict,
         optional_params={},
         endpoint=endpoint,
         custom_llm_provider=custom_llm_provider,
@@ -240,7 +240,7 @@ def llm_passthrough_route(
         model=model,
         endpoint=endpoint,
         request_query_params=request_query_params,
-        litellm_params=litellm_params_dict,
+        remodl_params=remodl_params_dict,
     )
 
     # [TODO: Refactor to bedrockpassthroughconfig] need to encode the id of application-inference-profile for bedrock
@@ -258,7 +258,7 @@ def llm_passthrough_route(
         model=model,
         messages=[],
         optional_params={},
-        litellm_params={},
+        remodl_params={},
         api_key=provider_api_key,
         api_base=base_target_url,
     )
@@ -271,7 +271,7 @@ def llm_passthrough_route(
 
     headers, signed_json_body = provider_config.sign_request(
         headers=headers,
-        litellm_params=litellm_params_dict,
+        remodl_params=remodl_params_dict,
         request_data=data if data else json,
         api_base=str(updated_url),
         model=model,
@@ -300,11 +300,11 @@ def llm_passthrough_route(
     )
 
     # Update logging object with streaming status
-    litellm_logging_obj.stream = is_streaming_request
+    remodl_logging_obj.stream = is_streaming_request
 
     ## LOGGING PRE-CALL
     request_data = data if data else json
-    litellm_logging_obj.pre_call(
+    remodl_logging_obj.pre_call(
         input=request_data,
         api_key=provider_api_key,
         additional_args={
@@ -321,7 +321,7 @@ def llm_passthrough_route(
                 client=client,
                 request=request,
                 is_streaming_request=is_streaming_request,
-                litellm_logging_obj=litellm_logging_obj,
+                remodl_logging_obj=remodl_logging_obj,
                 provider_config=provider_config,
             )
         else:
@@ -332,7 +332,7 @@ def llm_passthrough_route(
             if (
                 hasattr(response, "iter_bytes") and is_streaming_request
             ):  # yield the chunk, so we can store it in the logging object
-                return _sync_streaming(response, litellm_logging_obj, provider_config)
+                return _sync_streaming(response, remodl_logging_obj, provider_config)
             else:
                 # For non-streaming responses, yield the entire response
                 return response
@@ -349,7 +349,7 @@ async def _async_passthrough_request(
     client: Union[HTTPHandler, AsyncHTTPHandler],
     request: httpx.Request,
     is_streaming_request: bool,
-    litellm_logging_obj: "LiteLLMLoggingObj",
+    remodl_logging_obj: "LiteLLMLoggingObj",
     provider_config: "BasePassthroughConfig",
 ) -> Union[httpx.Response, AsyncGenerator[Any, Any]]:
     """
@@ -365,7 +365,7 @@ async def _async_passthrough_request(
             # Pass the coroutine to _async_streaming which will await it
             return _async_streaming(
                 response=response_result,
-                litellm_logging_obj=litellm_logging_obj,
+                remodl_logging_obj=remodl_logging_obj,
                 provider_config=provider_config,
             )
         else:
@@ -380,10 +380,10 @@ async def _async_passthrough_request(
 
 def _sync_streaming(
     response: httpx.Response,
-    litellm_logging_obj: "LiteLLMLoggingObj",
+    remodl_logging_obj: "LiteLLMLoggingObj",
     provider_config: "BasePassthroughConfig",
 ):
-    from litellm.utils import executor
+    from remodl.utils import executor
 
     try:
         raw_bytes: List[bytes] = []
@@ -392,7 +392,7 @@ def _sync_streaming(
             yield chunk
 
         executor.submit(
-            litellm_logging_obj.flush_passthrough_collected_chunks,
+            remodl_logging_obj.flush_passthrough_collected_chunks,
             raw_bytes=raw_bytes,
             provider_config=provider_config,
         )
@@ -402,7 +402,7 @@ def _sync_streaming(
 
 async def _async_streaming(
     response: Coroutine[Any, Any, httpx.Response],
-    litellm_logging_obj: "LiteLLMLoggingObj",
+    remodl_logging_obj: "LiteLLMLoggingObj",
     provider_config: "BasePassthroughConfig",
 ):
     try:
@@ -415,7 +415,7 @@ async def _async_streaming(
             yield chunk
 
         asyncio.create_task(
-            litellm_logging_obj.async_flush_passthrough_collected_chunks(
+            remodl_logging_obj.async_flush_passthrough_collected_chunks(
                 raw_bytes=raw_bytes,
                 provider_config=provider_config,
             )

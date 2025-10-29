@@ -3,15 +3,15 @@ from typing import TYPE_CHECKING, List, Optional, Tuple, cast
 
 from httpx import Response
 
-from litellm.litellm_core_utils.litellm_logging import Logging
-from litellm.llms.base_llm.passthrough.transformation import BasePassthroughConfig
+from remodl.remodl_core_utils.remodl_logging import Logging
+from remodl.llms.base_llm.passthrough.transformation import BasePassthroughConfig
 
 from ..base_aws_llm import BaseAWSLLM
 from ..common_utils import BedrockEventStreamDecoderBase, BedrockModelInfo
 
 if TYPE_CHECKING:
-    from litellm.litellm_core_utils.litellm_logging import Logging as LiteLLMLoggingObj
-    from litellm.types.utils import CostResponseTypes
+    from remodl.remodl_core_utils.remodl_logging import Logging as LiteLLMLoggingObj
+    from remodl.types.utils import CostResponseTypes
 
 
 if TYPE_CHECKING:
@@ -31,9 +31,9 @@ class BedrockPassthroughConfig(
         model: str,
         endpoint: str,
         request_query_params: Optional[dict],
-        litellm_params: dict,
+        remodl_params: dict,
     ) -> Tuple["URL", str]:
-        optional_params = litellm_params.copy()
+        optional_params = remodl_params.copy()
 
         aws_region_name = self._get_aws_region_name(
             optional_params=optional_params,
@@ -54,12 +54,12 @@ class BedrockPassthroughConfig(
     def sign_request(
         self,
         headers: dict,
-        litellm_params: dict,
+        remodl_params: dict,
         request_data: Optional[dict],
         api_base: str,
         model: Optional[str] = None,
     ) -> Tuple[dict, Optional[bytes]]:
-        optional_params = litellm_params.copy()
+        optional_params = remodl_params.copy()
         return self._sign_request(
             service_name="bedrock",
             headers=headers,
@@ -78,9 +78,9 @@ class BedrockPassthroughConfig(
         logging_obj: Logging,
         endpoint: str,
     ) -> Optional["CostResponseTypes"]:
-        from litellm import encoding
-        from litellm.types.utils import LlmProviders, ModelResponse
-        from litellm.utils import ProviderConfigManager
+        from remodl import encoding
+        from remodl.types.utils import LlmProviders, ModelResponse
+        from remodl.utils import ProviderConfigManager
 
         if "invoke" in endpoint:
             chat_config_model = "invoke/" + model
@@ -97,20 +97,20 @@ class BedrockPassthroughConfig(
         if provider_chat_config is None:
             raise ValueError(f"No provider config found for model: {model}")
 
-        litellm_model_response: ModelResponse = provider_chat_config.transform_response(
+        remodl_model_response: ModelResponse = provider_chat_config.transform_response(
             model=model,
             messages=[{"role": "user", "content": "no-message-pass-through-endpoint"}],
             raw_response=httpx_response,
             model_response=ModelResponse(),
             logging_obj=logging_obj,
             optional_params={},
-            litellm_params={},
+            remodl_params={},
             api_key="",
             request_data=request_data,
             encoding=encoding,
         )
 
-        return litellm_model_response
+        return remodl_model_response
 
     def _convert_raw_bytes_to_str_lines(self, raw_bytes: List[bytes]) -> List[str]:
         from botocore.eventstream import EventStreamBuffer
@@ -129,7 +129,7 @@ class BedrockPassthroughConfig(
     def handle_logging_collected_chunks(
         self,
         all_chunks: List[str],
-        litellm_logging_obj: "LiteLLMLoggingObj",
+        remodl_logging_obj: "LiteLLMLoggingObj",
         model: str,
         custom_llm_provider: str,
         endpoint: str,
@@ -140,16 +140,16 @@ class BedrockPassthroughConfig(
         3. Return the model_response
         """
 
-        from litellm.litellm_core_utils.streaming_handler import (
+        from remodl.remodl_core_utils.streaming_handler import (
             convert_generic_chunk_to_model_response_stream,
             generic_chunk_has_all_required_fields,
         )
-        from litellm.llms.bedrock.chat import get_bedrock_event_stream_decoder
-        from litellm.llms.bedrock.chat.invoke_transformations.base_invoke_transformation import (
+        from remodl.llms.bedrock.chat import get_bedrock_event_stream_decoder
+        from remodl.llms.bedrock.chat.invoke_transformations.base_invoke_transformation import (
             AmazonInvokeConfig,
         )
-        from litellm.main import stream_chunk_builder
-        from litellm.types.utils import GenericStreamingChunk, ModelResponseStream
+        from remodl.main import stream_chunk_builder
+        from remodl.types.utils import GenericStreamingChunk, ModelResponseStream
 
         all_translated_chunks = []
         if "invoke" in endpoint:

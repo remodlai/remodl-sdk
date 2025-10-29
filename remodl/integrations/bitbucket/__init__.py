@@ -2,10 +2,10 @@ from typing import TYPE_CHECKING, Optional
 
 if TYPE_CHECKING:
     from .bitbucket_prompt_manager import BitBucketPromptManager
-    from litellm.types.prompts.init_prompts import PromptLiteLLMParams, PromptSpec
-    from litellm.integrations.custom_prompt_management import CustomPromptManagement
+    from remodl.types.prompts.init_prompts import PromptLiteLLMParams, PromptSpec
+    from remodl.integrations.custom_prompt_management import CustomPromptManagement
 
-from litellm.types.prompts.init_prompts import SupportedPromptIntegrations
+from remodl.types.prompts.init_prompts import SupportedPromptIntegrations
 
 from .bitbucket_prompt_manager import BitBucketPromptManager
 
@@ -24,19 +24,19 @@ def set_global_bitbucket_config(config: dict) -> None:
                 - access_token: BitBucket access token
                 - branch: Branch to fetch prompts from (default: main)
     """
-    import litellm
+    import remodl
 
-    litellm.global_bitbucket_config = config  # type: ignore
+    remodl.global_bitbucket_config = config  # type: ignore
 
 
 def prompt_initializer(
-    litellm_params: "PromptLiteLLMParams", prompt_spec: "PromptSpec"
+    remodl_params: "PromptLiteLLMParams", prompt_spec: "PromptSpec"
 ) -> "CustomPromptManagement":
     """
     Initialize a prompt from a BitBucket repository.
     """
-    bitbucket_config = getattr(litellm_params, "bitbucket_config", None)
-    prompt_id = getattr(litellm_params, "prompt_id", None)
+    bitbucket_config = getattr(remodl_params, "bitbucket_config", None)
+    prompt_id = getattr(remodl_params, "prompt_id", None)
 
     if not bitbucket_config:
         raise ValueError(

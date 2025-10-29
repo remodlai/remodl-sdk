@@ -4,8 +4,8 @@ Transformation for Calling Google models in their native format.
 
 from typing import Any, Dict, Literal, Optional, Union
 
-from litellm.llms.gemini.google_genai.transformation import GoogleGenAIConfig
-from litellm.types.router import GenericLiteLLMParams
+from remodl.llms.gemini.google_genai.transformation import GoogleGenAIConfig
+from remodl.types.router import GenericLiteLLMParams
 
 
 class VertexAIGoogleGenAIConfig(GoogleGenAIConfig):
@@ -25,7 +25,7 @@ class VertexAIGoogleGenAIConfig(GoogleGenAIConfig):
         api_key: Optional[str],
         headers: Optional[dict],
         model: str,
-        litellm_params: Optional[Union[GenericLiteLLMParams, dict]],
+        remodl_params: Optional[Union[GenericLiteLLMParams, dict]],
     ) -> dict:
         default_headers = {
             "Content-Type": "application/json",

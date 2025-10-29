@@ -4,13 +4,13 @@ from typing import TYPE_CHECKING, Any, Iterable, List, Literal, Optional, Union
 
 import httpx
 
-from litellm._logging import verbose_logger
-from litellm.types.llms.openai import AllMessageValues
+from remodl._logging import verbose_logger
+from remodl.types.llms.openai import AllMessageValues
 
 if TYPE_CHECKING:
     from opentelemetry.trace import Span as _Span
 
-    from litellm.types.utils import ModelResponseStream
+    from remodl.types.utils import ModelResponseStream
 
     Span = Union[_Span, Any]
 else:
@@ -122,54 +122,54 @@ def remove_items_at_indices(items: Optional[List[Any]], indices: Iterable[int]) 
             items.pop(index)
 
 
-def add_missing_spend_metadata_to_litellm_metadata(
-    litellm_metadata: dict, metadata: dict
+def add_missing_spend_metadata_to_remodl_metadata(
+    remodl_metadata: dict, metadata: dict
 ) -> dict:
     """
-    Helper to get litellm metadata for spend tracking
+    Helper to get remodl metadata for spend tracking
 
-    PATCH for issue where both `litellm_metadata` and `metadata` are present in the kwargs
+    PATCH for issue where both `remodl_metadata` and `metadata` are present in the kwargs
     and user_api_key values are in 'metadata'.
     """
     potential_spend_tracking_metadata_substring = "user_api_key"
     for key, value in metadata.items():
         if potential_spend_tracking_metadata_substring in key:
-            litellm_metadata[key] = value
-    return litellm_metadata
+            remodl_metadata[key] = value
+    return remodl_metadata
 
 
 def get_metadata_variable_name_from_kwargs(
     kwargs: dict,
-) -> Literal["metadata", "litellm_metadata"]:
+) -> Literal["metadata", "remodl_metadata"]:
     """
     Helper to return what the "metadata" field should be called in the request data
 
-    - New endpoints return `litellm_metadata`
+    - New endpoints return `remodl_metadata`
     - Old endpoints return `metadata`
 
     Context:
     - LiteLLM used `metadata` as an internal field for storing metadata
     - OpenAI then started using this field for their metadata
-    - LiteLLM is now moving to using `litellm_metadata` for our metadata
+    - LiteLLM is now moving to using `remodl_metadata` for our metadata
     """
-    return "litellm_metadata" if "litellm_metadata" in kwargs else "metadata"
+    return "remodl_metadata" if "remodl_metadata" in kwargs else "metadata"
     
-def get_litellm_metadata_from_kwargs(kwargs: dict):
+def get_remodl_metadata_from_kwargs(kwargs: dict):
     """
-    Helper to get litellm metadata from all litellm request kwargs
+    Helper to get remodl metadata from all remodl request kwargs
 
-    Return `litellm_metadata` if it exists, otherwise return `metadata`
+    Return `remodl_metadata` if it exists, otherwise return `metadata`
     """
-    litellm_params = kwargs.get("litellm_params", {})
-    if litellm_params:
-        metadata = litellm_params.get("metadata", {})
-        litellm_metadata = litellm_params.get("litellm_metadata", {})
-        if litellm_metadata and metadata:
-            litellm_metadata = add_missing_spend_metadata_to_litellm_metadata(
-                litellm_metadata, metadata
+    remodl_params = kwargs.get("remodl_params", {})
+    if remodl_params:
+        metadata = remodl_params.get("metadata", {})
+        remodl_metadata = remodl_params.get("remodl_metadata", {})
+        if remodl_metadata and metadata:
+            remodl_metadata = add_missing_spend_metadata_to_remodl_metadata(
+                remodl_metadata, metadata
             )
-        if litellm_metadata:
-            return litellm_metadata
+        if remodl_metadata:
+            return remodl_metadata
         elif metadata:
             return metadata
 
@@ -183,18 +183,18 @@ def _get_parent_otel_span_from_kwargs(
     try:
         if kwargs is None:
             return None
-        litellm_params = kwargs.get("litellm_params")
+        remodl_params = kwargs.get("remodl_params")
         _metadata = kwargs.get("metadata") or {}
-        if "litellm_parent_otel_span" in _metadata:
-            return _metadata["litellm_parent_otel_span"]
+        if "remodl_parent_otel_span" in _metadata:
+            return _metadata["remodl_parent_otel_span"]
         elif (
-            litellm_params is not None
-            and litellm_params.get("metadata") is not None
-            and "litellm_parent_otel_span" in litellm_params.get("metadata", {})
+            remodl_params is not None
+            and remodl_params.get("metadata") is not None
+            and "remodl_parent_otel_span" in remodl_params.get("metadata", {})
         ):
-            return litellm_params["metadata"]["litellm_parent_otel_span"]
-        elif "litellm_parent_otel_span" in kwargs:
-            return kwargs["litellm_parent_otel_span"]
+            return remodl_params["metadata"]["remodl_parent_otel_span"]
+        elif "remodl_parent_otel_span" in kwargs:
+            return kwargs["remodl_parent_otel_span"]
         return None
     except Exception as e:
         verbose_logger.exception(
@@ -204,7 +204,7 @@ def _get_parent_otel_span_from_kwargs(
 
 
 def process_response_headers(response_headers: Union[httpx.Headers, dict]) -> dict:
-    from litellm.types.utils import OPENAI_RESPONSE_HEADERS
+    from remodl.types.utils import OPENAI_RESPONSE_HEADERS
 
     openai_headers = {}
     processed_headers = {}
@@ -252,27 +252,27 @@ def safe_deep_copy(data):
     """
     import copy
 
-    import litellm
+    import remodl
 
-    if litellm.safe_memory_mode is True:
+    if remodl.safe_memory_mode is True:
         return data
 
-    litellm_parent_otel_span: Optional[Any] = None
-    # Step 1: Remove the litellm_parent_otel_span
-    litellm_parent_otel_span = None
+    remodl_parent_otel_span: Optional[Any] = None
+    # Step 1: Remove the remodl_parent_otel_span
+    remodl_parent_otel_span = None
     if isinstance(data, dict):
-        # remove litellm_parent_otel_span since this is not picklable
-        if "metadata" in data and "litellm_parent_otel_span" in data["metadata"]:
-            litellm_parent_otel_span = data["metadata"].pop("litellm_parent_otel_span")
-            data["metadata"]["litellm_parent_otel_span"] = "placeholder"
+        # remove remodl_parent_otel_span since this is not picklable
+        if "metadata" in data and "remodl_parent_otel_span" in data["metadata"]:
+            remodl_parent_otel_span = data["metadata"].pop("remodl_parent_otel_span")
+            data["metadata"]["remodl_parent_otel_span"] = "placeholder"
         if (
-            "litellm_metadata" in data
-            and "litellm_parent_otel_span" in data["litellm_metadata"]
+            "remodl_metadata" in data
+            and "remodl_parent_otel_span" in data["remodl_metadata"]
         ):
-            litellm_parent_otel_span = data["litellm_metadata"].pop(
-                "litellm_parent_otel_span"
+            remodl_parent_otel_span = data["remodl_metadata"].pop(
+                "remodl_parent_otel_span"
             )
-            data["litellm_metadata"]["litellm_parent_otel_span"] = "placeholder"
+            data["remodl_metadata"]["remodl_parent_otel_span"] = "placeholder"
 
     # Step 2: Per-key deepcopy with fallback
     if isinstance(data, dict):
@@ -288,15 +288,15 @@ def safe_deep_copy(data):
         except Exception:
             new_data = data
 
-    # Step 3: re-add the litellm_parent_otel_span after doing a deep copy
-    if isinstance(data, dict) and litellm_parent_otel_span is not None:
-        if "metadata" in data and "litellm_parent_otel_span" in data["metadata"]:
-            data["metadata"]["litellm_parent_otel_span"] = litellm_parent_otel_span
+    # Step 3: re-add the remodl_parent_otel_span after doing a deep copy
+    if isinstance(data, dict) and remodl_parent_otel_span is not None:
+        if "metadata" in data and "remodl_parent_otel_span" in data["metadata"]:
+            data["metadata"]["remodl_parent_otel_span"] = remodl_parent_otel_span
         if (
-            "litellm_metadata" in data
-            and "litellm_parent_otel_span" in data["litellm_metadata"]
+            "remodl_metadata" in data
+            and "remodl_parent_otel_span" in data["remodl_metadata"]
         ):
-            data["litellm_metadata"][
-                "litellm_parent_otel_span"
-            ] = litellm_parent_otel_span
+            data["remodl_metadata"][
+                "remodl_parent_otel_span"
+            ] = remodl_parent_otel_span
     return new_data

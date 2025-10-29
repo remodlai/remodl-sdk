@@ -2,10 +2,10 @@ from typing import Optional, cast
 
 import httpx
 
-import litellm
-from litellm.llms.openai.image_edit.transformation import OpenAIImageEditConfig
-from litellm.secret_managers.main import get_secret_str
-from litellm.utils import _add_path_to_api_base
+import remodl
+from remodl.llms.openai.image_edit.transformation import OpenAIImageEditConfig
+from remodl.secret_managers.main import get_secret_str
+from remodl.utils import _add_path_to_api_base
 
 
 class AzureImageEditConfig(OpenAIImageEditConfig):
@@ -17,8 +17,8 @@ class AzureImageEditConfig(OpenAIImageEditConfig):
     ) -> dict:
         api_key = (
             api_key
-            or litellm.api_key
-            or litellm.azure_key
+            or remodl.api_key
+            or remodl.azure_key
             or get_secret_str("AZURE_OPENAI_API_KEY")
             or get_secret_str("AZURE_API_KEY")
         )
@@ -34,24 +34,24 @@ class AzureImageEditConfig(OpenAIImageEditConfig):
         self,
         model: str,
         api_base: Optional[str],
-        litellm_params: dict,
+        remodl_params: dict,
     ) -> str:
         """
         Constructs a complete URL for the API request.
 
         Args:
         - api_base: Base URL, e.g.,
-            "https://litellm8397336933.openai.azure.com"
+            "https://remodl8397336933.openai.azure.com"
             OR
-            "https://litellm8397336933.openai.azure.com/openai/deployments/<deployment_name>/images/edits?api-version=2024-05-01-preview"
+            "https://remodl8397336933.openai.azure.com/openai/deployments/<deployment_name>/images/edits?api-version=2024-05-01-preview"
         - model: Model name (deployment name).
-        - litellm_params: Additional query parameters, including "api_version".
+        - remodl_params: Additional query parameters, including "api_version".
 
         Returns:
         - A complete URL string, e.g.,
-        "https://litellm8397336933.openai.azure.com/openai/deployments/<deployment_name>/images/edits?api-version=2024-05-01-preview"
+        "https://remodl8397336933.openai.azure.com/openai/deployments/<deployment_name>/images/edits?api-version=2024-05-01-preview"
         """
-        api_base = api_base or litellm.api_base or get_secret_str("AZURE_API_BASE")
+        api_base = api_base or remodl.api_base or get_secret_str("AZURE_API_BASE")
         if api_base is None:
             raise ValueError(
                 f"api_base is required for Azure AI Studio. Please set the api_base parameter. Passed `api_base={api_base}`"
@@ -59,7 +59,7 @@ class AzureImageEditConfig(OpenAIImageEditConfig):
         original_url = httpx.URL(api_base)
 
         # Extract api_version or use default
-        api_version = cast(Optional[str], litellm_params.get("api_version"))
+        api_version = cast(Optional[str], remodl_params.get("api_version"))
 
         # Create a new dictionary with existing params
         query_params = dict(original_url.params)

@@ -1,6 +1,6 @@
 from typing import Dict, Optional
 
-from litellm.types.utils import ProviderSpecificHeader
+from remodl.types.utils import ProviderSpecificHeader
 
 
 class ProviderSpecificHeaderUtils:

@@ -5,8 +5,8 @@ Helper util for handling databricks-specific cost calculation
 
 from typing import Tuple
 
-from litellm.types.utils import Usage
-from litellm.utils import get_model_info
+from remodl.types.utils import Usage
+from remodl.utils import get_model_info
 
 
 def cost_per_token(model: str, usage: Usage) -> Tuple[float, float]:

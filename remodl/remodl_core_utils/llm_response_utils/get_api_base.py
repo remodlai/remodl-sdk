@@ -1,9 +1,9 @@
 from typing import Optional, Union
 
-import litellm
-from litellm import verbose_logger
+import remodl
+from remodl import verbose_logger
 
-from ...litellm_core_utils.get_llm_provider_logic import get_llm_provider
+from ...remodl_core_utils.get_llm_provider_logic import get_llm_provider
 from ...types.router import LiteLLM_Params
 
 
@@ -14,15 +14,15 @@ def get_api_base(
     Returns the api base used for calling the model.
 
     Parameters:
-    - model: str - the model passed to litellm.completion()
-    - optional_params - the 'litellm_params' in router.completion *OR* additional params passed to litellm.completion - eg. api_base, api_key, etc. See `LiteLLM_Params` - https://github.com/BerriAI/litellm/blob/f09e6ba98d65e035a79f73bc069145002ceafd36/litellm/router.py#L67
+    - model: str - the model passed to remodl.completion()
+    - optional_params - the 'remodl_params' in router.completion *OR* additional params passed to remodl.completion - eg. api_base, api_key, etc. See `LiteLLM_Params` - https://github.com/BerriAI/remodl/blob/f09e6ba98d65e035a79f73bc069145002ceafd36/remodl/router.py#L67
 
     Returns:
     - string (api_base) or None
 
     Example:
     ```
-    from litellm import get_api_base
+    from remodl import get_api_base
 
     get_api_base(model="gemini/gemini-pro")
     ```
@@ -44,8 +44,8 @@ def get_api_base(
     if _optional_params.api_base is not None:
         return _optional_params.api_base
 
-    if litellm.model_alias_map and model in litellm.model_alias_map:
-        model = litellm.model_alias_map[model]
+    if remodl.model_alias_map and model in remodl.model_alias_map:
+        model = remodl.model_alias_map[model]
     try:
         (
             model,
@@ -72,8 +72,8 @@ def get_api_base(
         _optional_params.vertex_location is not None
         and _optional_params.vertex_project is not None
     ):
-        from litellm.llms.vertex_ai.vertex_llm_base import VertexBase
-        from litellm.types.llms.vertex_ai import VertexPartnerProvider
+        from remodl.llms.vertex_ai.vertex_llm_base import VertexBase
+        from remodl.types.llms.vertex_ai import VertexPartnerProvider
 
         if "claude" in model:
             _api_base = VertexBase.create_vertex_url(

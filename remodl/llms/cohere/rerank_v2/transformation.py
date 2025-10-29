@@ -1,7 +1,7 @@
 from typing import Any, Dict, List, Optional, Union
 
-from litellm.llms.cohere.rerank.transformation import CohereRerankConfig
-from litellm.types.rerank import OptionalRerankParams, RerankRequest
+from remodl.llms.cohere.rerank.transformation import CohereRerankConfig
+from remodl.types.rerank import OptionalRerankParams, RerankRequest
 
 
 class CohereRerankV2Config(CohereRerankConfig):

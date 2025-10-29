@@ -5,17 +5,17 @@ This file contains the transformation logic for the Gemini realtime API.
 import json
 from typing import Any, Dict, List, Optional, Union, cast
 
-from litellm import verbose_logger
-from litellm._uuid import uuid
-from litellm.litellm_core_utils.litellm_logging import Logging as LiteLLMLoggingObj
-from litellm.llms.base_llm.realtime.transformation import BaseRealtimeConfig
-from litellm.llms.vertex_ai.gemini.vertex_and_google_ai_studio_gemini import (
+from remodl import verbose_logger
+from remodl._uuid import uuid
+from remodl.remodl_core_utils.remodl_logging import Logging as LiteLLMLoggingObj
+from remodl.llms.base_llm.realtime.transformation import BaseRealtimeConfig
+from remodl.llms.vertex_ai.gemini.vertex_and_google_ai_studio_gemini import (
     VertexGeminiConfig,
 )
-from litellm.responses.litellm_completion_transformation.transformation import (
+from remodl.responses.remodl_completion_transformation.transformation import (
     LiteLLMCompletionResponsesConfig,
 )
-from litellm.types.llms.gemini import (
+from remodl.types.llms.gemini import (
     AutomaticActivityDetection,
     BidiGenerateContentRealtimeInput,
     BidiGenerateContentRealtimeInputConfig,
@@ -23,7 +23,7 @@ from litellm.types.llms.gemini import (
     BidiGenerateContentServerMessage,
     BidiGenerateContentSetup,
 )
-from litellm.types.llms.openai import (
+from remodl.types.llms.openai import (
     OpenAIRealtimeContentPartDone,
     OpenAIRealtimeConversationItemCreated,
     OpenAIRealtimeDoneEvent,
@@ -41,18 +41,18 @@ from litellm.types.llms.openai import (
     OpenAIRealtimeStreamSessionEvents,
     OpenAIRealtimeTurnDetection,
 )
-from litellm.types.llms.vertex_ai import (
+from remodl.types.llms.vertex_ai import (
     GeminiResponseModalities,
     HttpxBlobType,
     HttpxContentType,
 )
-from litellm.types.realtime import (
+from remodl.types.realtime import (
     ALL_DELTA_TYPES,
     RealtimeModalityResponseTransformOutput,
     RealtimeResponseTransformInput,
     RealtimeResponseTypedDict,
 )
-from litellm.utils import get_empty_usage
+from remodl.utils import get_empty_usage
 
 from ..common_utils import encode_unserializable_types, get_api_key_from_env
 
@@ -181,7 +181,7 @@ class GeminiRealtimeConfig(BaseRealtimeConfig):
                     modality.upper() for modality in cast(List[str], value)
                 ]
             elif key == "tools":
-                from litellm.llms.vertex_ai.gemini.vertex_and_google_ai_studio_gemini import (
+                from remodl.llms.vertex_ai.gemini.vertex_and_google_ai_studio_gemini import (
                     VertexGeminiConfig,
                 )
 
@@ -824,7 +824,7 @@ class GeminiRealtimeConfig(BaseRealtimeConfig):
                 message_str = str(message)
             raise ValueError(f"Invalid JSON message: {message_str}")
 
-        logging_session_id = logging_obj.litellm_trace_id
+        logging_session_id = logging_obj.remodl_trace_id
 
         current_output_item_id = realtime_response_transform_input[
             "current_output_item_id"

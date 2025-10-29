@@ -20,9 +20,9 @@ from typing import (
 import httpx
 from pydantic import BaseModel
 
-from litellm.constants import DEFAULT_MAX_TOKENS, RESPONSE_FORMAT_TOOL_NAME
-from litellm.llms.custom_httpx.http_handler import AsyncHTTPHandler, HTTPHandler
-from litellm.types.llms.openai import (
+from remodl.constants import DEFAULT_MAX_TOKENS, RESPONSE_FORMAT_TOOL_NAME
+from remodl.llms.custom_httpx.http_handler import AsyncHTTPHandler, HTTPHandler
+from remodl.types.llms.openai import (
     AllMessageValues,
     ChatCompletionToolChoiceFunctionParam,
     ChatCompletionToolChoiceObjectParam,
@@ -31,8 +31,8 @@ from litellm.types.llms.openai import (
 )
 
 if TYPE_CHECKING:
-    from litellm.litellm_core_utils.streaming_handler import CustomStreamWrapper
-    from litellm.types.utils import ModelResponse
+    from remodl.remodl_core_utils.streaming_handler import CustomStreamWrapper
+    from remodl.types.utils import ModelResponse
 
 from ..base_utils import (
     map_developer_role_to_system_role,
@@ -40,7 +40,7 @@ from ..base_utils import (
 )
 
 if TYPE_CHECKING:
-    from litellm.litellm_core_utils.litellm_logging import Logging as _LiteLLMLoggingObj
+    from remodl.remodl_core_utils.remodl_logging import Logging as _LiteLLMLoggingObj
 
     LiteLLMLoggingObj = _LiteLLMLoggingObj
 else:
@@ -64,7 +64,7 @@ class BaseLLMException(Exception):
             self.request = request
         else:
             self.request = httpx.Request(
-                method="POST", url="https://docs.litellm.ai/docs"
+                method="POST", url="https://docs.remodl.ai/docs"
             )
         if response:
             self.response = response
@@ -179,7 +179,7 @@ class BaseConfig(ABC):
         return map_developer_role_to_system_role(messages=messages)
 
     def should_retry_llm_api_inside_llm_translation_on_http_error(
-        self, e: httpx.HTTPStatusError, litellm_params: dict
+        self, e: httpx.HTTPStatusError, remodl_params: dict
     ) -> bool:
         """
         Returns True if the model/provider should retry the LLM API on UnprocessableEntityError
@@ -276,7 +276,7 @@ class BaseConfig(ABC):
         model: str,
         messages: List[AllMessageValues],
         optional_params: dict,
-        litellm_params: dict,
+        remodl_params: dict,
         api_key: Optional[str] = None,
         api_base: Optional[str] = None,
     ) -> dict:
@@ -313,7 +313,7 @@ class BaseConfig(ABC):
         api_key: Optional[str],
         model: str,
         optional_params: dict,
-        litellm_params: dict,
+        remodl_params: dict,
         stream: Optional[bool] = None,
     ) -> str:
         """
@@ -333,7 +333,7 @@ class BaseConfig(ABC):
         model: str,
         messages: List[AllMessageValues],
         optional_params: dict,
-        litellm_params: dict,
+        remodl_params: dict,
         headers: dict,
     ) -> dict:
         pass
@@ -343,7 +343,7 @@ class BaseConfig(ABC):
         model: str,
         messages: List[AllMessageValues],
         optional_params: dict,
-        litellm_params: dict,
+        remodl_params: dict,
         headers: dict,
     ) -> dict:
         """
@@ -355,7 +355,7 @@ class BaseConfig(ABC):
             model=model,
             messages=messages,
             optional_params=optional_params,
-            litellm_params=litellm_params,
+            remodl_params=remodl_params,
             headers=headers,
         )
 
@@ -369,7 +369,7 @@ class BaseConfig(ABC):
         request_data: dict,
         messages: List[AllMessageValues],
         optional_params: dict,
-        litellm_params: dict,
+        remodl_params: dict,
         encoding: Any,
         api_key: Optional[str] = None,
         json_mode: Optional[bool] = None,

@@ -2,24 +2,24 @@ from typing import List, Optional, Union, cast
 
 from httpx import Headers, Response
 
-from litellm.exceptions import InternalServerError
-from litellm.llms.base_llm.chat.transformation import BaseLLMException
-from litellm.llms.base_llm.embedding.transformation import LiteLLMLoggingObj
-from litellm.types.llms.openai import AllEmbeddingInputValues, AllMessageValues
-from litellm.types.llms.vertex_ai import (
+from remodl.exceptions import InternalServerError
+from remodl.llms.base_llm.chat.transformation import BaseLLMException
+from remodl.llms.base_llm.embedding.transformation import LiteLLMLoggingObj
+from remodl.types.llms.openai import AllEmbeddingInputValues, AllMessageValues
+from remodl.types.llms.vertex_ai import (
     Instance,
     InstanceImage,
     InstanceVideo,
     MultimodalPredictions,
     VertexMultimodalEmbeddingRequest,
 )
-from litellm.types.utils import (
+from remodl.types.utils import (
     Embedding,
     EmbeddingResponse,
     PromptTokensDetailsWrapper,
     Usage,
 )
-from litellm.utils import _count_characters, is_base64_encoded
+from remodl.utils import _count_characters, is_base64_encoded
 
 from ...base_llm.embedding.transformation import BaseEmbeddingConfig
 from ..common_utils import VertexAIError
@@ -47,7 +47,7 @@ class VertexAIMultimodalEmbeddingConfig(BaseEmbeddingConfig):
         model: str,
         messages: List[AllMessageValues],
         optional_params: dict,
-        litellm_params: dict,
+        remodl_params: dict,
         api_key: Optional[str] = None,
         api_base: Optional[str] = None,
     ) -> dict:
@@ -184,7 +184,7 @@ class VertexAIMultimodalEmbeddingConfig(BaseEmbeddingConfig):
         api_key: Optional[str],
         request_data: dict,
         optional_params: dict,
-        litellm_params: dict,
+        remodl_params: dict,
     ) -> EmbeddingResponse:
         if raw_response.status_code != 200:
             raise Exception(f"Error: {raw_response.status_code} {raw_response.text}")

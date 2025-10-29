@@ -17,10 +17,10 @@ from mcp.types import CallToolResult as MCPCallToolResult
 from mcp.types import TextContent
 from mcp.types import Tool as MCPTool
 
-from litellm._logging import verbose_logger
-from litellm.llms.custom_httpx.http_handler import get_ssl_configuration
-from litellm.types.llms.custom_http import VerifyTypes
-from litellm.types.mcp import (
+from remodl._logging import verbose_logger
+from remodl.llms.custom_httpx.http_handler import get_ssl_configuration
+from remodl.types.llms.custom_http import VerifyTypes
+from remodl.types.mcp import (
     MCPAuth,
     MCPAuthType,
     MCPStdioConfig,
@@ -139,7 +139,7 @@ class MCPClient:
                 headers = self._get_auth_headers()
                 httpx_client_factory = self._create_httpx_client_factory()
                 verbose_logger.debug(
-                    "litellm headers for streamablehttp_client: %s", headers
+                    "remodl headers for streamablehttp_client: %s", headers
                 )
                 self._transport_ctx = streamablehttp_client(
                     url=self.server_url,

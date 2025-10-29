@@ -8,13 +8,13 @@ from typing import Any, Coroutine, Dict, Optional, Union
 
 import httpx
 
-import litellm
-from litellm._logging import verbose_logger
-from litellm.constants import request_timeout
-from litellm.litellm_core_utils.litellm_logging import Logging as LiteLLMLoggingObj
-from litellm.llms.base_llm.ocr.transformation import BaseOCRConfig, OCRResponse
-from litellm.llms.custom_httpx.llm_http_handler import BaseLLMHTTPHandler
-from litellm.utils import ProviderConfigManager, client
+import remodl
+from remodl._logging import verbose_logger
+from remodl.constants import request_timeout
+from remodl.remodl_core_utils.remodl_logging import Logging as LiteLLMLoggingObj
+from remodl.llms.base_llm.ocr.transformation import BaseOCRConfig, OCRResponse
+from remodl.llms.custom_httpx.llm_http_handler import BaseLLMHTTPHandler
+from remodl.utils import ProviderConfigManager, client
 
 ####### ENVIRONMENT VARIABLES ###################
 base_llm_http_handler = BaseLLMHTTPHandler()
@@ -52,10 +52,10 @@ async def aocr(
         
     Example:
         ```python
-        import litellm
+        import remodl
         
         # OCR with PDF
-        response = await litellm.aocr(
+        response = await remodl.aocr(
             model="mistral/mistral-ocr-latest",
             document={
                 "type": "document_url",
@@ -65,7 +65,7 @@ async def aocr(
         )
         
         # OCR with image
-        response = await litellm.aocr(
+        response = await remodl.aocr(
             model="mistral/mistral-ocr-latest",
             document={
                 "type": "image_url",
@@ -74,7 +74,7 @@ async def aocr(
         )
         
         # OCR with base64 encoded PDF
-        response = await litellm.aocr(
+        response = await remodl.aocr(
             model="mistral/mistral-ocr-latest",
             document={
                 "type": "document_url",
@@ -90,7 +90,7 @@ async def aocr(
 
         # Get custom llm provider
         if custom_llm_provider is None:
-            _, custom_llm_provider, _, _ = litellm.get_llm_provider(
+            _, custom_llm_provider, _, _ = remodl.get_llm_provider(
                 model=model, api_base=api_base
             )
 
@@ -122,7 +122,7 @@ async def aocr(
 
         return response
     except Exception as e:
-        raise litellm.exception_type(
+        raise remodl.exception_type(
             model=model,
             custom_llm_provider=custom_llm_provider,
             original_exception=e,
@@ -162,10 +162,10 @@ def ocr(
         
     Example:
         ```python
-        import litellm
+        import remodl
         
         # OCR with PDF
-        response = litellm.ocr(
+        response = remodl.ocr(
             model="mistral/mistral-ocr-latest",
             document={
                 "type": "document_url",
@@ -175,7 +175,7 @@ def ocr(
         )
         
         # OCR with image
-        response = litellm.ocr(
+        response = remodl.ocr(
             model="mistral/mistral-ocr-latest",
             document={
                 "type": "image_url",
@@ -184,7 +184,7 @@ def ocr(
         )
         
         # OCR with base64 encoded PDF
-        response = litellm.ocr(
+        response = remodl.ocr(
             model="mistral/mistral-ocr-latest",
             document={
                 "type": "document_url",
@@ -199,8 +199,8 @@ def ocr(
     """
     local_vars = locals()
     try:
-        litellm_logging_obj: LiteLLMLoggingObj = kwargs.pop("litellm_logging_obj")  # type: ignore
-        litellm_call_id: Optional[str] = kwargs.get("litellm_call_id", None)
+        remodl_logging_obj: LiteLLMLoggingObj = kwargs.pop("remodl_logging_obj")  # type: ignore
+        remodl_call_id: Optional[str] = kwargs.get("remodl_call_id", None)
         _is_async = kwargs.pop("aocr", False) is True
         
         # Validate document parameter format (Mistral spec)
@@ -212,7 +212,7 @@ def ocr(
             raise ValueError(f"Invalid document type: {doc_type}. Must be 'document_url' or 'image_url'")
 
         model, custom_llm_provider, dynamic_api_key, dynamic_api_base = (
-            litellm.get_llm_provider(
+            remodl.get_llm_provider(
                 model=model,
                 custom_llm_provider=custom_llm_provider,
                 api_base=api_base,
@@ -230,7 +230,7 @@ def ocr(
         ocr_provider_config: Optional[BaseOCRConfig] = (
             ProviderConfigManager.get_provider_ocr_config(
                 model=model,
-                provider=litellm.LlmProviders(custom_llm_provider),
+                provider=remodl.LlmProviders(custom_llm_provider),
             )
         )
 
@@ -260,11 +260,11 @@ def ocr(
         verbose_logger.debug(f"OCR optional_params after mapping: {optional_params}")
 
         # Pre Call logging
-        litellm_logging_obj.update_environment_variables(
+        remodl_logging_obj.update_environment_variables(
             model=model,
             optional_params=optional_params,
-            litellm_params={
-                "litellm_call_id": litellm_call_id,
+            remodl_params={
+                "remodl_call_id": remodl_call_id,
                 "api_base": api_base,
             },
             custom_llm_provider=custom_llm_provider,
@@ -276,14 +276,14 @@ def ocr(
             document=document,  # Pass the entire document dict
             optional_params=optional_params,
             timeout=timeout or request_timeout,
-            logging_obj=litellm_logging_obj,
+            logging_obj=remodl_logging_obj,
             api_key=api_key,
             api_base=api_base,
             custom_llm_provider=custom_llm_provider,
             aocr=_is_async,
             headers=extra_headers,
             provider_config=ocr_provider_config,
-            litellm_params={
+            remodl_params={
                 "api_base": api_base,
                 "api_key": api_key,
             },
@@ -291,7 +291,7 @@ def ocr(
 
         return response
     except Exception as e:
-        raise litellm.exception_type(
+        raise remodl.exception_type(
             model=model,
             custom_llm_provider=custom_llm_provider,
             original_exception=e,

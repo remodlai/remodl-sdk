@@ -6,14 +6,14 @@ from typing import Optional, Union
 
 import httpx
 
-from litellm.llms.base_llm.audio_transcription.transformation import (
+from remodl.llms.base_llm.audio_transcription.transformation import (
     AudioTranscriptionRequestData,
 )
-from litellm.llms.base_llm.chat.transformation import BaseLLMException
-from litellm.llms.openai.transcriptions.whisper_transformation import (
+from remodl.llms.base_llm.chat.transformation import BaseLLMException
+from remodl.llms.openai.transcriptions.whisper_transformation import (
     OpenAIWhisperAudioTranscriptionConfig,
 )
-from litellm.types.utils import FileTypes
+from remodl.types.utils import FileTypes
 
 
 class RemodlAIAudioTranscriptionError(BaseLLMException):
@@ -36,7 +36,7 @@ class RemodlAIAudioTranscriptionConfig(OpenAIWhisperAudioTranscriptionConfig):
         api_key: Optional[str],
         model: str,
         optional_params: dict,
-        litellm_params: dict,
+        remodl_params: dict,
         stream: Optional[bool] = None,
     ) -> str:
         if api_base:
@@ -52,7 +52,7 @@ class RemodlAIAudioTranscriptionConfig(OpenAIWhisperAudioTranscriptionConfig):
         model: str,
         audio_file: FileTypes,
         optional_params: dict,
-        litellm_params: dict,
+        remodl_params: dict,
     ) -> AudioTranscriptionRequestData:
         """
         Transform the audio transcription request

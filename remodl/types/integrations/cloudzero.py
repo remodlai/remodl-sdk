@@ -15,7 +15,7 @@ class CBFRecord(Dict[str, Any]):
     - resource/id: CloudZero Resource Name (CZRN) (str)
     - usage/amount: Numeric value of tokens consumed (int)
     - usage/units: Description of units, e.g., 'tokens' (str)
-    - resource/service: Maps to CZRN service-type, e.g., 'litellm' (str)
+    - resource/service: Maps to CZRN service-type, e.g., 'remodl' (str)
     - resource/account: Maps to CZRN owner-account-id (entity_id) (str)
     - resource/region: Maps to CZRN region, e.g., 'cross-region' (str)
     - resource/usage_family: Maps to CZRN resource-type, e.g., 'llm-usage' (str)

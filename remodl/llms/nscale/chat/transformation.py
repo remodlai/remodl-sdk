@@ -1,7 +1,7 @@
 from typing import Optional, Tuple
 
-from litellm.llms.openai.chat.gpt_transformation import OpenAIGPTConfig
-from litellm.secret_managers.main import get_secret_str
+from remodl.llms.openai.chat.gpt_transformation import OpenAIGPTConfig
+from remodl.secret_managers.main import get_secret_str
 
 
 class NscaleConfig(OpenAIGPTConfig):

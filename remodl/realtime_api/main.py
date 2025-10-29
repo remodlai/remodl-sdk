@@ -2,19 +2,19 @@
 
 from typing import Any, Optional, cast
 
-import litellm
-from litellm import get_llm_provider
-from litellm.constants import REALTIME_WEBSOCKET_MAX_MESSAGE_SIZE_BYTES
-from litellm.llms.base_llm.realtime.transformation import BaseRealtimeConfig
-from litellm.llms.custom_httpx.llm_http_handler import BaseLLMHTTPHandler
-from litellm.secret_managers.main import get_secret_str
-from litellm.types.realtime import RealtimeQueryParams
-from litellm.types.router import GenericLiteLLMParams
-from litellm.types.utils import LlmProviders
-from litellm.utils import ProviderConfigManager
+import remodl
+from remodl import get_llm_provider
+from remodl.constants import REALTIME_WEBSOCKET_MAX_MESSAGE_SIZE_BYTES
+from remodl.llms.base_llm.realtime.transformation import BaseRealtimeConfig
+from remodl.llms.custom_httpx.llm_http_handler import BaseLLMHTTPHandler
+from remodl.secret_managers.main import get_secret_str
+from remodl.types.realtime import RealtimeQueryParams
+from remodl.types.router import GenericLiteLLMParams
+from remodl.types.utils import LlmProviders
+from remodl.utils import ProviderConfigManager
 
-from ..litellm_core_utils.get_litellm_params import get_litellm_params
-from ..litellm_core_utils.litellm_logging import Logging as LiteLLMLogging
+from ..remodl_core_utils.get_remodl_params import get_remodl_params
+from ..remodl_core_utils.remodl_logging import Logging as LiteLLMLogging
 from ..llms.azure.realtime.handler import AzureOpenAIRealtime
 from ..llms.openai.realtime.handler import OpenAIRealtime
 from ..utils import client as wrapper_client
@@ -48,11 +48,11 @@ async def _arealtime(
         headers = {}
     if extra_headers is not None:
         headers.update(extra_headers)
-    litellm_logging_obj: LiteLLMLogging = kwargs.get("litellm_logging_obj")  # type: ignore
+    remodl_logging_obj: LiteLLMLogging = kwargs.get("remodl_logging_obj")  # type: ignore
     user = kwargs.get("user", None)
-    litellm_params = GenericLiteLLMParams(**kwargs)
+    remodl_params = GenericLiteLLMParams(**kwargs)
 
-    litellm_params_dict = get_litellm_params(**kwargs)
+    remodl_params_dict = get_remodl_params(**kwargs)
 
     model, _custom_llm_provider, dynamic_api_key, dynamic_api_base = get_llm_provider(
         model=model,
@@ -60,11 +60,11 @@ async def _arealtime(
         api_key=api_key,
     )
 
-    litellm_logging_obj.update_environment_variables(
+    remodl_logging_obj.update_environment_variables(
         model=model,
         user=user,
         optional_params={},
-        litellm_params=litellm_params_dict,
+        remodl_params=remodl_params_dict,
         custom_llm_provider=_custom_llm_provider,
     )
 
@@ -78,7 +78,7 @@ async def _arealtime(
         await base_llm_http_handler.async_realtime(
             model=model,
             websocket=websocket,
-            logging_obj=litellm_logging_obj,
+            logging_obj=remodl_logging_obj,
             provider_config=provider_config,
             api_base=api_base,
             api_key=api_key,
@@ -89,15 +89,15 @@ async def _arealtime(
     elif _custom_llm_provider == "azure":
         api_base = (
             dynamic_api_base
-            or litellm_params.api_base
-            or litellm.api_base
+            or remodl_params.api_base
+            or remodl.api_base
             or get_secret_str("AZURE_API_BASE")
         )
         # set API KEY
         api_key = (
             dynamic_api_key
-            or litellm.api_key
-            or litellm.openai_key
+            or remodl.api_key
+            or remodl.openai_key
             or get_secret_str("AZURE_API_KEY")
         )
 
@@ -110,27 +110,27 @@ async def _arealtime(
             azure_ad_token=None,
             client=None,
             timeout=timeout,
-            logging_obj=litellm_logging_obj,
+            logging_obj=remodl_logging_obj,
         )
     elif _custom_llm_provider == "openai":
         api_base = (
             dynamic_api_base
-            or litellm_params.api_base
-            or litellm.api_base
+            or remodl_params.api_base
+            or remodl.api_base
             or "https://api.openai.com/"
         )
         # set API KEY
         api_key = (
             dynamic_api_key
-            or litellm.api_key
-            or litellm.openai_key
+            or remodl.api_key
+            or remodl.openai_key
             or get_secret_str("OPENAI_API_KEY")
         )
 
         await openai_realtime.async_realtime(
             model=model,
             websocket=websocket,
-            logging_obj=litellm_logging_obj,
+            logging_obj=remodl_logging_obj,
             api_base=api_base,
             api_key=api_key,
             client=None,

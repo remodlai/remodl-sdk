@@ -5,8 +5,8 @@ from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple, Union
 import httpx
 
 if TYPE_CHECKING:
-    from litellm.litellm_core_utils.litellm_logging import Logging as LiteLLMLoggingObj
-    from litellm.types.google_genai.main import (
+    from remodl.remodl_core_utils.remodl_logging import Logging as LiteLLMLoggingObj
+    from remodl.types.google_genai.main import (
         GenerateContentConfigDict,
         GenerateContentContentListUnionDict,
         GenerateContentResponse,
@@ -19,7 +19,7 @@ else:
     LiteLLMLoggingObj = Any
     ToolConfigDict = Any
     
-from litellm.types.router import GenericLiteLLMParams
+from remodl.types.router import GenericLiteLLMParams
 
 
 class BaseGoogleGenAIGenerateContentConfig(ABC):
@@ -85,7 +85,7 @@ class BaseGoogleGenAIGenerateContentConfig(ABC):
         api_key: Optional[str],
         headers: Optional[dict],
         model: str,
-        litellm_params: Optional[Union[GenericLiteLLMParams, dict]]
+        remodl_params: Optional[Union[GenericLiteLLMParams, dict]]
     ) -> dict:
         """
         Validate the environment and return headers for the request.
@@ -94,7 +94,7 @@ class BaseGoogleGenAIGenerateContentConfig(ABC):
             api_key: API key
             headers: Existing headers
             model: The model name
-            litellm_params: LiteLLM parameters
+            remodl_params: LiteLLM parameters
 
         Returns:
             Updated headers
@@ -105,7 +105,7 @@ class BaseGoogleGenAIGenerateContentConfig(ABC):
         self,
         api_base: Optional[str],
         model: str,
-        litellm_params: dict,
+        remodl_params: dict,
         stream: bool,
     ) -> Tuple[dict, str]:
         """
@@ -114,7 +114,7 @@ class BaseGoogleGenAIGenerateContentConfig(ABC):
         Args:
             api_base: Base API URL
             model: The model name
-            litellm_params: LiteLLM parameters
+            remodl_params: LiteLLM parameters
             stream: Whether this is a streaming call
 
         Returns:
@@ -126,7 +126,7 @@ class BaseGoogleGenAIGenerateContentConfig(ABC):
         self,
         api_base: Optional[str],
         model: str,
-        litellm_params: dict,
+        remodl_params: dict,
         stream: bool,
     ) -> Tuple[dict, str]:
         """
@@ -135,7 +135,7 @@ class BaseGoogleGenAIGenerateContentConfig(ABC):
         Args:
             api_base: Base API URL
             model: The model name
-            litellm_params: LiteLLM parameters
+            remodl_params: LiteLLM parameters
 
         Returns:
             Tuple of headers and API base
@@ -158,7 +158,7 @@ class BaseGoogleGenAIGenerateContentConfig(ABC):
             contents: Input contents
             tools: Tools
             generate_content_request_params: Request parameters
-            litellm_params: LiteLLM parameters
+            remodl_params: LiteLLM parameters
             headers: Request headers
 
         Returns:
@@ -199,7 +199,7 @@ class BaseGoogleGenAIGenerateContentConfig(ABC):
         Returns:
             Exception instance
         """
-        from litellm.llms.base_llm.chat.transformation import BaseLLMException
+        from remodl.llms.base_llm.chat.transformation import BaseLLMException
 
         return BaseLLMException(
             status_code=status_code,

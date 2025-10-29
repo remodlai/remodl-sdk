@@ -1,5 +1,5 @@
-import litellm
-from litellm.llms.openai.chat.gpt_transformation import OpenAIGPTConfig
+import remodl
+from remodl.llms.openai.chat.gpt_transformation import OpenAIGPTConfig
 
 
 class VertexAIGPTOSSTransformation(OpenAIGPTConfig):
@@ -19,7 +19,7 @@ class VertexAIGPTOSSTransformation(OpenAIGPTConfig):
         #########################################################
         # VertexAI - GPT-OSS does not support tool calls
         #########################################################
-        if litellm.supports_function_calling(model=model) is False:
+        if remodl.supports_function_calling(model=model) is False:
             TOOL_CALLING_PARAMS_TO_REMOVE = ["tool", "tool_choice", "function_call", "functions"]
             base_gpt_series_params = [param for param in base_gpt_series_params if param not in TOOL_CALLING_PARAMS_TO_REMOVE]
 

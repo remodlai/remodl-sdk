@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING, Any, Dict, List, Optional, TypeAlias
 from pydantic import BaseModel
 from typing_extensions import TypedDict
 
-from litellm.types.llms.openai import BaseLiteLLMOpenAIResponseObject
+from remodl.types.llms.openai import BaseLiteLLMOpenAIResponseObject
 
 # During static type-checking we can rely on the real google-genai types.
 if TYPE_CHECKING:

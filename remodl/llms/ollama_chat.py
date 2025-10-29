@@ -1,22 +1,22 @@
 import json
 import time
-from litellm._uuid import uuid
+from remodl._uuid import uuid
 from typing import Any, List, Optional, Union
 
 import aiohttp
 import httpx
 from pydantic import BaseModel
 
-import litellm
-from litellm import verbose_logger
-from litellm.llms.custom_httpx.http_handler import (
+import remodl
+from remodl import verbose_logger
+from remodl.llms.custom_httpx.http_handler import (
     AsyncHTTPHandler,
     HTTPHandler,
     get_async_httpx_client,
 )
-from litellm.types.llms.ollama import OllamaToolCall, OllamaToolCallFunction
-from litellm.types.llms.openai import ChatCompletionAssistantToolCall
-from litellm.types.utils import ModelResponse, StreamingChoices
+from remodl.types.llms.ollama import OllamaToolCall, OllamaToolCallFunction
+from remodl.types.llms.openai import ChatCompletionAssistantToolCall
+from remodl.types.utils import ModelResponse, StreamingChoices
 
 
 class OllamaError(Exception):
@@ -49,7 +49,7 @@ def get_ollama_response(  # noqa: PLR0915
         url = f"{api_base}/api/chat"
 
     ## Load Config
-    config = litellm.OllamaChatConfig.get_config()
+    config = remodl.OllamaChatConfig.get_config()
     for k, v in config.items():
         if (
             k not in optional_params
@@ -67,7 +67,7 @@ def get_ollama_response(  # noqa: PLR0915
     for m in messages:
         if isinstance(
             m, BaseModel
-        ):  # avoid message serialization issues - https://github.com/BerriAI/litellm/issues/5319
+        ):  # avoid message serialization issues - https://github.com/BerriAI/remodl/issues/5319
             m = m.model_dump(exclude_none=True)
         if m.get("tool_calls") is not None and isinstance(m["tool_calls"], list):
             new_tools: List[OllamaToolCall] = []
@@ -142,7 +142,7 @@ def get_ollama_response(  # noqa: PLR0915
     if api_key is not None:
         headers = {"Authorization": "Bearer {}".format(api_key)}
 
-    sync_client = litellm.module_level_client
+    sync_client = remodl.module_level_client
     if client is not None and isinstance(client, HTTPHandler):
         sync_client = client
     response = sync_client.post(
@@ -170,7 +170,7 @@ def get_ollama_response(  # noqa: PLR0915
     model_response.choices[0].finish_reason = "stop"
     if data.get("format", "") == "json" and function_name is not None:
         function_call = json.loads(response_json["message"]["content"])
-        message = litellm.Message(
+        message = remodl.Message(
             content=None,
             tool_calls=[
                 {
@@ -188,18 +188,18 @@ def get_ollama_response(  # noqa: PLR0915
         model_response.choices[0].message = message  # type: ignore
         model_response.choices[0].finish_reason = "tool_calls"
     else:
-        _message = litellm.Message(**response_json["message"])
+        _message = remodl.Message(**response_json["message"])
         model_response.choices[0].message = _message  # type: ignore
     model_response.created = int(time.time())
     model_response.model = "ollama_chat/" + model
-    prompt_tokens = response_json.get("prompt_eval_count", litellm.token_counter(messages=messages))  # type: ignore
+    prompt_tokens = response_json.get("prompt_eval_count", remodl.token_counter(messages=messages))  # type: ignore
     completion_tokens = response_json.get(
-        "eval_count", litellm.token_counter(text=response_json["message"]["content"])
+        "eval_count", remodl.token_counter(text=response_json["message"]["content"])
     )
     setattr(
         model_response,
         "usage",
-        litellm.Usage(
+        remodl.Usage(
             prompt_tokens=prompt_tokens,
             completion_tokens=completion_tokens,
             total_tokens=prompt_tokens + completion_tokens,
@@ -213,7 +213,7 @@ def ollama_completion_stream(url, api_key, data, logging_obj):
         "url": f"{url}",
         "json": data,
         "method": "POST",
-        "timeout": litellm.request_timeout,
+        "timeout": remodl.request_timeout,
         "follow_redirects": True,
     }
     if api_key is not None:
@@ -225,7 +225,7 @@ def ollama_completion_stream(url, api_key, data, logging_obj):
                     status_code=response.status_code, message=response.iter_lines()
                 )
 
-            streamwrapper = litellm.CustomStreamWrapper(
+            streamwrapper = remodl.CustomStreamWrapper(
                 completion_stream=response.iter_lines(),
                 model=data["model"],
                 custom_llm_provider="ollama_chat",
@@ -247,7 +247,7 @@ def ollama_completion_stream(url, api_key, data, logging_obj):
                 response_content = "".join(content_chunks)
 
                 function_call = json.loads(response_content)
-                delta = litellm.utils.Delta(
+                delta = remodl.utils.Delta(
                     content=None,
                     tool_calls=[
                         {
@@ -276,14 +276,14 @@ async def ollama_async_streaming(
 ):
     try:
         _async_http_client = get_async_httpx_client(
-            llm_provider=litellm.LlmProviders.OLLAMA
+            llm_provider=remodl.LlmProviders.OLLAMA
         )
         client = _async_http_client.client
         _request = {
             "url": f"{url}",
             "json": data,
             "method": "POST",
-            "timeout": litellm.request_timeout,
+            "timeout": remodl.request_timeout,
         }
         if api_key is not None:
             _request["headers"] = {"Authorization": "Bearer {}".format(api_key)}
@@ -293,7 +293,7 @@ async def ollama_async_streaming(
                     status_code=response.status_code, message=response.text
                 )
 
-            streamwrapper = litellm.CustomStreamWrapper(
+            streamwrapper = remodl.CustomStreamWrapper(
                 completion_stream=response.aiter_lines(),
                 model=data["model"],
                 custom_llm_provider="ollama_chat",
@@ -326,7 +326,7 @@ async def ollama_async_streaming(
                 response_content = first_chunk_content + "".join(content_chunks)
 
                 function_call = json.loads(response_content)
-                delta = litellm.utils.Delta(
+                delta = remodl.utils.Delta(
                     content=None,
                     tool_calls=[
                         {
@@ -359,14 +359,14 @@ async def ollama_acompletion(
     url,
     api_key: Optional[str],
     data,
-    model_response: litellm.ModelResponse,
+    model_response: remodl.ModelResponse,
     encoding,
     logging_obj,
     function_name,
 ):
     data["stream"] = False
     try:
-        timeout = aiohttp.ClientTimeout(total=litellm.request_timeout)  # 10 minutes
+        timeout = aiohttp.ClientTimeout(total=remodl.request_timeout)  # 10 minutes
         async with aiohttp.ClientSession(timeout=timeout) as session:
             _request = {
                 "url": f"{url}",
@@ -398,7 +398,7 @@ async def ollama_acompletion(
 
             if data.get("format", "") == "json" and function_name is not None:
                 function_call = json.loads(response_json["message"]["content"])
-                message = litellm.Message(
+                message = remodl.Message(
                     content=None,
                     tool_calls=[
                         {
@@ -416,22 +416,22 @@ async def ollama_acompletion(
                 model_response.choices[0].message = message  # type: ignore
                 model_response.choices[0].finish_reason = "tool_calls"
             else:
-                _message = litellm.Message(**response_json["message"])
+                _message = remodl.Message(**response_json["message"])
                 model_response.choices[0].message = _message  # type: ignore
 
             model_response.created = int(time.time())
             model_response.model = "ollama_chat/" + data["model"]
-            prompt_tokens = response_json.get("prompt_eval_count", litellm.token_counter(messages=data["messages"]))  # type: ignore
+            prompt_tokens = response_json.get("prompt_eval_count", remodl.token_counter(messages=data["messages"]))  # type: ignore
             completion_tokens = response_json.get(
                 "eval_count",
-                litellm.token_counter(
+                remodl.token_counter(
                     text=response_json["message"]["content"], count_response_tokens=True
                 ),
             )
             setattr(
                 model_response,
                 "usage",
-                litellm.Usage(
+                remodl.Usage(
                     prompt_tokens=prompt_tokens,
                     completion_tokens=completion_tokens,
                     total_tokens=prompt_tokens + completion_tokens,

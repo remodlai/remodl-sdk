@@ -4,14 +4,14 @@ For calculating cost of fireworks ai serverless inference models.
 
 from typing import Tuple
 
-from litellm.constants import (
+from remodl.constants import (
     FIREWORKS_AI_4_B,
     FIREWORKS_AI_16_B,
     FIREWORKS_AI_56_B_MOE,
     FIREWORKS_AI_176_B_MOE,
 )
-from litellm.types.utils import Usage
-from litellm.utils import get_model_info
+from remodl.types.utils import Usage
+from remodl.utils import get_model_info
 
 
 # Extract the number of billion parameters from the model name

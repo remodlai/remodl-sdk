@@ -1,6 +1,6 @@
 import json
 import time
-from litellm._uuid import uuid
+from remodl._uuid import uuid
 from typing import (
     TYPE_CHECKING,
     Any,
@@ -15,30 +15,30 @@ from typing import (
 from httpx._models import Headers, Response
 from pydantic import BaseModel
 
-import litellm
-from litellm.litellm_core_utils.prompt_templates.common_utils import (
+import remodl
+from remodl.remodl_core_utils.prompt_templates.common_utils import (
     _extract_reasoning_content,
     convert_content_list_to_str,
     extract_images_from_message,
 )
-from litellm.llms.base_llm.base_model_iterator import BaseModelResponseIterator
-from litellm.llms.base_llm.chat.transformation import BaseConfig, BaseLLMException
-from litellm.types.llms.ollama import (
+from remodl.llms.base_llm.base_model_iterator import BaseModelResponseIterator
+from remodl.llms.base_llm.chat.transformation import BaseConfig, BaseLLMException
+from remodl.types.llms.ollama import (
     OllamaChatCompletionMessage,
     OllamaToolCall,
     OllamaToolCallFunction,
 )
-from litellm.types.llms.openai import (
+from remodl.types.llms.openai import (
     AllMessageValues,
     ChatCompletionAssistantToolCall,
     ChatCompletionUsageBlock,
 )
-from litellm.types.utils import ModelResponse, ModelResponseStream
+from remodl.types.utils import ModelResponse, ModelResponseStream
 
 from ..common_utils import OllamaError
 
 if TYPE_CHECKING:
-    from litellm.litellm_core_utils.litellm_logging import Logging as _LiteLLMLoggingObj
+    from remodl.remodl_core_utils.remodl_logging import Logging as _LiteLLMLoggingObj
 
     LiteLLMLoggingObj = _LiteLLMLoggingObj
 else:
@@ -193,7 +193,7 @@ class OllamaChatConfig(BaseConfig):
             if param == "tools":
                 ## CHECK IF MODEL SUPPORTS TOOL CALLING ##
                 try:
-                    model_info = litellm.get_model_info(
+                    model_info = remodl.get_model_info(
                         model=model, custom_llm_provider="ollama"
                     )
                     if model_info.get("supports_function_calling") is True:
@@ -202,7 +202,7 @@ class OllamaChatConfig(BaseConfig):
                         raise Exception
                 except Exception:
                     optional_params["format"] = "json"
-                    litellm.add_function_to_prompt = (
+                    remodl.add_function_to_prompt = (
                         True  # so that main.py adds the function call to the prompt
                     )
                     optional_params["functions_unsupported_model"] = value
@@ -215,7 +215,7 @@ class OllamaChatConfig(BaseConfig):
             if param == "functions":
                 ## CHECK IF MODEL SUPPORTS TOOL CALLING ##
                 try:
-                    model_info = litellm.get_model_info(
+                    model_info = remodl.get_model_info(
                         model=model, custom_llm_provider="ollama"
                     )
                     if model_info.get("supports_function_calling") is True:
@@ -224,7 +224,7 @@ class OllamaChatConfig(BaseConfig):
                         raise Exception
                 except Exception:
                     optional_params["format"] = "json"
-                    litellm.add_function_to_prompt = (
+                    remodl.add_function_to_prompt = (
                         True  # so that main.py adds the function call to the prompt
                     )
                     optional_params["functions_unsupported_model"] = (
@@ -240,7 +240,7 @@ class OllamaChatConfig(BaseConfig):
         model: str,
         messages: List[AllMessageValues],
         optional_params: dict,
-        litellm_params: dict,
+        remodl_params: dict,
         api_key: Optional[str] = None,
         api_base: Optional[str] = None,
     ) -> dict:
@@ -254,7 +254,7 @@ class OllamaChatConfig(BaseConfig):
         api_key: Optional[str],
         model: str,
         optional_params: dict,
-        litellm_params: dict,
+        remodl_params: dict,
         stream: Optional[bool] = None,
     ) -> str:
         """
@@ -278,7 +278,7 @@ class OllamaChatConfig(BaseConfig):
         model: str,
         messages: List[AllMessageValues],
         optional_params: dict,
-        litellm_params: dict,
+        remodl_params: dict,
         headers: dict,
     ) -> dict:
         stream = optional_params.pop("stream", False)
@@ -286,14 +286,14 @@ class OllamaChatConfig(BaseConfig):
         keep_alive = optional_params.pop("keep_alive", None)
         think = optional_params.pop("think", None)
         function_name = optional_params.pop("function_name", None)
-        litellm_params["function_name"] = function_name
+        remodl_params["function_name"] = function_name
         tools = optional_params.pop("tools", None)
 
         new_messages = []
         for m in messages:
             if isinstance(
                 m, BaseModel
-            ):  # avoid message serialization issues - https://github.com/BerriAI/litellm/issues/5319
+            ):  # avoid message serialization issues - https://github.com/BerriAI/remodl/issues/5319
                 m = m.model_dump(exclude_none=True)
             tool_calls = m.get("tool_calls")
             if tool_calls is not None and isinstance(tool_calls, list):
@@ -362,7 +362,7 @@ class OllamaChatConfig(BaseConfig):
         request_data: dict,
         messages: List[AllMessageValues],
         optional_params: dict,
-        litellm_params: dict,
+        remodl_params: dict,
         encoding: str,
         api_key: Optional[str] = None,
         json_mode: Optional[bool] = None,
@@ -374,7 +374,7 @@ class OllamaChatConfig(BaseConfig):
             original_response=raw_response.text,
             additional_args={
                 "headers": None,
-                "api_base": litellm_params.get("api_base"),
+                "api_base": remodl_params.get("api_base"),
             },
         )
 
@@ -392,7 +392,7 @@ class OllamaChatConfig(BaseConfig):
                 del response_json_message["thinking"]
             elif response_json_message.get("content") is not None:
                 # parse reasoning content from content
-                from litellm.litellm_core_utils.prompt_templates.common_utils import (
+                from remodl.remodl_core_utils.prompt_templates.common_utils import (
                     _parse_content_for_reasoning,
                 )
 
@@ -404,17 +404,17 @@ class OllamaChatConfig(BaseConfig):
 
         if (
             request_data.get("format", "") == "json"
-            and litellm_params.get("function_name") is not None
+            and remodl_params.get("function_name") is not None
         ):
             function_call = json.loads(response_json_message["content"])
-            message = litellm.Message(
+            message = remodl.Message(
                 content=None,
                 tool_calls=[
                     {
                         "id": f"call_{str(uuid.uuid4())}",
                         "function": {
                             "name": function_call.get(
-                                "name", litellm_params.get("function_name")
+                                "name", remodl_params.get("function_name")
                             ),
                             "arguments": json.dumps(
                                 function_call.get("arguments", function_call)
@@ -429,19 +429,19 @@ class OllamaChatConfig(BaseConfig):
             model_response.choices[0].finish_reason = "tool_calls"
         else:
 
-            _message = litellm.Message(**response_json_message)
+            _message = remodl.Message(**response_json_message)
             model_response.choices[0].message = _message  # type: ignore
         model_response.created = int(time.time())
         model_response.model = "ollama_chat/" + model
-        prompt_tokens = response_json.get("prompt_eval_count", litellm.token_counter(messages=messages))  # type: ignore
+        prompt_tokens = response_json.get("prompt_eval_count", remodl.token_counter(messages=messages))  # type: ignore
         completion_tokens = response_json.get(
             "eval_count",
-            litellm.token_counter(text=response_json["message"]["content"]),
+            remodl.token_counter(text=response_json["message"]["content"]),
         )
         setattr(
             model_response,
             "usage",
-            litellm.Usage(
+            remodl.Usage(
                 prompt_tokens=prompt_tokens,
                 completion_tokens=completion_tokens,
                 total_tokens=prompt_tokens + completion_tokens,
@@ -512,7 +512,7 @@ class OllamaChatCompletionResponseIterator(BaseModelResponseIterator):
             - return usage when done is true
 
             """
-            from litellm.types.utils import Delta, StreamingChoices
+            from remodl.types.utils import Delta, StreamingChoices
 
             # process tool calls - if complete function arg - add id to tool call
             tool_calls = chunk["message"].get("tool_calls")

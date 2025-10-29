@@ -6,14 +6,14 @@ from typing import TYPE_CHECKING, Any, List, Optional, Tuple, Union
 
 import httpx
 
-from litellm.secret_managers.main import get_secret_str
-from litellm.types.llms.openai import AllMessageValues, ChatCompletionAssistantMessage
-from litellm.types.utils import ModelResponse
+from remodl.secret_managers.main import get_secret_str
+from remodl.types.llms.openai import AllMessageValues, ChatCompletionAssistantMessage
+from remodl.types.utils import ModelResponse
 
 from ...openai.chat.gpt_transformation import OpenAIGPTConfig
 
 if TYPE_CHECKING:
-    from litellm.litellm_core_utils.litellm_logging import Logging as _LiteLLMLoggingObj
+    from remodl.remodl_core_utils.remodl_logging import Logging as _LiteLLMLoggingObj
 
     LiteLLMLoggingObj = _LiteLLMLoggingObj
 else:
@@ -114,7 +114,7 @@ class OpenAILikeChatConfig(OpenAIGPTConfig):
         request_data: dict,
         messages: List[AllMessageValues],
         optional_params: dict,
-        litellm_params: dict,
+        remodl_params: dict,
         encoding: Any,
         api_key: Optional[str] = None,
         json_mode: Optional[bool] = None,

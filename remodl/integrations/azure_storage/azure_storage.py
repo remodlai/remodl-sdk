@@ -2,20 +2,20 @@ import asyncio
 import json
 import os
 import time
-from litellm._uuid import uuid
+from remodl._uuid import uuid
 from datetime import datetime, timedelta
 from typing import List, Optional
 
-from litellm._logging import verbose_logger
-from litellm.constants import _DEFAULT_TTL_FOR_HTTPX_CLIENTS, AZURE_STORAGE_MSFT_VERSION
-from litellm.integrations.custom_batch_logger import CustomBatchLogger
-from litellm.llms.azure.common_utils import get_azure_ad_token_from_entra_id
-from litellm.llms.custom_httpx.http_handler import (
+from remodl._logging import verbose_logger
+from remodl.constants import _DEFAULT_TTL_FOR_HTTPX_CLIENTS, AZURE_STORAGE_MSFT_VERSION
+from remodl.integrations.custom_batch_logger import CustomBatchLogger
+from remodl.llms.azure.common_utils import get_azure_ad_token_from_entra_id
+from remodl.llms.custom_httpx.http_handler import (
     AsyncHTTPHandler,
     get_async_httpx_client,
     httpxSpecialProvider,
 )
-from litellm.types.utils import StandardLoggingPayload
+from remodl.types.utils import StandardLoggingPayload
 
 
 class AzureBlobStorageLogger(CustomBatchLogger):
@@ -321,7 +321,7 @@ class AzureBlobStorageLogger(CustomBatchLogger):
         """
         Checks if the user is a premium user, raises an error if not
         """
-        from litellm.proxy.proxy_server import CommonProxyErrors, premium_user
+        from remodl.proxy.proxy_server import CommonProxyErrors, premium_user
 
         if premium_user is not True:
             raise ValueError(

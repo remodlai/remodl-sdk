@@ -6,12 +6,12 @@ from typing import List, Optional, Union
 
 import httpx
 
-from litellm.litellm_core_utils.litellm_logging import Logging as LiteLLMLoggingObj
-from litellm.llms.base_llm.chat.transformation import BaseLLMException
-from litellm.llms.base_llm.embedding.transformation import BaseEmbeddingConfig
-from litellm.secret_managers.main import get_secret_str
-from litellm.types.llms.openai import AllEmbeddingInputValues, AllMessageValues
-from litellm.types.utils import EmbeddingResponse, Usage
+from remodl.remodl_core_utils.remodl_logging import Logging as LiteLLMLoggingObj
+from remodl.llms.base_llm.chat.transformation import BaseLLMException
+from remodl.llms.base_llm.embedding.transformation import BaseEmbeddingConfig
+from remodl.secret_managers.main import get_secret_str
+from remodl.types.llms.openai import AllEmbeddingInputValues, AllMessageValues
+from remodl.types.utils import EmbeddingResponse, Usage
 
 from ..utils import OVHCloudException
 
@@ -26,7 +26,7 @@ class OVHCloudEmbeddingConfig(BaseEmbeddingConfig):
         api_key: Optional[str],
         model: str,
         optional_params: dict,
-        litellm_params: dict,
+        remodl_params: dict,
         stream: Optional[bool] = None,
     ) -> str:
         api_base = "https://oai.endpoints.kepler.ai.cloud.ovh.net/v1" if api_base is None else api_base.rstrip("/")
@@ -39,7 +39,7 @@ class OVHCloudEmbeddingConfig(BaseEmbeddingConfig):
         model: str,
         messages: List[AllMessageValues],
         optional_params: dict,
-        litellm_params: dict,
+        remodl_params: dict,
         api_key: Optional[str] = None,
         api_base: Optional[str] = None,
     ) -> dict:
@@ -91,7 +91,7 @@ class OVHCloudEmbeddingConfig(BaseEmbeddingConfig):
         api_key: Optional[str],
         request_data: dict,
         optional_params: dict,
-        litellm_params: dict,
+        remodl_params: dict,
     ) -> EmbeddingResponse:
         try:
             raw_response_json = raw_response.json()

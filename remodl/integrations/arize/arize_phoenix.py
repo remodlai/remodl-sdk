@@ -2,14 +2,14 @@ import os
 import urllib.parse
 from typing import TYPE_CHECKING, Any, Union
 
-from litellm._logging import verbose_logger
-from litellm.integrations.arize import _utils
-from litellm.types.integrations.arize_phoenix import ArizePhoenixConfig
+from remodl._logging import verbose_logger
+from remodl.integrations.arize import _utils
+from remodl.types.integrations.arize_phoenix import ArizePhoenixConfig
 
 if TYPE_CHECKING:
     from opentelemetry.trace import Span as _Span
 
-    from litellm.types.integrations.arize import Protocol as _Protocol
+    from remodl.types.integrations.arize import Protocol as _Protocol
 
     from .opentelemetry import OpenTelemetryConfig as _OpenTelemetryConfig
 

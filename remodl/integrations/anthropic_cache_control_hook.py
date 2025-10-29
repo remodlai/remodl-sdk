@@ -2,22 +2,22 @@
 This hook is used to inject cache control directives into the messages of a chat completion.
 
 Users can define
-- `cache_control_injection_points` in the completion params and litellm will inject the cache control directives into the messages at the specified injection points.
+- `cache_control_injection_points` in the completion params and remodl will inject the cache control directives into the messages at the specified injection points.
 
 """
 
 import copy
 from typing import Dict, List, Optional, Tuple, Union, cast
 
-from litellm._logging import verbose_logger
-from litellm.integrations.custom_logger import CustomLogger
-from litellm.integrations.custom_prompt_management import CustomPromptManagement
-from litellm.types.integrations.anthropic_cache_control_hook import (
+from remodl._logging import verbose_logger
+from remodl.integrations.custom_logger import CustomLogger
+from remodl.integrations.custom_prompt_management import CustomPromptManagement
+from remodl.types.integrations.anthropic_cache_control_hook import (
     CacheControlInjectionPoint,
     CacheControlMessageInjectionPoint,
 )
-from litellm.types.llms.openai import AllMessageValues, ChatCompletionCachedContent
-from litellm.types.utils import StandardCallbackDynamicParams
+from remodl.types.llms.openai import AllMessageValues, ChatCompletionCachedContent
+from remodl.types.utils import StandardCallbackDynamicParams
 
 
 class AnthropicCacheControlHook(CustomPromptManagement):
@@ -149,7 +149,7 @@ class AnthropicCacheControlHook(CustomPromptManagement):
     def get_custom_logger_for_anthropic_cache_control_hook(
         non_default_params: Dict,
     ) -> Optional[CustomLogger]:
-        from litellm.litellm_core_utils.litellm_logging import (
+        from remodl.remodl_core_utils.remodl_logging import (
             _init_custom_logger_compatible_class,
         )
 

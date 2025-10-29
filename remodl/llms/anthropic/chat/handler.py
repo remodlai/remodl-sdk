@@ -18,19 +18,19 @@ from typing import (
 
 import httpx  # type: ignore
 
-import litellm
-import litellm.litellm_core_utils
-import litellm.types
-import litellm.types.utils
-from litellm.constants import RESPONSE_FORMAT_TOOL_NAME
-from litellm.litellm_core_utils.core_helpers import map_finish_reason
-from litellm.llms.custom_httpx.http_handler import (
+import remodl
+import remodl.remodl_core_utils
+import remodl.types
+import remodl.types.utils
+from remodl.constants import RESPONSE_FORMAT_TOOL_NAME
+from remodl.remodl_core_utils.core_helpers import map_finish_reason
+from remodl.llms.custom_httpx.http_handler import (
     AsyncHTTPHandler,
     HTTPHandler,
     _get_httpx_client,
     get_async_httpx_client,
 )
-from litellm.types.llms.anthropic import (
+from remodl.types.llms.anthropic import (
     ContentBlockDelta,
     ContentBlockStart,
     ContentBlockStop,
@@ -38,12 +38,12 @@ from litellm.types.llms.anthropic import (
     MessageStartBlock,
     UsageDelta,
 )
-from litellm.types.llms.openai import (
+from remodl.types.llms.openai import (
     ChatCompletionRedactedThinkingBlock,
     ChatCompletionThinkingBlock,
     ChatCompletionToolCallChunk,
 )
-from litellm.types.utils import (
+from remodl.types.utils import (
     Delta,
     GenericStreamingChunk,
     LlmProviders,
@@ -59,8 +59,8 @@ from ..common_utils import AnthropicError, process_anthropic_headers
 from .transformation import AnthropicConfig
 
 if TYPE_CHECKING:
-    from litellm.litellm_core_utils.streaming_handler import CustomStreamWrapper
-    from litellm.llms.base_llm.chat.transformation import BaseConfig
+    from remodl.remodl_core_utils.streaming_handler import CustomStreamWrapper
+    from remodl.llms.base_llm.chat.transformation import BaseConfig
 
 
 async def make_call(
@@ -75,7 +75,7 @@ async def make_call(
     json_mode: bool,
 ) -> Tuple[Any, httpx.Headers]:
     if client is None:
-        client = litellm.module_level_aclient
+        client = remodl.module_level_aclient
 
     try:
         response = await client.post(
@@ -92,7 +92,7 @@ async def make_call(
             headers=error_headers,
         )
     except Exception as e:
-        for exception in litellm.LITELLM_EXCEPTION_TYPES:
+        for exception in remodl.LITELLM_EXCEPTION_TYPES:
             if isinstance(e, exception):
                 raise e
         raise AnthropicError(status_code=500, message=str(e))
@@ -126,7 +126,7 @@ def make_sync_call(
     json_mode: bool,
 ) -> Tuple[Any, httpx.Headers]:
     if client is None:
-        client = litellm.module_level_client  # re-use a module level client
+        client = remodl.module_level_client  # re-use a module level client
 
     try:
         response = client.post(
@@ -143,7 +143,7 @@ def make_sync_call(
             headers=error_headers,
         )
     except Exception as e:
-        for exception in litellm.LITELLM_EXCEPTION_TYPES:
+        for exception in remodl.LITELLM_EXCEPTION_TYPES:
             if isinstance(e, exception):
                 raise e
         raise AnthropicError(status_code=500, message=str(e))
@@ -193,11 +193,11 @@ class AnthropicChatCompletion(BaseLLM):
         data: dict,
         json_mode: bool,
         optional_params=None,
-        litellm_params=None,
+        remodl_params=None,
         logger_fn=None,
         headers={},
     ):
-        from litellm.litellm_core_utils.streaming_handler import CustomStreamWrapper
+        from remodl.remodl_core_utils.streaming_handler import CustomStreamWrapper
 
         data["stream"] = True
 
@@ -238,14 +238,14 @@ class AnthropicChatCompletion(BaseLLM):
         data: dict,
         optional_params: dict,
         json_mode: bool,
-        litellm_params: dict,
+        remodl_params: dict,
         provider_config: "BaseConfig",
         logger_fn=None,
         headers={},
         client: Optional[AsyncHTTPHandler] = None,
     ) -> Union[ModelResponse, "CustomStreamWrapper"]:
         async_handler = client or get_async_httpx_client(
-            llm_provider=litellm.LlmProviders.ANTHROPIC
+            llm_provider=remodl.LlmProviders.ANTHROPIC
         )
 
         try:
@@ -283,7 +283,7 @@ class AnthropicChatCompletion(BaseLLM):
             request_data=data,
             messages=messages,
             optional_params=optional_params,
-            litellm_params=litellm_params,
+            remodl_params=remodl_params,
             encoding=encoding,
             json_mode=json_mode,
         )
@@ -302,14 +302,14 @@ class AnthropicChatCompletion(BaseLLM):
         logging_obj,
         optional_params: dict,
         timeout: Union[float, httpx.Timeout],
-        litellm_params: dict,
+        remodl_params: dict,
         acompletion=None,
         logger_fn=None,
         headers={},
         client=None,
     ):
-        from litellm.litellm_core_utils.streaming_handler import CustomStreamWrapper
-        from litellm.utils import ProviderConfigManager
+        from remodl.remodl_core_utils.streaming_handler import CustomStreamWrapper
+        from remodl.utils import ProviderConfigManager
 
         optional_params = copy.deepcopy(optional_params)
         stream = optional_params.pop("stream", None)
@@ -323,7 +323,7 @@ class AnthropicChatCompletion(BaseLLM):
             model=model,
             messages=messages,
             optional_params={**optional_params, "is_vertex_request": is_vertex_request},
-            litellm_params=litellm_params,
+            remodl_params=remodl_params,
         )
 
         config = ProviderConfigManager.get_provider_chat_config(
@@ -339,7 +339,7 @@ class AnthropicChatCompletion(BaseLLM):
             model=model,
             messages=messages,
             optional_params=optional_params,
-            litellm_params=litellm_params,
+            remodl_params=remodl_params,
             headers=headers,
         )
 
@@ -375,7 +375,7 @@ class AnthropicChatCompletion(BaseLLM):
                     stream=stream,
                     _is_function_call=_is_function_call,
                     json_mode=json_mode,
-                    litellm_params=litellm_params,
+                    remodl_params=remodl_params,
                     logger_fn=logger_fn,
                     headers=headers,
                     timeout=timeout,
@@ -401,7 +401,7 @@ class AnthropicChatCompletion(BaseLLM):
                     optional_params=optional_params,
                     stream=stream,
                     _is_function_call=_is_function_call,
-                    litellm_params=litellm_params,
+                    remodl_params=remodl_params,
                     logger_fn=logger_fn,
                     headers=headers,
                     client=client,
@@ -472,7 +472,7 @@ class AnthropicChatCompletion(BaseLLM):
             request_data=data,
             messages=messages,
             optional_params=optional_params,
-            litellm_params=litellm_params,
+            remodl_params=remodl_params,
             encoding=encoding,
             json_mode=json_mode,
         )
@@ -613,7 +613,7 @@ class ModelResponseIterator:
         return thinking_blocks, provider_specific_fields
 
     def get_content_block_start(self, chunk: dict) -> ContentBlockStart:
-        from litellm.types.llms.anthropic import (
+        from remodl.types.llms.anthropic import (
             ContentBlockStartText,
             ContentBlockStartToolUse,
         )

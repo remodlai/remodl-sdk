@@ -4,7 +4,7 @@ from typing import Literal, Optional, Union
 
 import httpx
 
-from litellm.llms.base_llm.chat.transformation import BaseLLMException
+from remodl.llms.base_llm.chat.transformation import BaseLLMException
 
 HF_HUB_URL = "https://huggingface.co"
 
@@ -46,7 +46,7 @@ def output_parser(generated_text: str):
     """
     Parse the output text to remove any special characters. In our current approach we just check for ChatML tokens.
 
-    Initial issue that prompted this - https://github.com/BerriAI/litellm/issues/763
+    Initial issue that prompted this - https://github.com/BerriAI/remodl/issues/763
     """
     chat_template_tokens = ["<|assistant|>", "<|system|>", "<|user|>", "<s>", "</s>"]
     for token in chat_template_tokens:

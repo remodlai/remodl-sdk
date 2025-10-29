@@ -2,15 +2,15 @@ from typing import Any, AsyncIterator, Dict, List, Optional, Tuple
 
 import httpx
 
-from litellm.litellm_core_utils.litellm_logging import Logging as LiteLLMLoggingObj, verbose_logger
-from litellm.llms.base_llm.anthropic_messages.transformation import (
+from remodl.remodl_core_utils.remodl_logging import Logging as LiteLLMLoggingObj, verbose_logger
+from remodl.llms.base_llm.anthropic_messages.transformation import (
     BaseAnthropicMessagesConfig,
 )
-from litellm.types.llms.anthropic import AnthropicMessagesRequest
-from litellm.types.llms.anthropic_messages.anthropic_response import (
+from remodl.types.llms.anthropic import AnthropicMessagesRequest
+from remodl.types.llms.anthropic_messages.anthropic_response import (
     AnthropicMessagesResponse,
 )
-from litellm.types.router import GenericLiteLLMParams
+from remodl.types.router import GenericLiteLLMParams
 
 from ...common_utils import AnthropicError
 
@@ -42,7 +42,7 @@ class AnthropicMessagesConfig(BaseAnthropicMessagesConfig):
         api_key: Optional[str],
         model: str,
         optional_params: dict,
-        litellm_params: dict,
+        remodl_params: dict,
         stream: Optional[bool] = None,
     ) -> str:
         api_base = api_base or DEFAULT_ANTHROPIC_API_BASE
@@ -56,7 +56,7 @@ class AnthropicMessagesConfig(BaseAnthropicMessagesConfig):
         model: str,
         messages: List[Any],
         optional_params: dict,
-        litellm_params: dict,
+        remodl_params: dict,
         api_key: Optional[str] = None,
         api_base: Optional[str] = None,
     ) -> Tuple[dict, Optional[str]]:
@@ -78,7 +78,7 @@ class AnthropicMessagesConfig(BaseAnthropicMessagesConfig):
         model: str,
         messages: List[Dict],
         anthropic_messages_optional_request_params: Dict,
-        litellm_params: GenericLiteLLMParams,
+        remodl_params: GenericLiteLLMParams,
         headers: dict,
     ) -> Dict:
         """
@@ -125,20 +125,20 @@ class AnthropicMessagesConfig(BaseAnthropicMessagesConfig):
         model: str,
         httpx_response: httpx.Response,
         request_body: dict,
-        litellm_logging_obj: LiteLLMLoggingObj,
+        remodl_logging_obj: LiteLLMLoggingObj,
     ) -> AsyncIterator:
         """Helper function to handle Anthropic streaming responses using the existing logging handlers"""
-        from litellm.llms.anthropic.experimental_pass_through.messages.streaming_iterator import (
+        from remodl.llms.anthropic.experimental_pass_through.messages.streaming_iterator import (
             BaseAnthropicMessagesStreamingIterator,
         )
 
         # Use the shared streaming handler for Anthropic
         handler = BaseAnthropicMessagesStreamingIterator(
-            litellm_logging_obj=litellm_logging_obj,
+            remodl_logging_obj=remodl_logging_obj,
             request_body=request_body,
         )
         return handler.get_async_streaming_response_iterator(
             httpx_response=httpx_response,
             request_body=request_body,
-            litellm_logging_obj=litellm_logging_obj,
+            remodl_logging_obj=remodl_logging_obj,
         )

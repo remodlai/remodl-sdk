@@ -2,7 +2,7 @@ from typing import Optional
 
 import httpx
 
-from litellm.llms.base_llm.chat.transformation import BaseLLMException
+from remodl.llms.base_llm.chat.transformation import BaseLLMException
 
 
 class OCIError(BaseLLMException):

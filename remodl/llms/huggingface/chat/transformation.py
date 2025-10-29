@@ -4,16 +4,16 @@ from typing import TYPE_CHECKING, Any, Dict, List, Optional, Union
 
 import httpx
 
-from litellm.types.llms.openai import AllMessageValues, ChatCompletionRequest
+from remodl.types.llms.openai import AllMessageValues, ChatCompletionRequest
 
 if TYPE_CHECKING:
-    from litellm.litellm_core_utils.litellm_logging import Logging as LiteLLMLoggingObj
+    from remodl.remodl_core_utils.remodl_logging import Logging as LiteLLMLoggingObj
 
     LoggingClass = LiteLLMLoggingObj
 else:
     LoggingClass = Any
 
-from litellm.llms.base_llm.chat.transformation import BaseLLMException
+from remodl.llms.base_llm.chat.transformation import BaseLLMException
 
 from ...openai.chat.gpt_transformation import OpenAIGPTConfig
 from ..common_utils import HuggingFaceError, _fetch_inference_provider_mapping
@@ -49,7 +49,7 @@ class HuggingFaceChatConfig(OpenAIGPTConfig):
         model: str,
         messages: List[AllMessageValues],
         optional_params: Dict,
-        litellm_params: dict,
+        remodl_params: dict,
         api_key: Optional[str] = None,
         api_base: Optional[str] = None,
     ) -> dict:
@@ -88,7 +88,7 @@ class HuggingFaceChatConfig(OpenAIGPTConfig):
         api_key: Optional[str],
         model: str,
         optional_params: dict,
-        litellm_params: dict,
+        remodl_params: dict,
         stream: Optional[bool] = None,
     ) -> str:
         """
@@ -131,10 +131,10 @@ class HuggingFaceChatConfig(OpenAIGPTConfig):
         model: str,
         messages: List[AllMessageValues],
         optional_params: dict,
-        litellm_params: dict,
+        remodl_params: dict,
         headers: dict,
     ) -> dict:
-        if litellm_params.get("api_base"):
+        if remodl_params.get("api_base"):
             return dict(
                 ChatCompletionRequest(model=model, messages=messages, **optional_params)
             )

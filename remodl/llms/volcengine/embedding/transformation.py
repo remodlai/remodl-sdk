@@ -5,11 +5,11 @@ Transforms OpenAI embedding requests to Volcengine format
 
 from typing import List, Optional, Union, Dict, Any
 import httpx
-from litellm.types.llms.openai import AllEmbeddingInputValues, AllMessageValues
-from litellm.types.utils import EmbeddingResponse
-from litellm.litellm_core_utils.litellm_logging import Logging as LiteLLMLoggingObj
-from litellm.llms.base_llm.embedding.transformation import BaseEmbeddingConfig
-from litellm.llms.base_llm.chat.transformation import BaseLLMException
+from remodl.types.llms.openai import AllEmbeddingInputValues, AllMessageValues
+from remodl.types.utils import EmbeddingResponse
+from remodl.remodl_core_utils.remodl_logging import Logging as LiteLLMLoggingObj
+from remodl.llms.base_llm.embedding.transformation import BaseEmbeddingConfig
+from remodl.llms.base_llm.chat.transformation import BaseLLMException
 from ..common_utils import get_volcengine_base_url, get_volcengine_headers
 
 
@@ -54,7 +54,7 @@ class VolcEngineEmbeddingConfig(BaseEmbeddingConfig):
         api_key: Optional[str],
         model: str,
         optional_params: dict,
-        litellm_params: dict,
+        remodl_params: dict,
         stream: Optional[bool] = None,
     ) -> str:
         """
@@ -65,7 +65,7 @@ class VolcEngineEmbeddingConfig(BaseEmbeddingConfig):
             api_key: API key (not used for URL construction)
             model: Model name (not used for URL construction)
             optional_params: Optional parameters (not used for URL construction)
-            litellm_params: LiteLLM parameters (not used for URL construction)
+            remodl_params: LiteLLM parameters (not used for URL construction)
             stream: Stream parameter (not used for URL construction)
             
         Returns:
@@ -155,7 +155,7 @@ class VolcEngineEmbeddingConfig(BaseEmbeddingConfig):
         api_key: Optional[str],
         request_data: dict,
         optional_params: dict,
-        litellm_params: dict,
+        remodl_params: dict,
     ) -> EmbeddingResponse:
         """Transform Volcengine response to EmbeddingResponse"""
         try:
@@ -185,7 +185,7 @@ class VolcEngineEmbeddingConfig(BaseEmbeddingConfig):
         model: str,
         messages: List[AllMessageValues],
         optional_params: dict,
-        litellm_params: dict,
+        remodl_params: dict,
         api_key: Optional[str] = None,
         api_base: Optional[str] = None,
     ) -> dict:

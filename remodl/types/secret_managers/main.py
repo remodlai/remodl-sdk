@@ -1,7 +1,7 @@
 import enum
 from typing import List, Literal, Optional
 
-from litellm.types.llms.base import LiteLLMPydanticObjectBase
+from remodl.types.llms.base import LiteLLMPydanticObjectBase
 
 
 class KeyManagementSystem(enum.Enum):
@@ -18,9 +18,9 @@ class KeyManagementSettings(LiteLLMPydanticObjectBase):
     hosted_keys: Optional[List] = None
     store_virtual_keys: Optional[bool] = False
     """
-    If True, virtual keys created by litellm will be stored in the secret manager
+    If True, virtual keys created by remodl will be stored in the secret manager
     """
-    prefix_for_stored_virtual_keys: str = "litellm/"
+    prefix_for_stored_virtual_keys: str = "remodl/"
     """
     If set, this prefix will be used for stored virtual keys in the secret manager
     """

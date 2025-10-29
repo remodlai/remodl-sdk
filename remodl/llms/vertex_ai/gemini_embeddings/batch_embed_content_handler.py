@@ -7,15 +7,15 @@ from typing import Any, Literal, Optional, Union
 
 import httpx
 
-import litellm
-from litellm import EmbeddingResponse
-from litellm.llms.custom_httpx.http_handler import (
+import remodl
+from remodl import EmbeddingResponse
+from remodl.llms.custom_httpx.http_handler import (
     AsyncHTTPHandler,
     HTTPHandler,
     get_async_httpx_client,
 )
-from litellm.types.llms.openai import EmbeddingInput
-from litellm.types.llms.vertex_ai import (
+from remodl.types.llms.openai import EmbeddingInput
+from remodl.types.llms.vertex_ai import (
     VertexAIBatchEmbeddingsRequestBody,
     VertexAIBatchEmbeddingsResponseObject,
 )
@@ -155,7 +155,7 @@ class GoogleBatchEmbeddings(VertexLLM):
                 _params["timeout"] = httpx.Timeout(timeout=600.0, connect=5.0)
 
             async_handler: AsyncHTTPHandler = get_async_httpx_client(
-                llm_provider=litellm.LlmProviders.VERTEX_AI,
+                llm_provider=remodl.LlmProviders.VERTEX_AI,
                 params={"timeout": timeout},
             )
         else:

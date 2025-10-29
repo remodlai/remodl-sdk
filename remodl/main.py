@@ -1,7 +1,7 @@
 # +-----------------------------------------------+
 # |                                               |
 # |           Give Feedback / Get Help            |
-# | https://github.com/BerriAI/litellm/issues/new |
+# | https://github.com/BerriAI/remodl/issues/new |
 # |                                               |
 # +-----------------------------------------------+
 #
@@ -39,7 +39,7 @@ from typing import (
     get_args,
 )
 
-from litellm._uuid import uuid
+from remodl._uuid import uuid
 
 if TYPE_CHECKING:
     from aiohttp import ClientSession
@@ -51,53 +51,53 @@ import tiktoken
 from pydantic import BaseModel
 from typing_extensions import overload
 
-import litellm
-from litellm import (  # type: ignore
+import remodl
+from remodl import (  # type: ignore
     Logging,
     client,
     exception_type,
-    get_litellm_params,
+    get_remodl_params,
     get_optional_params,
 )
-from litellm.constants import (
+from remodl.constants import (
     DEFAULT_MOCK_RESPONSE_COMPLETION_TOKEN_COUNT,
     DEFAULT_MOCK_RESPONSE_PROMPT_TOKEN_COUNT,
 )
-from litellm.exceptions import LiteLLMUnknownProvider
-from litellm.integrations.custom_logger import CustomLogger
-from litellm.litellm_core_utils.audio_utils.utils import get_audio_file_for_health_check
-from litellm.litellm_core_utils.dd_tracing import tracer
-from litellm.litellm_core_utils.get_provider_specific_headers import (
+from remodl.exceptions import LiteLLMUnknownProvider
+from remodl.integrations.custom_logger import CustomLogger
+from remodl.remodl_core_utils.audio_utils.utils import get_audio_file_for_health_check
+from remodl.remodl_core_utils.dd_tracing import tracer
+from remodl.remodl_core_utils.get_provider_specific_headers import (
     ProviderSpecificHeaderUtils,
 )
-from litellm.litellm_core_utils.health_check_utils import (
+from remodl.remodl_core_utils.health_check_utils import (
     _create_health_check_response,
     _filter_model_params,
 )
-from litellm.litellm_core_utils.litellm_logging import Logging as LiteLLMLoggingObj
-from litellm.litellm_core_utils.mock_functions import (
+from remodl.remodl_core_utils.remodl_logging import Logging as LiteLLMLoggingObj
+from remodl.remodl_core_utils.mock_functions import (
     mock_embedding,
     mock_image_generation,
 )
-from litellm.litellm_core_utils.prompt_templates.common_utils import (
+from remodl.remodl_core_utils.prompt_templates.common_utils import (
     get_content_from_model_response,
 )
-from litellm.llms.base_llm import BaseConfig, BaseImageGenerationConfig
-from litellm.llms.base_llm.base_model_iterator import (
+from remodl.llms.base_llm import BaseConfig, BaseImageGenerationConfig
+from remodl.llms.base_llm.base_model_iterator import (
     convert_model_response_to_streaming,
 )
-from litellm.llms.bedrock.common_utils import BedrockModelInfo
-from litellm.llms.cohere.common_utils import CohereModelInfo
-from litellm.llms.custom_httpx.http_handler import AsyncHTTPHandler, HTTPHandler
-from litellm.llms.vertex_ai.common_utils import (
+from remodl.llms.bedrock.common_utils import BedrockModelInfo
+from remodl.llms.cohere.common_utils import CohereModelInfo
+from remodl.llms.custom_httpx.http_handler import AsyncHTTPHandler, HTTPHandler
+from remodl.llms.vertex_ai.common_utils import (
     VertexAIModelRoute,
     get_vertex_ai_model_route,
 )
-from litellm.realtime_api.main import _realtime_health_check
-from litellm.secret_managers.main import get_secret_bool, get_secret_str
-from litellm.types.router import GenericLiteLLMParams
-from litellm.types.utils import RawRequestTypedDict, StreamingChoices
-from litellm.utils import (
+from remodl.realtime_api.main import _realtime_health_check
+from remodl.secret_managers.main import get_secret_bool, get_secret_str
+from remodl.types.router import GenericLiteLLMParams
+from remodl.types.utils import RawRequestTypedDict, StreamingChoices
+from remodl.utils import (
     CustomStreamWrapper,
     ProviderConfigManager,
     Usage,
@@ -130,16 +130,16 @@ from litellm.utils import (
 
 from ._logging import verbose_logger
 from .caching.caching import disable_cache, enable_cache, update_cache
-from .litellm_core_utils.core_helpers import safe_deep_copy
-from .litellm_core_utils.fallback_utils import (
+from .remodl_core_utils.core_helpers import safe_deep_copy
+from .remodl_core_utils.fallback_utils import (
     async_completion_with_fallbacks,
     completion_with_fallbacks,
 )
-from .litellm_core_utils.prompt_templates.common_utils import (
+from .remodl_core_utils.prompt_templates.common_utils import (
     get_completion_messages,
     update_messages_with_model_file_ids,
 )
-from .litellm_core_utils.prompt_templates.factory import (
+from .remodl_core_utils.prompt_templates.factory import (
     custom_prompt,
     function_call_prompt,
     map_system_message_pt,
@@ -147,7 +147,7 @@ from .litellm_core_utils.prompt_templates.factory import (
     prompt_factory,
     stringify_json_tool_call_content,
 )
-from .litellm_core_utils.streaming_chunk_builder_utils import ChunkProcessor
+from .remodl_core_utils.streaming_chunk_builder_utils import ChunkProcessor
 from .llms.anthropic.chat import AnthropicChatCompletion
 from .llms.azure.audio_transcriptions import AzureAudioTranscription
 from .llms.azure.azure import AzureChatCompletion, _check_dynamic_azure_params
@@ -226,12 +226,12 @@ from .types.utils import (
     LlmProviders,
     PromptTokensDetails,
     ProviderSpecificHeader,
-    all_litellm_params,
+    all_remodl_params,
 )
 
 encoding = tiktoken.get_encoding("cl100k_base")
-from litellm.types.utils import ModelResponseStream
-from litellm.utils import (
+from remodl.types.utils import ModelResponseStream
+from remodl.utils import (
     Choices,
     EmbeddingResponse,
     Message,
@@ -296,7 +296,7 @@ class LiteLLM:
         organization: Optional[str] = None,
         base_url: Optional[str] = None,
         timeout: Optional[float] = 600,
-        max_retries: Optional[int] = litellm.num_retries,
+        max_retries: Optional[int] = remodl.num_retries,
         default_headers: Optional[Mapping[str, str]] = None,
     ):
         self.params = locals()
@@ -403,10 +403,10 @@ async def acompletion(
     **kwargs,
 ) -> Union[ModelResponse, CustomStreamWrapper]:
     """
-    Asynchronously executes a litellm.completion() call for any of litellm supported llms (example gpt-4, gpt-3.5-turbo, claude-2, command-nightly)
+    Asynchronously executes a remodl.completion() call for any of remodl supported llms (example gpt-4, gpt-3.5-turbo, claude-2, command-nightly)
 
     Parameters:
-        model (str): The name of the language model to use for text completion. see all supported LLMs: https://docs.litellm.ai/docs/providers/
+        model (str): The name of the language model to use for text completion. see all supported LLMs: https://docs.remodl.ai/docs/providers/
         messages (List): A list of message objects representing the conversation context (default is an empty list).
 
         OPTIONAL PARAMS
@@ -457,9 +457,9 @@ async def acompletion(
     ## PROMPT MANAGEMENT HOOKS ##
     #########################################################
     #########################################################
-    litellm_logging_obj = kwargs.get("litellm_logging_obj", None)
-    if isinstance(litellm_logging_obj, LiteLLMLoggingObj) and (
-        litellm_logging_obj.should_run_prompt_management_hooks(
+    remodl_logging_obj = kwargs.get("remodl_logging_obj", None)
+    if isinstance(remodl_logging_obj, LiteLLMLoggingObj) and (
+        remodl_logging_obj.should_run_prompt_management_hooks(
             prompt_id=kwargs.get("prompt_id", None),
             non_default_params=kwargs,
             tools=tools,
@@ -469,7 +469,7 @@ async def acompletion(
             model,
             messages,
             _,
-        ) = await litellm_logging_obj.async_get_chat_completion_prompt(
+        ) = await remodl_logging_obj.async_get_chat_completion_prompt(
             model=model,
             messages=messages,
             non_default_params=kwargs,
@@ -484,7 +484,7 @@ async def acompletion(
         # set tools to None
         # eg. in certain cases when users send vector stores as tools
         # we don't want the tools to go to the upstream llm
-        # relevant issue: https://github.com/BerriAI/litellm/issues/11404
+        # relevant issue: https://github.com/BerriAI/remodl/issues/11404
         #########################################################
         if tools is not None and len(tools) == 0:
             tools = None
@@ -552,14 +552,14 @@ async def acompletion(
             api_base=completion_kwargs.get("base_url", None),
         )
 
-    fallbacks = fallbacks or litellm.model_fallbacks
+    fallbacks = fallbacks or remodl.model_fallbacks
     if fallbacks is not None:
         response = await async_completion_with_fallbacks(
             **completion_kwargs, kwargs={"fallbacks": fallbacks, **kwargs}
         )
         if response is None:
             raise Exception(
-                "No response from fallbacks. Got none. Turn on `litellm.set_verbose=True` to see more details."
+                "No response from fallbacks. Got none. Turn on `remodl.set_verbose=True` to see more details."
             )
         return response
 
@@ -600,9 +600,9 @@ async def acompletion(
             custom_llm_provider == "text-completion-openai"
             or custom_llm_provider == "text-completion-codestral"
         ) and isinstance(response, TextCompletionResponse):
-            response = litellm.OpenAITextCompletionConfig().convert_to_chat_model_response_object(
+            response = remodl.OpenAITextCompletionConfig().convert_to_chat_model_response_object(
                 response_object=response,
-                model_response_object=litellm.ModelResponse(),
+                model_response_object=remodl.ModelResponse(),
             )
         if isinstance(response, CustomStreamWrapper):
             response.set_logging_event_loop(
@@ -645,7 +645,7 @@ def _handle_mock_potential_exceptions(
     if isinstance(mock_response, Exception):
         if isinstance(mock_response, openai.APIError):
             raise mock_response
-        raise litellm.MockException(
+        raise remodl.MockException(
             status_code=getattr(mock_response, "status_code", 500),  # type: ignore
             message=getattr(mock_response, "text", str(mock_response)),
             llm_provider=getattr(
@@ -654,8 +654,8 @@ def _handle_mock_potential_exceptions(
             model=model,  # type: ignore
             request=httpx.Request(method="POST", url="https://api.openai.com/v1/"),
         )
-    elif isinstance(mock_response, str) and mock_response == "litellm.RateLimitError":
-        raise litellm.RateLimitError(
+    elif isinstance(mock_response, str) and mock_response == "remodl.RateLimitError":
+        raise remodl.RateLimitError(
             message="this is a mock rate limit error",
             llm_provider=getattr(
                 mock_response, "llm_provider", custom_llm_provider or "openai"
@@ -664,9 +664,9 @@ def _handle_mock_potential_exceptions(
         )
     elif (
         isinstance(mock_response, str)
-        and mock_response == "litellm.ContextWindowExceededError"
+        and mock_response == "remodl.ContextWindowExceededError"
     ):
-        raise litellm.ContextWindowExceededError(
+        raise remodl.ContextWindowExceededError(
             message="this is a mock context window exceeded error",
             llm_provider=getattr(
                 mock_response, "llm_provider", custom_llm_provider or "openai"
@@ -675,9 +675,9 @@ def _handle_mock_potential_exceptions(
         )
     elif (
         isinstance(mock_response, str)
-        and mock_response == "litellm.InternalServerError"
+        and mock_response == "remodl.InternalServerError"
     ):
-        raise litellm.InternalServerError(
+        raise remodl.InternalServerError(
             message="this is a mock internal server error",
             llm_provider=getattr(
                 mock_response, "llm_provider", custom_llm_provider or "openai"
@@ -687,7 +687,7 @@ def _handle_mock_potential_exceptions(
     elif isinstance(mock_response, str) and mock_response.startswith(
         "Exception: content_filter_policy"
     ):
-        raise litellm.MockException(
+        raise remodl.MockException(
             status_code=400,
             message=mock_response,
             llm_provider="azure",
@@ -703,7 +703,7 @@ def _handle_mock_timeout(
 ):
     if mock_timeout is True and timeout is not None:
         _sleep_for_timeout(timeout)
-        raise litellm.Timeout(
+        raise remodl.Timeout(
             message="This is a mock timeout error",
             llm_provider="openai",
             model=model,
@@ -717,7 +717,7 @@ async def _handle_mock_timeout_async(
 ):
     if mock_timeout is True and timeout is not None:
         await _sleep_for_timeout_async(timeout)
-        raise litellm.Timeout(
+        raise remodl.Timeout(
             message="This is a mock timeout error",
             llm_provider="openai",
             model=model,
@@ -770,7 +770,7 @@ def mock_completion(
         **kwargs: Additional keyword arguments that can be used but are not required.
 
     Returns:
-        litellm.ModelResponse: A ModelResponse simulating a completion response with the specified model, messages, and mock response.
+        remodl.ModelResponse: A ModelResponse simulating a completion response with the specified model, messages, and mock response.
 
     Raises:
         Exception: If an error occurs during the generation of the mock completion response.
@@ -805,7 +805,7 @@ def mock_completion(
         if isinstance(mock_response, str) and mock_response.startswith(
             "Exception: mock_streaming_error"
         ):
-            mock_response = litellm.MockException(
+            mock_response = remodl.MockException(
                 message="This is a mock error raised mid-stream",
                 llm_provider="anthropic",
                 model=model,
@@ -846,7 +846,7 @@ def mock_completion(
                 custom_llm_provider="openai",
                 logging_obj=logging,
             )
-        if isinstance(mock_response, litellm.MockException):
+        if isinstance(mock_response, remodl.MockException):
             raise mock_response
         # At this point, mock_response must be a string (all other types have been handled or returned early)
         mock_response = cast(str, mock_response)
@@ -855,9 +855,9 @@ def mock_completion(
         else:
             _all_choices = []
             for i in range(n):
-                _choice = litellm.utils.Choices(
+                _choice = remodl.utils.Choices(
                     index=i,
-                    message=litellm.utils.Message(
+                    message=remodl.utils.Message(
                         content=mock_response, role="assistant"
                     ),
                 )
@@ -884,7 +884,7 @@ def mock_completion(
         )
 
         try:
-            _, custom_llm_provider, _, _ = litellm.utils.get_llm_provider(model=model)
+            _, custom_llm_provider, _, _ = remodl.utils.get_llm_provider(model=model)
             model_response._hidden_params["custom_llm_provider"] = custom_llm_provider
         except Exception:
             # dont let setting a hidden param block a mock_respose
@@ -985,9 +985,9 @@ def completion(  # type: ignore # noqa: PLR0915
     **kwargs,
 ) -> Union[ModelResponse, CustomStreamWrapper]:
     """
-    Perform a completion() using any of litellm supported llms (example gpt-4, gpt-3.5-turbo, claude-2, command-nightly)
+    Perform a completion() using any of remodl supported llms (example gpt-4, gpt-3.5-turbo, claude-2, command-nightly)
     Parameters:
-        model (str): The name of the language model to use for text completion. see all supported LLMs: https://docs.litellm.ai/docs/providers/
+        model (str): The name of the language model to use for text completion. see all supported LLMs: https://docs.remodl.ai/docs/providers/
         messages (List): A list of message objects representing the conversation context (default is an empty list).
 
         OPTIONAL PARAMS
@@ -1047,7 +1047,7 @@ def completion(  # type: ignore # noqa: PLR0915
     logger_fn = kwargs.get("logger_fn", None)
     verbose = kwargs.get("verbose", False)
     custom_llm_provider = kwargs.get("custom_llm_provider", None)
-    litellm_logging_obj = kwargs.get("litellm_logging_obj", None)
+    remodl_logging_obj = kwargs.get("remodl_logging_obj", None)
     id = kwargs.get("id", None)
     metadata = kwargs.get("metadata", None)
     model_info = kwargs.get("model_info", None)
@@ -1110,7 +1110,7 @@ def completion(  # type: ignore # noqa: PLR0915
     ### PROMPT MANAGEMENT ###
     prompt_id = cast(Optional[str], kwargs.get("prompt_id", None))
     prompt_variables = cast(Optional[dict], kwargs.get("prompt_variables", None))
-    ### COPY MESSAGES ### - related issue https://github.com/BerriAI/litellm/discussions/4489
+    ### COPY MESSAGES ### - related issue https://github.com/BerriAI/remodl/discussions/4489
     messages = get_completion_messages(
         messages=messages,
         ensure_alternating_roles=ensure_alternating_roles or False,
@@ -1119,11 +1119,11 @@ def completion(  # type: ignore # noqa: PLR0915
     )
     ######## end of unpacking kwargs ###########
     non_default_params = get_non_default_completion_params(kwargs=kwargs)
-    litellm_params = {}  # used to prevent unbound var errors
+    remodl_params = {}  # used to prevent unbound var errors
     ## PROMPT MANAGEMENT HOOKS ##
 
-    if isinstance(litellm_logging_obj, LiteLLMLoggingObj) and (
-        litellm_logging_obj.should_run_prompt_management_hooks(
+    if isinstance(remodl_logging_obj, LiteLLMLoggingObj) and (
+        remodl_logging_obj.should_run_prompt_management_hooks(
             prompt_id=prompt_id, non_default_params=non_default_params
         )
     ):
@@ -1132,7 +1132,7 @@ def completion(  # type: ignore # noqa: PLR0915
             model,
             messages,
             optional_params,
-        ) = litellm_logging_obj.get_chat_completion_prompt(
+        ) = remodl_logging_obj.get_chat_completion_prompt(
             model=model,
             messages=messages,
             non_default_params=non_default_params,
@@ -1147,21 +1147,21 @@ def completion(  # type: ignore # noqa: PLR0915
             api_base = base_url
         if num_retries is not None:
             max_retries = num_retries
-        logging: Logging = cast(Logging, litellm_logging_obj)
-        fallbacks = fallbacks or litellm.model_fallbacks
+        logging: Logging = cast(Logging, remodl_logging_obj)
+        fallbacks = fallbacks or remodl.model_fallbacks
         if fallbacks is not None:
             return completion_with_fallbacks(**args)
         if model_list is not None:
             deployments = [
-                m["litellm_params"] for m in model_list if m["model_name"] == model
+                m["remodl_params"] for m in model_list if m["model_name"] == model
             ]
-            return litellm.batch_completion_models(deployments=deployments, **args)
-        if litellm.model_alias_map and model in litellm.model_alias_map:
-            model = litellm.model_alias_map[
+            return remodl.batch_completion_models(deployments=deployments, **args)
+        if remodl.model_alias_map and model in remodl.model_alias_map:
+            model = remodl.model_alias_map[
                 model
             ]  # update the model to the actual value if an alias has been passed in
         model_response = ModelResponse()
-        setattr(model_response, "usage", litellm.Usage())
+        setattr(model_response, "usage", remodl.Usage())
         if (
             kwargs.get("azure", False) is True
         ):  # don't remove flag check, to remain backwards compatible for repos like Codium
@@ -1202,12 +1202,12 @@ def completion(  # type: ignore # noqa: PLR0915
 
         ### REGISTER CUSTOM MODEL PRICING -- IF GIVEN ###
         if input_cost_per_token is not None and output_cost_per_token is not None:
-            litellm.register_model(
+            remodl.register_model(
                 {
                     f"{custom_llm_provider}/{model}": {
                         "input_cost_per_token": input_cost_per_token,
                         "output_cost_per_token": output_cost_per_token,
-                        "litellm_provider": custom_llm_provider,
+                        "remodl_provider": custom_llm_provider,
                     }
                 }
             )
@@ -1215,12 +1215,12 @@ def completion(  # type: ignore # noqa: PLR0915
             input_cost_per_second is not None
         ):  # time based pricing just needs cost in place
             output_cost_per_second = output_cost_per_second
-            litellm.register_model(
+            remodl.register_model(
                 {
                     f"{custom_llm_provider}/{model}": {
                         "input_cost_per_second": input_cost_per_second,
                         "output_cost_per_second": output_cost_per_second,
-                        "litellm_provider": custom_llm_provider,
+                        "remodl_provider": custom_llm_provider,
                     }
                 }
             )
@@ -1329,7 +1329,7 @@ def completion(  # type: ignore # noqa: PLR0915
             provider_config=provider_config,
         )
 
-        if litellm.add_function_to_prompt and optional_params.get(
+        if remodl.add_function_to_prompt and optional_params.get(
             "functions_unsupported_model", None
         ):  # if user opts to add it to prompt, when API doesn't support function calling
             functions_unsupported_model = optional_params.pop(
@@ -1339,8 +1339,8 @@ def completion(  # type: ignore # noqa: PLR0915
                 messages=messages, functions=functions_unsupported_model
             )
 
-        # For logging - save the values of the litellm-specific params passed in
-        litellm_params = get_litellm_params(
+        # For logging - save the values of the remodl-specific params passed in
+        remodl_params = get_remodl_params(
             acompletion=acompletion,
             api_key=api_key,
             force_timeout=force_timeout,
@@ -1348,8 +1348,8 @@ def completion(  # type: ignore # noqa: PLR0915
             verbose=verbose,
             custom_llm_provider=custom_llm_provider,
             api_base=api_base,
-            litellm_call_id=kwargs.get("litellm_call_id", None),
-            model_alias_map=litellm.model_alias_map,
+            remodl_call_id=kwargs.get("remodl_call_id", None),
+            model_alias_map=remodl.model_alias_map,
             completion_call_id=id,
             metadata=metadata,
             model_info=model_info,
@@ -1365,11 +1365,11 @@ def completion(  # type: ignore # noqa: PLR0915
             azure_ad_token_provider=kwargs.get("azure_ad_token_provider"),
             user_continue_message=kwargs.get("user_continue_message"),
             base_model=base_model,
-            litellm_trace_id=kwargs.get("litellm_trace_id"),
-            litellm_session_id=kwargs.get("litellm_session_id"),
+            remodl_trace_id=kwargs.get("remodl_trace_id"),
+            remodl_session_id=kwargs.get("remodl_session_id"),
             hf_model_name=hf_model_name,
             custom_prompt_dict=custom_prompt_dict,
-            litellm_metadata=kwargs.get("litellm_metadata"),
+            remodl_metadata=kwargs.get("remodl_metadata"),
             disable_add_transform_inline_image_block=disable_add_transform_inline_image_block,
             drop_params=kwargs.get("drop_params"),
             prompt_id=prompt_id,
@@ -1378,7 +1378,7 @@ def completion(  # type: ignore # noqa: PLR0915
             merge_reasoning_content_in_choices=kwargs.get(
                 "merge_reasoning_content_in_choices", None
             ),
-            use_litellm_proxy=kwargs.get("use_litellm_proxy", False),
+            use_remodl_proxy=kwargs.get("use_remodl_proxy", False),
             api_version=api_version,
             azure_ad_token=kwargs.get("azure_ad_token"),
             tenant_id=kwargs.get("tenant_id"),
@@ -1389,13 +1389,13 @@ def completion(  # type: ignore # noqa: PLR0915
             azure_scope=kwargs.get("azure_scope"),
             max_retries=max_retries,
             timeout=timeout,
-            litellm_request_debug=kwargs.get("litellm_request_debug", False),
+            remodl_request_debug=kwargs.get("remodl_request_debug", False),
         )
         cast(LiteLLMLoggingObj, logging).update_environment_variables(
             model=model,
             user=user,
             optional_params=processed_non_default_params,  # [IMPORTANT] - using processed_non_default_params ensures consistent params logged to langfuse for finetuning / eval datasets.
-            litellm_params=litellm_params,
+            remodl_params=remodl_params,
             custom_llm_provider=custom_llm_provider,
         )
         if mock_response or mock_tool_calls or mock_timeout:
@@ -1415,13 +1415,13 @@ def completion(  # type: ignore # noqa: PLR0915
                 timeout=timeout,
             )
 
-        ## RESPONSES API BRIDGE LOGIC ## - check if model has 'mode: responses' in litellm.model_cost map
+        ## RESPONSES API BRIDGE LOGIC ## - check if model has 'mode: responses' in remodl.model_cost map
         model_info, model = responses_api_bridge_check(
             model=model, custom_llm_provider=custom_llm_provider
         )
 
         if model_info.get("mode") == "responses":
-            from litellm.completion_extras import responses_api_bridge
+            from remodl.completion_extras import responses_api_bridge
 
             return responses_api_bridge.completion(
                 model=model,
@@ -1433,7 +1433,7 @@ def completion(  # type: ignore # noqa: PLR0915
                 acompletion=acompletion,
                 logging_obj=logging,
                 optional_params=optional_params,
-                litellm_params=litellm_params,
+                remodl_params=remodl_params,
                 timeout=timeout,  # type: ignore
                 client=client,  # pass AsyncOpenAI, OpenAI client
                 custom_llm_provider=custom_llm_provider,
@@ -1456,19 +1456,19 @@ def completion(  # type: ignore # noqa: PLR0915
 
             api_type = get_secret("AZURE_API_TYPE") or "azure"
 
-            api_base = api_base or litellm.api_base or get_secret("AZURE_API_BASE")
+            api_base = api_base or remodl.api_base or get_secret("AZURE_API_BASE")
 
             api_version = (
                 api_version
-                or litellm.api_version
+                or remodl.api_version
                 or get_secret_str("AZURE_API_VERSION")
-                or litellm.AZURE_DEFAULT_API_VERSION
+                or remodl.AZURE_DEFAULT_API_VERSION
             )
 
             api_key = (
                 api_key
-                or litellm.api_key
-                or litellm.azure_key
+                or remodl.api_key
+                or remodl.azure_key
                 or get_secret_str("AZURE_OPENAI_API_KEY")
                 or get_secret_str("AZURE_API_KEY")
             )
@@ -1477,20 +1477,20 @@ def completion(  # type: ignore # noqa: PLR0915
                 "azure_ad_token", None
             ) or get_secret_str("AZURE_AD_TOKEN")
 
-            azure_ad_token_provider = litellm_params.get(
+            azure_ad_token_provider = remodl_params.get(
                 "azure_ad_token_provider", None
             )
 
-            headers = headers or litellm.headers
+            headers = headers or remodl.headers
 
             if extra_headers is not None:
                 optional_params["extra_headers"] = extra_headers
             if max_retries is not None:
                 optional_params["max_retries"] = max_retries
 
-            if litellm.AzureOpenAIO1Config().is_o_series_model(model=model):
+            if remodl.AzureOpenAIO1Config().is_o_series_model(model=model):
                 ## LOAD CONFIG - if set
-                config = litellm.AzureOpenAIO1Config.get_config()
+                config = remodl.AzureOpenAIO1Config.get_config()
                 for k, v in config.items():
                     if (
                         k not in optional_params
@@ -1509,7 +1509,7 @@ def completion(  # type: ignore # noqa: PLR0915
                     model_response=model_response,
                     print_verbose=print_verbose,
                     optional_params=optional_params,
-                    litellm_params=litellm_params,
+                    remodl_params=remodl_params,
                     logger_fn=logger_fn,
                     logging_obj=logging,
                     acompletion=acompletion,
@@ -1519,7 +1519,7 @@ def completion(  # type: ignore # noqa: PLR0915
                 )
             else:
                 ## LOAD CONFIG - if set
-                config = litellm.AzureOpenAIConfig.get_config()
+                config = remodl.AzureOpenAIConfig.get_config()
                 for k, v in config.items():
                     if (
                         k not in optional_params
@@ -1541,7 +1541,7 @@ def completion(  # type: ignore # noqa: PLR0915
                     model_response=model_response,
                     print_verbose=print_verbose,
                     optional_params=optional_params,
-                    litellm_params=litellm_params,
+                    remodl_params=remodl_params,
                     logger_fn=logger_fn,
                     logging_obj=logging,
                     acompletion=acompletion,
@@ -1565,7 +1565,7 @@ def completion(  # type: ignore # noqa: PLR0915
             # azure configs
             api_type = get_secret_str("AZURE_API_TYPE") or "azure"
 
-            api_base = api_base or litellm.api_base or get_secret_str("AZURE_API_BASE")
+            api_base = api_base or remodl.api_base or get_secret_str("AZURE_API_BASE")
 
             if api_base is None:
                 raise ValueError(
@@ -1574,14 +1574,14 @@ def completion(  # type: ignore # noqa: PLR0915
 
             api_version = (
                 api_version
-                or litellm.api_version
+                or remodl.api_version
                 or get_secret_str("AZURE_API_VERSION")
             )
 
             api_key = (
                 api_key
-                or litellm.api_key
-                or litellm.azure_key
+                or remodl.api_key
+                or remodl.azure_key
                 or get_secret_str("AZURE_OPENAI_API_KEY")
                 or get_secret_str("AZURE_API_KEY")
             )
@@ -1590,17 +1590,17 @@ def completion(  # type: ignore # noqa: PLR0915
                 "azure_ad_token", None
             ) or get_secret_str("AZURE_AD_TOKEN")
 
-            azure_ad_token_provider = litellm_params.get(
+            azure_ad_token_provider = remodl_params.get(
                 "azure_ad_token_provider", None
             )
 
-            headers = headers or litellm.headers
+            headers = headers or remodl.headers
 
             if extra_headers is not None:
                 optional_params["extra_headers"] = extra_headers
 
             ## LOAD CONFIG - if set
-            config = litellm.AzureOpenAIConfig.get_config()
+            config = remodl.AzureOpenAIConfig.get_config()
             for k, v in config.items():
                 if (
                     k not in optional_params
@@ -1621,7 +1621,7 @@ def completion(  # type: ignore # noqa: PLR0915
                 model_response=model_response,
                 print_verbose=print_verbose,
                 optional_params=optional_params,
-                litellm_params=litellm_params,
+                remodl_params=remodl_params,
                 logger_fn=logger_fn,
                 logging_obj=logging,
                 acompletion=acompletion,
@@ -1655,7 +1655,7 @@ def completion(  # type: ignore # noqa: PLR0915
                     acompletion=acompletion,
                     logging_obj=logging,
                     optional_params=optional_params,
-                    litellm_params=litellm_params,
+                    remodl_params=remodl_params,
                     shared_session=shared_session,
                     timeout=timeout,  # type: ignore
                     client=client,
@@ -1675,13 +1675,13 @@ def completion(  # type: ignore # noqa: PLR0915
                 raise e
 
         elif custom_llm_provider == "azure_ai":
-            from litellm.llms.azure_ai.common_utils import AzureFoundryModelInfo
+            from remodl.llms.azure_ai.common_utils import AzureFoundryModelInfo
 
             api_base = AzureFoundryModelInfo.get_api_base(api_base)
             # set API KEY
             api_key = AzureFoundryModelInfo.get_api_key(api_key)
 
-            headers = headers or litellm.headers
+            headers = headers or remodl.headers
 
             if extra_headers is not None:
                 optional_params["extra_headers"] = extra_headers
@@ -1702,7 +1702,7 @@ def completion(  # type: ignore # noqa: PLR0915
                     acompletion=acompletion,
                     logging_obj=logging,
                     optional_params=optional_params,
-                    litellm_params=litellm_params,
+                    remodl_params=remodl_params,
                     shared_session=shared_session,
                     timeout=timeout,  # type: ignore
                     client=client,  # pass AsyncOpenAI, OpenAI client
@@ -1733,14 +1733,14 @@ def completion(  # type: ignore # noqa: PLR0915
             or "ft:babbage-002" in model
             or "ft:davinci-002" in model  # support for finetuned completion models
             or custom_llm_provider
-            in litellm.openai_text_completion_compatible_providers
+            in remodl.openai_text_completion_compatible_providers
             and kwargs.get("text_completion") is True
         ):
             openai.api_type = "openai"
 
             api_base = (
                 api_base
-                or litellm.api_base
+                or remodl.api_base
                 or get_secret("OPENAI_BASE_URL")
                 or get_secret("OPENAI_API_BASE")
                 or "https://api.openai.com/v1"
@@ -1751,25 +1751,25 @@ def completion(  # type: ignore # noqa: PLR0915
 
             api_key = (
                 api_key
-                or litellm.api_key
-                or litellm.openai_key
+                or remodl.api_key
+                or remodl.openai_key
                 or get_secret("OPENAI_API_KEY")
             )
 
-            headers = headers or litellm.headers
+            headers = headers or remodl.headers
 
             if extra_headers is not None:
                 optional_params["extra_headers"] = extra_headers
 
             ## LOAD CONFIG - if set
-            config = litellm.OpenAITextCompletionConfig.get_config()
+            config = remodl.OpenAITextCompletionConfig.get_config()
             for k, v in config.items():
                 if (
                     k not in optional_params
                 ):  # completion(top_k=3) > openai_text_config(top_k=3) <- allows for dynamic variables to be passed in
                     optional_params[k] = v
-            if litellm.organization:
-                openai.organization = litellm.organization
+            if remodl.organization:
+                openai.organization = remodl.organization
 
             if (
                 len(messages) > 0
@@ -1795,7 +1795,7 @@ def completion(  # type: ignore # noqa: PLR0915
                 client=client,  # pass AsyncOpenAI, OpenAI client
                 logging_obj=logging,
                 optional_params=optional_params,
-                litellm_params=litellm_params,
+                remodl_params=remodl_params,
                 logger_fn=logger_fn,
                 timeout=timeout,  # type: ignore
             )
@@ -1806,7 +1806,7 @@ def completion(  # type: ignore # noqa: PLR0915
                 and text_completion is False
             ):
                 # convert to chat completion response
-                _response = litellm.OpenAITextCompletionConfig().convert_to_chat_model_response_object(
+                _response = remodl.OpenAITextCompletionConfig().convert_to_chat_model_response_object(
                     response_object=_response, model_response_object=model_response
                 )
 
@@ -1832,7 +1832,7 @@ def completion(  # type: ignore # noqa: PLR0915
                     acompletion=acompletion,
                     logging_obj=logging,
                     optional_params=optional_params,
-                    litellm_params=litellm_params,
+                    remodl_params=remodl_params,
                     shared_session=shared_session,
                     timeout=timeout,  # type: ignore
                     client=client,
@@ -1862,7 +1862,7 @@ def completion(  # type: ignore # noqa: PLR0915
                     acompletion=acompletion,
                     logging_obj=logging,
                     optional_params=optional_params,
-                    litellm_params=litellm_params,
+                    remodl_params=remodl_params,
                     shared_session=shared_session,
                     timeout=timeout,
                     client=client,
@@ -1893,7 +1893,7 @@ def completion(  # type: ignore # noqa: PLR0915
                     acompletion=acompletion,
                     logging_obj=logging,
                     optional_params=optional_params,
-                    litellm_params=litellm_params,
+                    remodl_params=remodl_params,
                     shared_session=shared_session,
                     timeout=timeout,  # type: ignore
                     client=client,
@@ -1914,7 +1914,7 @@ def completion(  # type: ignore # noqa: PLR0915
         elif custom_llm_provider == "groq":
             api_base = (
                 api_base  # for deepinfra/perplexity/anyscale/groq/friendliai we check in get_llm_provider and pass in the api base from there
-                or litellm.api_base
+                or remodl.api_base
                 or get_secret("GROQ_API_BASE")
                 or "https://api.groq.com/openai/v1"
             )
@@ -1922,15 +1922,15 @@ def completion(  # type: ignore # noqa: PLR0915
             # set API KEY
             api_key = (
                 api_key
-                or litellm.api_key  # for deepinfra/perplexity/anyscale/friendliai we check in get_llm_provider and pass in the api key from there
-                or litellm.groq_key
+                or remodl.api_key  # for deepinfra/perplexity/anyscale/friendliai we check in get_llm_provider and pass in the api key from there
+                or remodl.groq_key
                 or get_secret("GROQ_API_KEY")
             )
 
-            headers = headers or litellm.headers
+            headers = headers or remodl.headers
 
             ## LOAD CONFIG - if set
-            config = litellm.GroqChatConfig.get_config()
+            config = remodl.GroqChatConfig.get_config()
             for k, v in config.items():
                 if (
                     k not in optional_params
@@ -1945,7 +1945,7 @@ def completion(  # type: ignore # noqa: PLR0915
                 api_base=api_base,
                 model_response=model_response,
                 optional_params=optional_params,
-                litellm_params=litellm_params,
+                remodl_params=remodl_params,
                 shared_session=shared_session,
                 custom_llm_provider=custom_llm_provider,
                 timeout=timeout,
@@ -1959,7 +1959,7 @@ def completion(  # type: ignore # noqa: PLR0915
             # NEW aiohttp provider for 10-100x higher RPS
             api_base = (
                 api_base  # for deepinfra/perplexity/anyscale/groq/friendliai we check in get_llm_provider and pass in the api base from there
-                or litellm.api_base
+                or remodl.api_base
                 or get_secret("OPENAI_BASE_URL")
                 or get_secret("OPENAI_API_BASE")
                 or "https://api.openai.com/v1"
@@ -1967,12 +1967,12 @@ def completion(  # type: ignore # noqa: PLR0915
             # set API KEY
             api_key = (
                 api_key
-                or litellm.api_key  # for deepinfra/perplexity/anyscale/friendliai we check in get_llm_provider and pass in the api key from there
-                or litellm.openai_key
+                or remodl.api_key  # for deepinfra/perplexity/anyscale/friendliai we check in get_llm_provider and pass in the api key from there
+                or remodl.openai_key
                 or get_secret("OPENAI_API_KEY")
             )
 
-            headers = headers or litellm.headers
+            headers = headers or remodl.headers
 
             if extra_headers is not None:
                 optional_params["extra_headers"] = extra_headers
@@ -1986,7 +1986,7 @@ def completion(  # type: ignore # noqa: PLR0915
                 acompletion=acompletion,
                 logging_obj=logging,
                 optional_params=optional_params,
-                litellm_params=litellm_params,
+                remodl_params=remodl_params,
                 timeout=timeout,
                 client=client,
                 custom_llm_provider=custom_llm_provider,
@@ -1996,14 +1996,14 @@ def completion(  # type: ignore # noqa: PLR0915
         elif custom_llm_provider == "cometapi":
             api_key = (
                 api_key
-                or litellm.cometapi_key
+                or remodl.cometapi_key
                 or get_secret_str("COMETAPI_KEY")
-                or litellm.api_key
+                or remodl.api_key
             )
 
             api_base = (
                 api_base
-                or litellm.api_base
+                or remodl.api_base
                 or get_secret_str("COMETAPI_API_BASE")
                 or "https://api.cometapi.com/v1"
             )
@@ -2019,7 +2019,7 @@ def completion(  # type: ignore # noqa: PLR0915
                 acompletion=acompletion,
                 logging_obj=logging,
                 optional_params=optional_params,
-                litellm_params=litellm_params,
+                remodl_params=remodl_params,
                 shared_session=shared_session,
                 timeout=timeout,
                 client=client,
@@ -2034,7 +2034,7 @@ def completion(  # type: ignore # noqa: PLR0915
                 input=messages, api_key=api_key, original_response=response
             )
         elif (
-            model in litellm.open_ai_chat_completion_models
+            model in remodl.open_ai_chat_completion_models
             or custom_llm_provider == "custom_openai"
             or custom_llm_provider == "deepinfra"
             or custom_llm_provider == "perplexity"
@@ -2050,21 +2050,21 @@ def completion(  # type: ignore # noqa: PLR0915
             or custom_llm_provider == "nebius"
             or custom_llm_provider == "wandb"
             or custom_llm_provider == "clarifai"
-            or custom_llm_provider in litellm.openai_compatible_providers
+            or custom_llm_provider in remodl.openai_compatible_providers
             or "ft:gpt-3.5-turbo" in model  # finetune gpt-3.5-turbo
         ):  # allow user to make an openai call with a custom base
             # note: if a user sets a custom base - we should ensure this works
             # allow for the setting of dynamic and stateful api-bases
             api_base = (
                 api_base  # for deepinfra/perplexity/anyscale/groq/friendliai we check in get_llm_provider and pass in the api base from there
-                or litellm.api_base
+                or remodl.api_base
                 or get_secret("OPENAI_BASE_URL")
                 or get_secret("OPENAI_API_BASE")
                 or "https://api.openai.com/v1"
             )
             organization = (
                 organization
-                or litellm.organization
+                or remodl.organization
                 or get_secret("OPENAI_ORGANIZATION")
                 or None  # default - https://github.com/openai/openai-python/blob/284c1799070c723c6a553337134148a7ab088dd8/openai/util.py#L105
             )
@@ -2072,23 +2072,23 @@ def completion(  # type: ignore # noqa: PLR0915
             # set API KEY
             api_key = (
                 api_key
-                or litellm.api_key  # for deepinfra/perplexity/anyscale/friendliai we check in get_llm_provider and pass in the api key from there
-                or litellm.openai_key
+                or remodl.api_key  # for deepinfra/perplexity/anyscale/friendliai we check in get_llm_provider and pass in the api key from there
+                or remodl.openai_key
                 or get_secret("OPENAI_API_KEY")
             )
 
-            headers = headers or litellm.headers
+            headers = headers or remodl.headers
 
             if extra_headers is not None:
                 optional_params["extra_headers"] = extra_headers
 
             if (
-                litellm.enable_preview_features and metadata is not None
+                remodl.enable_preview_features and metadata is not None
             ):  # [PREVIEW] allow metadata to be passed to OPENAI
                 optional_params["metadata"] = add_openai_metadata(metadata)
 
             ## LOAD CONFIG - if set
-            config = litellm.OpenAIConfig.get_config()
+            config = remodl.OpenAIConfig.get_config()
             for k, v in config.items():
                 if (
                     k not in optional_params
@@ -2113,7 +2113,7 @@ def completion(  # type: ignore # noqa: PLR0915
                         logging_obj=logging,
                         optional_params=optional_params,
                         timeout=timeout,
-                        litellm_params=litellm_params,
+                        remodl_params=remodl_params,
                         shared_session=shared_session,
                         acompletion=acompletion,
                         stream=stream,
@@ -2134,7 +2134,7 @@ def completion(  # type: ignore # noqa: PLR0915
                         acompletion=acompletion,
                         logging_obj=logging,
                         optional_params=optional_params,
-                        litellm_params=litellm_params,
+                        remodl_params=remodl_params,
                         logger_fn=logger_fn,
                         timeout=timeout,  # type: ignore
                         custom_prompt_dict=custom_prompt_dict,
@@ -2163,10 +2163,10 @@ def completion(  # type: ignore # noqa: PLR0915
                 )
 
         elif custom_llm_provider == "mistral":
-            api_key = api_key or litellm.api_key or get_secret("MISTRAL_API_KEY")
+            api_key = api_key or remodl.api_key or get_secret("MISTRAL_API_KEY")
             api_base = (
                 api_base
-                or litellm.api_base
+                or remodl.api_base
                 or get_secret("MISTRAL_API_BASE")
                 or "https://api.mistral.ai/v1"
             )
@@ -2181,7 +2181,7 @@ def completion(  # type: ignore # noqa: PLR0915
                 logging_obj=logging,
                 optional_params=optional_params,
                 timeout=timeout,
-                litellm_params=litellm_params,
+                remodl_params=remodl_params,
                 shared_session=shared_session,
                 acompletion=acompletion,
                 stream=stream,
@@ -2193,25 +2193,25 @@ def completion(  # type: ignore # noqa: PLR0915
         elif (
             "replicate" in model
             or custom_llm_provider == "replicate"
-            or model in litellm.replicate_models
+            or model in remodl.replicate_models
         ):
             # Setting the relevant API KEY for replicate, replicate defaults to using os.environ.get("REPLICATE_API_TOKEN")
             replicate_key = (
                 api_key
-                or litellm.replicate_key
-                or litellm.api_key
+                or remodl.replicate_key
+                or remodl.api_key
                 or get_secret("REPLICATE_API_KEY")
                 or get_secret("REPLICATE_API_TOKEN")
             )
 
             api_base = (
                 api_base
-                or litellm.api_base
+                or remodl.api_base
                 or get_secret("REPLICATE_API_BASE")
                 or "https://api.replicate.com/v1"
             )
 
-            custom_prompt_dict = custom_prompt_dict or litellm.custom_prompt_dict
+            custom_prompt_dict = custom_prompt_dict or remodl.custom_prompt_dict
 
             model_response = replicate_chat_completion(  # type: ignore
                 model=model,
@@ -2220,7 +2220,7 @@ def completion(  # type: ignore # noqa: PLR0915
                 model_response=model_response,
                 print_verbose=print_verbose,
                 optional_params=optional_params,
-                litellm_params=litellm_params,
+                remodl_params=remodl_params,
                 logger_fn=logger_fn,
                 encoding=encoding,  # for calculating input/output tokens
                 api_key=replicate_key,
@@ -2242,20 +2242,20 @@ def completion(  # type: ignore # noqa: PLR0915
         elif (
             "clarifai" in model
             or custom_llm_provider == "clarifai"
-            or model in litellm.clarifai_models
+            or model in remodl.clarifai_models
         ):
             pass  # Deprecated - handled in the openai compatible provider section above
         elif custom_llm_provider == "anthropic_text":
             api_key = (
                 api_key
-                or litellm.anthropic_key
-                or litellm.api_key
+                or remodl.anthropic_key
+                or remodl.api_key
                 or os.environ.get("ANTHROPIC_API_KEY")
             )
-            custom_prompt_dict = custom_prompt_dict or litellm.custom_prompt_dict
+            custom_prompt_dict = custom_prompt_dict or remodl.custom_prompt_dict
             api_base = (
                 api_base
-                or litellm.api_base
+                or remodl.api_base
                 or get_secret("ANTHROPIC_API_BASE")
                 or get_secret("ANTHROPIC_BASE_URL")
                 or "https://api.anthropic.com/v1/complete"
@@ -2282,7 +2282,7 @@ def completion(  # type: ignore # noqa: PLR0915
                 api_base=api_base,
                 model_response=model_response,
                 optional_params=optional_params,
-                litellm_params=litellm_params,
+                remodl_params=remodl_params,
                 shared_session=shared_session,
                 custom_llm_provider="anthropic_text",
                 timeout=timeout,
@@ -2294,16 +2294,16 @@ def completion(  # type: ignore # noqa: PLR0915
         elif custom_llm_provider == "anthropic":
             api_key = (
                 api_key
-                or litellm.anthropic_key
-                or litellm.api_key
+                or remodl.anthropic_key
+                or remodl.api_key
                 or os.environ.get("ANTHROPIC_API_KEY")
             )
-            custom_prompt_dict = custom_prompt_dict or litellm.custom_prompt_dict
+            custom_prompt_dict = custom_prompt_dict or remodl.custom_prompt_dict
             # call /messages
             # default route for all anthropic models
             api_base = (
                 api_base
-                or litellm.api_base
+                or remodl.api_base
                 or get_secret("ANTHROPIC_API_BASE")
                 or get_secret("ANTHROPIC_BASE_URL")
                 or "https://api.anthropic.com/v1/messages"
@@ -2327,11 +2327,11 @@ def completion(  # type: ignore # noqa: PLR0915
                 messages=messages,
                 api_base=api_base,
                 acompletion=acompletion,
-                custom_prompt_dict=litellm.custom_prompt_dict,
+                custom_prompt_dict=remodl.custom_prompt_dict,
                 model_response=model_response,
                 print_verbose=print_verbose,
                 optional_params=optional_params,
-                litellm_params=litellm_params,
+                remodl_params=remodl_params,
                 logger_fn=logger_fn,
                 encoding=encoding,  # for calculating input/output tokens
                 api_key=api_key,
@@ -2352,14 +2352,14 @@ def completion(  # type: ignore # noqa: PLR0915
         elif custom_llm_provider == "nlp_cloud":
             nlp_cloud_key = (
                 api_key
-                or litellm.nlp_cloud_key
+                or remodl.nlp_cloud_key
                 or get_secret("NLP_CLOUD_API_KEY")
-                or litellm.api_key
+                or remodl.api_key
             )
 
             api_base = (
                 api_base
-                or litellm.api_base
+                or remodl.api_base
                 or get_secret("NLP_CLOUD_API_BASE")
                 or "https://api.nlpcloud.io/v1/gpu/"
             )
@@ -2371,7 +2371,7 @@ def completion(  # type: ignore # noqa: PLR0915
                 model_response=model_response,
                 print_verbose=print_verbose,
                 optional_params=optional_params,
-                litellm_params=litellm_params,
+                remodl_params=remodl_params,
                 logger_fn=logger_fn,
                 encoding=encoding,
                 api_key=nlp_cloud_key,
@@ -2399,15 +2399,15 @@ def completion(  # type: ignore # noqa: PLR0915
         elif custom_llm_provider == "aleph_alpha":
             aleph_alpha_key = (
                 api_key
-                or litellm.aleph_alpha_key
+                or remodl.aleph_alpha_key
                 or get_secret("ALEPH_ALPHA_API_KEY")
                 or get_secret("ALEPHALPHA_API_KEY")
-                or litellm.api_key
+                or remodl.api_key
             )
 
             api_base = (
                 api_base
-                or litellm.api_base
+                or remodl.api_base
                 or get_secret("ALEPH_ALPHA_API_BASE")
                 or "https://api.aleph-alpha.com/complete"
             )
@@ -2419,10 +2419,10 @@ def completion(  # type: ignore # noqa: PLR0915
                 model_response=model_response,
                 print_verbose=print_verbose,
                 optional_params=optional_params,
-                litellm_params=litellm_params,
+                remodl_params=remodl_params,
                 logger_fn=logger_fn,
                 encoding=encoding,
-                default_max_tokens_to_sample=litellm.max_tokens,
+                default_max_tokens_to_sample=remodl.max_tokens,
                 api_key=aleph_alpha_key,
                 logging_obj=logging,  # model call logging done inside the class as we make need to modify I/O to fit aleph alpha's requirements
             )
@@ -2440,10 +2440,10 @@ def completion(  # type: ignore # noqa: PLR0915
         elif custom_llm_provider == "cohere_chat" or custom_llm_provider == "cohere":
             cohere_key = (
                 api_key
-                or litellm.cohere_key
+                or remodl.cohere_key
                 or get_secret_str("COHERE_API_KEY")
                 or get_secret_str("CO_API_KEY")
-                or litellm.api_key
+                or remodl.api_key
             )
 
             cohere_route = CohereModelInfo.get_cohere_route(model)
@@ -2452,7 +2452,7 @@ def completion(  # type: ignore # noqa: PLR0915
             if cohere_route == "v2":
                 api_base = (
                     api_base
-                    or litellm.api_base
+                    or remodl.api_base
                     or get_secret_str("COHERE_API_BASE")
                     or "https://api.cohere.com/v2/chat"
                 )
@@ -2462,12 +2462,12 @@ def completion(  # type: ignore # noqa: PLR0915
             else:
                 api_base = (
                     api_base
-                    or litellm.api_base
+                    or remodl.api_base
                     or get_secret_str("COHERE_API_BASE")
                     or "https://api.cohere.ai/v1/chat"
                 )
 
-            headers = headers or litellm.headers or {}
+            headers = headers or remodl.headers or {}
             if headers is None:
                 headers = {}
 
@@ -2484,7 +2484,7 @@ def completion(  # type: ignore # noqa: PLR0915
                 api_base=api_base,
                 model_response=model_response,
                 optional_params=optional_params,
-                litellm_params=litellm_params,
+                remodl_params=remodl_params,
                 shared_session=shared_session,
                 custom_llm_provider="cohere_chat",
                 timeout=timeout,
@@ -2497,14 +2497,14 @@ def completion(  # type: ignore # noqa: PLR0915
         elif custom_llm_provider == "maritalk":
             maritalk_key = (
                 api_key
-                or litellm.maritalk_key
+                or remodl.maritalk_key
                 or get_secret("MARITALK_API_KEY")
-                or litellm.api_key
+                or remodl.api_key
             )
 
             api_base = (
                 api_base
-                or litellm.api_base
+                or remodl.api_base
                 or get_secret("MARITALK_API_BASE")
                 or "https://chat.maritaca.ai/api"
             )
@@ -2516,7 +2516,7 @@ def completion(  # type: ignore # noqa: PLR0915
                 model_response=model_response,
                 print_verbose=print_verbose,
                 optional_params=optional_params,
-                litellm_params=litellm_params,
+                remodl_params=remodl_params,
                 logger_fn=logger_fn,
                 encoding=encoding,
                 api_key=maritalk_key,
@@ -2529,12 +2529,12 @@ def completion(  # type: ignore # noqa: PLR0915
         elif custom_llm_provider == "huggingface":
             huggingface_key = (
                 api_key
-                or litellm.huggingface_key
+                or remodl.huggingface_key
                 or os.environ.get("HF_TOKEN")
                 or os.environ.get("HUGGINGFACE_API_KEY")
-                or litellm.api_key
+                or remodl.api_key
             )
-            hf_headers = headers or litellm.headers
+            hf_headers = headers or remodl.headers
             response = base_llm_http_handler.completion(
                 model=model,
                 messages=messages,
@@ -2545,7 +2545,7 @@ def completion(  # type: ignore # noqa: PLR0915
                 acompletion=acompletion,
                 logging_obj=logging,
                 optional_params=optional_params,
-                litellm_params=litellm_params,
+                remodl_params=remodl_params,
                 timeout=timeout,  # type: ignore
                 client=client,
                 custom_llm_provider=custom_llm_provider,
@@ -2563,7 +2563,7 @@ def completion(  # type: ignore # noqa: PLR0915
                 acompletion=acompletion,
                 logging_obj=logging,
                 optional_params=optional_params,
-                litellm_params=litellm_params,
+                remodl_params=remodl_params,
                 timeout=timeout,  # type: ignore
                 client=client,
                 custom_llm_provider=custom_llm_provider,
@@ -2572,7 +2572,7 @@ def completion(  # type: ignore # noqa: PLR0915
             )
         elif custom_llm_provider == "compactifai":
             api_key = (
-                api_key or get_secret_str("COMPACTIFAI_API_KEY") or litellm.api_key
+                api_key or get_secret_str("COMPACTIFAI_API_KEY") or remodl.api_key
             )
 
             api_base = api_base or "https://api.compactif.ai/v1"
@@ -2588,7 +2588,7 @@ def completion(  # type: ignore # noqa: PLR0915
                 acompletion=acompletion,
                 logging_obj=logging,
                 optional_params=optional_params,
-                litellm_params=litellm_params,
+                remodl_params=remodl_params,
                 timeout=timeout,
                 client=client,
                 custom_llm_provider=custom_llm_provider,
@@ -2605,7 +2605,7 @@ def completion(  # type: ignore # noqa: PLR0915
                 api_base=api_base,  # type: ignore
                 print_verbose=print_verbose,
                 optional_params=optional_params,
-                litellm_params=litellm_params,
+                remodl_params=remodl_params,
                 api_key=None,
                 logger_fn=logger_fn,
                 encoding=encoding,
@@ -2624,19 +2624,19 @@ def completion(  # type: ignore # noqa: PLR0915
         elif custom_llm_provider == "databricks":
             api_base = (
                 api_base  # for databricks we check in get_llm_provider and pass in the api base from there
-                or litellm.api_base
+                or remodl.api_base
                 or os.getenv("DATABRICKS_API_BASE")
             )
 
             # set API KEY
             api_key = (
                 api_key
-                or litellm.api_key  # for databricks we check in get_llm_provider and pass in the api key from there
-                or litellm.databricks_key
+                or remodl.api_key  # for databricks we check in get_llm_provider and pass in the api key from there
+                or remodl.databricks_key
                 or get_secret("DATABRICKS_API_KEY")
             )
 
-            headers = headers or litellm.headers
+            headers = headers or remodl.headers
 
             ## COMPLETION CALL
             try:
@@ -2648,7 +2648,7 @@ def completion(  # type: ignore # noqa: PLR0915
                     api_base=api_base,
                     model_response=model_response,
                     optional_params=optional_params,
-                    litellm_params=litellm_params,
+                    remodl_params=remodl_params,
                     custom_llm_provider="databricks",
                     timeout=timeout,
                     headers=headers,
@@ -2687,7 +2687,7 @@ def completion(  # type: ignore # noqa: PLR0915
                 acompletion=acompletion,
                 logging_obj=logging,
                 optional_params=optional_params,
-                litellm_params=litellm_params,
+                remodl_params=remodl_params,
                 timeout=timeout,  # type: ignore
                 client=client,
                 custom_llm_provider=custom_llm_provider,
@@ -2698,20 +2698,20 @@ def completion(  # type: ignore # noqa: PLR0915
         elif custom_llm_provider == "openrouter":
             api_base = (
                 api_base
-                or litellm.api_base
+                or remodl.api_base
                 or get_secret_str("OPENROUTER_API_BASE")
                 or "https://openrouter.ai/api/v1"
             )
 
             api_key = (
                 api_key
-                or litellm.api_key
-                or litellm.openrouter_key
+                or remodl.api_key
+                or remodl.openrouter_key
                 or get_secret("OPENROUTER_API_KEY")
                 or get_secret("OR_API_KEY")
             )
 
-            openrouter_site_url = get_secret("OR_SITE_URL") or "https://litellm.ai"
+            openrouter_site_url = get_secret("OR_SITE_URL") or "https://remodl.ai"
             openrouter_app_name = get_secret("OR_APP_NAME") or "liteLLM"
 
             openrouter_headers = {
@@ -2719,14 +2719,14 @@ def completion(  # type: ignore # noqa: PLR0915
                 "X-Title": openrouter_app_name,
             }
 
-            _headers = headers or litellm.headers
+            _headers = headers or remodl.headers
             if _headers:
                 openrouter_headers.update(_headers)
 
             headers = openrouter_headers
 
             ## Load Config
-            config = litellm.OpenrouterConfig.get_config()
+            config = remodl.OpenrouterConfig.get_config()
             for k, v in config.items():
                 if k == "extra_body":
                     # we use openai 'extra_body' to pass openrouter specific params - transforms, route, models
@@ -2748,7 +2748,7 @@ def completion(  # type: ignore # noqa: PLR0915
                 api_base=api_base,
                 model_response=model_response,
                 optional_params=optional_params,
-                litellm_params=litellm_params,
+                remodl_params=remodl_params,
                 shared_session=shared_session,
                 custom_llm_provider="openrouter",
                 timeout=timeout,
@@ -2765,16 +2765,16 @@ def completion(  # type: ignore # noqa: PLR0915
         elif custom_llm_provider == "vercel_ai_gateway":
             api_base = (
                 api_base
-                or litellm.api_base
+                or remodl.api_base
                 or get_secret_str("VERCEL_AI_GATEWAY_API_BASE")
                 or "https://ai-gateway.vercel.sh/v1"
             )
 
             api_key = (
-                api_key or litellm.api_key or get_secret("VERCEL_AI_GATEWAY_API_KEY")
+                api_key or remodl.api_key or get_secret("VERCEL_AI_GATEWAY_API_KEY")
             )
 
-            vercel_site_url = get_secret("VERCEL_SITE_URL") or "https://litellm.ai"
+            vercel_site_url = get_secret("VERCEL_SITE_URL") or "https://remodl.ai"
             vercel_app_name = get_secret("VERCEL_APP_NAME") or "liteLLM"
 
             vercel_headers = {
@@ -2782,14 +2782,14 @@ def completion(  # type: ignore # noqa: PLR0915
                 "x-title": vercel_app_name,
             }
 
-            _headers = headers or litellm.headers
+            _headers = headers or remodl.headers
             if _headers:
                 vercel_headers.update(_headers)
 
             headers = vercel_headers
 
             ## Load Config
-            config = litellm.VercelAIGatewayConfig.get_config()
+            config = remodl.VercelAIGatewayConfig.get_config()
             for k, v in config.items():
                 if k == "extra_body":
                     # we use openai 'extra_body' to pass vercel specific params - providerOptions
@@ -2811,7 +2811,7 @@ def completion(  # type: ignore # noqa: PLR0915
                 api_base=api_base,
                 model_response=model_response,
                 optional_params=optional_params,
-                litellm_params=litellm_params,
+                remodl_params=remodl_params,
                 shared_session=shared_session,
                 custom_llm_provider="vercel_ai_gateway",
                 timeout=timeout,
@@ -2828,7 +2828,7 @@ def completion(  # type: ignore # noqa: PLR0915
         elif (
             custom_llm_provider == "together_ai"
             or ("togethercomputer" in model)
-            or (model in litellm.together_ai_models)
+            or (model in remodl.together_ai_models)
         ):
             """
             Deprecated. We now do together ai calls via the openai client - https://docs.together.ai/docs/openai-api-compatibility
@@ -2842,13 +2842,13 @@ def completion(  # type: ignore # noqa: PLR0915
             vertex_ai_project = (
                 optional_params.pop("vertex_project", None)
                 or optional_params.pop("vertex_ai_project", None)
-                or litellm.vertex_project
+                or remodl.vertex_project
                 or get_secret("VERTEXAI_PROJECT")
             )
             vertex_ai_location = (
                 optional_params.pop("vertex_location", None)
                 or optional_params.pop("vertex_ai_location", None)
-                or litellm.vertex_location
+                or remodl.vertex_location
                 or get_secret("VERTEXAI_LOCATION")
             )
             vertex_credentials = (
@@ -2861,10 +2861,10 @@ def completion(  # type: ignore # noqa: PLR0915
                 api_key
                 or get_api_key_from_env()
                 or get_secret("PALM_API_KEY")  # older palm api key should also work
-                or litellm.api_key
+                or remodl.api_key
             )
 
-            api_base = api_base or litellm.api_base or get_secret("GEMINI_API_BASE")
+            api_base = api_base or remodl.api_base or get_secret("GEMINI_API_BASE")
             new_params = safe_deep_copy(optional_params or {})
             response = vertex_chat_completion.completion(  # type: ignore
                 model=model,
@@ -2872,7 +2872,7 @@ def completion(  # type: ignore # noqa: PLR0915
                 model_response=model_response,
                 print_verbose=print_verbose,
                 optional_params=new_params,
-                litellm_params=litellm_params,  # type: ignore
+                remodl_params=remodl_params,  # type: ignore
                 logger_fn=logger_fn,
                 encoding=encoding,
                 vertex_location=vertex_ai_location,
@@ -2892,13 +2892,13 @@ def completion(  # type: ignore # noqa: PLR0915
             vertex_ai_project = (
                 optional_params.pop("vertex_project", None)
                 or optional_params.pop("vertex_ai_project", None)
-                or litellm.vertex_project
+                or remodl.vertex_project
                 or get_secret("VERTEXAI_PROJECT")
             )
             vertex_ai_location = (
                 optional_params.pop("vertex_location", None)
                 or optional_params.pop("vertex_ai_location", None)
-                or litellm.vertex_location
+                or remodl.vertex_location
                 or get_secret("VERTEXAI_LOCATION")
             )
             vertex_credentials = (
@@ -2907,11 +2907,11 @@ def completion(  # type: ignore # noqa: PLR0915
                 or get_secret("VERTEXAI_CREDENTIALS")
             )
 
-            api_base = api_base or litellm.api_base or get_secret("VERTEXAI_API_BASE")
+            api_base = api_base or remodl.api_base or get_secret("VERTEXAI_API_BASE")
 
             new_params = safe_deep_copy(optional_params or {})
             model_route = get_vertex_ai_model_route(
-                model=model, litellm_params=litellm_params
+                model=model, remodl_params=remodl_params
             )
 
             if model_route == VertexAIModelRoute.PARTNER_MODELS:
@@ -2921,7 +2921,7 @@ def completion(  # type: ignore # noqa: PLR0915
                     model_response=model_response,
                     print_verbose=print_verbose,
                     optional_params=new_params,
-                    litellm_params=litellm_params,  # type: ignore
+                    remodl_params=remodl_params,  # type: ignore
                     logger_fn=logger_fn,
                     encoding=encoding,
                     api_base=api_base,
@@ -2942,7 +2942,7 @@ def completion(  # type: ignore # noqa: PLR0915
                     model_response=model_response,
                     print_verbose=print_verbose,
                     optional_params=new_params,
-                    litellm_params=litellm_params,  # type: ignore
+                    remodl_params=remodl_params,  # type: ignore
                     logger_fn=logger_fn,
                     encoding=encoding,
                     vertex_location=vertex_ai_location,
@@ -2965,7 +2965,7 @@ def completion(  # type: ignore # noqa: PLR0915
                     model_response=model_response,
                     print_verbose=print_verbose,
                     optional_params=new_params,
-                    litellm_params=litellm_params,  # type: ignore
+                    remodl_params=remodl_params,  # type: ignore
                     logger_fn=logger_fn,
                     encoding=encoding,
                     api_base=api_base,
@@ -2987,7 +2987,7 @@ def completion(  # type: ignore # noqa: PLR0915
                     model_response=model_response,
                     print_verbose=print_verbose,
                     optional_params=new_params,
-                    litellm_params=litellm_params,  # type: ignore
+                    remodl_params=remodl_params,  # type: ignore
                     logger_fn=logger_fn,
                     encoding=encoding,
                     api_base=api_base,
@@ -3008,7 +3008,7 @@ def completion(  # type: ignore # noqa: PLR0915
                     model_response=model_response,
                     print_verbose=print_verbose,
                     optional_params=new_params,
-                    litellm_params=litellm_params,
+                    remodl_params=remodl_params,
                     logger_fn=logger_fn,
                     encoding=encoding,
                     vertex_location=vertex_ai_location,
@@ -3035,7 +3035,7 @@ def completion(  # type: ignore # noqa: PLR0915
             tenant_id = (
                 optional_params.pop("tenant_id", None)
                 or optional_params.pop("predibase_tenant_id", None)
-                or litellm.predibase_tenant_id
+                or remodl.predibase_tenant_id
                 or get_secret("PREDIBASE_TENANT_ID")
             )
 
@@ -3048,14 +3048,14 @@ def completion(  # type: ignore # noqa: PLR0915
                 api_base
                 or optional_params.pop("api_base", None)
                 or optional_params.pop("base_url", None)
-                or litellm.api_base
+                or remodl.api_base
                 or get_secret("PREDIBASE_API_BASE")
             )
 
             api_key = (
                 api_key
-                or litellm.api_key
-                or litellm.predibase_key
+                or remodl.api_key
+                or remodl.predibase_key
                 or get_secret("PREDIBASE_API_KEY")
             )
 
@@ -3065,7 +3065,7 @@ def completion(  # type: ignore # noqa: PLR0915
                 model_response=model_response,
                 print_verbose=print_verbose,
                 optional_params=optional_params,
-                litellm_params=litellm_params,
+                remodl_params=remodl_params,
                 logger_fn=logger_fn,
                 encoding=encoding,
                 logging_obj=logging,
@@ -3089,13 +3089,13 @@ def completion(  # type: ignore # noqa: PLR0915
                 api_base
                 or optional_params.pop("api_base", None)
                 or optional_params.pop("base_url", None)
-                or litellm.api_base
+                or remodl.api_base
                 or "https://codestral.mistral.ai/v1/fim/completions"
             )
 
-            api_key = api_key or litellm.api_key or get_secret("CODESTRAL_API_KEY")
+            api_key = api_key or remodl.api_key or get_secret("CODESTRAL_API_KEY")
 
-            text_completion_model_response = litellm.TextCompletionResponse(
+            text_completion_model_response = remodl.TextCompletionResponse(
                 stream=stream
             )
 
@@ -3105,7 +3105,7 @@ def completion(  # type: ignore # noqa: PLR0915
                 model_response=text_completion_model_response,
                 print_verbose=print_verbose,
                 optional_params=optional_params,
-                litellm_params=litellm_params,
+                remodl_params=remodl_params,
                 logger_fn=logger_fn,
                 encoding=encoding,
                 logging_obj=logging,
@@ -3133,7 +3133,7 @@ def completion(  # type: ignore # noqa: PLR0915
                 api_base=api_base,
                 model_response=model_response,
                 optional_params=optional_params,
-                litellm_params=litellm_params,
+                remodl_params=remodl_params,
                 custom_llm_provider="sagemaker_chat",
                 timeout=timeout,
                 headers=headers,
@@ -3153,7 +3153,7 @@ def completion(  # type: ignore # noqa: PLR0915
                 model_response=model_response,
                 print_verbose=print_verbose,
                 optional_params=optional_params,
-                litellm_params=litellm_params,
+                remodl_params=remodl_params,
                 custom_prompt_dict=custom_prompt_dict,
                 hf_model_name=hf_model_name,
                 logger_fn=logger_fn,
@@ -3166,11 +3166,11 @@ def completion(  # type: ignore # noqa: PLR0915
             response = model_response
         elif custom_llm_provider == "bedrock":
             # boto3 reads keys from .env
-            custom_prompt_dict = custom_prompt_dict or litellm.custom_prompt_dict
+            custom_prompt_dict = custom_prompt_dict or remodl.custom_prompt_dict
 
             if "aws_bedrock_client" in optional_params:
                 verbose_logger.warning(
-                    "'aws_bedrock_client' is a deprecated param. Please move to another auth method - https://docs.litellm.ai/docs/providers/bedrock#boto3---authentication."
+                    "'aws_bedrock_client' is a deprecated param. Please move to another auth method - https://docs.remodl.ai/docs/providers/bedrock#boto3---authentication."
                 )
                 # Extract credentials for legacy boto3 client and pass thru to httpx
                 aws_bedrock_client = optional_params.pop("aws_bedrock_client")
@@ -3199,7 +3199,7 @@ def completion(  # type: ignore # noqa: PLR0915
                     custom_prompt_dict=custom_prompt_dict,
                     model_response=model_response,
                     optional_params=optional_params,
-                    litellm_params=litellm_params,  # type: ignore
+                    remodl_params=remodl_params,  # type: ignore
                     logger_fn=logger_fn,
                     encoding=encoding,
                     logging_obj=logging,
@@ -3220,7 +3220,7 @@ def completion(  # type: ignore # noqa: PLR0915
                     api_base=api_base,
                     model_response=model_response,
                     optional_params=optional_params,
-                    litellm_params=litellm_params,
+                    remodl_params=remodl_params,
                     custom_llm_provider="bedrock",
                     timeout=timeout,
                     headers=headers,
@@ -3238,7 +3238,7 @@ def completion(  # type: ignore # noqa: PLR0915
                     api_base=api_base,
                     model_response=model_response,
                     optional_params=optional_params,
-                    litellm_params=litellm_params,
+                    remodl_params=remodl_params,
                     custom_llm_provider="bedrock",
                     timeout=timeout,
                     headers=headers,
@@ -3259,7 +3259,7 @@ def completion(  # type: ignore # noqa: PLR0915
                 acompletion=acompletion,
                 logging_obj=logging,
                 optional_params=optional_params,
-                litellm_params=litellm_params,
+                remodl_params=remodl_params,
                 logger_fn=logger_fn,
                 timeout=timeout,  # type: ignore
                 custom_prompt_dict=custom_prompt_dict,
@@ -3321,7 +3321,7 @@ def completion(  # type: ignore # noqa: PLR0915
                 api_base=api_base,
                 model_response=model_response,
                 optional_params=optional_params,
-                litellm_params=litellm_params,
+                remodl_params=remodl_params,
                 shared_session=shared_session,
                 custom_llm_provider="watsonx_text",
                 timeout=timeout,
@@ -3332,7 +3332,7 @@ def completion(  # type: ignore # noqa: PLR0915
                 client=client,
             )
         elif custom_llm_provider == "vllm":
-            custom_prompt_dict = custom_prompt_dict or litellm.custom_prompt_dict
+            custom_prompt_dict = custom_prompt_dict or remodl.custom_prompt_dict
             model_response = vllm_handler.completion(
                 model=model,
                 messages=messages,
@@ -3340,7 +3340,7 @@ def completion(  # type: ignore # noqa: PLR0915
                 model_response=model_response,
                 print_verbose=print_verbose,
                 optional_params=optional_params,
-                litellm_params=litellm_params,
+                remodl_params=remodl_params,
                 logger_fn=logger_fn,
                 encoding=encoding,
                 logging_obj=logging,
@@ -3362,7 +3362,7 @@ def completion(  # type: ignore # noqa: PLR0915
             response = model_response
         elif custom_llm_provider == "ollama":
             api_base = (
-                litellm.api_base
+                remodl.api_base
                 or api_base
                 or get_secret("OLLAMA_API_BASE")
                 or "http://localhost:11434"
@@ -3375,7 +3375,7 @@ def completion(  # type: ignore # noqa: PLR0915
                 api_base=api_base,
                 model_response=model_response,
                 optional_params=optional_params,
-                litellm_params=litellm_params,
+                remodl_params=remodl_params,
                 shared_session=shared_session,
                 custom_llm_provider="ollama",
                 timeout=timeout,
@@ -3388,7 +3388,7 @@ def completion(  # type: ignore # noqa: PLR0915
 
         elif custom_llm_provider == "ollama_chat":
             api_base = (
-                litellm.api_base
+                remodl.api_base
                 or api_base
                 or get_secret("OLLAMA_API_BASE")
                 or "http://localhost:11434"
@@ -3396,9 +3396,9 @@ def completion(  # type: ignore # noqa: PLR0915
 
             api_key = (
                 api_key
-                or litellm.ollama_key
+                or remodl.ollama_key
                 or os.environ.get("OLLAMA_API_KEY")
-                or litellm.api_key
+                or remodl.api_key
             )
 
             response = base_llm_http_handler.completion(
@@ -3409,7 +3409,7 @@ def completion(  # type: ignore # noqa: PLR0915
                 api_base=api_base,
                 model_response=model_response,
                 optional_params=optional_params,
-                litellm_params=litellm_params,
+                remodl_params=remodl_params,
                 shared_session=shared_session,
                 custom_llm_provider="ollama_chat",
                 timeout=timeout,
@@ -3421,7 +3421,7 @@ def completion(  # type: ignore # noqa: PLR0915
             )
 
         elif custom_llm_provider == "triton":
-            api_base = litellm.api_base or api_base
+            api_base = remodl.api_base or api_base
             response = base_llm_http_handler.completion(
                 model=model,
                 stream=stream,
@@ -3430,7 +3430,7 @@ def completion(  # type: ignore # noqa: PLR0915
                 api_base=api_base,
                 model_response=model_response,
                 optional_params=optional_params,
-                litellm_params=litellm_params,
+                remodl_params=remodl_params,
                 shared_session=shared_session,
                 custom_llm_provider=custom_llm_provider,
                 timeout=timeout,
@@ -3442,19 +3442,19 @@ def completion(  # type: ignore # noqa: PLR0915
         elif custom_llm_provider == "cloudflare":
             api_key = (
                 api_key
-                or litellm.cloudflare_api_key
-                or litellm.api_key
+                or remodl.cloudflare_api_key
+                or remodl.api_key
                 or get_secret("CLOUDFLARE_API_KEY")
             )
             account_id = get_secret("CLOUDFLARE_ACCOUNT_ID")
             api_base = (
                 api_base
-                or litellm.api_base
+                or remodl.api_base
                 or get_secret("CLOUDFLARE_API_BASE")
                 or f"https://api.cloudflare.com/client/v4/accounts/{account_id}/ai/run/"
             )
 
-            custom_prompt_dict = custom_prompt_dict or litellm.custom_prompt_dict
+            custom_prompt_dict = custom_prompt_dict or remodl.custom_prompt_dict
             response = base_llm_http_handler.completion(
                 model=model,
                 stream=stream,
@@ -3463,7 +3463,7 @@ def completion(  # type: ignore # noqa: PLR0915
                 api_base=api_base,
                 model_response=model_response,
                 optional_params=optional_params,
-                litellm_params=litellm_params,
+                remodl_params=remodl_params,
                 shared_session=shared_session,
                 custom_llm_provider="cloudflare",
                 timeout=timeout,
@@ -3473,8 +3473,8 @@ def completion(  # type: ignore # noqa: PLR0915
                 logging_obj=logging,  # model call logging done inside the class as we make need to modify I/O to fit aleph alpha's requirements
             )
 
-        elif custom_llm_provider == "petals" or model in litellm.petals_models:
-            api_base = api_base or litellm.api_base
+        elif custom_llm_provider == "petals" or model in remodl.petals_models:
+            api_base = api_base or remodl.api_base
 
             custom_llm_provider = "petals"
             stream = optional_params.pop("stream", False)
@@ -3485,7 +3485,7 @@ def completion(  # type: ignore # noqa: PLR0915
                 model_response=model_response,
                 print_verbose=print_verbose,
                 optional_params=optional_params,
-                litellm_params=litellm_params,
+                remodl_params=remodl_params,
                 logger_fn=logger_fn,
                 encoding=encoding,
                 logging_obj=logging,
@@ -3502,7 +3502,7 @@ def completion(  # type: ignore # noqa: PLR0915
                 )
                 return response
             response = model_response
-        elif custom_llm_provider == "snowflake" or model in litellm.snowflake_models:
+        elif custom_llm_provider == "snowflake" or model in remodl.snowflake_models:
             try:
                 client = (
                     HTTPHandler(timeout=timeout) if stream is False else None
@@ -3517,7 +3517,7 @@ def completion(  # type: ignore # noqa: PLR0915
                     acompletion=acompletion,
                     logging_obj=logging,
                     optional_params=optional_params,
-                    litellm_params=litellm_params,
+                    remodl_params=remodl_params,
                     shared_session=shared_session,
                     timeout=timeout,  # type: ignore
                     client=client,
@@ -3537,7 +3537,7 @@ def completion(  # type: ignore # noqa: PLR0915
                 raise e
         elif custom_llm_provider == "gradient_ai":
 
-            api_base = litellm.api_base or api_base
+            api_base = remodl.api_base or api_base
             response = base_llm_http_handler.completion(
                 model=model,
                 stream=stream,
@@ -3546,7 +3546,7 @@ def completion(  # type: ignore # noqa: PLR0915
                 api_base=api_base,
                 model_response=model_response,
                 optional_params=optional_params,
-                litellm_params=litellm_params,
+                remodl_params=remodl_params,
                 shared_session=shared_session,
                 custom_llm_provider="gradient_ai",
                 timeout=timeout,
@@ -3559,9 +3559,9 @@ def completion(  # type: ignore # noqa: PLR0915
         elif custom_llm_provider == "bytez":
             api_key = (
                 api_key
-                or litellm.bytez_key
+                or remodl.bytez_key
                 or get_secret_str("BYTEZ_API_KEY")
-                or litellm.api_key
+                or remodl.api_key
             )
 
             response = base_llm_http_handler.completion(
@@ -3574,7 +3574,7 @@ def completion(  # type: ignore # noqa: PLR0915
                 acompletion=acompletion,
                 logging_obj=logging,
                 optional_params=optional_params,
-                litellm_params=litellm_params,
+                remodl_params=remodl_params,
                 timeout=timeout,  # type: ignore
                 client=client,
                 custom_llm_provider=custom_llm_provider,
@@ -3587,9 +3587,9 @@ def completion(  # type: ignore # noqa: PLR0915
         elif custom_llm_provider == "lemonade":
             api_key = (
                 api_key
-                or litellm.lemonade_key
+                or remodl.lemonade_key
                 or get_secret_str("LEMONADE_API_KEY")
-                or litellm.api_key
+                or remodl.api_key
             )
 
             response = base_llm_http_handler.completion(
@@ -3602,7 +3602,7 @@ def completion(  # type: ignore # noqa: PLR0915
                 acompletion=acompletion,
                 logging_obj=logging,
                 optional_params=optional_params,
-                litellm_params=litellm_params,
+                remodl_params=remodl_params,
                 timeout=timeout,  # type: ignore
                 client=client,
                 custom_llm_provider=custom_llm_provider,
@@ -3613,17 +3613,17 @@ def completion(  # type: ignore # noqa: PLR0915
 
             pass
 
-        elif custom_llm_provider == "ovhcloud" or model in litellm.ovhcloud_models:
+        elif custom_llm_provider == "ovhcloud" or model in remodl.ovhcloud_models:
             api_key = (
                 api_key
-                or litellm.ovhcloud_key
+                or remodl.ovhcloud_key
                 or get_secret_str("OVHCLOUD_API_KEY")
-                or litellm.api_key
+                or remodl.api_key
             )
 
             api_base = (
                 api_base
-                or litellm.api_base
+                or remodl.api_base
                 or get_secret_str("OVHCLOUD_API_BASE")
                 or "https://oai.endpoints.kepler.ai.cloud.ovh.net/v1"
             )
@@ -3638,7 +3638,7 @@ def completion(  # type: ignore # noqa: PLR0915
                 acompletion=acompletion,
                 logging_obj=logging,
                 optional_params=optional_params,
-                litellm_params=litellm_params,
+                remodl_params=remodl_params,
                 timeout=timeout,  # type: ignore
                 client=client,
                 custom_llm_provider=custom_llm_provider,
@@ -3650,15 +3650,15 @@ def completion(  # type: ignore # noqa: PLR0915
             pass
 
         elif custom_llm_provider == "custom":
-            url = litellm.api_base or api_base or ""
+            url = remodl.api_base or api_base or ""
             if url is None or url == "":
                 raise ValueError(
-                    "api_base not set. Set api_base or litellm.api_base for custom endpoints"
+                    "api_base not set. Set api_base or remodl.api_base for custom endpoints"
                 )
 
             """
             assume input to custom LLM api bases follow this format:
-            resp = litellm.module_level_client.post(
+            resp = remodl.module_level_client.post(
                 api_base,
                 json={
                     'model': 'meta-llama/Llama-2-13b-hf', # model name
@@ -3674,7 +3674,7 @@ def completion(  # type: ignore # noqa: PLR0915
 
             """
             prompt = " ".join([message["content"] for message in messages])  # type: ignore
-            resp = litellm.module_level_client.post(
+            resp = remodl.module_level_client.post(
                 url,
                 headers=headers,
                 json={
@@ -3711,11 +3711,11 @@ def completion(  # type: ignore # noqa: PLR0915
             response = model_response
 
         elif (
-            custom_llm_provider in litellm._custom_providers
+            custom_llm_provider in remodl._custom_providers
         ):  # Assume custom LLM provider
             # Get the Custom Handler
             custom_handler: Optional[CustomLLM] = None
-            for item in litellm.custom_provider_map:
+            for item in remodl.custom_provider_map:
                 if item["provider"] == custom_llm_provider:
                     custom_handler = item["custom_handler"]
 
@@ -3729,7 +3729,7 @@ def completion(  # type: ignore # noqa: PLR0915
                 async_fn=acompletion, stream=stream, custom_llm=custom_handler
             )
 
-            headers = headers or litellm.headers or {}
+            headers = headers or remodl.headers or {}
 
             ## CALL FUNCTION
             response = handler_fn(
@@ -3743,7 +3743,7 @@ def completion(  # type: ignore # noqa: PLR0915
                 acompletion=acompletion,
                 logging_obj=logging,
                 optional_params=optional_params,
-                litellm_params=litellm_params,
+                remodl_params=remodl_params,
                 logger_fn=logger_fn,
                 timeout=timeout,  # type: ignore
                 custom_prompt_dict=custom_prompt_dict,
@@ -3776,7 +3776,7 @@ def completion(  # type: ignore # noqa: PLR0915
 
 def completion_with_retries(*args, **kwargs):
     """
-    Executes a litellm.completion() with 3 retries
+    Executes a remodl.completion() with 3 retries
     """
     try:
         import tenacity
@@ -3809,7 +3809,7 @@ def completion_with_retries(*args, **kwargs):
 async def acompletion_with_retries(*args, **kwargs):
     """
     [DEPRECATED]. Use 'acompletion' or router.acompletion instead!
-    Executes a litellm.completion() with 3 retries
+    Executes a remodl.completion() with 3 retries
     """
     try:
         import tenacity
@@ -3920,7 +3920,7 @@ def embedding(
     caching: bool = False,
     user: Optional[str] = None,
     custom_llm_provider=None,
-    litellm_call_id=None,
+    remodl_call_id=None,
     logger_fn=None,
     *,
     aembedding: Literal[True],
@@ -3946,7 +3946,7 @@ def embedding(
     caching: bool = False,
     user: Optional[str] = None,
     custom_llm_provider=None,
-    litellm_call_id=None,
+    remodl_call_id=None,
     logger_fn=None,
     *,
     aembedding: Literal[False] = False,
@@ -3973,7 +3973,7 @@ def embedding(  # noqa: PLR0915
     caching: bool = False,
     user: Optional[str] = None,
     custom_llm_provider=None,
-    litellm_call_id=None,
+    remodl_call_id=None,
     logger_fn=None,
     **kwargs,
 ) -> Union[EmbeddingResponse, Coroutine[Any, Any, EmbeddingResponse]]:
@@ -3986,8 +3986,8 @@ def embedding(  # noqa: PLR0915
     - encoding_format: Optional[str] The format to return the embeddings in. Can be either `float` or `base64`
     - dimensions: The number of dimensions the resulting output embeddings should have. Only supported in text-embedding-3 and later models.
     - timeout: The timeout value for the API call, default 10 mins
-    - litellm_call_id: The call ID for litellm logging.
-    - litellm_logging_obj: The litellm logging object.
+    - remodl_call_id: The call ID for remodl logging.
+    - remodl_logging_obj: The remodl logging object.
     - logger_fn: The logger function.
     - api_base: Optional. The base URL for the API.
     - api_version: Optional. The version of the API.
@@ -4006,7 +4006,7 @@ def embedding(  # noqa: PLR0915
     client = kwargs.pop("client", None)
     shared_session = kwargs.get("shared_session", None)
     max_retries = kwargs.get("max_retries", None)
-    litellm_logging_obj: LiteLLMLoggingObj = kwargs.get("litellm_logging_obj")  # type: ignore
+    remodl_logging_obj: LiteLLMLoggingObj = kwargs.get("remodl_logging_obj")  # type: ignore
     mock_response: Optional[List[float]] = kwargs.get("mock_response", None)  # type: ignore
     azure_ad_token_provider = kwargs.get("azure_ad_token_provider", None)
     aembedding: Optional[bool] = kwargs.get("aembedding", None)
@@ -4032,12 +4032,12 @@ def embedding(  # noqa: PLR0915
         "max_retries",
         "encoding_format",
     ]
-    litellm_params = [
+    remodl_params = [
         "aembedding",
         "extra_headers",
-    ] + all_litellm_params
+    ] + all_remodl_params
 
-    default_params = openai_params + litellm_params
+    default_params = openai_params + remodl_params
     non_default_params = {
         k: v for k, v in kwargs.items() if k not in default_params
     }  # model-specific params - pass them straight to the model/provider
@@ -4063,35 +4063,35 @@ def embedding(  # noqa: PLR0915
 
     ### REGISTER CUSTOM MODEL PRICING -- IF GIVEN ###
     if input_cost_per_token is not None and output_cost_per_token is not None:
-        litellm.register_model(
+        remodl.register_model(
             {
                 f"{custom_llm_provider}/{model}": {
                     "input_cost_per_token": input_cost_per_token,
                     "output_cost_per_token": output_cost_per_token,
-                    "litellm_provider": custom_llm_provider,
+                    "remodl_provider": custom_llm_provider,
                 }
             }
         )
     if input_cost_per_second is not None:  # time based pricing just needs cost in place
         output_cost_per_second = output_cost_per_second or 0.0
-        litellm.register_model(
+        remodl.register_model(
             {
                 f"{custom_llm_provider}/{model}": {
                     "input_cost_per_second": input_cost_per_second,
                     "output_cost_per_second": output_cost_per_second,
-                    "litellm_provider": custom_llm_provider,
+                    "remodl_provider": custom_llm_provider,
                 }
             }
         )
 
-    litellm_params_dict = get_litellm_params(**kwargs)
+    remodl_params_dict = get_remodl_params(**kwargs)
 
-    logging: Logging = litellm_logging_obj  # type: ignore
+    logging: Logging = remodl_logging_obj  # type: ignore
     logging.update_environment_variables(
         model=model,
         user=user,
         optional_params=optional_params,
-        litellm_params=litellm_params_dict,
+        remodl_params=remodl_params_dict,
         custom_llm_provider=custom_llm_provider,
     )
 
@@ -4105,13 +4105,13 @@ def embedding(  # noqa: PLR0915
         if azure is True or custom_llm_provider == "azure":
             # azure configs
 
-            api_base = api_base or litellm.api_base or get_secret_str("AZURE_API_BASE")
+            api_base = api_base or remodl.api_base or get_secret_str("AZURE_API_BASE")
 
             api_version = (
                 api_version
-                or litellm.api_version
+                or remodl.api_version
                 or get_secret_str("AZURE_API_VERSION")
-                or litellm.AZURE_DEFAULT_API_VERSION
+                or remodl.AZURE_DEFAULT_API_VERSION
             )
 
             azure_ad_token = optional_params.pop(
@@ -4120,8 +4120,8 @@ def embedding(  # noqa: PLR0915
 
             api_key = (
                 api_key
-                or litellm.api_key
-                or litellm.azure_key
+                or remodl.api_key
+                or remodl.azure_key
                 or get_secret_str("AZURE_API_KEY")
             )
 
@@ -4147,32 +4147,32 @@ def embedding(  # noqa: PLR0915
                 aembedding=aembedding,
                 max_retries=max_retries,
                 headers=headers or extra_headers,
-                litellm_params=litellm_params_dict,
+                remodl_params=remodl_params_dict,
             )
         elif (
-            model in litellm.open_ai_embedding_models
+            model in remodl.open_ai_embedding_models
             or custom_llm_provider == "openai"
             or custom_llm_provider == "together_ai"
             or custom_llm_provider == "nvidia_nim"
-            or custom_llm_provider == "litellm_proxy"
+            or custom_llm_provider == "remodl_proxy"
         ):
             api_base = (
                 api_base
-                or litellm.api_base
+                or remodl.api_base
                 or get_secret_str("OPENAI_BASE_URL")
                 or get_secret_str("OPENAI_API_BASE")
                 or "https://api.openai.com/v1"
             )
             openai.organization = (
-                litellm.organization
+                remodl.organization
                 or get_secret_str("OPENAI_ORGANIZATION")
                 or None  # default - https://github.com/openai/openai-python/blob/284c1799070c723c6a553337134148a7ab088dd8/openai/util.py#L105
             )
             # set API KEY
             api_key = (
                 api_key
-                or litellm.api_key
-                or litellm.openai_key
+                or remodl.api_key
+                or remodl.openai_key
                 or get_secret_str("OPENAI_API_KEY")
             )
 
@@ -4197,13 +4197,13 @@ def embedding(  # noqa: PLR0915
                 shared_session=shared_session,
             )
         elif custom_llm_provider == "databricks":
-            api_base = api_base or litellm.api_base or get_secret("DATABRICKS_API_BASE")  # type: ignore
+            api_base = api_base or remodl.api_base or get_secret("DATABRICKS_API_BASE")  # type: ignore
 
             # set API KEY
             api_key = (
                 api_key
-                or litellm.api_key
-                or litellm.databricks_key
+                or remodl.api_key
+                or remodl.databricks_key
                 or get_secret("DATABRICKS_API_KEY")
             )  # type: ignore
 
@@ -4228,15 +4228,15 @@ def embedding(  # noqa: PLR0915
             or custom_llm_provider == "lm_studio"
         ):
             api_base = (
-                api_base or litellm.api_base or get_secret_str("OPENAI_LIKE_API_BASE")
+                api_base or remodl.api_base or get_secret_str("OPENAI_LIKE_API_BASE")
             )
 
             # set API KEY
             if api_key is None:
                 api_key = (
                     api_key
-                    or litellm.api_key
-                    or litellm.openai_like_key
+                    or remodl.api_key
+                    or remodl.openai_like_key
                     or get_secret_str("OPENAI_LIKE_API_KEY")
                 )
 
@@ -4259,10 +4259,10 @@ def embedding(  # noqa: PLR0915
         elif custom_llm_provider == "cohere" or custom_llm_provider == "cohere_chat":
             cohere_key = (
                 api_key
-                or litellm.cohere_key
+                or remodl.cohere_key
                 or get_secret_str("COHERE_API_KEY")
                 or get_secret_str("CO_API_KEY")
-                or litellm.api_key
+                or remodl.api_key
             )
 
             if extra_headers is not None and isinstance(extra_headers, dict):
@@ -4282,15 +4282,15 @@ def embedding(  # noqa: PLR0915
                 optional_params=optional_params,
                 client=client,
                 aembedding=aembedding,
-                litellm_params=litellm_params_dict,
+                remodl_params=remodl_params_dict,
                 headers=headers,
             )
         elif custom_llm_provider == "huggingface":
             api_key = (
                 api_key
-                or litellm.huggingface_key
+                or remodl.huggingface_key
                 or get_secret("HUGGINGFACE_API_KEY")
-                or litellm.api_key
+                or remodl.api_key
             )  # type: ignore
             response = huggingface_embed.embedding(
                 model=model,
@@ -4303,7 +4303,7 @@ def embedding(  # noqa: PLR0915
                 optional_params=optional_params,
                 client=client,
                 aembedding=aembedding,
-                litellm_params=litellm_params_dict,
+                remodl_params=remodl_params_dict,
             )
         elif custom_llm_provider == "bedrock":
             if isinstance(input, str):
@@ -4320,7 +4320,7 @@ def embedding(  # noqa: PLR0915
                 client=client,
                 timeout=timeout,
                 aembedding=aembedding,
-                litellm_params={},
+                remodl_params={},
                 api_base=api_base,
                 print_verbose=print_verbose,
                 extra_headers=extra_headers,
@@ -4343,12 +4343,12 @@ def embedding(  # noqa: PLR0915
                 optional_params=optional_params,
                 client=client,
                 aembedding=aembedding,
-                litellm_params={},
+                remodl_params={},
             )
         elif custom_llm_provider == "gemini":
-            gemini_api_key = api_key or get_api_key_from_env() or litellm.api_key
+            gemini_api_key = api_key or get_api_key_from_env() or remodl.api_key
 
-            api_base = api_base or litellm.api_base or get_secret_str("GEMINI_API_BASE")
+            api_base = api_base or remodl.api_base or get_secret_str("GEMINI_API_BASE")
 
             response = google_batch_embeddings.batch_embeddings(  # type: ignore
                 model=model,
@@ -4372,14 +4372,14 @@ def embedding(  # noqa: PLR0915
             vertex_ai_project = (
                 optional_params.pop("vertex_project", None)
                 or optional_params.pop("vertex_ai_project", None)
-                or litellm.vertex_project
+                or remodl.vertex_project
                 or get_secret_str("VERTEXAI_PROJECT")
                 or get_secret_str("VERTEX_PROJECT")
             )
             vertex_ai_location = (
                 optional_params.pop("vertex_location", None)
                 or optional_params.pop("vertex_ai_location", None)
-                or litellm.vertex_location
+                or remodl.vertex_location
                 or get_secret_str("VERTEXAI_LOCATION")
                 or get_secret_str("VERTEX_LOCATION")
             )
@@ -4392,7 +4392,7 @@ def embedding(  # noqa: PLR0915
 
             api_base = (
                 api_base
-                or litellm.api_base
+                or remodl.api_base
                 or get_secret_str("VERTEXAI_API_BASE")
                 or get_secret_str("VERTEX_API_BASE")
             )
@@ -4410,7 +4410,7 @@ def embedding(  # noqa: PLR0915
                     encoding=encoding,
                     logging_obj=logging,
                     optional_params=optional_params,
-                    litellm_params=litellm_params_dict,
+                    remodl_params=remodl_params_dict,
                     model_response=EmbeddingResponse(),
                     vertex_project=vertex_ai_project,
                     vertex_location=vertex_ai_location,
@@ -4453,7 +4453,7 @@ def embedding(  # noqa: PLR0915
             )
         elif custom_llm_provider == "ollama":
             api_base = (
-                litellm.api_base
+                remodl.api_base
                 or api_base
                 or get_secret_str("OLLAMA_API_BASE")
                 or "http://localhost:11434"
@@ -4462,7 +4462,7 @@ def embedding(  # noqa: PLR0915
             if isinstance(input, str):
                 input = [input]
             if not all(isinstance(item, str) for item in input):
-                raise litellm.BadRequestError(
+                raise remodl.BadRequestError(
                     message=f"Invalid input for ollama embeddings. input={input}",
                     model=model,  # type: ignore
                     llm_provider="ollama",  # type: ignore
@@ -4492,7 +4492,7 @@ def embedding(  # noqa: PLR0915
                 print_verbose=print_verbose,
             )
         elif custom_llm_provider == "mistral":
-            api_key = api_key or litellm.api_key or get_secret_str("MISTRAL_API_KEY")
+            api_key = api_key or remodl.api_key or get_secret_str("MISTRAL_API_KEY")
             response = openai_chat_completions.embedding(
                 model=model,
                 input=input,
@@ -4507,7 +4507,7 @@ def embedding(  # noqa: PLR0915
             )
         elif custom_llm_provider == "fireworks_ai":
             api_key = (
-                api_key or litellm.api_key or get_secret_str("FIREWORKS_AI_API_KEY")
+                api_key or remodl.api_key or get_secret_str("FIREWORKS_AI_API_KEY")
             )
             response = openai_chat_completions.embedding(
                 model=model,
@@ -4522,10 +4522,10 @@ def embedding(  # noqa: PLR0915
                 aembedding=aembedding,
             )
         elif custom_llm_provider == "nebius":
-            api_key = api_key or litellm.api_key or get_secret_str("NEBIUS_API_KEY")
+            api_key = api_key or remodl.api_key or get_secret_str("NEBIUS_API_KEY")
             api_base = (
                 api_base
-                or litellm.api_base
+                or remodl.api_base
                 or get_secret_str("NEBIUS_API_BASE")
                 or "api.studio.nebius.ai/v1"
             )
@@ -4543,10 +4543,10 @@ def embedding(  # noqa: PLR0915
                 aembedding=aembedding,
             )
         elif custom_llm_provider == "wandb":
-            api_key = api_key or litellm.api_key or get_secret_str("WANDB_API_KEY")
+            api_key = api_key or remodl.api_key or get_secret_str("WANDB_API_KEY")
             api_base = (
                 api_base
-                or litellm.api_base
+                or remodl.api_base
                 or get_secret_str("WANDB_API_BASE")
                 or "https://api.inference.wandb.ai/v1"
             )
@@ -4564,10 +4564,10 @@ def embedding(  # noqa: PLR0915
                 aembedding=aembedding,
             )
         elif custom_llm_provider == "sambanova":
-            api_key = api_key or litellm.api_key or get_secret_str("SAMBANOVA_API_KEY")
+            api_key = api_key or remodl.api_key or get_secret_str("SAMBANOVA_API_KEY")
             api_base = (
                 api_base
-                or litellm.api_base
+                or remodl.api_base
                 or get_secret_str("SAMBANOVA_API_BASE")
                 or "https://api.sambanova.ai/v1"
             )
@@ -4583,7 +4583,7 @@ def embedding(  # noqa: PLR0915
                 optional_params=optional_params,
                 client=client,
                 aembedding=aembedding,
-                litellm_params={},
+                remodl_params={},
             )
         elif custom_llm_provider == "voyage":
             response = base_llm_http_handler.embedding(
@@ -4598,7 +4598,7 @@ def embedding(  # noqa: PLR0915
                 optional_params=optional_params,
                 client=client,
                 aembedding=aembedding,
-                litellm_params={},
+                remodl_params={},
             )
         elif custom_llm_provider == "infinity":
             response = base_llm_http_handler.embedding(
@@ -4613,7 +4613,7 @@ def embedding(  # noqa: PLR0915
                 optional_params=optional_params,
                 client=client,
                 aembedding=aembedding,
-                litellm_params={},
+                remodl_params={},
             )
         elif custom_llm_provider == "watsonx":
             credentials = IBMWatsonXMixin.get_watsonx_credentials(
@@ -4636,20 +4636,20 @@ def embedding(  # noqa: PLR0915
                 timeout=timeout,
                 model_response=EmbeddingResponse(),
                 optional_params=optional_params,
-                litellm_params={},
+                remodl_params={},
                 client=client,
                 aembedding=aembedding,
             )
         elif custom_llm_provider == "xinference":
             api_key = (
                 api_key
-                or litellm.api_key
+                or remodl.api_key
                 or get_secret_str("XINFERENCE_API_KEY")
                 or "stub-xinference-key"
             )  # xinference does not need an api key, pass a stub key if user did not set one
             api_base = (
                 api_base
-                or litellm.api_base
+                or remodl.api_base
                 or get_secret_str("XINFERENCE_API_BASE")
                 or "http://127.0.0.1:9997/v1"
             )
@@ -4668,14 +4668,14 @@ def embedding(  # noqa: PLR0915
         elif custom_llm_provider == "azure_ai":
             api_base = (
                 api_base  # for deepinfra/perplexity/anyscale/groq/friendliai we check in get_llm_provider and pass in the api base from there
-                or litellm.api_base
+                or remodl.api_base
                 or get_secret_str("AZURE_AI_API_BASE")
             )
             # set API KEY
             api_key = (
                 api_key
-                or litellm.api_key  # for deepinfra/perplexity/anyscale/friendliai we check in get_llm_provider and pass in the api key from there
-                or litellm.openai_key
+                or remodl.api_key  # for deepinfra/perplexity/anyscale/friendliai we check in get_llm_provider and pass in the api key from there
+                or remodl.openai_key
                 or get_secret_str("AZURE_AI_API_KEY")
             )
 
@@ -4707,7 +4707,7 @@ def embedding(  # noqa: PLR0915
                 timeout=timeout,
                 model_response=EmbeddingResponse(),
                 optional_params=optional_params,
-                litellm_params={},
+                remodl_params={},
                 client=client,
                 aembedding=aembedding,
             )
@@ -4726,14 +4726,14 @@ def embedding(  # noqa: PLR0915
                 timeout=timeout,
                 model_response=EmbeddingResponse(),
                 optional_params=optional_params,
-                litellm_params={},
+                remodl_params={},
                 client=client,
                 aembedding=aembedding,
             )
         elif custom_llm_provider == "volcengine":
             volcengine_key = (
                 api_key
-                or litellm.api_key
+                or remodl.api_key
                 or get_secret_str("ARK_API_KEY")
                 or get_secret_str("VOLCENGINE_API_KEY")
             )
@@ -4753,7 +4753,7 @@ def embedding(  # noqa: PLR0915
                 logging_obj=logging,
                 api_base=api_base,
                 optional_params=optional_params,
-                litellm_params={},
+                remodl_params={},
                 model_response=EmbeddingResponse(),
                 api_key=volcengine_key,
                 client=client,
@@ -4761,10 +4761,10 @@ def embedding(  # noqa: PLR0915
                 headers=headers,
             )
         elif custom_llm_provider == "ovhcloud":
-            api_key = api_key or litellm.api_key or get_secret_str("OVHCLOUD_API_KEY")
+            api_key = api_key or remodl.api_key or get_secret_str("OVHCLOUD_API_KEY")
             api_base = (
                 api_base
-                or litellm.api_base
+                or remodl.api_base
                 or get_secret_str("OVHCLOUD_API_BASE")
                 or "https://oai.endpoints.kepler.ai.cloud.ovh.net/v1"
             )
@@ -4780,18 +4780,18 @@ def embedding(  # noqa: PLR0915
                 optional_params=optional_params,
                 client=client,
                 aembedding=aembedding,
-                litellm_params={},
+                remodl_params={},
             )
         elif custom_llm_provider == "cometapi":
             api_key = (
                 api_key
-                or litellm.cometapi_key
+                or remodl.cometapi_key
                 or get_secret_str("COMETAPI_KEY")
-                or litellm.api_key
+                or remodl.api_key
             )
             api_base = (
                 api_base
-                or litellm.api_base
+                or remodl.api_base
                 or get_secret_str("COMETAPI_API_BASE")
                 or "https://api.cometapi.com/v1"
             )
@@ -4807,11 +4807,11 @@ def embedding(  # noqa: PLR0915
                 optional_params=optional_params,
                 client=client,
                 aembedding=aembedding,
-                litellm_params={},
+                remodl_params={},
             )
-        elif custom_llm_provider in litellm._custom_providers:
+        elif custom_llm_provider in remodl._custom_providers:
             custom_handler: Optional[CustomLLM] = None
-            for item in litellm.custom_provider_map:
+            for item in remodl.custom_provider_map:
                 if item["provider"] == custom_llm_provider:
                     custom_handler = item["custom_handler"]
 
@@ -4836,7 +4836,7 @@ def embedding(  # noqa: PLR0915
                 optional_params=optional_params,
                 model_response=EmbeddingResponse(),
                 print_verbose=print_verbose,
-                litellm_params=litellm_params_dict,
+                remodl_params=remodl_params_dict,
             )
         else:
             raise LiteLLMUnknownProvider(
@@ -4856,7 +4856,7 @@ def embedding(  # noqa: PLR0915
         return response
     except Exception as e:
         ## LOGGING
-        litellm_logging_obj.post_call(
+        remodl_logging_obj.post_call(
             input=input,
             api_key=api_key,
             original_response=str(e),
@@ -4928,7 +4928,7 @@ async def atext_completion(
                 response = await response
 
             text_completion_response = TextCompletionResponse()
-            text_completion_response = litellm.utils.LiteLLMResponseObjectHandler.convert_chat_to_text_completion(
+            text_completion_response = remodl.utils.LiteLLMResponseObjectHandler.convert_chat_to_text_completion(
                 text_completion_response=text_completion_response,
                 response=response,
                 custom_llm_provider=custom_llm_provider,
@@ -5036,7 +5036,7 @@ def text_completion(  # noqa: PLR0915
     text_completion_response = TextCompletionResponse()
 
     optional_params: Dict[str, Any] = {}
-    # default values for all optional params are none, litellm only passes them to the llm when they are set to non None values
+    # default values for all optional params are none, remodl only passes them to the llm when they are set to non None values
     if best_of is not None:
         optional_params["best_of"] = best_of
     if echo is not None:
@@ -5159,7 +5159,7 @@ def text_completion(  # noqa: PLR0915
         messages = [{"role": "user", "content": prompt}]  # type: ignore
     else:
         raise Exception(
-            f"Unmapped prompt format. Your prompt is neither a list of strings nor a string. prompt={prompt}. File an issue - https://github.com/BerriAI/litellm/issues"
+            f"Unmapped prompt format. Your prompt is neither a list of strings nor a string. prompt={prompt}. File an issue - https://github.com/BerriAI/remodl/issues"
         )
 
     kwargs.pop("prompt", None)
@@ -5167,7 +5167,7 @@ def text_completion(  # noqa: PLR0915
     if _model is not None and (
         custom_llm_provider == "openai"
     ):  # for openai compatible endpoints - e.g. vllm, call the native /v1/completions endpoint for text completion calls
-        if _model not in litellm.open_ai_chat_completion_models:
+        if _model not in remodl.open_ai_chat_completion_models:
             model = "text-completion-openai/" + _model
             optional_params.pop("custom_llm_provider", None)
 
@@ -5203,7 +5203,7 @@ def text_completion(  # noqa: PLR0915
         return response
 
     text_completion_response = (
-        litellm.utils.LiteLLMResponseObjectHandler.convert_chat_to_text_completion(
+        remodl.utils.LiteLLMResponseObjectHandler.convert_chat_to_text_completion(
             response=response,
             text_completion_response=text_completion_response,
         )
@@ -5223,14 +5223,14 @@ async def aadapter_completion(
     """
     try:
         translation_obj: Optional[CustomLogger] = None
-        for item in litellm.adapters:
+        for item in remodl.adapters:
             if item["id"] == adapter_id:
                 translation_obj = item["adapter"]
 
         if translation_obj is None:
             raise ValueError(
-                "No matching adapter given. Received 'adapter_id'={}, litellm.adapters={}".format(
-                    adapter_id, litellm.adapters
+                "No matching adapter given. Received 'adapter_id'={}, remodl.adapters={}".format(
+                    adapter_id, remodl.adapters
                 )
             )
 
@@ -5259,7 +5259,7 @@ async def aadapter_completion(
 async def aadapter_generate_content(
     **kwargs,
 ) -> Union[Dict[str, Any], AsyncIterator[bytes]]:
-    from litellm.google_genai.adapters.handler import GenerateContentToCompletionHandler
+    from remodl.google_genai.adapters.handler import GenerateContentToCompletionHandler
 
     coro = cast(
         Coroutine[Any, Any, Union[Dict[str, Any], AsyncIterator[bytes]]],
@@ -5274,14 +5274,14 @@ def adapter_completion(
     *, adapter_id: str, **kwargs
 ) -> Optional[Union[BaseModel, AdapterCompletionStreamWrapper]]:
     translation_obj: Optional[CustomLogger] = None
-    for item in litellm.adapters:
+    for item in remodl.adapters:
         if item["id"] == adapter_id:
             translation_obj = item["adapter"]
 
     if translation_obj is None:
         raise ValueError(
-            "No matching adapter given. Received 'adapter_id'={}, litellm.adapters={}".format(
-                adapter_id, litellm.adapters
+            "No matching adapter given. Received 'adapter_id'={}, remodl.adapters={}".format(
+                adapter_id, remodl.adapters
             )
         )
 
@@ -5314,8 +5314,8 @@ def moderation(
     # only supports open ai for now
     api_key = (
         api_key
-        or litellm.api_key
-        or litellm.openai_key
+        or remodl.api_key
+        or remodl.openai_key
         or get_secret_str("OPENAI_API_KEY")
     )
 
@@ -5331,7 +5331,7 @@ def moderation(
         response = openai_client.moderations.create(input=input)
 
     response_dict: Dict = response.model_dump()
-    return litellm.utils.LiteLLMResponseObjectHandler.convert_to_moderation_response(
+    return remodl.utils.LiteLLMResponseObjectHandler.convert_to_moderation_response(
         response_object=response_dict,
     )
 
@@ -5349,8 +5349,8 @@ async def amoderation(
     # only supports open ai for now
     api_key = (
         api_key
-        or litellm.api_key
-        or litellm.openai_key
+        or remodl.api_key
+        or remodl.openai_key
         or get_secret_str("OPENAI_API_KEY")
     )
     openai_client = kwargs.get("client", None)
@@ -5365,8 +5365,8 @@ async def amoderation(
         _openai_client = openai_client
 
     optional_params = GenericLiteLLMParams(**kwargs)
-    litellm_logging_obj: Optional[LiteLLMLoggingObj] = kwargs.get(
-        "litellm_logging_obj", None
+    remodl_logging_obj: Optional[LiteLLMLoggingObj] = kwargs.get(
+        "remodl_logging_obj", None
     )
     try:
         (
@@ -5374,24 +5374,24 @@ async def amoderation(
             custom_llm_provider,
             _dynamic_api_key,
             _dynamic_api_base,
-        ) = litellm.get_llm_provider(
+        ) = remodl.get_llm_provider(
             model=model or "",
             custom_llm_provider=custom_llm_provider,
             api_base=optional_params.api_base,
             api_key=optional_params.api_key,
         )
-    except litellm.BadRequestError:
+    except remodl.BadRequestError:
         # `model` is optional field for moderation - get_llm_provider will throw BadRequestError if model is not set / not recognized
         pass
 
-    # update litellm_logging_obj with environment variables
-    custom_llm_provider = custom_llm_provider or litellm.LlmProviders.OPENAI.value
-    if litellm_logging_obj is not None:
-        litellm_logging_obj.update_environment_variables(
+    # update remodl_logging_obj with environment variables
+    custom_llm_provider = custom_llm_provider or remodl.LlmProviders.OPENAI.value
+    if remodl_logging_obj is not None:
+        remodl_logging_obj.update_environment_variables(
             model=model,
             user=kwargs.get("user", None),
             optional_params={},
-            litellm_params={
+            remodl_params={
                 **kwargs,
             },
             custom_llm_provider=custom_llm_provider,
@@ -5402,7 +5402,7 @@ async def amoderation(
     else:
         response = await _openai_client.moderations.create(input=input)
     response_dict: Dict = response.model_dump()
-    return litellm.utils.LiteLLMResponseObjectHandler.convert_to_moderation_response(
+    return remodl.utils.LiteLLMResponseObjectHandler.convert_to_moderation_response(
         response_object=response_dict,
     )
 
@@ -5488,12 +5488,12 @@ def transcription(
 
     Allows router to load balance between them
     """
-    litellm_call_id = kwargs.get("litellm_call_id", None)
+    remodl_call_id = kwargs.get("remodl_call_id", None)
     proxy_server_request = kwargs.get("proxy_server_request", None)
     model_info = kwargs.get("model_info", None)
     metadata = kwargs.get("metadata", None)
     atranscription = kwargs.pop("atranscription", False)
-    litellm_logging_obj: LiteLLMLoggingObj = kwargs.get("litellm_logging_obj")  # type: ignore
+    remodl_logging_obj: LiteLLMLoggingObj = kwargs.get("remodl_logging_obj")  # type: ignore
     extra_headers = kwargs.get("extra_headers", None)
     kwargs.pop("tags", [])
     non_default_params = get_non_default_transcription_params(kwargs)
@@ -5507,13 +5507,13 @@ def transcription(
         ]
     ] = kwargs.pop("client", None)
 
-    if litellm_logging_obj:
-        litellm_logging_obj.model_call_details["client"] = str(client)
+    if remodl_logging_obj:
+        remodl_logging_obj.model_call_details["client"] = str(client)
 
     if max_retries is None:
         max_retries = openai.DEFAULT_MAX_RETRIES
 
-    model_response = litellm.utils.TranscriptionResponse()
+    model_response = remodl.utils.TranscriptionResponse()
 
     model, custom_llm_provider, dynamic_api_key, api_base = get_llm_provider(
         model=model,
@@ -5536,14 +5536,14 @@ def transcription(
         **non_default_params,
     )
 
-    litellm_params_dict = get_litellm_params(**kwargs)
+    remodl_params_dict = get_remodl_params(**kwargs)
 
-    litellm_logging_obj.update_environment_variables(
+    remodl_logging_obj.update_environment_variables(
         model=model,
         user=user,
         optional_params={},
-        litellm_params={
-            "litellm_call_id": litellm_call_id,
+        remodl_params={
+            "remodl_call_id": remodl_call_id,
             "proxy_server_request": proxy_server_request,
             "model_info": model_info,
             "metadata": metadata,
@@ -5565,10 +5565,10 @@ def transcription(
 
     if custom_llm_provider == "azure":
         # azure configs
-        api_base = api_base or litellm.api_base or get_secret_str("AZURE_API_BASE")
+        api_base = api_base or remodl.api_base or get_secret_str("AZURE_API_BASE")
 
         api_version = (
-            api_version or litellm.api_version or get_secret_str("AZURE_API_VERSION")
+            api_version or remodl.api_version or get_secret_str("AZURE_API_VERSION")
         )
 
         azure_ad_token = kwargs.pop("azure_ad_token", None) or get_secret_str(
@@ -5577,8 +5577,8 @@ def transcription(
 
         api_key = (
             api_key
-            or litellm.api_key
-            or litellm.azure_key
+            or remodl.api_key
+            or remodl.azure_key
             or get_secret_str("AZURE_API_KEY")
         )
 
@@ -5592,32 +5592,32 @@ def transcription(
             atranscription=atranscription,
             client=client,
             timeout=timeout,
-            logging_obj=litellm_logging_obj,
+            logging_obj=remodl_logging_obj,
             api_base=api_base,
             api_key=api_key,
             api_version=api_version,
             azure_ad_token=azure_ad_token,
             max_retries=max_retries,
-            litellm_params=litellm_params_dict,
+            remodl_params=remodl_params_dict,
         )
     elif custom_llm_provider == "openai" or (
-        custom_llm_provider in litellm.openai_compatible_providers
+        custom_llm_provider in remodl.openai_compatible_providers
     ):
         api_base = (
             api_base
-            or litellm.api_base
+            or remodl.api_base
             or get_secret("OPENAI_BASE_URL")
             or get_secret("OPENAI_API_BASE")
             or "https://api.openai.com/v1"
         )  # type: ignore
         openai.organization = (
-            litellm.organization
+            remodl.organization
             or get_secret("OPENAI_ORGANIZATION")
             or None  # default - https://github.com/openai/openai-python/blob/284c1799070c723c6a553337134148a7ab088dd8/openai/util.py#L105
         )
         # set API KEY
 
-        api_key = api_key or litellm.api_key or litellm.openai_key or get_secret("OPENAI_API_KEY")  # type: ignore
+        api_key = api_key or remodl.api_key or remodl.openai_key or get_secret("OPENAI_API_KEY")  # type: ignore
         response = openai_audio_transcriptions.audio_transcriptions(
             model=model,
             audio_file=file,
@@ -5626,19 +5626,19 @@ def transcription(
             atranscription=atranscription,
             client=client,
             timeout=timeout,
-            logging_obj=litellm_logging_obj,
+            logging_obj=remodl_logging_obj,
             max_retries=max_retries,
             api_base=api_base,
             api_key=api_key,
             provider_config=provider_config,
-            litellm_params=litellm_params_dict,
+            remodl_params=remodl_params_dict,
         )
     elif provider_config is not None:
         response = base_llm_http_handler.audio_transcriptions(
             model=model,
             audio_file=file,
             optional_params=optional_params,
-            litellm_params=litellm_params_dict,
+            remodl_params=remodl_params_dict,
             model_response=model_response,
             atranscription=atranscription,
             client=(
@@ -5652,7 +5652,7 @@ def transcription(
             ),
             timeout=timeout,
             max_retries=max_retries,
-            logging_obj=litellm_logging_obj,
+            logging_obj=remodl_logging_obj,
             api_base=api_base,
             api_key=api_key,
             custom_llm_provider=custom_llm_provider,
@@ -5728,7 +5728,7 @@ def speech(  # noqa: PLR0915
     **kwargs,
 ) -> HttpxBinaryResponseContent:
     user = kwargs.get("user", None)
-    litellm_call_id: Optional[str] = kwargs.get("litellm_call_id", None)
+    remodl_call_id: Optional[str] = kwargs.get("remodl_call_id", None)
     proxy_server_request = kwargs.get("proxy_server_request", None)
     extra_headers = kwargs.get("extra_headers", None)
     model_info = kwargs.get("model_info", None)
@@ -5746,17 +5746,17 @@ def speech(  # noqa: PLR0915
         optional_params["instructions"] = instructions
 
     if timeout is None:
-        timeout = litellm.request_timeout
+        timeout = remodl.request_timeout
 
     if max_retries is None:
-        max_retries = litellm.num_retries or openai.DEFAULT_MAX_RETRIES
-    litellm_params_dict = get_litellm_params(**kwargs)
+        max_retries = remodl.num_retries or openai.DEFAULT_MAX_RETRIES
+    remodl_params_dict = get_remodl_params(**kwargs)
 
     # Get provider-specific text-to-speech config and map parameters
     text_to_speech_provider_config = (
         ProviderConfigManager.get_provider_text_to_speech_config(
             model=model,
-            provider=litellm.LlmProviders(custom_llm_provider),
+            provider=remodl.LlmProviders(custom_llm_provider),
         )
     )
 
@@ -5770,13 +5770,13 @@ def speech(  # noqa: PLR0915
             kwargs=kwargs,
         )
 
-    logging_obj: Logging = cast(Logging, kwargs.get("litellm_logging_obj"))
+    logging_obj: Logging = cast(Logging, kwargs.get("remodl_logging_obj"))
     logging_obj.update_environment_variables(
         model=model,
         user=user,
         optional_params=optional_params,
-        litellm_params={
-            "litellm_call_id": litellm_call_id,
+        remodl_params={
+            "remodl_call_id": remodl_call_id,
             "proxy_server_request": proxy_server_request,
             "model_info": model_info,
             "metadata": metadata,
@@ -5789,17 +5789,17 @@ def speech(  # noqa: PLR0915
     response: Optional[HttpxBinaryResponseContent] = None
     if (
         custom_llm_provider == "openai"
-        or custom_llm_provider in litellm.openai_compatible_providers
+        or custom_llm_provider in remodl.openai_compatible_providers
     ):
         if voice is None or not (isinstance(voice, str)):
-            raise litellm.BadRequestError(
+            raise remodl.BadRequestError(
                 message="'voice' is required to be passed as a string for OpenAI TTS",
                 model=model,
                 llm_provider=custom_llm_provider,
             )
         api_base = (
             api_base  # for deepinfra/perplexity/anyscale/groq/friendliai we check in get_llm_provider and pass in the api base from there
-            or litellm.api_base
+            or remodl.api_base
             or get_secret("OPENAI_BASE_URL")
             or get_secret("OPENAI_API_BASE")
             or "https://api.openai.com/v1"
@@ -5807,26 +5807,26 @@ def speech(  # noqa: PLR0915
         # set API KEY
         api_key = (
             api_key
-            or litellm.api_key  # for deepinfra/perplexity/anyscale we check in get_llm_provider and pass in the api key from there
-            or litellm.openai_key
+            or remodl.api_key  # for deepinfra/perplexity/anyscale we check in get_llm_provider and pass in the api key from there
+            or remodl.openai_key
             or get_secret("OPENAI_API_KEY")
         )  # type: ignore
 
         organization = (
             organization
-            or litellm.organization
+            or remodl.organization
             or get_secret("OPENAI_ORGANIZATION")
             or None  # default - https://github.com/openai/openai-python/blob/284c1799070c723c6a553337134148a7ab088dd8/openai/util.py#L105
         )  # type: ignore
 
         project = (
             project
-            or litellm.project
+            or remodl.project
             or get_secret("OPENAI_PROJECT")
             or None  # default - https://github.com/openai/openai-python/blob/284c1799070c723c6a553337134148a7ab088dd8/openai/util.py#L105
         )  # type: ignore
 
-        headers = headers or litellm.headers
+        headers = headers or remodl.headers
 
         response = openai_chat_completions.audio_speech(
             model=model,
@@ -5845,13 +5845,13 @@ def speech(  # noqa: PLR0915
     elif custom_llm_provider == "azure":
         # Check if this is Azure Speech Service (Cognitive Services TTS)
         if model.startswith("speech/"):
-            from litellm.llms.azure.text_to_speech.transformation import (
+            from remodl.llms.azure.text_to_speech.transformation import (
                 AzureAVATextToSpeechConfig,
             )
 
             # Azure AVA (Cognitive Services) Text-to-Speech
             if text_to_speech_provider_config is None:
-                raise litellm.BadRequestError(
+                raise remodl.BadRequestError(
                     message="Azure Speech Service configuration not found",
                     model=model,
                     llm_provider=custom_llm_provider,
@@ -5867,7 +5867,7 @@ def speech(  # noqa: PLR0915
                 input=input,
                 voice=voice,
                 optional_params=optional_params,
-                litellm_params_dict=litellm_params_dict,
+                remodl_params_dict=remodl_params_dict,
                 logging_obj=logging_obj,
                 timeout=timeout,
                 extra_headers=extra_headers,
@@ -5880,19 +5880,19 @@ def speech(  # noqa: PLR0915
         else:
             # Azure OpenAI TTS
             if voice is None or not (isinstance(voice, str)):
-                raise litellm.BadRequestError(
+                raise remodl.BadRequestError(
                     message="'voice' is required to be passed as a string for Azure TTS",
                     model=model,
                     llm_provider=custom_llm_provider,
                 )
-            api_base = api_base or litellm.api_base or get_secret("AZURE_API_BASE")  # type: ignore
+            api_base = api_base or remodl.api_base or get_secret("AZURE_API_BASE")  # type: ignore
 
-            api_version = api_version or litellm.api_version or get_secret("AZURE_API_VERSION")  # type: ignore
+            api_version = api_version or remodl.api_version or get_secret("AZURE_API_VERSION")  # type: ignore
 
             api_key = (
                 api_key
-                or litellm.api_key
-                or litellm.azure_key
+                or remodl.api_key
+                or remodl.azure_key
                 or get_secret("AZURE_OPENAI_API_KEY")
                 or get_secret("AZURE_API_KEY")
             )  # type: ignore
@@ -5922,7 +5922,7 @@ def speech(  # noqa: PLR0915
                 timeout=timeout,
                 client=client,  # pass AsyncOpenAI, OpenAI client
                 aspeech=aspeech,
-                litellm_params=litellm_params_dict,
+                remodl_params=remodl_params_dict,
             )
     elif custom_llm_provider == "vertex_ai" or custom_llm_provider == "vertex_ai_beta":
         generic_optional_params = GenericLiteLLMParams(**kwargs)
@@ -5930,12 +5930,12 @@ def speech(  # noqa: PLR0915
         api_base = generic_optional_params.api_base or ""
         vertex_ai_project = (
             generic_optional_params.vertex_project
-            or litellm.vertex_project
+            or remodl.vertex_project
             or get_secret_str("VERTEXAI_PROJECT")
         )
         vertex_ai_location = (
             generic_optional_params.vertex_location
-            or litellm.vertex_location
+            or remodl.vertex_location
             or get_secret_str("VERTEXAI_LOCATION")
         )
         vertex_credentials = (
@@ -5944,7 +5944,7 @@ def speech(  # noqa: PLR0915
         )
 
         if voice is not None and not isinstance(voice, dict):
-            raise litellm.BadRequestError(
+            raise remodl.BadRequestError(
                 message=f"'voice' is required to be passed as a dict for Vertex AI TTS, passed in voice={voice}",
                 model=model,
                 llm_provider=custom_llm_provider,
@@ -5959,7 +5959,7 @@ def speech(  # noqa: PLR0915
                 input=input,
                 voice=voice,
                 optional_params=optional_params,
-                litellm_params=litellm_params_dict,
+                remodl_params=remodl_params_dict,
                 headers=headers or {},
                 logging_obj=logging_obj,
                 custom_llm_provider=custom_llm_provider,
@@ -5988,7 +5988,7 @@ def speech(  # noqa: PLR0915
             input=input,
             voice=voice,
             optional_params=optional_params,
-            litellm_params=litellm_params_dict,
+            remodl_params=remodl_params_dict,
             headers=headers or {},
             logging_obj=logging_obj,
             custom_llm_provider=custom_llm_provider,
@@ -5997,7 +5997,7 @@ def speech(  # noqa: PLR0915
     if response is None:
         raise Exception(
             "Unable to map the custom llm provider={} to a known provider={}.".format(
-                custom_llm_provider, litellm.provider_list
+                custom_llm_provider, remodl.provider_list
             )
         )
     return response
@@ -6036,23 +6036,23 @@ async def ahealth_check(
             "x-ms-region": str,
         }
     """
-    from litellm.litellm_core_utils.health_check_helpers import HealthCheckHelpers
+    from remodl.remodl_core_utils.health_check_helpers import HealthCheckHelpers
 
     # Map modes to their corresponding health check calls
     #########################################################
     # Init request with tracking information
     #########################################################
-    litellm_logging_obj = Logging(
+    remodl_logging_obj = Logging(
         model="",
         messages=[],
         stream=False,
         call_type="acompletion",
-        litellm_call_id=str(uuid.uuid4()),
+        remodl_call_id=str(uuid.uuid4()),
         start_time=datetime.datetime.now(),
         function_id=str(uuid.uuid4()),
         log_raw_request_response=True,
     )
-    model_params["litellm_logging_obj"] = litellm_logging_obj
+    model_params["remodl_logging_obj"] = remodl_logging_obj
     model_params = (
         HealthCheckHelpers._update_model_params_with_health_check_tracking_information(
             model_params=model_params
@@ -6064,12 +6064,12 @@ async def ahealth_check(
         if model is None:
             raise Exception("model not set")
 
-        if model in litellm.model_cost and mode is None:
-            mode = litellm.model_cost[model].get("mode")
+        if model in remodl.model_cost and mode is None:
+            mode = remodl.model_cost[model].get("mode")
 
         model, custom_llm_provider, _, _ = get_llm_provider(model=model)
-        if model in litellm.model_cost and mode is None:
-            mode = litellm.model_cost[model].get("mode")
+        if model in remodl.model_cost and mode is None:
+            mode = remodl.model_cost[model].get("mode")
 
         model_params["cache"] = {
             "no-cache": True
@@ -6080,7 +6080,7 @@ async def ahealth_check(
                 model=model,
                 custom_llm_provider=custom_llm_provider,
                 model_params=model_params,
-                litellm_logging_obj=litellm_logging_obj,
+                remodl_logging_obj=remodl_logging_obj,
             )
 
         mode_handlers = HealthCheckHelpers.get_mode_handlers(
@@ -6100,7 +6100,7 @@ async def ahealth_check(
             return _create_health_check_response(_response_headers)
         else:
             raise Exception(
-                f"Mode {mode} not supported. See modes here: https://docs.litellm.ai/docs/proxy/health"
+                f"Mode {mode} not supported. See modes here: https://docs.remodl.ai/docs/proxy/health"
             )
     except Exception as e:
         stack_trace = traceback.format_exc()
@@ -6109,12 +6109,12 @@ async def ahealth_check(
 
         if mode is None:
             return {
-                "error": f"error:{str(e)}. Missing `mode`. Set the `mode` for the model - https://docs.litellm.ai/docs/proxy/health#embedding-models  \nstacktrace: {stack_trace}"
+                "error": f"error:{str(e)}. Missing `mode`. Set the `mode` for the model - https://docs.remodl.ai/docs/proxy/health#embedding-models  \nstacktrace: {stack_trace}"
             }
 
         error_to_return = str(e) + "\nstack trace: " + stack_trace
 
-        raw_request_typed_dict = litellm_logging_obj.model_call_details.get(
+        raw_request_typed_dict = remodl_logging_obj.model_call_details.get(
             "raw_request_typed_dict"
         )
 
@@ -6125,24 +6125,24 @@ async def ahealth_check(
 
 
 ####### HELPER FUNCTIONS ################
-## Set verbose to true -> ```litellm.set_verbose = True```
+## Set verbose to true -> ```remodl.set_verbose = True```
 def print_verbose(print_statement):
     try:
         verbose_logger.debug(print_statement)
-        if litellm.set_verbose:
+        if remodl.set_verbose:
             print(print_statement)  # noqa
     except Exception:
         pass
 
 
 def config_completion(**kwargs):
-    if litellm.config_path is not None:
-        config_args = read_config_args(litellm.config_path)
+    if remodl.config_path is not None:
+        config_args = read_config_args(remodl.config_path)
         # overwrite any args passed in with config args
         return completion(**kwargs, **config_args)
     else:
         raise ValueError(
-            "No config path set, please set a config path using `litellm.config_path = 'path/to/config.json'`"
+            "No config path set, please set a config path using `remodl.config_path = 'path/to/config.json'`"
         )
 
 
@@ -6229,7 +6229,7 @@ def stream_chunk_builder(  # noqa: PLR0915
 ) -> Optional[Union[ModelResponse, TextCompletionResponse]]:
     try:
         if chunks is None:
-            raise litellm.APIError(
+            raise remodl.APIError(
                 status_code=500,
                 message="Error building chunks for logging/streaming usage calculation",
                 llm_provider="",
@@ -6246,7 +6246,7 @@ def stream_chunk_builder(  # noqa: PLR0915
             return None
         ## Route to the text completion logic
         if isinstance(
-            chunks[0]["choices"][0], litellm.utils.TextChoices
+            chunks[0]["choices"][0], remodl.utils.TextChoices
         ):  # route to the text completion logic
             return stream_chunk_builder_text_completion(
                 chunks=chunks, messages=messages
@@ -6363,7 +6363,7 @@ def stream_chunk_builder(  # noqa: PLR0915
         setattr(response, "usage", usage)
 
         # Add cost to usage object if include_cost_in_streaming_usage is True
-        if litellm.include_cost_in_streaming_usage and logging_obj is not None:
+        if remodl.include_cost_in_streaming_usage and logging_obj is not None:
             setattr(
                 usage, "cost", logging_obj._response_cost_calculator(result=response)
             )
@@ -6371,11 +6371,11 @@ def stream_chunk_builder(  # noqa: PLR0915
         return response
     except Exception as e:
         verbose_logger.exception(
-            "litellm.main.py::stream_chunk_builder() - Exception occurred - {}".format(
+            "remodl.main.py::stream_chunk_builder() - Exception occurred - {}".format(
                 str(e)
             )
         )
-        raise litellm.APIError(
+        raise remodl.APIError(
             status_code=500,
             message="Error building chunks for logging/streaming usage calculation",
             llm_provider="",

@@ -4,9 +4,9 @@ from typing import Any, Optional
 
 import httpx
 
-import litellm
-from litellm._logging import verbose_logger
-from litellm.types.utils import LlmProviders
+import remodl
+from remodl._logging import verbose_logger
+from remodl.types.utils import LlmProviders
 
 from ..exceptions import (
     APIConnectionError,
@@ -128,7 +128,7 @@ def _get_response_headers(original_exception: Exception) -> Optional[httpx.Heade
             _response_headers = getattr(error_response, "headers", None)
         if not _response_headers:
             _response_headers = getattr(
-                original_exception, "litellm_response_headers", None
+                original_exception, "remodl_response_headers", None
             )
     except Exception:
         return None
@@ -139,20 +139,20 @@ def _get_response_headers(original_exception: Exception) -> Optional[httpx.Heade
 import re
 
 
-def extract_and_raise_litellm_exception(
+def extract_and_raise_remodl_exception(
     response: Optional[Any],
     error_str: str,
     model: str,
     custom_llm_provider: str,
 ):
     """
-    Covers scenario where litellm sdk calling proxy.
+    Covers scenario where remodl sdk calling proxy.
 
-    Enables raising the special errors raised by litellm, eg. ContextWindowExceededError.
+    Enables raising the special errors raised by remodl, eg. ContextWindowExceededError.
 
-    Relevant Issue: https://github.com/BerriAI/litellm/issues/7259
+    Relevant Issue: https://github.com/BerriAI/remodl/issues/7259
     """
-    pattern = r"litellm\.\w+Error"
+    pattern = r"remodl\.\w+Error"
 
     # Search for the exception in the error string
     match = re.search(pattern, error_str)
@@ -160,8 +160,8 @@ def extract_and_raise_litellm_exception(
     # Extract the exception if found
     if match:
         exception_name = match.group(0)
-        exception_name = exception_name.strip().replace("litellm.", "")
-        raised_exception_obj = getattr(litellm, exception_name, None)
+        exception_name = exception_name.strip().replace("remodl.", "")
+        raised_exception_obj = getattr(remodl, exception_name, None)
         if raised_exception_obj:
             raise raised_exception_obj(
                 message=error_str,
@@ -181,22 +181,22 @@ def exception_type(  # type: ignore  # noqa: PLR0915
     """Maps an LLM Provider Exception to OpenAI Exception Format"""
     if any(
         isinstance(original_exception, exc_type)
-        for exc_type in litellm.LITELLM_EXCEPTION_TYPES
+        for exc_type in remodl.LITELLM_EXCEPTION_TYPES
     ):
         return original_exception
     exception_mapping_worked = False
     exception_provider = custom_llm_provider
-    if litellm.suppress_debug_info is False:
+    if remodl.suppress_debug_info is False:
         print()  # noqa
         print(  # noqa
-            "\033[1;31mGive Feedback / Get Help: https://github.com/BerriAI/litellm/issues/new\033[0m"  # noqa
+            "\033[1;31mGive Feedback / Get Help: https://github.com/BerriAI/remodl/issues/new\033[0m"  # noqa
         )  # noqa
         print(  # noqa
-            "LiteLLM.Info: If you need to debug this error, use `litellm._turn_on_debug()'."  # noqa
+            "LiteLLM.Info: If you need to debug this error, use `remodl._turn_on_debug()'."  # noqa
         )  # noqa
         print()  # noqa
 
-    litellm_response_headers = _get_response_headers(
+    remodl_response_headers = _get_response_headers(
         original_exception=original_exception
     )
     try:
@@ -215,10 +215,10 @@ def exception_type(  # type: ignore  # noqa: PLR0915
             ################################################################################
             extra_information = ""
             try:
-                _api_base = litellm.get_api_base(
+                _api_base = remodl.get_api_base(
                     model=model, optional_params=extra_kwargs
                 )
-                messages = litellm.get_first_chars_messages(kwargs=completion_kwargs)
+                messages = remodl.get_first_chars_messages(kwargs=completion_kwargs)
                 _vertex_project = extra_kwargs.get("vertex_project")
                 _vertex_location = extra_kwargs.get("vertex_location")
                 _metadata = extra_kwargs.get("metadata", {}) or {}
@@ -241,7 +241,7 @@ def exception_type(  # type: ignore  # noqa: PLR0915
                 if (
                     messages
                     and len(messages) > 0
-                    and litellm.redact_messages_in_exceptions is False
+                    and remodl.redact_messages_in_exceptions is False
                 ):
                     extra_information += f"\nMessages: `{messages}`"
 
@@ -254,7 +254,7 @@ def exception_type(  # type: ignore  # noqa: PLR0915
                 if _vertex_location is not None:
                     extra_information += f"\nvertex_location: `{_vertex_location}`\n"
 
-                # on litellm proxy add key name + team to exceptions
+                # on remodl proxy add key name + team to exceptions
                 extra_information = _add_key_name_and_team_to_alert(
                     request_info=extra_information, metadata=_metadata
                 )
@@ -282,13 +282,13 @@ def exception_type(  # type: ignore  # noqa: PLR0915
                     message=f"APITimeoutError - Request timed out. Error_str: {error_str}",
                     model=model,
                     llm_provider=custom_llm_provider,
-                    litellm_debug_info=extra_information,
+                    remodl_debug_info=extra_information,
                 )
 
             if (
-                custom_llm_provider == "litellm_proxy"
-            ):  # handle special case where calling litellm proxy + exception str contains error message
-                extract_and_raise_litellm_exception(
+                custom_llm_provider == "remodl_proxy"
+            ):  # handle special case where calling remodl proxy + exception str contains error message
+                extract_and_raise_remodl_exception(
                     response=getattr(original_exception, "response", None),
                     error_str=error_str,
                     model=model,
@@ -298,7 +298,7 @@ def exception_type(  # type: ignore  # noqa: PLR0915
                 custom_llm_provider == "openai"
                 or custom_llm_provider == "text-completion-openai"
                 or custom_llm_provider == "custom_openai"
-                or custom_llm_provider in litellm.openai_compatible_providers
+                or custom_llm_provider in remodl.openai_compatible_providers
                 or custom_llm_provider == "mistral"
             ):
                 # custom_llm_provider is openai, make it OpenAI
@@ -311,7 +311,7 @@ def exception_type(  # type: ignore  # noqa: PLR0915
 
                 if message is not None and isinstance(
                     message, str
-                ):  # done to prevent user-confusion. Relevant issue - https://github.com/BerriAI/litellm/issues/1414
+                ):  # done to prevent user-confusion. Relevant issue - https://github.com/BerriAI/remodl/issues/1414
                     message = message.replace("OPENAI", custom_llm_provider.upper())
                     message = message.replace(
                         "openai.OpenAIError",
@@ -341,7 +341,7 @@ def exception_type(  # type: ignore  # noqa: PLR0915
                         llm_provider=custom_llm_provider,
                         model=model,
                         response=getattr(original_exception, "response", None),
-                        litellm_debug_info=extra_information,
+                        remodl_debug_info=extra_information,
                     )
                 elif (
                     "invalid_request_error" in error_str
@@ -353,7 +353,7 @@ def exception_type(  # type: ignore  # noqa: PLR0915
                         llm_provider=custom_llm_provider,
                         model=model,
                         response=getattr(original_exception, "response", None),
-                        litellm_debug_info=extra_information,
+                        remodl_debug_info=extra_information,
                     )
                 elif "A timeout occurred" in error_str:
                     exception_mapping_worked = True
@@ -361,7 +361,7 @@ def exception_type(  # type: ignore  # noqa: PLR0915
                         message=f"{exception_provider} - {message}",
                         model=model,
                         llm_provider=custom_llm_provider,
-                        litellm_debug_info=extra_information,
+                        remodl_debug_info=extra_information,
                     )
                 elif (
                     (
@@ -383,7 +383,7 @@ def exception_type(  # type: ignore  # noqa: PLR0915
                         llm_provider=custom_llm_provider,
                         model=model,
                         response=getattr(original_exception, "response", None),
-                        litellm_debug_info=extra_information,
+                        remodl_debug_info=extra_information,
                     )
                 elif (
                     "invalid_request_error" in error_str
@@ -395,7 +395,7 @@ def exception_type(  # type: ignore  # noqa: PLR0915
                         llm_provider=custom_llm_provider,
                         model=model,
                         response=getattr(original_exception, "response", None),
-                        litellm_debug_info=extra_information,
+                        remodl_debug_info=extra_information,
                         body=getattr(original_exception, "body", None),
                     )
                 elif (
@@ -403,7 +403,7 @@ def exception_type(  # type: ignore  # noqa: PLR0915
                     or "The server had an error processing your request." in error_str
                 ):
                     exception_mapping_worked = True
-                    raise litellm.InternalServerError(
+                    raise remodl.InternalServerError(
                         message=f"{exception_provider} - {message}",
                         model=model,
                         llm_provider=custom_llm_provider,
@@ -415,7 +415,7 @@ def exception_type(  # type: ignore  # noqa: PLR0915
                         model=model,
                         llm_provider=custom_llm_provider,
                         response=getattr(original_exception, "response", None),
-                        litellm_debug_info=extra_information,
+                        remodl_debug_info=extra_information,
                     )
                 elif (
                     "The api_key client option must be set either by passing api_key to the client or by setting the OPENAI_API_KEY environment variable"
@@ -427,7 +427,7 @@ def exception_type(  # type: ignore  # noqa: PLR0915
                         llm_provider=custom_llm_provider,
                         model=model,
                         response=getattr(original_exception, "response", None),
-                        litellm_debug_info=extra_information,
+                        remodl_debug_info=extra_information,
                     )
                 elif "Mistral API raised a streaming error" in error_str:
                     exception_mapping_worked = True
@@ -440,7 +440,7 @@ def exception_type(  # type: ignore  # noqa: PLR0915
                         llm_provider=custom_llm_provider,
                         model=model,
                         request=_request,
-                        litellm_debug_info=extra_information,
+                        remodl_debug_info=extra_information,
                     )
                 elif hasattr(original_exception, "status_code"):
                     exception_mapping_worked = True
@@ -451,7 +451,7 @@ def exception_type(  # type: ignore  # noqa: PLR0915
                             llm_provider=custom_llm_provider,
                             model=model,
                             response=getattr(original_exception, "response", None),
-                            litellm_debug_info=extra_information,
+                            remodl_debug_info=extra_information,
                         )
                     elif original_exception.status_code == 401:
                         exception_mapping_worked = True
@@ -460,7 +460,7 @@ def exception_type(  # type: ignore  # noqa: PLR0915
                             llm_provider=custom_llm_provider,
                             model=model,
                             response=getattr(original_exception, "response", None),
-                            litellm_debug_info=extra_information,
+                            remodl_debug_info=extra_information,
                         )
                     elif original_exception.status_code == 404:
                         exception_mapping_worked = True
@@ -469,7 +469,7 @@ def exception_type(  # type: ignore  # noqa: PLR0915
                             model=model,
                             llm_provider=custom_llm_provider,
                             response=getattr(original_exception, "response", None),
-                            litellm_debug_info=extra_information,
+                            remodl_debug_info=extra_information,
                         )
                     elif original_exception.status_code == 408:
                         exception_mapping_worked = True
@@ -477,7 +477,7 @@ def exception_type(  # type: ignore  # noqa: PLR0915
                             message=f"Timeout Error: {exception_provider} - {message}",
                             model=model,
                             llm_provider=custom_llm_provider,
-                            litellm_debug_info=extra_information,
+                            remodl_debug_info=extra_information,
                         )
                     elif original_exception.status_code == 422:
                         exception_mapping_worked = True
@@ -486,7 +486,7 @@ def exception_type(  # type: ignore  # noqa: PLR0915
                             model=model,
                             llm_provider=custom_llm_provider,
                             response=getattr(original_exception, "response", None),
-                            litellm_debug_info=extra_information,
+                            remodl_debug_info=extra_information,
                             body=getattr(original_exception, "body", None),
                         )
                     elif original_exception.status_code == 429:
@@ -496,7 +496,7 @@ def exception_type(  # type: ignore  # noqa: PLR0915
                             model=model,
                             llm_provider=custom_llm_provider,
                             response=getattr(original_exception, "response", None),
-                            litellm_debug_info=extra_information,
+                            remodl_debug_info=extra_information,
                         )
                     elif original_exception.status_code == 500:
                         exception_mapping_worked = True
@@ -505,7 +505,7 @@ def exception_type(  # type: ignore  # noqa: PLR0915
                             model=model,
                             llm_provider=custom_llm_provider,
                             response=getattr(original_exception, "response", None),
-                            litellm_debug_info=extra_information,
+                            remodl_debug_info=extra_information,
                         )
                     elif original_exception.status_code == 503:
                         exception_mapping_worked = True
@@ -514,7 +514,7 @@ def exception_type(  # type: ignore  # noqa: PLR0915
                             model=model,
                             llm_provider=custom_llm_provider,
                             response=getattr(original_exception, "response", None),
-                            litellm_debug_info=extra_information,
+                            remodl_debug_info=extra_information,
                         )
                     elif original_exception.status_code == 504:  # gateway timeout error
                         exception_mapping_worked = True
@@ -522,7 +522,7 @@ def exception_type(  # type: ignore  # noqa: PLR0915
                             message=f"Timeout Error: {exception_provider} - {message}",
                             model=model,
                             llm_provider=custom_llm_provider,
-                            litellm_debug_info=extra_information,
+                            remodl_debug_info=extra_information,
                             exception_status_code=original_exception.status_code,
                         )
                     else:
@@ -533,7 +533,7 @@ def exception_type(  # type: ignore  # noqa: PLR0915
                             llm_provider=custom_llm_provider,
                             model=model,
                             request=getattr(original_exception, "request", None),
-                            litellm_debug_info=extra_information,
+                            remodl_debug_info=extra_information,
                         )
                 else:
                     # if no status code then it is an APIConnectionError: https://github.com/openai/openai-python#handling-errors
@@ -542,7 +542,7 @@ def exception_type(  # type: ignore  # noqa: PLR0915
                         message=f"APIConnectionError: {exception_provider} - {message}",
                         llm_provider=custom_llm_provider,
                         model=model,
-                        litellm_debug_info=extra_information,
+                        remodl_debug_info=extra_information,
                         request=httpx.Request(
                             method="POST", url="https://api.openai.com/v1/"
                         ),
@@ -633,15 +633,15 @@ def exception_type(  # type: ignore  # noqa: PLR0915
                         or original_exception.status_code == 529
                     ):
                         exception_mapping_worked = True
-                        raise litellm.InternalServerError(
-                            message=f"AnthropicException - {error_str}. Handle with `litellm.InternalServerError`.",
+                        raise remodl.InternalServerError(
+                            message=f"AnthropicException - {error_str}. Handle with `remodl.InternalServerError`.",
                             llm_provider="anthropic",
                             model=model,
                         )
                     elif original_exception.status_code == 503:
                         exception_mapping_worked = True
-                        raise litellm.ServiceUnavailableError(
-                            message=f"AnthropicException - {error_str}. Handle with `litellm.ServiceUnavailableError`.",
+                        raise remodl.ServiceUnavailableError(
+                            message=f"AnthropicException - {error_str}. Handle with `remodl.ServiceUnavailableError`.",
                             llm_provider="anthropic",
                             model=model,
                         )
@@ -748,7 +748,7 @@ def exception_type(  # type: ignore  # noqa: PLR0915
                         url="https://api.replicate.com/v1/deployments",
                     ),
                 )
-            elif custom_llm_provider in litellm._openai_like_providers:
+            elif custom_llm_provider in remodl._openai_like_providers:
                 if "authorization denied for" in error_str:
                     exception_mapping_worked = True
 
@@ -768,7 +768,7 @@ def exception_type(  # type: ignore  # noqa: PLR0915
                         llm_provider=custom_llm_provider,
                         model=model,
                         response=getattr(original_exception, "response", None),
-                        litellm_debug_info=extra_information,
+                        remodl_debug_info=extra_information,
                     )
                 elif "model's maximum context limit" in error_str:
                     exception_mapping_worked = True
@@ -790,7 +790,7 @@ def exception_type(  # type: ignore  # noqa: PLR0915
                     in error_str
                 ):
                     exception_mapping_worked = True
-                    raise litellm.InternalServerError(
+                    raise remodl.InternalServerError(
                         message=f"{custom_llm_provider.capitalize()}Exception - {original_exception.message}",
                         llm_provider=custom_llm_provider,
                         model=model,
@@ -805,7 +805,7 @@ def exception_type(  # type: ignore  # noqa: PLR0915
                 elif hasattr(original_exception, "status_code"):
                     if original_exception.status_code == 500:
                         exception_mapping_worked = True
-                        raise litellm.InternalServerError(
+                        raise remodl.InternalServerError(
                             message=f"{custom_llm_provider.capitalize()}Exception - {original_exception.message}",
                             llm_provider=custom_llm_provider,
                             model=model,
@@ -840,7 +840,7 @@ def exception_type(  # type: ignore  # noqa: PLR0915
                             message=f"{custom_llm_provider.capitalize()}Exception - {original_exception.message}",
                             model=model,
                             llm_provider=custom_llm_provider,
-                            litellm_debug_info=extra_information,
+                            remodl_debug_info=extra_information,
                         )
                     elif (
                         original_exception.status_code == 422
@@ -851,7 +851,7 @@ def exception_type(  # type: ignore  # noqa: PLR0915
                             message=f"{custom_llm_provider.capitalize()}Exception - {original_exception.message}",
                             model=model,
                             llm_provider=custom_llm_provider,
-                            litellm_debug_info=extra_information,
+                            remodl_debug_info=extra_information,
                         )
                     elif original_exception.status_code == 429:
                         exception_mapping_worked = True
@@ -859,7 +859,7 @@ def exception_type(  # type: ignore  # noqa: PLR0915
                             message=f"{custom_llm_provider.capitalize()}Exception - {original_exception.message}",
                             model=model,
                             llm_provider=custom_llm_provider,
-                            litellm_debug_info=extra_information,
+                            remodl_debug_info=extra_information,
                         )
                     elif original_exception.status_code == 503:
                         exception_mapping_worked = True
@@ -867,7 +867,7 @@ def exception_type(  # type: ignore  # noqa: PLR0915
                             message=f"{custom_llm_provider.capitalize()}Exception - {original_exception.message}",
                             model=model,
                             llm_provider=custom_llm_provider,
-                            litellm_debug_info=extra_information,
+                            remodl_debug_info=extra_information,
                         )
                     elif original_exception.status_code == 504:  # gateway timeout error
                         exception_mapping_worked = True
@@ -875,7 +875,7 @@ def exception_type(  # type: ignore  # noqa: PLR0915
                             message=f"{custom_llm_provider.capitalize()}Exception - {original_exception.message}",
                             model=model,
                             llm_provider=custom_llm_provider,
-                            litellm_debug_info=extra_information,
+                            remodl_debug_info=extra_information,
                             exception_status_code=original_exception.status_code,
                         )
             elif custom_llm_provider == "bedrock":
@@ -899,7 +899,7 @@ def exception_type(  # type: ignore  # noqa: PLR0915
                 ):
                     exception_mapping_worked = True
                     raise BadRequestError(
-                        message=f"BedrockException - {error_str}\n. Enable 'litellm.modify_params=True' (for PROXY do: `litellm_settings::modify_params: True`) to insert a dummy assistant message and fix this error.",
+                        message=f"BedrockException - {error_str}\n. Enable 'remodl.modify_params=True' (for PROXY do: `remodl_settings::modify_params: True`) to insert a dummy assistant message and fix this error.",
                         model=model,
                         llm_provider="bedrock",
                         response=getattr(original_exception, "response", None),
@@ -915,7 +915,7 @@ def exception_type(  # type: ignore  # noqa: PLR0915
                 elif "A conversation must start with a user message." in error_str:
                     exception_mapping_worked = True
                     raise BadRequestError(
-                        message=f"BedrockException - {error_str}\n. Pass in default user message via `completion(..,user_continue_message=)` or enable `litellm.modify_params=True`.\nFor Proxy: do via `litellm_settings::modify_params: True` or user_continue_message under `litellm_params`",
+                        message=f"BedrockException - {error_str}\n. Pass in default user message via `completion(..,user_continue_message=)` or enable `remodl.modify_params=True`.\nFor Proxy: do via `remodl_settings::modify_params: True` or user_continue_message under `remodl_params`",
                         model=model,
                         llm_provider="bedrock",
                         response=getattr(original_exception, "response", None),
@@ -963,7 +963,7 @@ def exception_type(  # type: ignore  # noqa: PLR0915
                     )
                 elif "Could not process image" in error_str:
                     exception_mapping_worked = True
-                    raise litellm.InternalServerError(
+                    raise remodl.InternalServerError(
                         message=f"BedrockException - {error_str}",
                         model=model,
                         llm_provider="bedrock",
@@ -1012,7 +1012,7 @@ def exception_type(  # type: ignore  # noqa: PLR0915
                             message=f"BedrockException - {original_exception.message}",
                             model=model,
                             llm_provider=custom_llm_provider,
-                            litellm_debug_info=extra_information,
+                            remodl_debug_info=extra_information,
                         )
                     elif original_exception.status_code == 422:
                         exception_mapping_worked = True
@@ -1021,7 +1021,7 @@ def exception_type(  # type: ignore  # noqa: PLR0915
                             model=model,
                             llm_provider=custom_llm_provider,
                             response=getattr(original_exception, "response", None),
-                            litellm_debug_info=extra_information,
+                            remodl_debug_info=extra_information,
                         )
                     elif original_exception.status_code == 429:
                         exception_mapping_worked = True
@@ -1030,7 +1030,7 @@ def exception_type(  # type: ignore  # noqa: PLR0915
                             model=model,
                             llm_provider=custom_llm_provider,
                             response=getattr(original_exception, "response", None),
-                            litellm_debug_info=extra_information,
+                            remodl_debug_info=extra_information,
                         )
                     elif original_exception.status_code == 503:
                         exception_mapping_worked = True
@@ -1039,7 +1039,7 @@ def exception_type(  # type: ignore  # noqa: PLR0915
                             model=model,
                             llm_provider=custom_llm_provider,
                             response=getattr(original_exception, "response", None),
-                            litellm_debug_info=extra_information,
+                            remodl_debug_info=extra_information,
                         )
                     elif original_exception.status_code == 504:  # gateway timeout error
                         exception_mapping_worked = True
@@ -1047,7 +1047,7 @@ def exception_type(  # type: ignore  # noqa: PLR0915
                             message=f"BedrockException - {original_exception.message}",
                             model=model,
                             llm_provider=custom_llm_provider,
-                            litellm_debug_info=extra_information,
+                            remodl_debug_info=extra_information,
                             exception_status_code=original_exception.status_code,
                         )
             elif (
@@ -1057,7 +1057,7 @@ def exception_type(  # type: ignore  # noqa: PLR0915
                 if "Unable to locate credentials" in error_str:
                     exception_mapping_worked = True
                     raise BadRequestError(
-                        message=f"litellm.BadRequestError: SagemakerException - {error_str}",
+                        message=f"remodl.BadRequestError: SagemakerException - {error_str}",
                         model=model,
                         llm_provider="sagemaker",
                         response=getattr(original_exception, "response", None),
@@ -1128,7 +1128,7 @@ def exception_type(  # type: ignore  # noqa: PLR0915
                             message=f"SagemakerException - {original_exception.message}",
                             model=model,
                             llm_provider=custom_llm_provider,
-                            litellm_debug_info=extra_information,
+                            remodl_debug_info=extra_information,
                         )
                     elif (
                         original_exception.status_code == 422
@@ -1140,7 +1140,7 @@ def exception_type(  # type: ignore  # noqa: PLR0915
                             model=model,
                             llm_provider=custom_llm_provider,
                             response=getattr(original_exception, "response", None),
-                            litellm_debug_info=extra_information,
+                            remodl_debug_info=extra_information,
                         )
                     elif original_exception.status_code == 429:
                         exception_mapping_worked = True
@@ -1149,7 +1149,7 @@ def exception_type(  # type: ignore  # noqa: PLR0915
                             model=model,
                             llm_provider=custom_llm_provider,
                             response=getattr(original_exception, "response", None),
-                            litellm_debug_info=extra_information,
+                            remodl_debug_info=extra_information,
                         )
                     elif original_exception.status_code == 503:
                         exception_mapping_worked = True
@@ -1158,7 +1158,7 @@ def exception_type(  # type: ignore  # noqa: PLR0915
                             model=model,
                             llm_provider=custom_llm_provider,
                             response=getattr(original_exception, "response", None),
-                            litellm_debug_info=extra_information,
+                            remodl_debug_info=extra_information,
                         )
                     elif original_exception.status_code == 504:  # gateway timeout error
                         exception_mapping_worked = True
@@ -1166,7 +1166,7 @@ def exception_type(  # type: ignore  # noqa: PLR0915
                             message=f"SagemakerException - {original_exception.message}",
                             model=model,
                             llm_provider=custom_llm_provider,
-                            litellm_debug_info=extra_information,
+                            remodl_debug_info=extra_information,
                             exception_status_code=original_exception.status_code,
                         )
             elif (
@@ -1180,7 +1180,7 @@ def exception_type(  # type: ignore  # noqa: PLR0915
                 ):
                     exception_mapping_worked = True
                     raise BadRequestError(
-                        message=f"litellm.BadRequestError: {custom_llm_provider}Exception - {error_str}",
+                        message=f"remodl.BadRequestError: {custom_llm_provider}Exception - {error_str}",
                         model=model,
                         llm_provider=custom_llm_provider,
                         response=httpx.Response(
@@ -1190,7 +1190,7 @@ def exception_type(  # type: ignore  # noqa: PLR0915
                                 url=" https://cloud.google.com/vertex-ai/",
                             ),
                         ),
-                        litellm_debug_info=extra_information,
+                        remodl_debug_info=extra_information,
                     )
                 if "400 Request payload size exceeds" in error_str:
                     exception_mapping_worked = True
@@ -1204,16 +1204,16 @@ def exception_type(  # type: ignore  # noqa: PLR0915
                     or "Content has no parts." in error_str
                 ):
                     exception_mapping_worked = True
-                    raise litellm.InternalServerError(
-                        message=f"litellm.InternalServerError: {custom_llm_provider}Exception - {error_str}",
+                    raise remodl.InternalServerError(
+                        message=f"remodl.InternalServerError: {custom_llm_provider}Exception - {error_str}",
                         model=model,
                         llm_provider=custom_llm_provider,
                         response=httpx.Response(
                             status_code=500,
                             content=str(original_exception),
-                            request=httpx.Request(method="completion", url="https://github.com/BerriAI/litellm"),  # type: ignore
+                            request=httpx.Request(method="completion", url="https://github.com/BerriAI/remodl"),  # type: ignore
                         ),
-                        litellm_debug_info=extra_information,
+                        remodl_debug_info=extra_information,
                     )
                 elif "API key not valid." in error_str:
                     exception_mapping_worked = True
@@ -1221,7 +1221,7 @@ def exception_type(  # type: ignore  # noqa: PLR0915
                         message=f"{custom_llm_provider.capitalize()}Exception - {error_str}",
                         model=model,
                         llm_provider=custom_llm_provider,
-                        litellm_debug_info=extra_information,
+                        remodl_debug_info=extra_information,
                     )
                 elif "403" in error_str:
                     exception_mapping_worked = True
@@ -1236,7 +1236,7 @@ def exception_type(  # type: ignore  # noqa: PLR0915
                                 url=" https://cloud.google.com/vertex-ai/",
                             ),
                         ),
-                        litellm_debug_info=extra_information,
+                        remodl_debug_info=extra_information,
                     )
                 elif (
                     "The response was blocked." in error_str
@@ -1248,7 +1248,7 @@ def exception_type(  # type: ignore  # noqa: PLR0915
                         message=f"{custom_llm_provider.capitalize()}Exception ContentPolicyViolationError - {error_str}",
                         model=model,
                         llm_provider=custom_llm_provider,
-                        litellm_debug_info=extra_information,
+                        remodl_debug_info=extra_information,
                         response=httpx.Response(
                             status_code=400,
                             request=httpx.Request(
@@ -1266,10 +1266,10 @@ def exception_type(  # type: ignore  # noqa: PLR0915
                 ):
                     exception_mapping_worked = True
                     raise RateLimitError(
-                        message=f"litellm.RateLimitError: {custom_llm_provider}Exception - {error_str}",
+                        message=f"remodl.RateLimitError: {custom_llm_provider}Exception - {error_str}",
                         model=model,
                         llm_provider=custom_llm_provider,
-                        litellm_debug_info=extra_information,
+                        remodl_debug_info=extra_information,
                         response=httpx.Response(
                             status_code=429,
                             request=httpx.Request(
@@ -1283,11 +1283,11 @@ def exception_type(  # type: ignore  # noqa: PLR0915
                     or "The model is overloaded." in error_str
                 ):
                     exception_mapping_worked = True
-                    raise litellm.InternalServerError(
-                        message=f"litellm.InternalServerError: {custom_llm_provider}Exception - {error_str}",
+                    raise remodl.InternalServerError(
+                        message=f"remodl.InternalServerError: {custom_llm_provider}Exception - {error_str}",
                         model=model,
                         llm_provider=custom_llm_provider,
-                        litellm_debug_info=extra_information,
+                        remodl_debug_info=extra_information,
                     )
                 if hasattr(original_exception, "status_code"):
                     if original_exception.status_code == 400:
@@ -1296,7 +1296,7 @@ def exception_type(  # type: ignore  # noqa: PLR0915
                             message=f"{custom_llm_provider.capitalize()}Exception BadRequestError - {error_str}",
                             model=model,
                             llm_provider=custom_llm_provider,
-                            litellm_debug_info=extra_information,
+                            remodl_debug_info=extra_information,
                             response=httpx.Response(
                                 status_code=400,
                                 request=httpx.Request(
@@ -1344,10 +1344,10 @@ def exception_type(  # type: ignore  # noqa: PLR0915
                     if original_exception.status_code == 429:
                         exception_mapping_worked = True
                         raise RateLimitError(
-                            message=f"litellm.RateLimitError: {custom_llm_provider.capitalize()}Exception - {error_str}",
+                            message=f"remodl.RateLimitError: {custom_llm_provider.capitalize()}Exception - {error_str}",
                             model=model,
                             llm_provider=custom_llm_provider,
-                            litellm_debug_info=extra_information,
+                            remodl_debug_info=extra_information,
                             response=httpx.Response(
                                 status_code=429,
                                 request=httpx.Request(
@@ -1358,15 +1358,15 @@ def exception_type(  # type: ignore  # noqa: PLR0915
                         )
                     if original_exception.status_code == 500:
                         exception_mapping_worked = True
-                        raise litellm.InternalServerError(
+                        raise remodl.InternalServerError(
                             message=f"{custom_llm_provider.capitalize()}Exception InternalServerError - {error_str}",
                             model=model,
                             llm_provider=custom_llm_provider,
-                            litellm_debug_info=extra_information,
+                            remodl_debug_info=extra_information,
                             response=httpx.Response(
                                 status_code=500,
                                 content=str(original_exception),
-                                request=httpx.Request(method="completion", url="https://github.com/BerriAI/litellm"),  # type: ignore
+                                request=httpx.Request(method="completion", url="https://github.com/BerriAI/remodl"),  # type: ignore
                             ),
                         )
                     if original_exception.status_code == 502:
@@ -1966,11 +1966,11 @@ def exception_type(  # type: ignore  # noqa: PLR0915
 
                 if "Internal server error" in error_str:
                     exception_mapping_worked = True
-                    raise litellm.InternalServerError(
+                    raise remodl.InternalServerError(
                         message=f"AzureException Internal server error - {message}",
                         llm_provider="azure",
                         model=model,
-                        litellm_debug_info=extra_information,
+                        remodl_debug_info=extra_information,
                         response=getattr(original_exception, "response", None),
                     )
                 elif "This model's maximum context length is" in error_str:
@@ -1979,7 +1979,7 @@ def exception_type(  # type: ignore  # noqa: PLR0915
                         message=f"AzureException ContextWindowExceededError - {message}",
                         llm_provider="azure",
                         model=model,
-                        litellm_debug_info=extra_information,
+                        remodl_debug_info=extra_information,
                         response=getattr(original_exception, "response", None),
                     )
                 elif "DeploymentNotFound" in error_str:
@@ -1988,7 +1988,7 @@ def exception_type(  # type: ignore  # noqa: PLR0915
                         message=f"AzureException NotFoundError - {message}",
                         llm_provider="azure",
                         model=model,
-                        litellm_debug_info=extra_information,
+                        remodl_debug_info=extra_information,
                         response=getattr(original_exception, "response", None),
                     )
                 elif (
@@ -2006,10 +2006,10 @@ def exception_type(  # type: ignore  # noqa: PLR0915
                 ):
                     exception_mapping_worked = True
                     raise ContentPolicyViolationError(
-                        message=f"litellm.ContentPolicyViolationError: AzureException - {message}",
+                        message=f"remodl.ContentPolicyViolationError: AzureException - {message}",
                         llm_provider="azure",
                         model=model,
-                        litellm_debug_info=extra_information,
+                        remodl_debug_info=extra_information,
                         response=getattr(original_exception, "response", None),
                     )
                 elif "invalid_request_error" in error_str:
@@ -2018,7 +2018,7 @@ def exception_type(  # type: ignore  # noqa: PLR0915
                         message=f"AzureException BadRequestError - {message}",
                         llm_provider="azure",
                         model=model,
-                        litellm_debug_info=extra_information,
+                        remodl_debug_info=extra_information,
                         response=getattr(original_exception, "response", None),
                         body=getattr(original_exception, "body", None),
                     )
@@ -2031,7 +2031,7 @@ def exception_type(  # type: ignore  # noqa: PLR0915
                         message=f"{exception_provider} AuthenticationError - {message}",
                         llm_provider=custom_llm_provider,
                         model=model,
-                        litellm_debug_info=extra_information,
+                        remodl_debug_info=extra_information,
                         response=getattr(original_exception, "response", None),
                     )
                 elif "Connection error" in error_str:
@@ -2040,7 +2040,7 @@ def exception_type(  # type: ignore  # noqa: PLR0915
                         message=f"{exception_provider} APIConnectionError - {message}",
                         llm_provider=custom_llm_provider,
                         model=model,
-                        litellm_debug_info=extra_information,
+                        remodl_debug_info=extra_information,
                     )
                 elif hasattr(original_exception, "status_code"):
                     exception_mapping_worked = True
@@ -2050,7 +2050,7 @@ def exception_type(  # type: ignore  # noqa: PLR0915
                             message=f"AzureException - {message}",
                             llm_provider="azure",
                             model=model,
-                            litellm_debug_info=extra_information,
+                            remodl_debug_info=extra_information,
                             response=getattr(original_exception, "response", None),
                             body=getattr(original_exception, "body", None),
                         )
@@ -2060,7 +2060,7 @@ def exception_type(  # type: ignore  # noqa: PLR0915
                             message=f"AzureException AuthenticationError - {message}",
                             llm_provider="azure",
                             model=model,
-                            litellm_debug_info=extra_information,
+                            remodl_debug_info=extra_information,
                             response=getattr(original_exception, "response", None),
                         )
                     elif original_exception.status_code == 408:
@@ -2068,7 +2068,7 @@ def exception_type(  # type: ignore  # noqa: PLR0915
                         raise Timeout(
                             message=f"AzureException Timeout - {message}",
                             model=model,
-                            litellm_debug_info=extra_information,
+                            remodl_debug_info=extra_information,
                             llm_provider="azure",
                         )
                     elif original_exception.status_code == 422:
@@ -2077,7 +2077,7 @@ def exception_type(  # type: ignore  # noqa: PLR0915
                             message=f"AzureException BadRequestError - {message}",
                             model=model,
                             llm_provider="azure",
-                            litellm_debug_info=extra_information,
+                            remodl_debug_info=extra_information,
                             response=getattr(original_exception, "response", None),
                         )
                     elif original_exception.status_code == 429:
@@ -2086,7 +2086,7 @@ def exception_type(  # type: ignore  # noqa: PLR0915
                             message=f"AzureException RateLimitError - {message}",
                             model=model,
                             llm_provider="azure",
-                            litellm_debug_info=extra_information,
+                            remodl_debug_info=extra_information,
                             response=getattr(original_exception, "response", None),
                         )
                     elif original_exception.status_code == 503:
@@ -2095,7 +2095,7 @@ def exception_type(  # type: ignore  # noqa: PLR0915
                             message=f"AzureException ServiceUnavailableError - {message}",
                             model=model,
                             llm_provider="azure",
-                            litellm_debug_info=extra_information,
+                            remodl_debug_info=extra_information,
                             response=getattr(original_exception, "response", None),
                         )
                     elif original_exception.status_code == 504:  # gateway timeout error
@@ -2103,7 +2103,7 @@ def exception_type(  # type: ignore  # noqa: PLR0915
                         raise Timeout(
                             message=f"AzureException Timeout - {message}",
                             model=model,
-                            litellm_debug_info=extra_information,
+                            remodl_debug_info=extra_information,
                             llm_provider="azure",
                             exception_status_code=original_exception.status_code,
                         )
@@ -2113,7 +2113,7 @@ def exception_type(  # type: ignore  # noqa: PLR0915
                             status_code=original_exception.status_code,
                             message=f"AzureException APIError - {message}",
                             llm_provider="azure",
-                            litellm_debug_info=extra_information,
+                            remodl_debug_info=extra_information,
                             model=model,
                             request=httpx.Request(
                                 method="POST", url="https://openai.com/"
@@ -2125,7 +2125,7 @@ def exception_type(  # type: ignore  # noqa: PLR0915
                         message=f"{exception_provider} APIConnectionError - {message}\n{traceback.format_exc()}",
                         llm_provider="azure",
                         model=model,
-                        litellm_debug_info=extra_information,
+                        remodl_debug_info=extra_information,
                         request=httpx.Request(method="POST", url="https://openai.com/"),
                     )
             if custom_llm_provider == "openrouter":
@@ -2138,7 +2138,7 @@ def exception_type(  # type: ignore  # noqa: PLR0915
                             llm_provider=custom_llm_provider,
                             model=model,
                             response=getattr(original_exception, "response", None),
-                            litellm_debug_info=extra_information,
+                            remodl_debug_info=extra_information,
                         )
                     elif original_exception.status_code == 401:
                         exception_mapping_worked = True
@@ -2147,7 +2147,7 @@ def exception_type(  # type: ignore  # noqa: PLR0915
                             llm_provider=custom_llm_provider,
                             model=model,
                             response=getattr(original_exception, "response", None),
-                            litellm_debug_info=extra_information,
+                            remodl_debug_info=extra_information,
                         )
                     elif original_exception.status_code == 404:
                         exception_mapping_worked = True
@@ -2156,7 +2156,7 @@ def exception_type(  # type: ignore  # noqa: PLR0915
                             model=model,
                             llm_provider=custom_llm_provider,
                             response=getattr(original_exception, "response", None),
-                            litellm_debug_info=extra_information,
+                            remodl_debug_info=extra_information,
                         )
                     elif original_exception.status_code == 408:
                         exception_mapping_worked = True
@@ -2164,7 +2164,7 @@ def exception_type(  # type: ignore  # noqa: PLR0915
                             message=f"Timeout Error: {exception_provider} - {error_str}",
                             model=model,
                             llm_provider=custom_llm_provider,
-                            litellm_debug_info=extra_information,
+                            remodl_debug_info=extra_information,
                         )
                     elif original_exception.status_code == 422:
                         exception_mapping_worked = True
@@ -2173,7 +2173,7 @@ def exception_type(  # type: ignore  # noqa: PLR0915
                             model=model,
                             llm_provider=custom_llm_provider,
                             response=getattr(original_exception, "response", None),
-                            litellm_debug_info=extra_information,
+                            remodl_debug_info=extra_information,
                         )
                     elif original_exception.status_code == 429:
                         exception_mapping_worked = True
@@ -2182,7 +2182,7 @@ def exception_type(  # type: ignore  # noqa: PLR0915
                             model=model,
                             llm_provider=custom_llm_provider,
                             response=getattr(original_exception, "response", None),
-                            litellm_debug_info=extra_information,
+                            remodl_debug_info=extra_information,
                         )
                     elif original_exception.status_code == 503:
                         exception_mapping_worked = True
@@ -2191,7 +2191,7 @@ def exception_type(  # type: ignore  # noqa: PLR0915
                             model=model,
                             llm_provider=custom_llm_provider,
                             response=getattr(original_exception, "response", None),
-                            litellm_debug_info=extra_information,
+                            remodl_debug_info=extra_information,
                         )
                     elif original_exception.status_code == 504:  # gateway timeout error
                         exception_mapping_worked = True
@@ -2199,7 +2199,7 @@ def exception_type(  # type: ignore  # noqa: PLR0915
                             message=f"Timeout Error: {exception_provider} - {error_str}",
                             model=model,
                             llm_provider=custom_llm_provider,
-                            litellm_debug_info=extra_information,
+                            remodl_debug_info=extra_information,
                             exception_status_code=original_exception.status_code,
                         )
                     else:
@@ -2210,7 +2210,7 @@ def exception_type(  # type: ignore  # noqa: PLR0915
                             llm_provider=custom_llm_provider,
                             model=model,
                             request=getattr(original_exception, "request", None),
-                            litellm_debug_info=extra_information,
+                            remodl_debug_info=extra_information,
                         )
                 else:
                     # if no status code then it is an APIConnectionError: https://github.com/openai/openai-python#handling-errors
@@ -2218,7 +2218,7 @@ def exception_type(  # type: ignore  # noqa: PLR0915
                         message=f"APIConnectionError: {exception_provider} - {error_str}",
                         llm_provider=custom_llm_provider,
                         model=model,
-                        litellm_debug_info=extra_information,
+                        remodl_debug_info=extra_information,
                         request=httpx.Request(
                             method="POST", url="https://api.openai.com/v1/"
                         ),
@@ -2236,7 +2236,7 @@ def exception_type(  # type: ignore  # noqa: PLR0915
             )
         else:  # ensure generic errors always return APIConnectionError=
             """
-            For unmapped exceptions - raise the exception with traceback - https://github.com/BerriAI/litellm/issues/4201
+            For unmapped exceptions - raise the exception with traceback - https://github.com/BerriAI/remodl/issues/4201
             """
             exception_mapping_worked = True
             if hasattr(original_exception, "request"):
@@ -2270,19 +2270,19 @@ def exception_type(  # type: ignore  # noqa: PLR0915
 
         # don't let an error with mapping interrupt the user from receiving an error from the llm api calls
         if exception_mapping_worked:
-            setattr(e, "litellm_response_headers", litellm_response_headers)
+            setattr(e, "remodl_response_headers", remodl_response_headers)
             raise e
         else:
-            for error_type in litellm.LITELLM_EXCEPTION_TYPES:
+            for error_type in remodl.LITELLM_EXCEPTION_TYPES:
                 if isinstance(e, error_type):
-                    setattr(e, "litellm_response_headers", litellm_response_headers)
+                    setattr(e, "remodl_response_headers", remodl_response_headers)
                     raise e  # it's already mapped
             raised_exc = APIConnectionError(
                 message="{}\n{}".format(original_exception, traceback.format_exc()),
                 llm_provider="",
                 model="",
             )
-            setattr(raised_exc, "litellm_response_headers", litellm_response_headers)
+            setattr(raised_exc, "remodl_response_headers", remodl_response_headers)
             raise raised_exc
 
 
@@ -2321,7 +2321,7 @@ def exception_logging(
 
 def _add_key_name_and_team_to_alert(request_info: str, metadata: dict) -> str:
     """
-    Internal helper function for litellm proxy
+    Internal helper function for remodl proxy
     Add the Key Name + Team Name to the error
     Only gets added if the metadata contains the user_api_key_alias and user_api_key_team_alias
 

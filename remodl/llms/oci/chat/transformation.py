@@ -7,18 +7,18 @@ from urllib.parse import urlparse
 
 import httpx
 
-import litellm
-from litellm.litellm_core_utils.logging_utils import track_llm_api_timing
-from litellm.llms.base_llm.chat.transformation import BaseConfig, BaseLLMException
-from litellm.llms.custom_httpx.http_handler import (
+import remodl
+from remodl.remodl_core_utils.logging_utils import track_llm_api_timing
+from remodl.llms.base_llm.chat.transformation import BaseConfig, BaseLLMException
+from remodl.llms.custom_httpx.http_handler import (
     AsyncHTTPHandler,
     HTTPHandler,
     _get_httpx_client,
     get_async_httpx_client,
     version,
 )
-from litellm.llms.oci.common_utils import OCIError
-from litellm.types.llms.oci import (
+from remodl.llms.oci.common_utils import OCIError
+from remodl.types.llms.oci import (
     CohereChatRequest,
     CohereMessage,
     CohereChatResult,
@@ -40,22 +40,22 @@ from litellm.types.llms.oci import (
     OCIToolDefinition,
     OCIVendors,
 )
-from litellm.types.llms.openai import AllMessageValues
-from litellm.types.utils import (
+from remodl.types.llms.openai import AllMessageValues
+from remodl.types.utils import (
     Delta,
     LlmProviders,
     ModelResponse,
     ModelResponseStream,
     StreamingChoices,
 )
-from litellm.utils import (
+from remodl.utils import (
     ChatCompletionMessageToolCall,
     CustomStreamWrapper,
     Usage,
 )
 
 if TYPE_CHECKING:
-    from litellm.litellm_core_utils.litellm_logging import Logging as _LiteLLMLoggingObj
+    from remodl.remodl_core_utils.remodl_logging import Logging as _LiteLLMLoggingObj
 
     LiteLLMLoggingObj = _LiteLLMLoggingObj
 else:
@@ -216,7 +216,7 @@ class OCIChatConfig(BaseConfig):
 
             if alias is False:
                 # Workaround for mypy issue
-                if drop_params or litellm.drop_params:
+                if drop_params or remodl.drop_params:
                     continue
                 raise Exception(f"param `{key}` is not supported on OCI")
 
@@ -254,7 +254,7 @@ class OCIChatConfig(BaseConfig):
         oci_region = optional_params.get("oci_region", "us-ashburn-1")
         api_base = (
             api_base
-            or litellm.api_base
+            or remodl.api_base
             or f"https://inference.generativeai.{oci_region}.oci.oraclecloud.com"
         )
         oci_user = optional_params.get("oci_user")
@@ -361,14 +361,14 @@ class OCIChatConfig(BaseConfig):
         model: str,
         messages: List[AllMessageValues],
         optional_params: dict,
-        litellm_params: dict,
+        remodl_params: dict,
         api_key: Optional[str] = None,
         api_base: Optional[str] = None,
     ) -> dict:
         oci_region = optional_params.get("oci_region", "us-ashburn-1")
         api_base = (
             api_base
-            or litellm.api_base
+            or remodl.api_base
             or f"https://inference.generativeai.{oci_region}.oci.oraclecloud.com"
         )
         oci_user = optional_params.get("oci_user")
@@ -392,13 +392,13 @@ class OCIChatConfig(BaseConfig):
 
         if not api_base:
             raise Exception(
-                "Either `api_base` must be provided or `litellm.api_base` must be set. Alternatively, you can set the `oci_region` optional parameter to use the default OCI region."
+                "Either `api_base` must be provided or `remodl.api_base` must be set. Alternatively, you can set the `oci_region` optional parameter to use the default OCI region."
             )
 
         headers.update(
             {
                 "content-type": "application/json",
-                "user-agent": f"litellm/{version}",
+                "user-agent": f"remodl/{version}",
             }
         )
 
@@ -415,7 +415,7 @@ class OCIChatConfig(BaseConfig):
         api_key: Optional[str],
         model: str,
         optional_params: dict,
-        litellm_params: dict,
+        remodl_params: dict,
         stream: Optional[bool] = None,
     ) -> str:
         oci_region = optional_params.get("oci_region", "us-ashburn-1")
@@ -553,7 +553,7 @@ class OCIChatConfig(BaseConfig):
         model: str,
         messages: List[AllMessageValues],
         optional_params: dict,
-        litellm_params: dict,
+        remodl_params: dict,
         headers: dict,
     ) -> dict:
         oci_compartment_id = optional_params.get("oci_compartment_id", None)
@@ -657,7 +657,7 @@ class OCIChatConfig(BaseConfig):
                 })
         
         # Create choice
-        from litellm.types.utils import Choices
+        from remodl.types.utils import Choices
         choice = Choices(
             index=0,
             message={
@@ -671,7 +671,7 @@ class OCIChatConfig(BaseConfig):
         
         # Extract usage info
         usage_info = cohere_response.chatResponse.usage
-        from litellm.types.utils import Usage
+        from remodl.types.utils import Usage
         model_response.usage = Usage(  # type: ignore[attr-defined]
             prompt_tokens=usage_info.promptTokens,  # type: ignore[union-attr]
             completion_tokens=usage_info.completionTokens,  # type: ignore[union-attr]
@@ -729,7 +729,7 @@ class OCIChatConfig(BaseConfig):
         request_data: dict,
         messages: List[AllMessageValues],
         optional_params: dict,
-        litellm_params: dict,
+        remodl_params: dict,
         encoding: Any,
         api_key: Optional[str] = None,
         json_mode: Optional[bool] = None,

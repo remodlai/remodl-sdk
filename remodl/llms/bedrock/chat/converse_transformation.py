@@ -9,23 +9,23 @@ from typing import List, Literal, Optional, Tuple, Union, cast, overload
 
 import httpx
 
-import litellm
-from litellm._logging import verbose_logger
-from litellm.constants import RESPONSE_FORMAT_TOOL_NAME
-from litellm.litellm_core_utils.core_helpers import map_finish_reason
-from litellm.litellm_core_utils.litellm_logging import Logging
-from litellm.litellm_core_utils.prompt_templates.common_utils import (
+import remodl
+from remodl._logging import verbose_logger
+from remodl.constants import RESPONSE_FORMAT_TOOL_NAME
+from remodl.remodl_core_utils.core_helpers import map_finish_reason
+from remodl.remodl_core_utils.remodl_logging import Logging
+from remodl.remodl_core_utils.prompt_templates.common_utils import (
     _parse_content_for_reasoning,
 )
-from litellm.litellm_core_utils.prompt_templates.factory import (
+from remodl.remodl_core_utils.prompt_templates.factory import (
     BedrockConverseMessagesProcessor,
     _bedrock_converse_messages_pt,
     _bedrock_tools_pt,
 )
-from litellm.llms.anthropic.chat.transformation import AnthropicConfig
-from litellm.llms.base_llm.chat.transformation import BaseConfig, BaseLLMException
-from litellm.types.llms.bedrock import *
-from litellm.types.llms.openai import (
+from remodl.llms.anthropic.chat.transformation import AnthropicConfig
+from remodl.llms.base_llm.chat.transformation import BaseConfig, BaseLLMException
+from remodl.types.llms.bedrock import *
+from remodl.types.llms.openai import (
     AllMessageValues,
     ChatCompletionAssistantMessage,
     ChatCompletionRedactedThinkingBlock,
@@ -40,7 +40,7 @@ from litellm.types.llms.openai import (
     OpenAIChatCompletionToolParam,
     OpenAIMessageContentListBlock,
 )
-from litellm.types.utils import (
+from remodl.types.utils import (
     ChatCompletionMessageToolCall,
     Function,
     Message,
@@ -48,7 +48,7 @@ from litellm.types.utils import (
     PromptTokensDetailsWrapper,
     Usage,
 )
-from litellm.utils import add_dummy_tool, has_tool_call_blocks, supports_reasoning
+from remodl.utils import add_dummy_tool, has_tool_call_blocks, supports_reasoning
 
 from ..common_utils import (
     BedrockError,
@@ -187,14 +187,14 @@ class AmazonConverseConfig(BaseConfig):
         import re
 
         if not isinstance(metadata, dict):
-            raise litellm.exceptions.BadRequestError(
+            raise remodl.exceptions.BadRequestError(
                 message="requestMetadata must be a dictionary",
                 model="bedrock",
                 llm_provider="bedrock",
             )
 
         if len(metadata) > 16:
-            raise litellm.exceptions.BadRequestError(
+            raise remodl.exceptions.BadRequestError(
                 message="requestMetadata can contain a maximum of 16 items",
                 model="bedrock",
                 llm_provider="bedrock",
@@ -205,49 +205,49 @@ class AmazonConverseConfig(BaseConfig):
 
         for key, value in metadata.items():
             if not isinstance(key, str):
-                raise litellm.exceptions.BadRequestError(
+                raise remodl.exceptions.BadRequestError(
                     message="requestMetadata keys must be strings",
                     model="bedrock",
                     llm_provider="bedrock",
                 )
 
             if not isinstance(value, str):
-                raise litellm.exceptions.BadRequestError(
+                raise remodl.exceptions.BadRequestError(
                     message="requestMetadata values must be strings",
                     model="bedrock",
                     llm_provider="bedrock",
                 )
 
             if len(key) == 0 or len(key) > 256:
-                raise litellm.exceptions.BadRequestError(
+                raise remodl.exceptions.BadRequestError(
                     message="requestMetadata key length must be 1-256 characters",
                     model="bedrock",
                     llm_provider="bedrock",
                 )
 
             if len(value) > 256:
-                raise litellm.exceptions.BadRequestError(
+                raise remodl.exceptions.BadRequestError(
                     message="requestMetadata value length must be 0-256 characters",
                     model="bedrock",
                     llm_provider="bedrock",
                 )
 
             if not key_pattern.match(key):
-                raise litellm.exceptions.BadRequestError(
+                raise remodl.exceptions.BadRequestError(
                     message=f"requestMetadata key '{key}' contains invalid characters. Allowed: [a-zA-Z0-9\\s:_@$#=/+,.-]",
                     model="bedrock",
                     llm_provider="bedrock",
                 )
 
             if not value_pattern.match(value):
-                raise litellm.exceptions.BadRequestError(
+                raise remodl.exceptions.BadRequestError(
                     message=f"requestMetadata value '{value}' contains invalid characters. Allowed: [a-zA-Z0-9\\s:_@$#=/+,.-]",
                     model="bedrock",
                     llm_provider="bedrock",
                 )
 
     def get_supported_openai_params(self, model: str) -> List[str]:
-        from litellm.utils import supports_function_calling
+        from remodl.utils import supports_function_calling
 
         supported_params = [
             "max_tokens",
@@ -289,9 +289,9 @@ class AmazonConverseConfig(BaseConfig):
         ):
             supported_params.append("tools")
 
-        if litellm.utils.supports_tool_choice(
+        if remodl.utils.supports_tool_choice(
             model=model, custom_llm_provider=self.custom_llm_provider
-        ) or litellm.utils.supports_tool_choice(
+        ) or remodl.utils.supports_tool_choice(
             model=base_model, custom_llm_provider=self.custom_llm_provider
         ):
             # only anthropic and mistral support tool choice config. otherwise (E.g. cohere) will fail the call - https://docs.aws.amazon.com/bedrock/latest/APIReference/API_runtime_ToolChoice.html
@@ -320,11 +320,11 @@ class AmazonConverseConfig(BaseConfig):
         self, model: str, tool_choice: Union[str, dict], drop_params: bool
     ) -> Optional[ToolChoiceValuesBlock]:
         if tool_choice == "none":
-            if litellm.drop_params is True or drop_params is True:
+            if remodl.drop_params is True or drop_params is True:
                 return None
             else:
-                raise litellm.utils.UnsupportedParamsError(
-                    message="Bedrock doesn't support tool_choice={}. To drop it from the call, set `litellm.drop_params = True.".format(
+                raise remodl.utils.UnsupportedParamsError(
+                    message="Bedrock doesn't support tool_choice={}. To drop it from the call, set `remodl.drop_params = True.".format(
                         tool_choice
                     ),
                     status_code=400,
@@ -340,8 +340,8 @@ class AmazonConverseConfig(BaseConfig):
             )
             return ToolChoiceValuesBlock(tool=specific_tool)
         else:
-            raise litellm.utils.UnsupportedParamsError(
-                message="Bedrock doesn't support tool_choice={}. Supported tool_choice values=['auto', 'required', json object]. To drop it from the call, set `litellm.drop_params = True.".format(
+            raise remodl.utils.UnsupportedParamsError(
+                message="Bedrock doesn't support tool_choice={}. Supported tool_choice values=['auto', 'required', json object]. To drop it from the call, set `remodl.drop_params = True.".format(
                     tool_choice
                 ),
                 status_code=400,
@@ -627,7 +627,7 @@ class AmazonConverseConfig(BaseConfig):
         )
 
         if (
-            litellm.utils.supports_tool_choice(
+            remodl.utils.supports_tool_choice(
                 model=model, custom_llm_provider=self.custom_llm_provider
             )
             and not is_thinking_enabled
@@ -651,7 +651,7 @@ class AmazonConverseConfig(BaseConfig):
 
         if 'thinking' is enabled and 'max_tokens' is not specified, set 'max_tokens' to the thinking token budget + DEFAULT_MAX_TOKENS
         """
-        from litellm.constants import DEFAULT_MAX_TOKENS
+        from remodl.constants import DEFAULT_MAX_TOKENS
 
         is_thinking_enabled = self.is_thinking_enabled(optional_params)
         is_max_tokens_in_request = self.is_max_tokens_in_request(non_default_params)
@@ -867,13 +867,13 @@ class AmazonConverseConfig(BaseConfig):
             and messages is not None
             and has_tool_call_blocks(messages)
         ):
-            if litellm.modify_params:
+            if remodl.modify_params:
                 optional_params["tools"] = add_dummy_tool(
                     custom_llm_provider="bedrock_converse"
                 )
             else:
-                raise litellm.UnsupportedParamsError(
-                    message="Bedrock doesn't support tool calling without `tools=` param specified. Pass `tools=` param OR set `litellm.modify_params = True` // `litellm_settings::modify_params: True` to add dummy tool to the request.",
+                raise remodl.UnsupportedParamsError(
+                    message="Bedrock doesn't support tool calling without `tools=` param specified. Pass `tools=` param OR set `remodl.modify_params = True` // `remodl_settings::modify_params: True` to add dummy tool to the request.",
                     model="",
                     llm_provider="bedrock",
                 )
@@ -930,7 +930,7 @@ class AmazonConverseConfig(BaseConfig):
         model: str,
         messages: List[AllMessageValues],
         optional_params: dict,
-        litellm_params: dict,
+        remodl_params: dict,
         headers: Optional[dict] = None,
     ) -> RequestObject:
         messages, system_content_blocks = self._transform_system_message(messages)
@@ -954,7 +954,7 @@ class AmazonConverseConfig(BaseConfig):
                 messages=messages,
                 model=model,
                 llm_provider="bedrock_converse",
-                user_continue_message=litellm_params.pop("user_continue_message", None),
+                user_continue_message=remodl_params.pop("user_continue_message", None),
             )
         )
 
@@ -967,7 +967,7 @@ class AmazonConverseConfig(BaseConfig):
         model: str,
         messages: List[AllMessageValues],
         optional_params: dict,
-        litellm_params: dict,
+        remodl_params: dict,
         headers: dict,
     ) -> dict:
         return cast(
@@ -976,7 +976,7 @@ class AmazonConverseConfig(BaseConfig):
                 model=model,
                 messages=messages,
                 optional_params=optional_params,
-                litellm_params=litellm_params,
+                remodl_params=remodl_params,
                 headers=headers,
             ),
         )
@@ -986,7 +986,7 @@ class AmazonConverseConfig(BaseConfig):
         model: str,
         messages: List[AllMessageValues],
         optional_params: dict,
-        litellm_params: dict,
+        remodl_params: dict,
         headers: Optional[dict] = None,
     ) -> RequestObject:
         messages, system_content_blocks = self._transform_system_message(messages)
@@ -1009,7 +1009,7 @@ class AmazonConverseConfig(BaseConfig):
             messages=messages,
             model=model,
             llm_provider="bedrock_converse",
-            user_continue_message=litellm_params.pop("user_continue_message", None),
+            user_continue_message=remodl_params.pop("user_continue_message", None),
         )
 
         data: RequestObject = {"messages": bedrock_messages, **_data}
@@ -1025,7 +1025,7 @@ class AmazonConverseConfig(BaseConfig):
         request_data: dict,
         messages: List[AllMessageValues],
         optional_params: dict,
-        litellm_params: dict,
+        remodl_params: dict,
         encoding: Any,
         api_key: Optional[str] = None,
         json_mode: Optional[bool] = None,
@@ -1198,7 +1198,7 @@ class AmazonConverseConfig(BaseConfig):
                 if _content_str is not None:
                     content_str += _content_str
             if "toolUse" in content:
-                ## check tool name was formatted by litellm
+                ## check tool name was formatted by remodl
                 _response_tool_name = content["toolUse"]["name"]
                 response_tool_name = get_bedrock_tool_name(
                     response_tool_name=_response_tool_name
@@ -1260,7 +1260,7 @@ class AmazonConverseConfig(BaseConfig):
             completion_response = ConverseResponseBlock(**response.json())  # type: ignore
         except Exception as e:
             raise BedrockError(
-                message="Received={}, Error converting to valid response block={}. File an issue if litellm error - https://github.com/BerriAI/litellm/issues".format(
+                message="Received={}, Error converting to valid response block={}. File an issue if remodl error - https://github.com/BerriAI/remodl/issues".format(
                     response.text, str(e)
                 ),
                 status_code=422,
@@ -1377,7 +1377,7 @@ class AmazonConverseConfig(BaseConfig):
             initial_finish_reason=initial_finish_reason,
         )
         model_response.choices = [
-            litellm.Choices(
+            remodl.Choices(
                 finish_reason=returned_finish_reason,
                 index=0,
                 message=returned_message,
@@ -1409,7 +1409,7 @@ class AmazonConverseConfig(BaseConfig):
         model: str,
         messages: List[AllMessageValues],
         optional_params: dict,
-        litellm_params: dict,
+        remodl_params: dict,
         api_key: Optional[str] = None,
         api_base: Optional[str] = None,
     ) -> dict:

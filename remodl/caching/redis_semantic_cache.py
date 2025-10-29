@@ -15,12 +15,12 @@ import json
 import os
 from typing import Any, Dict, List, Optional, Tuple, cast
 
-import litellm
-from litellm._logging import print_verbose
-from litellm.litellm_core_utils.prompt_templates.common_utils import (
+import remodl
+from remodl._logging import print_verbose
+from remodl.remodl_core_utils.prompt_templates.common_utils import (
     get_str_from_messages,
 )
-from litellm.types.utils import EmbeddingResponse
+from remodl.types.utils import EmbeddingResponse
 
 from .base_cache import BaseCache
 
@@ -34,7 +34,7 @@ class RedisSemanticCache(BaseCache):
     but carry similar meaning.
     """
 
-    DEFAULT_REDIS_INDEX_NAME: str = "litellm_semantic_cache_index"
+    DEFAULT_REDIS_INDEX_NAME: str = "remodl_semantic_cache_index"
 
     def __init__(
         self,
@@ -145,7 +145,7 @@ class RedisSemanticCache(BaseCache):
         # Create an embedding from prompt
         embedding_response = cast(
             EmbeddingResponse,
-            litellm.embedding(
+            remodl.embedding(
                 model=self.embedding_model,
                 input=prompt,
                 cache={"no-store": True, "no-cache": True},
@@ -279,7 +279,7 @@ class RedisSemanticCache(BaseCache):
         Returns:
             List[float]: The embedding vector
         """
-        from litellm.proxy.proxy_server import llm_model_list, llm_router
+        from remodl.proxy.proxy_server import llm_model_list, llm_router
 
         # Route the embedding request through the proxy if appropriate
         router_model_names = (
@@ -304,7 +304,7 @@ class RedisSemanticCache(BaseCache):
                 )
             else:
                 # Generate embedding directly
-                embedding_response = await litellm.aembedding(
+                embedding_response = await remodl.aembedding(
                     model=self.embedding_model,
                     input=prompt,
                     cache={"no-store": True, "no-cache": True},

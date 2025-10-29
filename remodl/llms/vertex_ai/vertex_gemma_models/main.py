@@ -6,7 +6,7 @@ with @requestFormat: "chatCompletions" and returns responses wrapped in 'predict
 
 Usage:
 
-response = litellm.completion(
+response = remodl.completion(
     model="vertex_ai/gemma/gemma-3-12b-it-1222199011122",
     messages=[{"role": "user", "content": "What is machine learning?"}],
     vertex_project="your-project-id",
@@ -23,7 +23,7 @@ from typing import Callable, Optional, Union
 
 import httpx  # type: ignore
 
-from litellm.utils import ModelResponse
+from remodl.utils import ModelResponse
 
 from ..common_utils import VertexAIError
 from ..vertex_llm_base import VertexBase
@@ -46,7 +46,7 @@ class VertexAIGemmaModels(VertexBase):
         custom_prompt_dict: dict,
         headers: Optional[dict],
         timeout: Union[float, httpx.Timeout],
-        litellm_params: dict,
+        remodl_params: dict,
         vertex_project=None,
         vertex_location=None,
         vertex_credentials=None,
@@ -62,10 +62,10 @@ class VertexAIGemmaModels(VertexBase):
         try:
             import vertexai
 
-            from litellm.llms.vertex_ai.gemini.vertex_and_google_ai_studio_gemini import (
+            from remodl.llms.vertex_ai.gemini.vertex_and_google_ai_studio_gemini import (
                 VertexLLM,
             )
-            from litellm.llms.vertex_ai.vertex_gemma_models.transformation import (
+            from remodl.llms.vertex_ai.vertex_gemma_models.transformation import (
                 VertexGemmaConfig,
             )
         except Exception as e:
@@ -130,7 +130,7 @@ class VertexAIGemmaModels(VertexBase):
                 logging_obj=logging_obj,
                 optional_params=optional_params,
                 acompletion=acompletion,
-                litellm_params=litellm_params,
+                remodl_params=remodl_params,
                 logger_fn=logger_fn,
                 client=client,
                 timeout=timeout,

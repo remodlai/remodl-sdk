@@ -5,10 +5,10 @@ Helper util for handling openai-specific cost calculation
 
 from typing import Literal, Optional, Tuple
 
-from litellm._logging import verbose_logger
-from litellm.litellm_core_utils.llm_cost_calc.utils import generic_cost_per_token
-from litellm.types.utils import CallTypes, Usage
-from litellm.utils import get_model_info
+from remodl._logging import verbose_logger
+from remodl.remodl_core_utils.llm_cost_calc.utils import generic_cost_per_token
+from remodl.types.utils import CallTypes, Usage
+from remodl.utils import get_model_info
 
 
 def cost_router(call_type: CallTypes) -> Literal["cost_per_token", "cost_per_second"]:

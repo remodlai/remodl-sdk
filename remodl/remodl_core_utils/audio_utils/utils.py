@@ -1,12 +1,12 @@
 """
-Utils used for litellm.transcription() and litellm.atranscription()
+Utils used for remodl.transcription() and remodl.atranscription()
 """
 
 import os
 from dataclasses import dataclass
 
-from litellm.types.files import get_file_mime_type_from_extension
-from litellm.types.utils import FileTypes
+from remodl.types.files import get_file_mime_type_from_extension
+from remodl.types.utils import FileTypes
 
 
 @dataclass

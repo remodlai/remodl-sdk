@@ -1,9 +1,9 @@
 import json
 from typing import TYPE_CHECKING, Any, Optional, Union
 
-from litellm._logging import verbose_logger
-from litellm.litellm_core_utils.safe_json_dumps import safe_dumps
-from litellm.types.utils import StandardLoggingPayload
+from remodl._logging import verbose_logger
+from remodl.remodl_core_utils.safe_json_dumps import safe_dumps
+from remodl.types.utils import StandardLoggingPayload
 
 if TYPE_CHECKING:
     from opentelemetry.trace import Span as _Span
@@ -39,7 +39,7 @@ def set_attributes(span: Span, kwargs, response_obj):  # noqa: PLR0915
     """
     Populates span with OpenInference-compliant LLM attributes for Arize and Phoenix tracing.
     """
-    from litellm.integrations._types.open_inference import (
+    from remodl.integrations._types.open_inference import (
         MessageAttributes,
         OpenInferenceSpanKindValues,
         SpanAttributes,
@@ -48,7 +48,7 @@ def set_attributes(span: Span, kwargs, response_obj):  # noqa: PLR0915
 
     try:
         optional_params = kwargs.get("optional_params", {})
-        litellm_params = kwargs.get("litellm_params", {})
+        remodl_params = kwargs.get("remodl_params", {})
         standard_logging_payload: Optional[StandardLoggingPayload] = kwargs.get(
             "standard_logging_object"
         )
@@ -91,7 +91,7 @@ def set_attributes(span: Span, kwargs, response_obj):  # noqa: PLR0915
         safe_set_attribute(
             span,
             SpanAttributes.LLM_PROVIDER,
-            litellm_params.get("custom_llm_provider", "Unknown"),
+            remodl_params.get("custom_llm_provider", "Unknown"),
         )
 
         # The maximum number of tokens the LLM generates for a request.

@@ -21,17 +21,17 @@ from typing import (
 
 import httpx
 
-from litellm.litellm_core_utils.litellm_logging import Logging as LiteLLMLoggingObj
-from litellm.litellm_core_utils.prompt_templates.common_utils import (
+from remodl.remodl_core_utils.remodl_logging import Logging as LiteLLMLoggingObj
+from remodl.remodl_core_utils.prompt_templates.common_utils import (
     handle_messages_with_content_list_to_str_conversion,
     strip_none_values_from_message,
 )
-from litellm.llms.openai.chat.gpt_transformation import OpenAIGPTConfig
-from litellm.secret_managers.main import get_secret_str
-from litellm.types.llms.mistral import MistralThinkingBlock, MistralToolCallMessage
-from litellm.types.llms.openai import AllMessageValues
-from litellm.types.utils import ModelResponse
-from litellm.utils import convert_to_model_response_object
+from remodl.llms.openai.chat.gpt_transformation import OpenAIGPTConfig
+from remodl.secret_managers.main import get_secret_str
+from remodl.types.llms.mistral import MistralThinkingBlock, MistralToolCallMessage
+from remodl.types.llms.openai import AllMessageValues
+from remodl.types.utils import ModelResponse
+from remodl.utils import convert_to_model_response_object
 
 
 class MistralConfig(OpenAIGPTConfig):
@@ -236,7 +236,7 @@ class MistralConfig(OpenAIGPTConfig):
         - handles scenario where content is list and not string
         - content list is just text, and no images
         - if image passed in, then just return as is (user-intended)
-        - if `name` is passed, then drop it for mistral API: https://github.com/BerriAI/litellm/issues/6696
+        - if `name` is passed, then drop it for mistral API: https://github.com/BerriAI/remodl/issues/6696
 
         Motivation: mistral api doesn't support content as a list.
         The above statement is not valid now. Need to plan to remove all the #1,2,3 
@@ -391,8 +391,8 @@ class MistralConfig(OpenAIGPTConfig):
 
         import copy
 
-        from litellm.constants import DEFAULT_MAX_RECURSE_DEPTH
-        from litellm.utils import _remove_json_schema_refs
+        from remodl.constants import DEFAULT_MAX_RECURSE_DEPTH
+        from remodl.utils import _remove_json_schema_refs
 
         cleaned_tools = copy.deepcopy(tools)
 
@@ -446,7 +446,7 @@ class MistralConfig(OpenAIGPTConfig):
         """
         Mistral API does not support empty string in assistant content.
         """
-        from litellm.types.llms.openai import ChatCompletionAssistantMessage
+        from remodl.types.llms.openai import ChatCompletionAssistantMessage
 
         set_keys = get_type_hints(ChatCompletionAssistantMessage).keys()
 
@@ -537,7 +537,7 @@ class MistralConfig(OpenAIGPTConfig):
         model: str,
         messages: List[AllMessageValues],
         optional_params: dict,
-        litellm_params: dict,
+        remodl_params: dict,
         headers: dict,
     ) -> dict:
         """
@@ -560,7 +560,7 @@ class MistralConfig(OpenAIGPTConfig):
             model=model,
             messages=messages,
             optional_params=optional_params,
-            litellm_params=litellm_params,
+            remodl_params=remodl_params,
             headers=headers,
         )
 
@@ -573,7 +573,7 @@ class MistralConfig(OpenAIGPTConfig):
         request_data: dict,
         messages: List[AllMessageValues],
         optional_params: dict,
-        litellm_params: dict,
+        remodl_params: dict,
         encoding: Any,
         api_key: Optional[str] = None,
         json_mode: Optional[bool] = None,

@@ -5,10 +5,10 @@ Helper util for handling bedrock-specific cost calculation
 
 from typing import TYPE_CHECKING, Tuple
 
-from litellm.litellm_core_utils.llm_cost_calc.utils import generic_cost_per_token
+from remodl.remodl_core_utils.llm_cost_calc.utils import generic_cost_per_token
 
 if TYPE_CHECKING:
-    from litellm.types.utils import Usage
+    from remodl.types.utils import Usage
 
 
 def cost_per_token(model: str, usage: "Usage") -> Tuple[float, float]:

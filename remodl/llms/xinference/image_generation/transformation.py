@@ -1,9 +1,9 @@
 from typing import List
 
-from litellm.llms.base_llm.image_generation.transformation import (
+from remodl.llms.base_llm.image_generation.transformation import (
     BaseImageGenerationConfig,
 )
-from litellm.types.llms.openai import OpenAIImageGenerationOptionalParams
+from remodl.types.llms.openai import OpenAIImageGenerationOptionalParams
 
 
 class XInferenceImageGenerationConfig(BaseImageGenerationConfig):

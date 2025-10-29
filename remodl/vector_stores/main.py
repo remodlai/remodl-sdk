@@ -9,13 +9,13 @@ from typing import Any, Coroutine, Dict, List, Optional, Union
 
 import httpx
 
-import litellm
-from litellm.constants import request_timeout
-from litellm.litellm_core_utils.get_llm_provider_logic import get_llm_provider
-from litellm.litellm_core_utils.litellm_logging import Logging as LiteLLMLoggingObj
-from litellm.llms.custom_httpx.llm_http_handler import BaseLLMHTTPHandler
-from litellm.types.router import GenericLiteLLMParams
-from litellm.types.vector_stores import (
+import remodl
+from remodl.constants import request_timeout
+from remodl.remodl_core_utils.get_llm_provider_logic import get_llm_provider
+from remodl.remodl_core_utils.remodl_logging import Logging as LiteLLMLoggingObj
+from remodl.llms.custom_httpx.llm_http_handler import BaseLLMHTTPHandler
+from remodl.types.router import GenericLiteLLMParams
+from remodl.types.vector_stores import (
     VectorStoreCreateOptionalRequestParams,
     VectorStoreCreateResponse,
     VectorStoreFileCounts,
@@ -24,8 +24,8 @@ from litellm.types.vector_stores import (
     VectorStoreSearchResponse,
     VectorStoreSearchResult,
 )
-from litellm.utils import ProviderConfigManager, client
-from litellm.vector_stores.utils import VectorStoreRequestUtils
+from remodl.utils import ProviderConfigManager, client
+from remodl.vector_stores.utils import VectorStoreRequestUtils
 
 ####### ENVIRONMENT VARIABLES ###################
 # Initialize any necessary instances or variables here
@@ -140,7 +140,7 @@ async def acreate(
 
         return response
     except Exception as e:
-        raise litellm.exception_type(
+        raise remodl.exception_type(
             model=None,
             custom_llm_provider=custom_llm_provider,
             original_exception=e,
@@ -181,19 +181,19 @@ def create(
     """
     local_vars = locals()
     try:
-        litellm_logging_obj: LiteLLMLoggingObj = kwargs.get("litellm_logging_obj")  # type: ignore
-        litellm_call_id: Optional[str] = kwargs.get("litellm_call_id", None)
+        remodl_logging_obj: LiteLLMLoggingObj = kwargs.get("remodl_logging_obj")  # type: ignore
+        remodl_call_id: Optional[str] = kwargs.get("remodl_call_id", None)
         _is_async = kwargs.pop("acreate", False) is True
 
         # get llm provider logic
-        litellm_params = GenericLiteLLMParams(**kwargs)
+        remodl_params = GenericLiteLLMParams(**kwargs)
 
         ## MOCK RESPONSE LOGIC
-        if litellm_params.mock_response and isinstance(
-            litellm_params.mock_response, dict
+        if remodl_params.mock_response and isinstance(
+            remodl_params.mock_response, dict
         ):
             return mock_vector_store_create_response(
-                mock_response=VectorStoreCreateResponse(**litellm_params.mock_response)
+                mock_response=VectorStoreCreateResponse(**remodl_params.mock_response)
             )
 
         # Default to OpenAI for vector stores
@@ -203,13 +203,13 @@ def create(
         api_type, custom_llm_provider, _, _ = get_llm_provider(
             model=custom_llm_provider,
             custom_llm_provider=None,
-            litellm_params=None,
+            remodl_params=None,
         )
 
         # get provider config - using vector store custom logger for now
         vector_store_provider_config = (
             ProviderConfigManager.get_provider_vector_stores_config(
-                provider=litellm.LlmProviders(custom_llm_provider),
+                provider=remodl.LlmProviders(custom_llm_provider),
                 api_type=api_type,
             )
         )
@@ -229,14 +229,14 @@ def create(
         )
 
         # Pre Call logging
-        litellm_logging_obj.update_environment_variables(
+        remodl_logging_obj.update_environment_variables(
             model=None,
             optional_params={
                 "name": name,
                 **vector_store_create_optional_params,
             },
-            litellm_params={
-                "litellm_call_id": litellm_call_id,
+            remodl_params={
+                "remodl_call_id": remodl_call_id,
             },
             custom_llm_provider=custom_llm_provider,
         )
@@ -245,8 +245,8 @@ def create(
             vector_store_create_optional_params=vector_store_create_optional_params,
             vector_store_provider_config=vector_store_provider_config,
             custom_llm_provider=custom_llm_provider,
-            litellm_params=litellm_params,
-            logging_obj=litellm_logging_obj,
+            remodl_params=remodl_params,
+            logging_obj=remodl_logging_obj,
             extra_headers=extra_headers,
             extra_body=extra_body,
             timeout=timeout or request_timeout,
@@ -256,7 +256,7 @@ def create(
 
         return response
     except Exception as e:
-        raise litellm.exception_type(
+        raise remodl.exception_type(
             model=None,
             custom_llm_provider=custom_llm_provider,
             original_exception=e,
@@ -323,7 +323,7 @@ async def asearch(
 
         return response
     except Exception as e:
-        raise litellm.exception_type(
+        raise remodl.exception_type(
             model=None,
             custom_llm_provider=custom_llm_provider,
             original_exception=e,
@@ -366,19 +366,19 @@ def search(
     """
     local_vars = locals()
     try:
-        litellm_logging_obj: LiteLLMLoggingObj = kwargs.get("litellm_logging_obj")  # type: ignore
-        litellm_call_id: Optional[str] = kwargs.get("litellm_call_id", None)
+        remodl_logging_obj: LiteLLMLoggingObj = kwargs.get("remodl_logging_obj")  # type: ignore
+        remodl_call_id: Optional[str] = kwargs.get("remodl_call_id", None)
         _is_async = kwargs.pop("asearch", False) is True
 
         # pull credentials from registry if available
         vector_store_id_for_credentials = kwargs.get("vector_store_id", vector_store_id)
         if (
-            litellm.vector_store_registry is not None
+            remodl.vector_store_registry is not None
             and vector_store_id_for_credentials is not None
         ):
             try:
                 registry_credentials = (
-                    litellm.vector_store_registry.get_credentials_for_vector_store(
+                    remodl.vector_store_registry.get_credentials_for_vector_store(
                         vector_store_id_for_credentials
                     )
                 )
@@ -387,15 +387,15 @@ def search(
                 pass
 
         # get llm provider logic
-        litellm_params = GenericLiteLLMParams(vector_store_id=vector_store_id, **kwargs)
+        remodl_params = GenericLiteLLMParams(vector_store_id=vector_store_id, **kwargs)
 
         ## MOCK RESPONSE LOGIC
-        if litellm_params.mock_response and isinstance(
-            litellm_params.mock_response, (str, list)
+        if remodl_params.mock_response and isinstance(
+            remodl_params.mock_response, (str, list)
         ):
             mock_results = None
-            if isinstance(litellm_params.mock_response, list):
-                mock_results = litellm_params.mock_response
+            if isinstance(remodl_params.mock_response, list):
+                mock_results = remodl_params.mock_response
             return mock_vector_store_search_response(mock_results=mock_results)
 
         # Default to OpenAI for vector stores
@@ -406,7 +406,7 @@ def search(
             api_type, custom_llm_provider, _, _ = get_llm_provider(
                 model=custom_llm_provider,
                 custom_llm_provider=None,
-                litellm_params=None,
+                remodl_params=None,
             )
         else:
             api_type = None
@@ -415,7 +415,7 @@ def search(
         # get provider config - using vector store custom logger for now
         vector_store_provider_config = (
             ProviderConfigManager.get_provider_vector_stores_config(
-                provider=litellm.LlmProviders(custom_llm_provider),
+                provider=remodl.LlmProviders(custom_llm_provider),
                 api_type=api_type,
             )
         )
@@ -435,15 +435,15 @@ def search(
         )
 
         # Pre Call logging
-        litellm_logging_obj.update_environment_variables(
+        remodl_logging_obj.update_environment_variables(
             model=api_type,
             optional_params={
                 "vector_store_id": vector_store_id,
                 "query": query,
                 **vector_store_search_optional_params,
             },
-            litellm_params={
-                "litellm_call_id": litellm_call_id,
+            remodl_params={
+                "remodl_call_id": remodl_call_id,
                 "vector_store_id": vector_store_id,
             },
             custom_llm_provider=custom_llm_provider,
@@ -455,8 +455,8 @@ def search(
             vector_store_search_optional_params=vector_store_search_optional_params,
             vector_store_provider_config=vector_store_provider_config,
             custom_llm_provider=custom_llm_provider,
-            litellm_params=litellm_params,
-            logging_obj=litellm_logging_obj,
+            remodl_params=remodl_params,
+            logging_obj=remodl_logging_obj,
             extra_headers=extra_headers,
             extra_body=extra_body,
             timeout=timeout or request_timeout,
@@ -466,7 +466,7 @@ def search(
 
         return response
     except Exception as e:
-        raise litellm.exception_type(
+        raise remodl.exception_type(
             model=None,
             custom_llm_provider=custom_llm_provider,
             original_exception=e,

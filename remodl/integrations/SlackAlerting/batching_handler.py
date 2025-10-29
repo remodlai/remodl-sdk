@@ -8,7 +8,7 @@ see custom_batch_logger.py for more details / defaults
 
 from typing import TYPE_CHECKING, Any
 
-from litellm._logging import verbose_proxy_logger
+from remodl._logging import verbose_proxy_logger
 
 if TYPE_CHECKING:
     from .slack_alerting import SlackAlerting as _SlackAlerting
@@ -47,7 +47,7 @@ def _print_alerting_payload_warning(
     Print the payload to the console when
     slackAlertingInstance.alerting_args.log_to_console is True
 
-    Relevant issue: https://github.com/BerriAI/litellm/issues/7372
+    Relevant issue: https://github.com/BerriAI/remodl/issues/7372
     """
     if slackAlertingInstance.alerting_args.log_to_console is True:
         verbose_proxy_logger.warning(payload)

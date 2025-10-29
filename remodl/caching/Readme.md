@@ -16,7 +16,7 @@ The following caching mechanisms are supported:
 ## Folder Structure
 
 ```
-litellm/caching/
+remodl/caching/
 ├── base_cache.py
 ├── caching.py
 ├── caching_handler.py
@@ -30,8 +30,8 @@ litellm/caching/
 ```
 
 ## Documentation
-- [Caching on LiteLLM Gateway](https://docs.litellm.ai/docs/proxy/caching)
-- [Caching on LiteLLM Python](https://docs.litellm.ai/docs/caching/all_caches)
+- [Caching on LiteLLM Gateway](https://docs.remodl.ai/docs/proxy/caching)
+- [Caching on LiteLLM Python](https://docs.remodl.ai/docs/caching/all_caches)
 
 
 

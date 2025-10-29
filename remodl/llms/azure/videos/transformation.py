@@ -1,12 +1,12 @@
 from typing import TYPE_CHECKING, Any, Dict, Optional
 
-from litellm.types.videos.main import VideoCreateOptionalRequestParams
-from litellm.secret_managers.main import get_secret_str
-from litellm.llms.azure.common_utils import BaseAzureLLM
-import litellm
-from litellm.llms.openai.videos.transformation import OpenAIVideoConfig
+from remodl.types.videos.main import VideoCreateOptionalRequestParams
+from remodl.secret_managers.main import get_secret_str
+from remodl.llms.azure.common_utils import BaseAzureLLM
+import remodl
+from remodl.llms.openai.videos.transformation import OpenAIVideoConfig
 if TYPE_CHECKING:
-    from litellm.litellm_core_utils.litellm_logging import Logging as _LiteLLMLoggingObj
+    from remodl.remodl_core_utils.remodl_logging import Logging as _LiteLLMLoggingObj
 
     from ...base_llm.videos.transformation import BaseVideoConfig as _BaseVideoConfig
     from ...base_llm.chat.transformation import BaseLLMException as _BaseLLMException
@@ -59,8 +59,8 @@ class AzureVideoConfig(OpenAIVideoConfig):
     ) -> dict:
         api_key = (
             api_key
-            or litellm.api_key
-            or litellm.azure_key
+            or remodl.api_key
+            or remodl.azure_key
             or get_secret_str("AZURE_OPENAI_API_KEY")
             or get_secret_str("AZURE_API_KEY")
         )
@@ -76,14 +76,14 @@ class AzureVideoConfig(OpenAIVideoConfig):
         self,
         model: str,
         api_base: Optional[str],
-        litellm_params: dict,
+        remodl_params: dict,
     ) -> str:
         """
         Constructs a complete URL for the API request.
         """
         return BaseAzureLLM._get_base_azure_url(
             api_base=api_base,
-            litellm_params=litellm_params,
+            remodl_params=remodl_params,
             route="/openai/v1/videos",
             default_api_version="",
         )

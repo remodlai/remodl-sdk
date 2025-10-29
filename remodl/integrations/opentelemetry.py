@@ -3,12 +3,12 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import TYPE_CHECKING, Any, Dict, List, Optional, Union, cast
 
-import litellm
-from litellm._logging import verbose_logger
-from litellm.integrations.custom_logger import CustomLogger
-from litellm.litellm_core_utils.safe_json_dumps import safe_dumps
-from litellm.types.services import ServiceLoggerPayload
-from litellm.types.utils import (
+import remodl
+from remodl._logging import verbose_logger
+from remodl.integrations.custom_logger import CustomLogger
+from remodl.remodl_core_utils.safe_json_dumps import safe_dumps
+from remodl.types.services import ServiceLoggerPayload
+from remodl.types.utils import (
     ChatCompletionMessageToolCall,
     Function,
     StandardCallbackDynamicParams,
@@ -23,10 +23,10 @@ if TYPE_CHECKING:
     from opentelemetry.trace import Span as _Span
     from opentelemetry.trace import Tracer as _Tracer
 
-    from litellm.proxy._types import (
+    from remodl.proxy._types import (
         ManagementEndpointLoggingPayload as _ManagementEndpointLoggingPayload,
     )
-    from litellm.proxy.proxy_server import UserAPIKeyAuth as _UserAPIKeyAuth
+    from remodl.proxy.proxy_server import UserAPIKeyAuth as _UserAPIKeyAuth
 
     Span = Union[_Span, Any]
     Tracer = Union[_Tracer, Any]
@@ -42,15 +42,15 @@ else:
     ManagementEndpointLoggingPayload = Any
     Context = Any
 
-LITELLM_TRACER_NAME = os.getenv("OTEL_TRACER_NAME", "litellm")
-LITELLM_METER_NAME = os.getenv("LITELLM_METER_NAME", "litellm")
-LITELLM_LOGGER_NAME = os.getenv("LITELLM_LOGGER_NAME", "litellm")
+LITELLM_TRACER_NAME = os.getenv("OTEL_TRACER_NAME", "remodl")
+LITELLM_METER_NAME = os.getenv("LITELLM_METER_NAME", "remodl")
+LITELLM_LOGGER_NAME = os.getenv("LITELLM_LOGGER_NAME", "remodl")
 # Remove the hardcoded LITELLM_RESOURCE dictionary - we'll create it properly later
 RAW_REQUEST_SPAN_NAME = "raw_gen_ai_request"
-LITELLM_REQUEST_SPAN_NAME = "litellm_request"
+LITELLM_REQUEST_SPAN_NAME = "remodl_request"
 
 
-def _get_litellm_resource():
+def _get_remodl_resource():
     """
     Create a proper OpenTelemetry Resource that respects OTEL_RESOURCE_ATTRIBUTES
     while maintaining backward compatibility with LiteLLM-specific environment variables.
@@ -60,11 +60,11 @@ def _get_litellm_resource():
     # Create base resource attributes with LiteLLM-specific defaults
     # These will be overridden by OTEL_RESOURCE_ATTRIBUTES if present
     base_attributes: Dict[str, Optional[str]] = {
-        "service.name": os.getenv("OTEL_SERVICE_NAME", "litellm"),
+        "service.name": os.getenv("OTEL_SERVICE_NAME", "remodl"),
         "deployment.environment": os.getenv("OTEL_ENVIRONMENT_NAME", "production"),
         # Fix the model_id to use proper environment variable or default to service name
         "model_id": os.getenv(
-            "OTEL_MODEL_ID", os.getenv("OTEL_SERVICE_NAME", "litellm")
+            "OTEL_MODEL_ID", os.getenv("OTEL_SERVICE_NAME", "remodl")
         ),
     }
 
@@ -169,17 +169,17 @@ class OpenTelemetry(CustomLogger):
         super().__init__(**kwargs)
         self._init_metrics(meter_provider)
         self._init_logs(logger_provider)
-        self._init_otel_logger_on_litellm_proxy()
+        self._init_otel_logger_on_remodl_proxy()
 
-    def _init_otel_logger_on_litellm_proxy(self):
+    def _init_otel_logger_on_remodl_proxy(self):
         """
-        Initializes OpenTelemetry for litellm proxy server
+        Initializes OpenTelemetry for remodl proxy server
 
         - Adds Otel as a service callback
         - Sets `proxy_server.open_telemetry_logger` to self
         """
         try:
-            from litellm.proxy import proxy_server
+            from remodl.proxy import proxy_server
         except ImportError:
             verbose_logger.warning(
                 "Proxy Server is not installed. Skipping OpenTelemetry initialization."
@@ -187,10 +187,10 @@ class OpenTelemetry(CustomLogger):
             return
 
         # Add self as a service callback
-        if "otel" not in litellm.service_callback and all(
-            not isinstance(cb, OpenTelemetry) for cb in litellm.service_callback
+        if "otel" not in remodl.service_callback and all(
+            not isinstance(cb, OpenTelemetry) for cb in remodl.service_callback
         ):
-            litellm.service_callback.append(self)
+            remodl.service_callback.append(self)
         setattr(proxy_server, "open_telemetry_logger", self)
 
     def _init_tracing(self, tracer_provider):
@@ -216,7 +216,7 @@ class OpenTelemetry(CustomLogger):
                 else:
                     # No real provider exists yet, create our own
                     verbose_logger.debug("OpenTelemetry: Creating new TracerProvider")
-                    tracer_provider = TracerProvider(resource=_get_litellm_resource())
+                    tracer_provider = TracerProvider(resource=_get_remodl_resource())
                     tracer_provider.add_span_processor(self._get_span_processor())
                     trace.set_tracer_provider(tracer_provider)
             except Exception as e:
@@ -225,7 +225,7 @@ class OpenTelemetry(CustomLogger):
                     "OpenTelemetry: Exception checking existing provider, creating new one: %s",
                     str(e)
                 )
-                tracer_provider = TracerProvider(resource=_get_litellm_resource())
+                tracer_provider = TracerProvider(resource=_get_remodl_resource())
                 tracer_provider.add_span_processor(self._get_span_processor())
                 trace.set_tracer_provider(tracer_provider)
         else:
@@ -273,7 +273,7 @@ class OpenTelemetry(CustomLogger):
             )
 
             meter_provider = MeterProvider(
-                metric_readers=[_metric_reader], resource=_get_litellm_resource()
+                metric_readers=[_metric_reader], resource=_get_remodl_resource()
             )
             meter = meter_provider.get_meter(__name__)
         else:
@@ -309,8 +309,8 @@ class OpenTelemetry(CustomLogger):
 
         # set up log pipeline
         if logger_provider is None:
-            litellm_resource = _get_litellm_resource()
-            logger_provider = OTLoggerProvider(resource=litellm_resource)
+            remodl_resource = _get_remodl_resource()
+            logger_provider = OTLoggerProvider(resource=remodl_resource)
             # Only add OTLP exporter if we created the logger provider ourselves
             log_exporter = self._get_log_exporter()
             if log_exporter:
@@ -382,7 +382,7 @@ class OpenTelemetry(CustomLogger):
                         try:
                             value = str(value)
                         except Exception:
-                            value = "litellm logging error - could_not_json_serialize"
+                            value = "remodl logging error - could_not_json_serialize"
                     self.safe_set_attribute(
                         span=service_logging_span,
                         key=key,
@@ -532,7 +532,7 @@ class OpenTelemetry(CustomLogger):
         from opentelemetry.sdk.trace import TracerProvider
 
         # Create a temporary tracer provider with dynamic headers
-        temp_provider = TracerProvider(resource=_get_litellm_resource())
+        temp_provider = TracerProvider(resource=_get_remodl_resource())
         temp_provider.add_span_processor(
             self._get_span_processor(dynamic_headers=dynamic_headers)
         )
@@ -605,11 +605,11 @@ class OpenTelemetry(CustomLogger):
         from opentelemetry.trace import Status, StatusCode
 
         # only log raw LLM request/response if message_logging is on and not globally turned off
-        if litellm.turn_off_message_logging or not self.message_logging:
+        if remodl.turn_off_message_logging or not self.message_logging:
             return
 
-        litellm_params = kwargs.get("litellm_params", {})
-        metadata = litellm_params.get("metadata") or {}
+        remodl_params = kwargs.get("remodl_params", {})
+        metadata = remodl_params.get("metadata") or {}
         generation_name = metadata.get("generation_name")
 
         raw_span_name = generation_name if generation_name else RAW_REQUEST_SPAN_NAME
@@ -626,14 +626,14 @@ class OpenTelemetry(CustomLogger):
 
     def _record_metrics(self, kwargs, response_obj, start_time, end_time):
         duration_s = (end_time - start_time).total_seconds()
-        params = kwargs.get("litellm_params") or {}
+        params = kwargs.get("remodl_params") or {}
         provider = params.get("custom_llm_provider", "Unknown")
 
         common_attrs = {
             "gen_ai.operation.name": "chat",
             "gen_ai.system": provider,
             "gen_ai.request.model": kwargs.get("model"),
-            "gen_ai.framework": "litellm",
+            "gen_ai.framework": "remodl",
         }
 
         std_log = kwargs.get("standard_logging_object")
@@ -699,11 +699,11 @@ class OpenTelemetry(CustomLogger):
         # Get the resource from the logger provider
         logger_provider = get_logger_provider()
         resource = (
-            getattr(logger_provider, "_resource", None) or _get_litellm_resource()
+            getattr(logger_provider, "_resource", None) or _get_remodl_resource()
         )
 
         parent_ctx = span.get_span_context()
-        provider = (kwargs.get("litellm_params") or {}).get(
+        provider = (kwargs.get("remodl_params") or {}).get(
             "custom_llm_provider", "Unknown"
         )
 
@@ -832,7 +832,7 @@ class OpenTelemetry(CustomLogger):
         )
         _parent_context, parent_otel_span = self._get_span_context(kwargs)
 
-        # Span 1: Requst sent to litellm SDK
+        # Span 1: Requst sent to remodl SDK
         otel_tracer: Tracer = self.get_tracer_to_use_for_request(kwargs)
         span = otel_tracer.start_span(
             name=self._get_span_name(kwargs),
@@ -862,7 +862,7 @@ class OpenTelemetry(CustomLogger):
         2. Sets structured error attributes from StandardLoggingPayloadErrorInformation
         """
         try:
-            from litellm.integrations._types.open_inference import ErrorAttributes
+            from remodl.integrations._types.open_inference import ErrorAttributes
 
             # Get the exception object if available
             exception = kwargs.get("exception")
@@ -937,7 +937,7 @@ class OpenTelemetry(CustomLogger):
     def set_tools_attributes(self, span: Span, tools):
         import json
 
-        from litellm.proxy._types import SpanAttributes
+        from remodl.proxy._types import SpanAttributes
 
         if not tools:
             return
@@ -991,7 +991,7 @@ class OpenTelemetry(CustomLogger):
     def _tool_calls_kv_pair(
         tool_calls: List[ChatCompletionMessageToolCall],
     ) -> Dict[str, Any]:
-        from litellm.proxy._types import SpanAttributes
+        from remodl.proxy._types import SpanAttributes
 
         kv_pairs: Dict[str, Any] = {}
         for idx, tool_call in enumerate(tool_calls):
@@ -1014,21 +1014,21 @@ class OpenTelemetry(CustomLogger):
     ):
         try:
             if self.callback_name == "arize_phoenix":
-                from litellm.integrations.arize.arize_phoenix import ArizePhoenixLogger
+                from remodl.integrations.arize.arize_phoenix import ArizePhoenixLogger
 
                 ArizePhoenixLogger.set_arize_phoenix_attributes(
                     span, kwargs, response_obj
                 )
                 return
             elif self.callback_name == "langtrace":
-                from litellm.integrations.langtrace import LangtraceAttributes
+                from remodl.integrations.langtrace import LangtraceAttributes
 
                 LangtraceAttributes().set_langtrace_attributes(
                     span, kwargs, response_obj
                 )
                 return
             elif self.callback_name == "langfuse_otel":
-                from litellm.integrations.langfuse.langfuse_otel import (
+                from remodl.integrations.langfuse.langfuse_otel import (
                     LangfuseOtelLogger,
                 )
 
@@ -1036,10 +1036,10 @@ class OpenTelemetry(CustomLogger):
                     span, kwargs, response_obj
                 )
                 return
-            from litellm.proxy._types import SpanAttributes
+            from remodl.proxy._types import SpanAttributes
 
             optional_params = kwargs.get("optional_params", {})
-            litellm_params = kwargs.get("litellm_params", {}) or {}
+            remodl_params = kwargs.get("remodl_params", {}) or {}
             standard_logging_payload: Optional[StandardLoggingPayload] = kwargs.get(
                 "standard_logging_object"
             )
@@ -1088,7 +1088,7 @@ class OpenTelemetry(CustomLogger):
             self.safe_set_attribute(
                 span=span,
                 key=SpanAttributes.LLM_SYSTEM.value,
-                value=litellm_params.get("custom_llm_provider", "Unknown"),
+                value=remodl_params.get("custom_llm_provider", "Unknown"),
             )
 
             # The maximum number of tokens the LLM generates for a request.
@@ -1168,7 +1168,7 @@ class OpenTelemetry(CustomLogger):
             ########## LLM Request Medssages / tools / content Attributes ###########
             #########################################################################
 
-            if litellm.turn_off_message_logging is True:
+            if remodl.turn_off_message_logging is True:
                 return
             if self.message_logging is not True:
                 return
@@ -1269,8 +1269,8 @@ class OpenTelemetry(CustomLogger):
     def set_raw_request_attributes(self, span: Span, kwargs, response_obj):
         try:
             kwargs.get("optional_params", {})
-            litellm_params = kwargs.get("litellm_params", {}) or {}
-            custom_llm_provider = litellm_params.get("custom_llm_provider", "Unknown")
+            remodl_params = kwargs.get("remodl_params", {}) or {}
+            custom_llm_provider = remodl_params.get("custom_llm_provider", "Unknown")
 
             _raw_response = kwargs.get("original_response")
             _additional_args = kwargs.get("additional_args", {}) or {}
@@ -1303,7 +1303,7 @@ class OpenTelemetry(CustomLogger):
                         )
                 except json.JSONDecodeError:
                     verbose_logger.debug(
-                        "litellm.integrations.opentelemetry.py::set_raw_request_attributes() - raw_response not json string - {}".format(
+                        "remodl.integrations.opentelemetry.py::set_raw_request_attributes() - raw_response not json string - {}".format(
                             _raw_response
                         )
                     )
@@ -1322,8 +1322,8 @@ class OpenTelemetry(CustomLogger):
         return int(dt.timestamp() * 1e9)
 
     def _get_span_name(self, kwargs):
-        litellm_params = kwargs.get("litellm_params", {})
-        metadata = litellm_params.get("metadata") or {}
+        remodl_params = kwargs.get("remodl_params", {})
+        metadata = remodl_params.get("metadata") or {}
         generation_name = metadata.get("generation_name")
 
         if generation_name:
@@ -1354,12 +1354,12 @@ class OpenTelemetry(CustomLogger):
             TraceContextTextMapPropagator,
         )
 
-        litellm_params = kwargs.get("litellm_params", {}) or {}
-        proxy_server_request = litellm_params.get("proxy_server_request", {}) or {}
+        remodl_params = kwargs.get("remodl_params", {}) or {}
+        proxy_server_request = remodl_params.get("proxy_server_request", {}) or {}
         headers = proxy_server_request.get("headers", {}) or {}
         traceparent = headers.get("traceparent", None)
-        _metadata = litellm_params.get("metadata", {}) or {}
-        parent_otel_span = _metadata.get("litellm_parent_otel_span", None)
+        _metadata = remodl_params.get("metadata", {}) or {}
+        parent_otel_span = _metadata.get("remodl_parent_otel_span", None)
 
         # Priority 1: Explicit parent span from metadata
         if parent_otel_span is not None:
@@ -1735,7 +1735,7 @@ class OpenTelemetry(CustomLogger):
             management_endpoint_span.set_status(Status(StatusCode.ERROR))
             management_endpoint_span.end(end_time=_end_time_ns)
 
-    def create_litellm_proxy_request_started_span(
+    def create_remodl_proxy_request_started_span(
         self,
         start_time: datetime,
         headers: dict,

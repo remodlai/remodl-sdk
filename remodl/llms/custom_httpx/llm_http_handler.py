@@ -15,55 +15,55 @@ from typing import (
 
 import httpx  # type: ignore
 
-import litellm
-import litellm.litellm_core_utils
-import litellm.types
-import litellm.types.utils
-from litellm._logging import verbose_logger
-from litellm.constants import REALTIME_WEBSOCKET_MAX_MESSAGE_SIZE_BYTES
-from litellm.litellm_core_utils.realtime_streaming import RealTimeStreaming
-from litellm.llms.base_llm.anthropic_messages.transformation import (
+import remodl
+import remodl.remodl_core_utils
+import remodl.types
+import remodl.types.utils
+from remodl._logging import verbose_logger
+from remodl.constants import REALTIME_WEBSOCKET_MAX_MESSAGE_SIZE_BYTES
+from remodl.remodl_core_utils.realtime_streaming import RealTimeStreaming
+from remodl.llms.base_llm.anthropic_messages.transformation import (
     BaseAnthropicMessagesConfig,
 )
-from litellm.llms.base_llm.audio_transcription.transformation import (
+from remodl.llms.base_llm.audio_transcription.transformation import (
     BaseAudioTranscriptionConfig,
 )
-from litellm.llms.base_llm.base_model_iterator import MockResponseIterator
-from litellm.llms.base_llm.batches.transformation import BaseBatchesConfig
-from litellm.llms.base_llm.chat.transformation import BaseConfig
-from litellm.llms.base_llm.embedding.transformation import BaseEmbeddingConfig
-from litellm.llms.base_llm.files.transformation import BaseFilesConfig
-from litellm.llms.base_llm.google_genai.transformation import (
+from remodl.llms.base_llm.base_model_iterator import MockResponseIterator
+from remodl.llms.base_llm.batches.transformation import BaseBatchesConfig
+from remodl.llms.base_llm.chat.transformation import BaseConfig
+from remodl.llms.base_llm.embedding.transformation import BaseEmbeddingConfig
+from remodl.llms.base_llm.files.transformation import BaseFilesConfig
+from remodl.llms.base_llm.google_genai.transformation import (
     BaseGoogleGenAIGenerateContentConfig,
 )
-from litellm.llms.base_llm.image_edit.transformation import BaseImageEditConfig
-from litellm.llms.base_llm.image_generation.transformation import (
+from remodl.llms.base_llm.image_edit.transformation import BaseImageEditConfig
+from remodl.llms.base_llm.image_generation.transformation import (
     BaseImageGenerationConfig,
 )
-from litellm.llms.base_llm.ocr.transformation import BaseOCRConfig, OCRResponse
-from litellm.llms.base_llm.realtime.transformation import BaseRealtimeConfig
-from litellm.llms.base_llm.rerank.transformation import BaseRerankConfig
-from litellm.llms.base_llm.responses.transformation import BaseResponsesAPIConfig
-from litellm.llms.base_llm.search.transformation import BaseSearchConfig, SearchResponse
-from litellm.llms.base_llm.text_to_speech.transformation import BaseTextToSpeechConfig
-from litellm.llms.base_llm.vector_store.transformation import BaseVectorStoreConfig
-from litellm.llms.base_llm.videos.transformation import BaseVideoConfig
-from litellm.llms.custom_httpx.http_handler import (
+from remodl.llms.base_llm.ocr.transformation import BaseOCRConfig, OCRResponse
+from remodl.llms.base_llm.realtime.transformation import BaseRealtimeConfig
+from remodl.llms.base_llm.rerank.transformation import BaseRerankConfig
+from remodl.llms.base_llm.responses.transformation import BaseResponsesAPIConfig
+from remodl.llms.base_llm.search.transformation import BaseSearchConfig, SearchResponse
+from remodl.llms.base_llm.text_to_speech.transformation import BaseTextToSpeechConfig
+from remodl.llms.base_llm.vector_store.transformation import BaseVectorStoreConfig
+from remodl.llms.base_llm.videos.transformation import BaseVideoConfig
+from remodl.llms.custom_httpx.http_handler import (
     AsyncHTTPHandler,
     HTTPHandler,
     _get_httpx_client,
     get_async_httpx_client,
 )
-from litellm.responses.streaming_iterator import (
+from remodl.responses.streaming_iterator import (
     BaseResponsesAPIStreamingIterator,
     MockResponsesAPIStreamingIterator,
     ResponsesAPIStreamingIterator,
     SyncResponsesAPIStreamingIterator,
 )
-from litellm.types.llms.anthropic_messages.anthropic_response import (
+from remodl.types.llms.anthropic_messages.anthropic_response import (
     AnthropicMessagesResponse,
 )
-from litellm.types.llms.openai import (
+from remodl.types.llms.openai import (
     CreateBatchRequest,
     CreateFileRequest,
     HttpxBinaryResponseContent,
@@ -71,23 +71,23 @@ from litellm.types.llms.openai import (
     ResponseInputParam,
     ResponsesAPIResponse,
 )
-from litellm.types.rerank import RerankResponse
-from litellm.types.responses.main import DeleteResponseResult
-from litellm.types.router import GenericLiteLLMParams
-from litellm.types.utils import (
+from remodl.types.rerank import RerankResponse
+from remodl.types.responses.main import DeleteResponseResult
+from remodl.types.router import GenericLiteLLMParams
+from remodl.types.utils import (
     EmbeddingResponse,
     FileTypes,
     LiteLLMBatch,
     TranscriptionResponse,
 )
-from litellm.types.vector_stores import (
+from remodl.types.vector_stores import (
     VectorStoreCreateOptionalRequestParams,
     VectorStoreCreateResponse,
     VectorStoreSearchOptionalRequestParams,
     VectorStoreSearchResponse,
 )
-from litellm.types.videos.main import VideoObject
-from litellm.utils import (
+from remodl.types.videos.main import VideoObject
+from remodl.utils import (
     CustomStreamWrapper,
     ImageResponse,
     ModelResponse,
@@ -97,8 +97,8 @@ from litellm.utils import (
 if TYPE_CHECKING:
     from aiohttp import ClientSession
 
-    from litellm.litellm_core_utils.litellm_logging import Logging as _LiteLLMLoggingObj
-    from litellm.llms.base_llm.passthrough.transformation import BasePassthroughConfig
+    from remodl.remodl_core_utils.remodl_logging import Logging as _LiteLLMLoggingObj
+    from remodl.llms.base_llm.passthrough.transformation import BasePassthroughConfig
 
     LiteLLMLoggingObj = _LiteLLMLoggingObj
 else:
@@ -114,7 +114,7 @@ class BaseLLMHTTPHandler:
         headers: dict,
         data: dict,
         timeout: Union[float, httpx.Timeout],
-        litellm_params: dict,
+        remodl_params: dict,
         logging_obj: LiteLLMLoggingObj,
         stream: bool = False,
         signed_json_body: Optional[bytes] = None,
@@ -142,7 +142,7 @@ class BaseLLMHTTPHandler:
             except httpx.HTTPStatusError as e:
                 hit_max_retry = i + 1 == max_retry_on_unprocessable_entity_error
                 should_retry = provider_config.should_retry_llm_api_inside_llm_translation_on_http_error(
-                    e=e, litellm_params=litellm_params
+                    e=e, remodl_params=remodl_params
                 )
                 if should_retry and not hit_max_retry:
                     data = (
@@ -174,7 +174,7 @@ class BaseLLMHTTPHandler:
         headers: dict,
         data: dict,
         timeout: Union[float, httpx.Timeout],
-        litellm_params: dict,
+        remodl_params: dict,
         logging_obj: LiteLLMLoggingObj,
         stream: bool = False,
         signed_json_body: Optional[bytes] = None,
@@ -202,7 +202,7 @@ class BaseLLMHTTPHandler:
             except httpx.HTTPStatusError as e:
                 hit_max_retry = i + 1 == max_retry_on_unprocessable_entity_error
                 should_retry = provider_config.should_retry_llm_api_inside_llm_translation_on_http_error(
-                    e=e, litellm_params=litellm_params
+                    e=e, remodl_params=remodl_params
                 )
                 if should_retry and not hit_max_retry:
                     data = (
@@ -239,7 +239,7 @@ class BaseLLMHTTPHandler:
         logging_obj: LiteLLMLoggingObj,
         messages: list,
         optional_params: dict,
-        litellm_params: dict,
+        remodl_params: dict,
         encoding: Any,
         api_key: Optional[str] = None,
         client: Optional[AsyncHTTPHandler] = None,
@@ -252,8 +252,8 @@ class BaseLLMHTTPHandler:
                 f"Creating HTTP client with shared_session: {id(shared_session) if shared_session else None}"
             )
             async_httpx_client = get_async_httpx_client(
-                llm_provider=litellm.LlmProviders(custom_llm_provider),
-                params={"ssl_verify": litellm_params.get("ssl_verify", None)},
+                llm_provider=remodl.LlmProviders(custom_llm_provider),
+                params={"ssl_verify": remodl_params.get("ssl_verify", None)},
                 shared_session=shared_session,
             )
         else:
@@ -266,7 +266,7 @@ class BaseLLMHTTPHandler:
             headers=headers,
             data=data,
             timeout=timeout,
-            litellm_params=litellm_params,
+            remodl_params=remodl_params,
             stream=False,
             logging_obj=logging_obj,
             signed_json_body=signed_json_body,
@@ -280,7 +280,7 @@ class BaseLLMHTTPHandler:
             request_data=data,
             messages=messages,
             optional_params=optional_params,
-            litellm_params=litellm_params,
+            remodl_params=remodl_params,
             encoding=encoding,
             json_mode=json_mode,
         )
@@ -296,7 +296,7 @@ class BaseLLMHTTPHandler:
         logging_obj: LiteLLMLoggingObj,
         optional_params: dict,
         timeout: Union[float, httpx.Timeout],
-        litellm_params: dict,
+        remodl_params: dict,
         acompletion: bool,
         stream: Optional[bool] = False,
         fake_stream: bool = False,
@@ -312,7 +312,7 @@ class BaseLLMHTTPHandler:
         provider_config = (
             provider_config
             or ProviderConfigManager.get_provider_chat_config(
-                model=model, provider=litellm.LlmProviders(custom_llm_provider)
+                model=model, provider=remodl.LlmProviders(custom_llm_provider)
             )
         )
         if provider_config is None:
@@ -336,7 +336,7 @@ class BaseLLMHTTPHandler:
             messages=messages,
             optional_params=optional_params,
             api_base=api_base,
-            litellm_params=litellm_params,
+            remodl_params=remodl_params,
         )
 
         api_base = provider_config.get_complete_url(
@@ -345,14 +345,14 @@ class BaseLLMHTTPHandler:
             model=model,
             optional_params=optional_params,
             stream=stream,
-            litellm_params=litellm_params,
+            remodl_params=remodl_params,
         )
 
         data = provider_config.transform_request(
             model=model,
             messages=messages,
             optional_params=optional_params,
-            litellm_params=litellm_params,
+            remodl_params=remodl_params,
             headers=headers,
         )
 
@@ -404,7 +404,7 @@ class BaseLLMHTTPHandler:
                         if client is not None and isinstance(client, AsyncHTTPHandler)
                         else None
                     ),
-                    litellm_params=litellm_params,
+                    remodl_params=remodl_params,
                     json_mode=json_mode,
                     optional_params=optional_params,
                     signed_json_body=signed_json_body,
@@ -424,7 +424,7 @@ class BaseLLMHTTPHandler:
                     api_key=api_key,
                     messages=messages,
                     optional_params=optional_params,
-                    litellm_params=litellm_params,
+                    remodl_params=remodl_params,
                     encoding=encoding,
                     client=(
                         client
@@ -472,7 +472,7 @@ class BaseLLMHTTPHandler:
                     if client is not None and isinstance(client, HTTPHandler)
                     else None
                 ),
-                litellm_params=litellm_params,
+                remodl_params=remodl_params,
                 json_mode=json_mode,
                 optional_params=optional_params,
             )
@@ -485,7 +485,7 @@ class BaseLLMHTTPHandler:
 
         if client is None or not isinstance(client, HTTPHandler):
             sync_httpx_client = _get_httpx_client(
-                params={"ssl_verify": litellm_params.get("ssl_verify", None)},
+                params={"ssl_verify": remodl_params.get("ssl_verify", None)},
             )
         else:
             sync_httpx_client = client
@@ -498,7 +498,7 @@ class BaseLLMHTTPHandler:
             data=data,
             signed_json_body=signed_json_body,
             timeout=timeout,
-            litellm_params=litellm_params,
+            remodl_params=remodl_params,
             logging_obj=logging_obj,
         )
         return provider_config.transform_response(
@@ -510,7 +510,7 @@ class BaseLLMHTTPHandler:
             request_data=data,
             messages=messages,
             optional_params=optional_params,
-            litellm_params=litellm_params,
+            remodl_params=remodl_params,
             encoding=encoding,
             json_mode=json_mode,
         )
@@ -527,7 +527,7 @@ class BaseLLMHTTPHandler:
         messages: list,
         logging_obj,
         optional_params: dict,
-        litellm_params: dict,
+        remodl_params: dict,
         timeout: Union[float, httpx.Timeout],
         fake_stream: bool = False,
         client: Optional[HTTPHandler] = None,
@@ -536,7 +536,7 @@ class BaseLLMHTTPHandler:
         if client is None or not isinstance(client, HTTPHandler):
             sync_httpx_client = _get_httpx_client(
                 {
-                    "ssl_verify": litellm_params.get("ssl_verify", None),
+                    "ssl_verify": remodl_params.get("ssl_verify", None),
                 }
             )
         else:
@@ -553,7 +553,7 @@ class BaseLLMHTTPHandler:
             data=data,
             signed_json_body=signed_json_body,
             timeout=timeout,
-            litellm_params=litellm_params,
+            remodl_params=remodl_params,
             stream=stream,
             logging_obj=logging_obj,
         )
@@ -562,12 +562,12 @@ class BaseLLMHTTPHandler:
             model_response: ModelResponse = provider_config.transform_response(
                 model=model,
                 raw_response=response,
-                model_response=litellm.ModelResponse(),
+                model_response=remodl.ModelResponse(),
                 logging_obj=logging_obj,
                 request_data=original_data,
                 messages=messages,
                 optional_params=optional_params,
-                litellm_params=litellm_params,
+                remodl_params=remodl_params,
                 encoding=None,
                 json_mode=json_mode,
             )
@@ -603,7 +603,7 @@ class BaseLLMHTTPHandler:
         timeout: Union[float, httpx.Timeout],
         logging_obj: LiteLLMLoggingObj,
         data: dict,
-        litellm_params: dict,
+        remodl_params: dict,
         optional_params: dict,
         fake_stream: bool = False,
         client: Optional[AsyncHTTPHandler] = None,
@@ -636,7 +636,7 @@ class BaseLLMHTTPHandler:
             timeout=timeout,
             fake_stream=fake_stream,
             client=client,
-            litellm_params=litellm_params,
+            remodl_params=remodl_params,
             optional_params=optional_params,
             json_mode=json_mode,
             signed_json_body=signed_json_body,
@@ -660,7 +660,7 @@ class BaseLLMHTTPHandler:
         messages: list,
         logging_obj: LiteLLMLoggingObj,
         timeout: Union[float, httpx.Timeout],
-        litellm_params: dict,
+        remodl_params: dict,
         optional_params: dict,
         fake_stream: bool = False,
         client: Optional[AsyncHTTPHandler] = None,
@@ -674,8 +674,8 @@ class BaseLLMHTTPHandler:
         """
         if client is None:
             async_httpx_client = get_async_httpx_client(
-                llm_provider=litellm.LlmProviders(custom_llm_provider),
-                params={"ssl_verify": litellm_params.get("ssl_verify", None)},
+                llm_provider=remodl.LlmProviders(custom_llm_provider),
+                params={"ssl_verify": remodl_params.get("ssl_verify", None)},
             )
         else:
             async_httpx_client = client
@@ -691,7 +691,7 @@ class BaseLLMHTTPHandler:
             data=data,
             signed_json_body=signed_json_body,
             timeout=timeout,
-            litellm_params=litellm_params,
+            remodl_params=remodl_params,
             stream=stream,
             logging_obj=logging_obj,
         )
@@ -700,12 +700,12 @@ class BaseLLMHTTPHandler:
             model_response: ModelResponse = provider_config.transform_response(
                 model=model,
                 raw_response=response,
-                model_response=litellm.ModelResponse(),
+                model_response=remodl.ModelResponse(),
                 logging_obj=logging_obj,
                 request_data=data,
                 messages=messages,
                 optional_params=optional_params,
-                litellm_params=litellm_params,
+                remodl_params=remodl_params,
                 encoding=None,
                 json_mode=json_mode,
             )
@@ -755,7 +755,7 @@ class BaseLLMHTTPHandler:
         logging_obj: LiteLLMLoggingObj,
         api_base: Optional[str],
         optional_params: dict,
-        litellm_params: dict,
+        remodl_params: dict,
         model_response: EmbeddingResponse,
         api_key: Optional[str] = None,
         client: Optional[Union[HTTPHandler, AsyncHTTPHandler]] = None,
@@ -763,7 +763,7 @@ class BaseLLMHTTPHandler:
         headers: Optional[Dict[str, Any]] = None,
     ) -> EmbeddingResponse:
         provider_config = ProviderConfigManager.get_provider_embedding_config(
-            model=model, provider=litellm.LlmProviders(custom_llm_provider)
+            model=model, provider=remodl.LlmProviders(custom_llm_provider)
         )
         if provider_config is None:
             raise ValueError(
@@ -776,7 +776,7 @@ class BaseLLMHTTPHandler:
             model=model,
             messages=[],
             optional_params=optional_params,
-            litellm_params=litellm_params,
+            remodl_params=remodl_params,
         )
 
         api_base = provider_config.get_complete_url(
@@ -784,7 +784,7 @@ class BaseLLMHTTPHandler:
             api_key=api_key,
             model=model,
             optional_params=optional_params,
-            litellm_params=litellm_params,
+            remodl_params=remodl_params,
         )
 
         data = provider_config.transform_embedding_request(
@@ -819,7 +819,7 @@ class BaseLLMHTTPHandler:
                 timeout=timeout,
                 client=client,
                 optional_params=optional_params,
-                litellm_params=litellm_params,
+                remodl_params=remodl_params,
             )
 
         if client is None or not isinstance(client, HTTPHandler):
@@ -848,7 +848,7 @@ class BaseLLMHTTPHandler:
             api_key=api_key,
             request_data=data,
             optional_params=optional_params,
-            litellm_params=litellm_params,
+            remodl_params=remodl_params,
         )
 
     async def aembedding(
@@ -862,14 +862,14 @@ class BaseLLMHTTPHandler:
         model_response: EmbeddingResponse,
         logging_obj: LiteLLMLoggingObj,
         optional_params: dict,
-        litellm_params: dict,
+        remodl_params: dict,
         api_key: Optional[str] = None,
         timeout: Optional[Union[float, httpx.Timeout]] = None,
         client: Optional[Union[HTTPHandler, AsyncHTTPHandler]] = None,
     ) -> EmbeddingResponse:
         if client is None or not isinstance(client, AsyncHTTPHandler):
             async_httpx_client = get_async_httpx_client(
-                llm_provider=litellm.LlmProviders(custom_llm_provider)
+                llm_provider=remodl.LlmProviders(custom_llm_provider)
             )
         else:
             async_httpx_client = client
@@ -892,7 +892,7 @@ class BaseLLMHTTPHandler:
             api_key=api_key,
             request_data=request_data,
             optional_params=optional_params,
-            litellm_params=litellm_params,
+            remodl_params=remodl_params,
         )
 
     def rerank(
@@ -997,7 +997,7 @@ class BaseLLMHTTPHandler:
     ) -> RerankResponse:
         if client is None or not isinstance(client, AsyncHTTPHandler):
             async_httpx_client = get_async_httpx_client(
-                llm_provider=litellm.LlmProviders(custom_llm_provider)
+                llm_provider=remodl.LlmProviders(custom_llm_provider)
             )
         else:
             async_httpx_client = client
@@ -1025,7 +1025,7 @@ class BaseLLMHTTPHandler:
         model: str,
         audio_file: FileTypes,
         optional_params: dict,
-        litellm_params: dict,
+        remodl_params: dict,
         logging_obj: LiteLLMLoggingObj,
         api_key: Optional[str],
         api_base: Optional[str],
@@ -1037,7 +1037,7 @@ class BaseLLMHTTPHandler:
         Returns: (headers, complete_url, data, files)
         """
         # Handle the response based on type
-        from litellm.llms.base_llm.audio_transcription.transformation import (
+        from remodl.llms.base_llm.audio_transcription.transformation import (
             AudioTranscriptionRequestData,
         )
 
@@ -1047,7 +1047,7 @@ class BaseLLMHTTPHandler:
             model=model,
             messages=[],
             optional_params=optional_params,
-            litellm_params=litellm_params,
+            remodl_params=remodl_params,
         )
 
         complete_url = provider_config.get_complete_url(
@@ -1055,7 +1055,7 @@ class BaseLLMHTTPHandler:
             api_key=api_key,
             model=model,
             optional_params=optional_params,
-            litellm_params=litellm_params,
+            remodl_params=remodl_params,
         )
 
         # Transform the request to get data
@@ -1063,7 +1063,7 @@ class BaseLLMHTTPHandler:
             model=model,
             audio_file=audio_file,
             optional_params=optional_params,
-            litellm_params=litellm_params,
+            remodl_params=remodl_params,
         )
 
         # All providers now return AudioTranscriptionRequestData
@@ -1108,7 +1108,7 @@ class BaseLLMHTTPHandler:
         model: str,
         audio_file: FileTypes,
         optional_params: dict,
-        litellm_params: dict,
+        remodl_params: dict,
         model_response: TranscriptionResponse,
         timeout: float,
         max_retries: int,
@@ -1131,7 +1131,7 @@ class BaseLLMHTTPHandler:
                 model=model,
                 audio_file=audio_file,
                 optional_params=optional_params,
-                litellm_params=litellm_params,
+                remodl_params=remodl_params,
                 model_response=model_response,
                 timeout=timeout,
                 max_retries=max_retries,
@@ -1154,7 +1154,7 @@ class BaseLLMHTTPHandler:
             model=model,
             audio_file=audio_file,
             optional_params=optional_params,
-            litellm_params=litellm_params,
+            remodl_params=remodl_params,
             logging_obj=logging_obj,
             api_key=api_key,
             api_base=api_base,
@@ -1195,7 +1195,7 @@ class BaseLLMHTTPHandler:
         model: str,
         audio_file: FileTypes,
         optional_params: dict,
-        litellm_params: dict,
+        remodl_params: dict,
         model_response: TranscriptionResponse,
         timeout: float,
         max_retries: int,
@@ -1222,7 +1222,7 @@ class BaseLLMHTTPHandler:
             model=model,
             audio_file=audio_file,
             optional_params=optional_params,
-            litellm_params=litellm_params,
+            remodl_params=remodl_params,
             logging_obj=logging_obj,
             api_key=api_key,
             api_base=api_base,
@@ -1232,8 +1232,8 @@ class BaseLLMHTTPHandler:
 
         if client is None or not isinstance(client, AsyncHTTPHandler):
             async_httpx_client = get_async_httpx_client(
-                llm_provider=litellm.LlmProviders(custom_llm_provider),
-                params={"ssl_verify": litellm_params.get("ssl_verify", None)},
+                llm_provider=remodl.LlmProviders(custom_llm_provider),
+                params={"ssl_verify": remodl_params.get("ssl_verify", None)},
             )
         else:
             async_httpx_client = client
@@ -1273,13 +1273,13 @@ class BaseLLMHTTPHandler:
         api_base: Optional[str],
         headers: Optional[Dict[str, Any]],
         provider_config: BaseOCRConfig,
-        litellm_params: dict,
+        remodl_params: dict,
     ) -> Tuple[Dict[str, Any], str, Dict[str, Any], None]:
         """
         Shared logic for preparing OCR requests.
         Returns: (headers, complete_url, data, files)
         """
-        from litellm.llms.base_llm.ocr.transformation import OCRRequestData
+        from remodl.llms.base_llm.ocr.transformation import OCRRequestData
 
         headers = provider_config.validate_environment(
             api_key=api_key,
@@ -1339,13 +1339,13 @@ class BaseLLMHTTPHandler:
         api_base: Optional[str],
         headers: Optional[Dict[str, Any]],
         provider_config: BaseOCRConfig,
-        litellm_params: dict,
+        remodl_params: dict,
     ) -> Tuple[Dict[str, Any], str, Dict[str, Any], None]:
         """
         Async version of _prepare_ocr_request for providers that need async transforms.
         Returns: (headers, complete_url, data, files)
         """
-        from litellm.llms.base_llm.ocr.transformation import OCRRequestData
+        from remodl.llms.base_llm.ocr.transformation import OCRRequestData
 
         headers = provider_config.validate_environment(
             api_key=api_key,
@@ -1423,7 +1423,7 @@ class BaseLLMHTTPHandler:
         aocr: bool = False,
         headers: Optional[Dict[str, Any]] = None,
         provider_config: Optional[BaseOCRConfig] = None,
-        litellm_params: Optional[dict] = None,
+        remodl_params: Optional[dict] = None,
     ) -> Union[OCRResponse, Coroutine[Any, Any, OCRResponse]]:
         """
         Sync OCR handler.
@@ -1433,8 +1433,8 @@ class BaseLLMHTTPHandler:
                 f"No provider config found for model: {model} and provider: {custom_llm_provider}"
             )
 
-        if litellm_params is None:
-            litellm_params = {}
+        if remodl_params is None:
+            remodl_params = {}
 
         if aocr is True:
             return self.async_ocr(
@@ -1449,7 +1449,7 @@ class BaseLLMHTTPHandler:
                 client=client,
                 headers=headers,
                 provider_config=provider_config,
-                litellm_params=litellm_params,
+                remodl_params=remodl_params,
             )
 
         # Prepare the request
@@ -1462,7 +1462,7 @@ class BaseLLMHTTPHandler:
             api_base=api_base,
             headers=headers,
             provider_config=provider_config,
-            litellm_params=litellm_params,
+            remodl_params=remodl_params,
         )
 
         if client is None or not isinstance(client, HTTPHandler):
@@ -1499,7 +1499,7 @@ class BaseLLMHTTPHandler:
         client: Optional[Union[HTTPHandler, AsyncHTTPHandler]] = None,
         headers: Optional[Dict[str, Any]] = None,
         provider_config: Optional[BaseOCRConfig] = None,
-        litellm_params: Optional[dict] = None,
+        remodl_params: Optional[dict] = None,
     ) -> OCRResponse:
         """
         Async OCR handler.
@@ -1509,8 +1509,8 @@ class BaseLLMHTTPHandler:
                 f"No provider config found for model: {model} and provider: {custom_llm_provider}"
             )
 
-        if litellm_params is None:
-            litellm_params = {}
+        if remodl_params is None:
+            remodl_params = {}
 
         # Prepare the request using async prepare method
         headers, complete_url, data, files = await self._async_prepare_ocr_request(
@@ -1522,12 +1522,12 @@ class BaseLLMHTTPHandler:
             api_base=api_base,
             headers=headers,
             provider_config=provider_config,
-            litellm_params=litellm_params,
+            remodl_params=remodl_params,
         )
 
         if client is None or not isinstance(client, AsyncHTTPHandler):
             async_httpx_client = get_async_httpx_client(
-                llm_provider=litellm.LlmProviders(custom_llm_provider),
+                llm_provider=remodl.LlmProviders(custom_llm_provider),
             )
         else:
             async_httpx_client = client
@@ -1703,7 +1703,7 @@ class BaseLLMHTTPHandler:
 
         if client is None or not isinstance(client, AsyncHTTPHandler):
             # For search providers, use special Search provider type
-            from litellm.types.llms.custom_http import httpxSpecialProvider
+            from remodl.types.llms.custom_http import httpxSpecialProvider
             async_httpx_client = get_async_httpx_client(
                 llm_provider=httpxSpecialProvider.Search
             )
@@ -1744,7 +1744,7 @@ class BaseLLMHTTPHandler:
         anthropic_messages_provider_config: BaseAnthropicMessagesConfig,
         anthropic_messages_optional_request_params: Dict,
         custom_llm_provider: str,
-        litellm_params: GenericLiteLLMParams,
+        remodl_params: GenericLiteLLMParams,
         logging_obj: LiteLLMLoggingObj,
         client: Optional[AsyncHTTPHandler] = None,
         extra_headers: Optional[Dict[str, Any]] = None,
@@ -1753,13 +1753,13 @@ class BaseLLMHTTPHandler:
         stream: Optional[bool] = False,
         kwargs: Optional[Dict[str, Any]] = None,
     ) -> Union[AnthropicMessagesResponse, AsyncIterator]:
-        from litellm.litellm_core_utils.get_provider_specific_headers import (
+        from remodl.remodl_core_utils.get_provider_specific_headers import (
             ProviderSpecificHeaderUtils,
         )
 
         if client is None or not isinstance(client, AsyncHTTPHandler):
             async_httpx_client = get_async_httpx_client(
-                llm_provider=litellm.LlmProviders.ANTHROPIC
+                llm_provider=remodl.LlmProviders.ANTHROPIC
             )
         else:
             async_httpx_client = client
@@ -1767,7 +1767,7 @@ class BaseLLMHTTPHandler:
         # Prepare headers
         kwargs = kwargs or {}
         provider_specific_header = cast(
-            Optional[litellm.types.utils.ProviderSpecificHeader],
+            Optional[remodl.types.utils.ProviderSpecificHeader],
             kwargs.get("provider_specific_header", None),
         )
         extra_headers = ProviderSpecificHeaderUtils.get_provider_specific_headers(
@@ -1782,7 +1782,7 @@ class BaseLLMHTTPHandler:
             model=model,
             messages=messages,
             optional_params=anthropic_messages_optional_request_params,
-            litellm_params=dict(litellm_params),
+            remodl_params=dict(remodl_params),
             api_key=api_key,
             api_base=api_base,
         )
@@ -1790,7 +1790,7 @@ class BaseLLMHTTPHandler:
         logging_obj.update_environment_variables(
             model=model,
             optional_params=dict(anthropic_messages_optional_request_params),
-            litellm_params={
+            remodl_params={
                 "metadata": kwargs.get("metadata", {}),
                 "preset_cache_key": None,
                 "stream_response": {},
@@ -1803,7 +1803,7 @@ class BaseLLMHTTPHandler:
             model=model,
             messages=messages,
             anthropic_messages_optional_request_params=anthropic_messages_optional_request_params,
-            litellm_params=litellm_params,
+            remodl_params=remodl_params,
             headers=headers,
         )
         logging_obj.stream = stream
@@ -1815,17 +1815,17 @@ class BaseLLMHTTPHandler:
             api_key=api_key,
             model=model,
             optional_params=dict(
-                litellm_params
+                remodl_params
             ),  # this uses the invoke config, which expects aws_* params in optional_params
-            litellm_params=dict(litellm_params),
+            remodl_params=dict(remodl_params),
             stream=stream,
         )
 
         headers, signed_json_body = anthropic_messages_provider_config.sign_request(
             headers=headers,
             optional_params=dict(
-                litellm_params
-            ),  # dynamic aws_* params are passed under litellm_params
+                remodl_params
+            ),  # dynamic aws_* params are passed under remodl_params
             request_data=request_body,
             api_base=request_url,
             api_key=api_key,
@@ -1866,7 +1866,7 @@ class BaseLLMHTTPHandler:
                 model=model,
                 httpx_response=response,
                 request_body=request_body,
-                litellm_logging_obj=logging_obj,
+                remodl_logging_obj=logging_obj,
             )
             return completion_stream
         else:
@@ -1884,7 +1884,7 @@ class BaseLLMHTTPHandler:
         anthropic_messages_optional_request_params: Dict,
         custom_llm_provider: str,
         _is_async: bool,
-        litellm_params: GenericLiteLLMParams,
+        remodl_params: GenericLiteLLMParams,
         logging_obj: LiteLLMLoggingObj,
         client: Optional[Union[HTTPHandler, AsyncHTTPHandler]] = None,
         api_key: Optional[str] = None,
@@ -1907,7 +1907,7 @@ class BaseLLMHTTPHandler:
                 anthropic_messages_optional_request_params=anthropic_messages_optional_request_params,
                 client=client if isinstance(client, AsyncHTTPHandler) else None,
                 custom_llm_provider=custom_llm_provider,
-                litellm_params=litellm_params,
+                remodl_params=remodl_params,
                 logging_obj=logging_obj,
                 api_key=api_key,
                 api_base=api_base,
@@ -1923,7 +1923,7 @@ class BaseLLMHTTPHandler:
         responses_api_provider_config: BaseResponsesAPIConfig,
         response_api_optional_request_params: Dict,
         custom_llm_provider: str,
-        litellm_params: GenericLiteLLMParams,
+        remodl_params: GenericLiteLLMParams,
         logging_obj: LiteLLMLoggingObj,
         extra_headers: Optional[Dict[str, Any]] = None,
         extra_body: Optional[Dict[str, Any]] = None,
@@ -1931,7 +1931,7 @@ class BaseLLMHTTPHandler:
         client: Optional[Union[HTTPHandler, AsyncHTTPHandler]] = None,
         _is_async: bool = False,
         fake_stream: bool = False,
-        litellm_metadata: Optional[Dict[str, Any]] = None,
+        remodl_metadata: Optional[Dict[str, Any]] = None,
     ) -> Union[
         ResponsesAPIResponse,
         BaseResponsesAPIStreamingIterator,
@@ -1952,19 +1952,19 @@ class BaseLLMHTTPHandler:
                 responses_api_provider_config=responses_api_provider_config,
                 response_api_optional_request_params=response_api_optional_request_params,
                 custom_llm_provider=custom_llm_provider,
-                litellm_params=litellm_params,
+                remodl_params=remodl_params,
                 logging_obj=logging_obj,
                 extra_headers=extra_headers,
                 extra_body=extra_body,
                 timeout=timeout,
                 client=client if isinstance(client, AsyncHTTPHandler) else None,
                 fake_stream=fake_stream,
-                litellm_metadata=litellm_metadata,
+                remodl_metadata=remodl_metadata,
             )
 
         if client is None or not isinstance(client, HTTPHandler):
             sync_httpx_client = _get_httpx_client(
-                params={"ssl_verify": litellm_params.get("ssl_verify", None)}
+                params={"ssl_verify": remodl_params.get("ssl_verify", None)}
             )
         else:
             sync_httpx_client = client
@@ -1972,7 +1972,7 @@ class BaseLLMHTTPHandler:
         headers = responses_api_provider_config.validate_environment(
             headers=response_api_optional_request_params.get("extra_headers", {}) or {},
             model=model,
-            litellm_params=litellm_params,
+            remodl_params=remodl_params,
         )
 
         if extra_headers:
@@ -1982,15 +1982,15 @@ class BaseLLMHTTPHandler:
         stream = response_api_optional_request_params.get("stream", False)
 
         api_base = responses_api_provider_config.get_complete_url(
-            api_base=litellm_params.api_base,
-            litellm_params=dict(litellm_params),
+            api_base=remodl_params.api_base,
+            remodl_params=dict(remodl_params),
         )
 
         data = responses_api_provider_config.transform_responses_api_request(
             model=model,
             input=input,
             response_api_optional_request_params=response_api_optional_request_params,
-            litellm_params=litellm_params,
+            remodl_params=remodl_params,
             headers=headers,
         )
 
@@ -2029,7 +2029,7 @@ class BaseLLMHTTPHandler:
                         model=model,
                         logging_obj=logging_obj,
                         responses_api_provider_config=responses_api_provider_config,
-                        litellm_metadata=litellm_metadata,
+                        remodl_metadata=remodl_metadata,
                         custom_llm_provider=custom_llm_provider,
                     )
 
@@ -2038,7 +2038,7 @@ class BaseLLMHTTPHandler:
                     model=model,
                     logging_obj=logging_obj,
                     responses_api_provider_config=responses_api_provider_config,
-                    litellm_metadata=litellm_metadata,
+                    remodl_metadata=remodl_metadata,
                     custom_llm_provider=custom_llm_provider,
                 )
             else:
@@ -2069,14 +2069,14 @@ class BaseLLMHTTPHandler:
         responses_api_provider_config: BaseResponsesAPIConfig,
         response_api_optional_request_params: Dict,
         custom_llm_provider: str,
-        litellm_params: GenericLiteLLMParams,
+        remodl_params: GenericLiteLLMParams,
         logging_obj: LiteLLMLoggingObj,
         extra_headers: Optional[Dict[str, Any]] = None,
         extra_body: Optional[Dict[str, Any]] = None,
         timeout: Optional[Union[float, httpx.Timeout]] = None,
         client: Optional[Union[HTTPHandler, AsyncHTTPHandler]] = None,
         fake_stream: bool = False,
-        litellm_metadata: Optional[Dict[str, Any]] = None,
+        remodl_metadata: Optional[Dict[str, Any]] = None,
     ) -> Union[ResponsesAPIResponse, BaseResponsesAPIStreamingIterator]:
         """
         Async version of the responses API handler.
@@ -2084,8 +2084,8 @@ class BaseLLMHTTPHandler:
         """
         if client is None or not isinstance(client, AsyncHTTPHandler):
             async_httpx_client = get_async_httpx_client(
-                llm_provider=litellm.LlmProviders(custom_llm_provider),
-                params={"ssl_verify": litellm_params.get("ssl_verify", None)},
+                llm_provider=remodl.LlmProviders(custom_llm_provider),
+                params={"ssl_verify": remodl_params.get("ssl_verify", None)},
             )
         else:
             async_httpx_client = client
@@ -2093,7 +2093,7 @@ class BaseLLMHTTPHandler:
         headers = responses_api_provider_config.validate_environment(
             headers=response_api_optional_request_params.get("extra_headers", {}) or {},
             model=model,
-            litellm_params=litellm_params,
+            remodl_params=remodl_params,
         )
 
         if extra_headers:
@@ -2103,15 +2103,15 @@ class BaseLLMHTTPHandler:
         stream = response_api_optional_request_params.get("stream", False)
 
         api_base = responses_api_provider_config.get_complete_url(
-            api_base=litellm_params.api_base,
-            litellm_params=dict(litellm_params),
+            api_base=remodl_params.api_base,
+            remodl_params=dict(remodl_params),
         )
 
         data = responses_api_provider_config.transform_responses_api_request(
             model=model,
             input=input,
             response_api_optional_request_params=response_api_optional_request_params,
-            litellm_params=litellm_params,
+            remodl_params=remodl_params,
             headers=headers,
         )
 
@@ -2151,7 +2151,7 @@ class BaseLLMHTTPHandler:
                         model=model,
                         logging_obj=logging_obj,
                         responses_api_provider_config=responses_api_provider_config,
-                        litellm_metadata=litellm_metadata,
+                        remodl_metadata=remodl_metadata,
                         custom_llm_provider=custom_llm_provider,
                     )
 
@@ -2161,7 +2161,7 @@ class BaseLLMHTTPHandler:
                     model=model,
                     logging_obj=logging_obj,
                     responses_api_provider_config=responses_api_provider_config,
-                    litellm_metadata=litellm_metadata,
+                    remodl_metadata=remodl_metadata,
                     custom_llm_provider=custom_llm_provider,
                 )
             else:
@@ -2190,7 +2190,7 @@ class BaseLLMHTTPHandler:
         self,
         response_id: str,
         responses_api_provider_config: BaseResponsesAPIConfig,
-        litellm_params: GenericLiteLLMParams,
+        remodl_params: GenericLiteLLMParams,
         logging_obj: LiteLLMLoggingObj,
         custom_llm_provider: Optional[str],
         extra_headers: Optional[Dict[str, Any]] = None,
@@ -2205,28 +2205,28 @@ class BaseLLMHTTPHandler:
         """
         if client is None or not isinstance(client, AsyncHTTPHandler):
             async_httpx_client = get_async_httpx_client(
-                llm_provider=litellm.LlmProviders(custom_llm_provider),
-                params={"ssl_verify": litellm_params.get("ssl_verify", None)},
+                llm_provider=remodl.LlmProviders(custom_llm_provider),
+                params={"ssl_verify": remodl_params.get("ssl_verify", None)},
             )
         else:
             async_httpx_client = client
 
         headers = responses_api_provider_config.validate_environment(
-            headers=extra_headers or {}, model="None", litellm_params=litellm_params
+            headers=extra_headers or {}, model="None", remodl_params=remodl_params
         )
 
         if extra_headers:
             headers.update(extra_headers)
 
         api_base = responses_api_provider_config.get_complete_url(
-            api_base=litellm_params.api_base,
-            litellm_params=dict(litellm_params),
+            api_base=remodl_params.api_base,
+            remodl_params=dict(remodl_params),
         )
 
         url, data = responses_api_provider_config.transform_delete_response_api_request(
             response_id=response_id,
             api_base=api_base,
-            litellm_params=litellm_params,
+            remodl_params=remodl_params,
             headers=headers,
         )
 
@@ -2261,7 +2261,7 @@ class BaseLLMHTTPHandler:
         self,
         response_id: str,
         responses_api_provider_config: BaseResponsesAPIConfig,
-        litellm_params: GenericLiteLLMParams,
+        remodl_params: GenericLiteLLMParams,
         logging_obj: LiteLLMLoggingObj,
         custom_llm_provider: Optional[str],
         extra_headers: Optional[Dict[str, Any]] = None,
@@ -2278,7 +2278,7 @@ class BaseLLMHTTPHandler:
             return self.async_delete_response_api_handler(
                 response_id=response_id,
                 responses_api_provider_config=responses_api_provider_config,
-                litellm_params=litellm_params,
+                remodl_params=remodl_params,
                 logging_obj=logging_obj,
                 custom_llm_provider=custom_llm_provider,
                 extra_headers=extra_headers,
@@ -2288,27 +2288,27 @@ class BaseLLMHTTPHandler:
             )
         if client is None or not isinstance(client, HTTPHandler):
             sync_httpx_client = _get_httpx_client(
-                params={"ssl_verify": litellm_params.get("ssl_verify", None)}
+                params={"ssl_verify": remodl_params.get("ssl_verify", None)}
             )
         else:
             sync_httpx_client = client
 
         headers = responses_api_provider_config.validate_environment(
-            headers=extra_headers or {}, model="None", litellm_params=litellm_params
+            headers=extra_headers or {}, model="None", remodl_params=remodl_params
         )
 
         if extra_headers:
             headers.update(extra_headers)
 
         api_base = responses_api_provider_config.get_complete_url(
-            api_base=litellm_params.api_base,
-            litellm_params=dict(litellm_params),
+            api_base=remodl_params.api_base,
+            remodl_params=dict(remodl_params),
         )
 
         url, data = responses_api_provider_config.transform_delete_response_api_request(
             response_id=response_id,
             api_base=api_base,
-            litellm_params=litellm_params,
+            remodl_params=remodl_params,
             headers=headers,
         )
 
@@ -2343,7 +2343,7 @@ class BaseLLMHTTPHandler:
         self,
         response_id: str,
         responses_api_provider_config: BaseResponsesAPIConfig,
-        litellm_params: GenericLiteLLMParams,
+        remodl_params: GenericLiteLLMParams,
         logging_obj: LiteLLMLoggingObj,
         custom_llm_provider: Optional[str] = None,
         extra_headers: Optional[Dict[str, Any]] = None,
@@ -2360,7 +2360,7 @@ class BaseLLMHTTPHandler:
             return self.async_get_responses(
                 response_id=response_id,
                 responses_api_provider_config=responses_api_provider_config,
-                litellm_params=litellm_params,
+                remodl_params=remodl_params,
                 logging_obj=logging_obj,
                 custom_llm_provider=custom_llm_provider,
                 extra_headers=extra_headers,
@@ -2371,27 +2371,27 @@ class BaseLLMHTTPHandler:
 
         if client is None or not isinstance(client, HTTPHandler):
             sync_httpx_client = _get_httpx_client(
-                params={"ssl_verify": litellm_params.get("ssl_verify", None)}
+                params={"ssl_verify": remodl_params.get("ssl_verify", None)}
             )
         else:
             sync_httpx_client = client
 
         headers = responses_api_provider_config.validate_environment(
-            headers=extra_headers or {}, model="None", litellm_params=litellm_params
+            headers=extra_headers or {}, model="None", remodl_params=remodl_params
         )
 
         if extra_headers:
             headers.update(extra_headers)
 
         api_base = responses_api_provider_config.get_complete_url(
-            api_base=litellm_params.api_base,
-            litellm_params=dict(litellm_params),
+            api_base=remodl_params.api_base,
+            remodl_params=dict(remodl_params),
         )
 
         url, data = responses_api_provider_config.transform_get_response_api_request(
             response_id=response_id,
             api_base=api_base,
-            litellm_params=litellm_params,
+            remodl_params=remodl_params,
             headers=headers,
         )
 
@@ -2423,7 +2423,7 @@ class BaseLLMHTTPHandler:
         self,
         response_id: str,
         responses_api_provider_config: BaseResponsesAPIConfig,
-        litellm_params: GenericLiteLLMParams,
+        remodl_params: GenericLiteLLMParams,
         logging_obj: LiteLLMLoggingObj,
         custom_llm_provider: Optional[str] = None,
         extra_headers: Optional[Dict[str, Any]] = None,
@@ -2436,28 +2436,28 @@ class BaseLLMHTTPHandler:
         """
         if client is None or not isinstance(client, AsyncHTTPHandler):
             async_httpx_client = get_async_httpx_client(
-                llm_provider=litellm.LlmProviders(custom_llm_provider),
-                params={"ssl_verify": litellm_params.get("ssl_verify", None)},
+                llm_provider=remodl.LlmProviders(custom_llm_provider),
+                params={"ssl_verify": remodl_params.get("ssl_verify", None)},
             )
         else:
             async_httpx_client = client
 
         headers = responses_api_provider_config.validate_environment(
-            headers=extra_headers or {}, model="None", litellm_params=litellm_params
+            headers=extra_headers or {}, model="None", remodl_params=remodl_params
         )
 
         if extra_headers:
             headers.update(extra_headers)
 
         api_base = responses_api_provider_config.get_complete_url(
-            api_base=litellm_params.api_base,
-            litellm_params=dict(litellm_params),
+            api_base=remodl_params.api_base,
+            remodl_params=dict(remodl_params),
         )
 
         url, data = responses_api_provider_config.transform_get_response_api_request(
             response_id=response_id,
             api_base=api_base,
-            litellm_params=litellm_params,
+            remodl_params=remodl_params,
             headers=headers,
         )
 
@@ -2496,7 +2496,7 @@ class BaseLLMHTTPHandler:
         self,
         response_id: str,
         responses_api_provider_config: BaseResponsesAPIConfig,
-        litellm_params: GenericLiteLLMParams,
+        remodl_params: GenericLiteLLMParams,
         logging_obj: LiteLLMLoggingObj,
         custom_llm_provider: Optional[str] = None,
         after: Optional[str] = None,
@@ -2513,7 +2513,7 @@ class BaseLLMHTTPHandler:
             return self.async_list_responses_input_items(
                 response_id=response_id,
                 responses_api_provider_config=responses_api_provider_config,
-                litellm_params=litellm_params,
+                remodl_params=remodl_params,
                 logging_obj=logging_obj,
                 custom_llm_provider=custom_llm_provider,
                 after=after,
@@ -2528,27 +2528,27 @@ class BaseLLMHTTPHandler:
 
         if client is None or not isinstance(client, HTTPHandler):
             sync_httpx_client = _get_httpx_client(
-                params={"ssl_verify": litellm_params.get("ssl_verify", None)}
+                params={"ssl_verify": remodl_params.get("ssl_verify", None)}
             )
         else:
             sync_httpx_client = client
 
         headers = responses_api_provider_config.validate_environment(
-            headers=extra_headers or {}, model="None", litellm_params=litellm_params
+            headers=extra_headers or {}, model="None", remodl_params=remodl_params
         )
 
         if extra_headers:
             headers.update(extra_headers)
 
         api_base = responses_api_provider_config.get_complete_url(
-            api_base=litellm_params.api_base,
-            litellm_params=dict(litellm_params),
+            api_base=remodl_params.api_base,
+            remodl_params=dict(remodl_params),
         )
 
         url, params = responses_api_provider_config.transform_list_input_items_request(
             response_id=response_id,
             api_base=api_base,
-            litellm_params=litellm_params,
+            remodl_params=remodl_params,
             headers=headers,
             after=after,
             before=before,
@@ -2581,7 +2581,7 @@ class BaseLLMHTTPHandler:
         self,
         response_id: str,
         responses_api_provider_config: BaseResponsesAPIConfig,
-        litellm_params: GenericLiteLLMParams,
+        remodl_params: GenericLiteLLMParams,
         logging_obj: LiteLLMLoggingObj,
         custom_llm_provider: Optional[str] = None,
         after: Optional[str] = None,
@@ -2595,28 +2595,28 @@ class BaseLLMHTTPHandler:
     ) -> Dict:
         if client is None or not isinstance(client, AsyncHTTPHandler):
             async_httpx_client = get_async_httpx_client(
-                llm_provider=litellm.LlmProviders(custom_llm_provider),
-                params={"ssl_verify": litellm_params.get("ssl_verify", None)},
+                llm_provider=remodl.LlmProviders(custom_llm_provider),
+                params={"ssl_verify": remodl_params.get("ssl_verify", None)},
             )
         else:
             async_httpx_client = client
 
         headers = responses_api_provider_config.validate_environment(
-            headers=extra_headers or {}, model="None", litellm_params=litellm_params
+            headers=extra_headers or {}, model="None", remodl_params=remodl_params
         )
 
         if extra_headers:
             headers.update(extra_headers)
 
         api_base = responses_api_provider_config.get_complete_url(
-            api_base=litellm_params.api_base,
-            litellm_params=dict(litellm_params),
+            api_base=remodl_params.api_base,
+            remodl_params=dict(remodl_params),
         )
 
         url, params = responses_api_provider_config.transform_list_input_items_request(
             response_id=response_id,
             api_base=api_base,
-            litellm_params=litellm_params,
+            remodl_params=remodl_params,
             headers=headers,
             after=after,
             before=before,
@@ -2650,7 +2650,7 @@ class BaseLLMHTTPHandler:
     def create_file(
         self,
         create_file_data: CreateFileRequest,
-        litellm_params: dict,
+        remodl_params: dict,
         provider_config: BaseFilesConfig,
         headers: dict,
         api_base: Optional[str],
@@ -2670,7 +2670,7 @@ class BaseLLMHTTPHandler:
             model="",
             messages=[],
             optional_params={},
-            litellm_params=litellm_params,
+            remodl_params=remodl_params,
         )
 
         api_base = provider_config.get_complete_file_url(
@@ -2678,7 +2678,7 @@ class BaseLLMHTTPHandler:
             api_key=api_key,
             model="",
             optional_params={},
-            litellm_params=litellm_params,
+            remodl_params=remodl_params,
             data=create_file_data,
         )
         if api_base is None:
@@ -2688,14 +2688,14 @@ class BaseLLMHTTPHandler:
         transformed_request = provider_config.transform_create_file_request(
             model="",
             create_file_data=create_file_data,
-            litellm_params=litellm_params,
+            remodl_params=remodl_params,
             optional_params={},
         )
 
         if _is_async:
             return self.async_create_file(
                 transformed_request=transformed_request,
-                litellm_params=litellm_params,
+                remodl_params=remodl_params,
                 provider_config=provider_config,
                 headers=headers,
                 api_base=api_base,
@@ -2775,21 +2775,21 @@ class BaseLLMHTTPHandler:
                     provider_config=provider_config,
                 )
 
-        # Store the upload URL in litellm_params for the transformation method
-        litellm_params_with_url = dict(litellm_params)
-        litellm_params_with_url["upload_url"] = api_base
+        # Store the upload URL in remodl_params for the transformation method
+        remodl_params_with_url = dict(remodl_params)
+        remodl_params_with_url["upload_url"] = api_base
 
         return provider_config.transform_create_file_response(
             model=None,
             raw_response=upload_response,
             logging_obj=logging_obj,
-            litellm_params=litellm_params_with_url,
+            remodl_params=remodl_params_with_url,
         )
 
     async def async_create_file(
         self,
         transformed_request: Union[bytes, str, dict],
-        litellm_params: dict,
+        remodl_params: dict,
         provider_config: BaseFilesConfig,
         headers: dict,
         api_base: str,
@@ -2891,13 +2891,13 @@ class BaseLLMHTTPHandler:
             model=None,
             raw_response=upload_response,
             logging_obj=logging_obj,
-            litellm_params=litellm_params,
+            remodl_params=remodl_params,
         )
 
     def create_batch(
         self,
         create_batch_data: "CreateBatchRequest",
-        litellm_params: dict,
+        remodl_params: dict,
         provider_config: "BaseBatchesConfig",
         headers: dict,
         api_base: Optional[str],
@@ -2921,7 +2921,7 @@ class BaseLLMHTTPHandler:
             model=model,
             messages=[],
             optional_params={},
-            litellm_params=litellm_params,
+            remodl_params=remodl_params,
         )
 
         api_base = provider_config.get_complete_batch_url(
@@ -2929,7 +2929,7 @@ class BaseLLMHTTPHandler:
             api_key=api_key,
             model=model,
             optional_params={},
-            litellm_params=litellm_params,
+            remodl_params=remodl_params,
             data=create_batch_data,
         )
         if api_base is None:
@@ -2939,14 +2939,14 @@ class BaseLLMHTTPHandler:
         transformed_request = provider_config.transform_create_batch_request(
             model=model,
             create_batch_data=create_batch_data,
-            litellm_params=litellm_params,
+            remodl_params=remodl_params,
             optional_params={},
         )
 
         if _is_async:
             return self.async_create_batch(
                 transformed_request=transformed_request,
-                litellm_params=litellm_params,
+                remodl_params=remodl_params,
                 provider_config=provider_config,
                 headers=headers,
                 api_base=api_base,
@@ -2999,8 +2999,8 @@ class BaseLLMHTTPHandler:
             )
 
         # Store original request for response transformation
-        litellm_params_with_request = {
-            **litellm_params,
+        remodl_params_with_request = {
+            **remodl_params,
             "original_batch_request": create_batch_data,
         }
 
@@ -3008,13 +3008,13 @@ class BaseLLMHTTPHandler:
             model=model,
             raw_response=batch_response,
             logging_obj=logging_obj,
-            litellm_params=litellm_params_with_request,
+            remodl_params=remodl_params_with_request,
         )
 
     def retrieve_batch(
         self,
         batch_id: str,
-        litellm_params: dict,
+        remodl_params: dict,
         provider_config: "BaseBatchesConfig",
         headers: dict,
         api_base: Optional[str],
@@ -3031,14 +3031,14 @@ class BaseLLMHTTPHandler:
         # Transform the request using provider config
         transformed_request = provider_config.transform_retrieve_batch_request(
             batch_id=batch_id,
-            optional_params=litellm_params,
-            litellm_params=litellm_params,
+            optional_params=remodl_params,
+            remodl_params=remodl_params,
         )
 
         if _is_async:
             return self.async_retrieve_batch(
                 transformed_request=transformed_request,
-                litellm_params=litellm_params,
+                remodl_params=remodl_params,
                 provider_config=provider_config,
                 headers=headers,
                 api_base=api_base,
@@ -3097,13 +3097,13 @@ class BaseLLMHTTPHandler:
             model=model,
             raw_response=batch_response,
             logging_obj=logging_obj,
-            litellm_params=litellm_params,
+            remodl_params=remodl_params,
         )
 
     async def async_create_batch(
         self,
         transformed_request: Union[bytes, str, dict],
-        litellm_params: dict,
+        remodl_params: dict,
         provider_config: "BaseBatchesConfig",
         headers: dict,
         api_base: str,
@@ -3174,8 +3174,8 @@ class BaseLLMHTTPHandler:
             )
 
         # Store original request for response transformation (for async version)
-        litellm_params_with_request = {
-            **litellm_params,
+        remodl_params_with_request = {
+            **remodl_params,
             "original_batch_request": create_batch_data or {},
         }
 
@@ -3183,13 +3183,13 @@ class BaseLLMHTTPHandler:
             model=model,
             raw_response=batch_response,
             logging_obj=logging_obj,
-            litellm_params=litellm_params_with_request,
+            remodl_params=remodl_params_with_request,
         )
 
     async def async_retrieve_batch(
         self,
         transformed_request: Union[bytes, str, dict],
-        litellm_params: dict,
+        remodl_params: dict,
         provider_config: "BaseBatchesConfig",
         headers: dict,
         api_base: Optional[str],
@@ -3268,14 +3268,14 @@ class BaseLLMHTTPHandler:
             model=model,
             raw_response=batch_response,
             logging_obj=logging_obj,
-            litellm_params=litellm_params,
+            remodl_params=remodl_params,
         )
 
     def cancel_response_api_handler(
         self,
         response_id: str,
         responses_api_provider_config: BaseResponsesAPIConfig,
-        litellm_params: GenericLiteLLMParams,
+        remodl_params: GenericLiteLLMParams,
         logging_obj: LiteLLMLoggingObj,
         custom_llm_provider: Optional[str],
         extra_headers: Optional[Dict[str, Any]] = None,
@@ -3292,7 +3292,7 @@ class BaseLLMHTTPHandler:
             return self.async_cancel_response_api_handler(
                 response_id=response_id,
                 responses_api_provider_config=responses_api_provider_config,
-                litellm_params=litellm_params,
+                remodl_params=remodl_params,
                 logging_obj=logging_obj,
                 custom_llm_provider=custom_llm_provider,
                 extra_headers=extra_headers,
@@ -3302,27 +3302,27 @@ class BaseLLMHTTPHandler:
             )
         if client is None or not isinstance(client, HTTPHandler):
             sync_httpx_client = _get_httpx_client(
-                params={"ssl_verify": litellm_params.get("ssl_verify", None)}
+                params={"ssl_verify": remodl_params.get("ssl_verify", None)}
             )
         else:
             sync_httpx_client = client
 
         headers = responses_api_provider_config.validate_environment(
-            headers=extra_headers or {}, model="None", litellm_params=litellm_params
+            headers=extra_headers or {}, model="None", remodl_params=remodl_params
         )
 
         if extra_headers:
             headers.update(extra_headers)
 
         api_base = responses_api_provider_config.get_complete_url(
-            api_base=litellm_params.api_base,
-            litellm_params=dict(litellm_params),
+            api_base=remodl_params.api_base,
+            remodl_params=dict(remodl_params),
         )
 
         url, data = responses_api_provider_config.transform_cancel_response_api_request(
             response_id=response_id,
             api_base=api_base,
-            litellm_params=litellm_params,
+            remodl_params=remodl_params,
             headers=headers,
         )
 
@@ -3357,7 +3357,7 @@ class BaseLLMHTTPHandler:
         self,
         response_id: str,
         responses_api_provider_config: BaseResponsesAPIConfig,
-        litellm_params: GenericLiteLLMParams,
+        remodl_params: GenericLiteLLMParams,
         logging_obj: LiteLLMLoggingObj,
         custom_llm_provider: Optional[str],
         extra_headers: Optional[Dict[str, Any]] = None,
@@ -3372,28 +3372,28 @@ class BaseLLMHTTPHandler:
         """
         if client is None or not isinstance(client, AsyncHTTPHandler):
             async_httpx_client = get_async_httpx_client(
-                llm_provider=litellm.LlmProviders(custom_llm_provider),
-                params={"ssl_verify": litellm_params.get("ssl_verify", None)},
+                llm_provider=remodl.LlmProviders(custom_llm_provider),
+                params={"ssl_verify": remodl_params.get("ssl_verify", None)},
             )
         else:
             async_httpx_client = client
 
         headers = responses_api_provider_config.validate_environment(
-            headers=extra_headers or {}, model="None", litellm_params=litellm_params
+            headers=extra_headers or {}, model="None", remodl_params=remodl_params
         )
 
         if extra_headers:
             headers.update(extra_headers)
 
         api_base = responses_api_provider_config.get_complete_url(
-            api_base=litellm_params.api_base,
-            litellm_params=dict(litellm_params),
+            api_base=remodl_params.api_base,
+            remodl_params=dict(remodl_params),
         )
 
         url, data = responses_api_provider_config.transform_cancel_response_api_request(
             response_id=response_id,
             api_base=api_base,
-            litellm_params=litellm_params,
+            remodl_params=remodl_params,
             headers=headers,
         )
 
@@ -3501,7 +3501,7 @@ class BaseLLMHTTPHandler:
             error_headers = {}
 
         if provider_config is None:
-            from litellm.llms.base_llm.chat.transformation import BaseLLMException
+            from remodl.llms.base_llm.chat.transformation import BaseLLMException
 
             raise BaseLLMException(
                 status_code=status_code,
@@ -3581,7 +3581,7 @@ class BaseLLMHTTPHandler:
         image_edit_provider_config: BaseImageEditConfig,
         image_edit_optional_request_params: Dict,
         custom_llm_provider: str,
-        litellm_params: GenericLiteLLMParams,
+        remodl_params: GenericLiteLLMParams,
         logging_obj: LiteLLMLoggingObj,
         timeout: Union[float, httpx.Timeout],
         extra_headers: Optional[Dict[str, Any]] = None,
@@ -3589,7 +3589,7 @@ class BaseLLMHTTPHandler:
         client: Optional[Union[HTTPHandler, AsyncHTTPHandler]] = None,
         _is_async: bool = False,
         fake_stream: bool = False,
-        litellm_metadata: Optional[Dict[str, Any]] = None,
+        remodl_metadata: Optional[Dict[str, Any]] = None,
     ) -> Union[
         ImageResponse,
         Coroutine[Any, Any, ImageResponse],
@@ -3608,25 +3608,25 @@ class BaseLLMHTTPHandler:
                 image_edit_provider_config=image_edit_provider_config,
                 image_edit_optional_request_params=image_edit_optional_request_params,
                 custom_llm_provider=custom_llm_provider,
-                litellm_params=litellm_params,
+                remodl_params=remodl_params,
                 logging_obj=logging_obj,
                 extra_headers=extra_headers,
                 extra_body=extra_body,
                 timeout=timeout,
                 client=client if isinstance(client, AsyncHTTPHandler) else None,
                 fake_stream=fake_stream,
-                litellm_metadata=litellm_metadata,
+                remodl_metadata=remodl_metadata,
             )
 
         if client is None or not isinstance(client, HTTPHandler):
             sync_httpx_client = _get_httpx_client(
-                params={"ssl_verify": litellm_params.get("ssl_verify", None)}
+                params={"ssl_verify": remodl_params.get("ssl_verify", None)}
             )
         else:
             sync_httpx_client = client
 
         headers = image_edit_provider_config.validate_environment(
-            api_key=litellm_params.api_key,
+            api_key=remodl_params.api_key,
             headers=image_edit_optional_request_params.get("extra_headers", {}) or {},
             model=model,
         )
@@ -3636,8 +3636,8 @@ class BaseLLMHTTPHandler:
 
         api_base = image_edit_provider_config.get_complete_url(
             model=model,
-            api_base=litellm_params.api_base,
-            litellm_params=dict(litellm_params),
+            api_base=remodl_params.api_base,
+            remodl_params=dict(remodl_params),
         )
 
         data, files = image_edit_provider_config.transform_image_edit_request(
@@ -3645,7 +3645,7 @@ class BaseLLMHTTPHandler:
             image=image,
             prompt=prompt,
             image_edit_optional_request_params=image_edit_optional_request_params,
-            litellm_params=litellm_params,
+            remodl_params=remodl_params,
             headers=headers,
         )
 
@@ -3689,14 +3689,14 @@ class BaseLLMHTTPHandler:
         image_edit_provider_config: BaseImageEditConfig,
         image_edit_optional_request_params: Dict,
         custom_llm_provider: str,
-        litellm_params: GenericLiteLLMParams,
+        remodl_params: GenericLiteLLMParams,
         logging_obj: LiteLLMLoggingObj,
         timeout: Union[float, httpx.Timeout],
         extra_headers: Optional[Dict[str, Any]] = None,
         extra_body: Optional[Dict[str, Any]] = None,
         client: Optional[Union[HTTPHandler, AsyncHTTPHandler]] = None,
         fake_stream: bool = False,
-        litellm_metadata: Optional[Dict[str, Any]] = None,
+        remodl_metadata: Optional[Dict[str, Any]] = None,
     ) -> ImageResponse:
         """
         Async version of the image edit handler.
@@ -3704,14 +3704,14 @@ class BaseLLMHTTPHandler:
         """
         if client is None or not isinstance(client, AsyncHTTPHandler):
             async_httpx_client = get_async_httpx_client(
-                llm_provider=litellm.LlmProviders(custom_llm_provider),
-                params={"ssl_verify": litellm_params.get("ssl_verify", None)},
+                llm_provider=remodl.LlmProviders(custom_llm_provider),
+                params={"ssl_verify": remodl_params.get("ssl_verify", None)},
             )
         else:
             async_httpx_client = client
 
         headers = image_edit_provider_config.validate_environment(
-            api_key=litellm_params.api_key,
+            api_key=remodl_params.api_key,
             headers=image_edit_optional_request_params.get("extra_headers", {}) or {},
             model=model,
         )
@@ -3721,8 +3721,8 @@ class BaseLLMHTTPHandler:
 
         api_base = image_edit_provider_config.get_complete_url(
             model=model,
-            api_base=litellm_params.api_base,
-            litellm_params=dict(litellm_params),
+            api_base=remodl_params.api_base,
+            remodl_params=dict(remodl_params),
         )
 
         data, files = image_edit_provider_config.transform_image_edit_request(
@@ -3730,7 +3730,7 @@ class BaseLLMHTTPHandler:
             image=image,
             prompt=prompt,
             image_edit_optional_request_params=image_edit_optional_request_params,
-            litellm_params=litellm_params,
+            remodl_params=remodl_params,
             headers=headers,
         )
 
@@ -3773,7 +3773,7 @@ class BaseLLMHTTPHandler:
         image_generation_provider_config: BaseImageGenerationConfig,
         image_generation_optional_request_params: Dict,
         custom_llm_provider: str,
-        litellm_params: Dict,
+        remodl_params: Dict,
         logging_obj: LiteLLMLoggingObj,
         timeout: Union[float, httpx.Timeout],
         extra_headers: Optional[Dict[str, Any]] = None,
@@ -3781,7 +3781,7 @@ class BaseLLMHTTPHandler:
         client: Optional[Union[HTTPHandler, AsyncHTTPHandler]] = None,
         _is_async: bool = False,
         fake_stream: bool = False,
-        litellm_metadata: Optional[Dict[str, Any]] = None,
+        remodl_metadata: Optional[Dict[str, Any]] = None,
         api_key: Optional[str] = None,
     ) -> Union[
         ImageResponse,
@@ -3799,20 +3799,20 @@ class BaseLLMHTTPHandler:
                 image_generation_provider_config=image_generation_provider_config,
                 image_generation_optional_request_params=image_generation_optional_request_params,
                 custom_llm_provider=custom_llm_provider,
-                litellm_params=litellm_params,
+                remodl_params=remodl_params,
                 logging_obj=logging_obj,
                 extra_headers=extra_headers,
                 extra_body=extra_body,
                 timeout=timeout,
                 client=client if isinstance(client, AsyncHTTPHandler) else None,
                 fake_stream=fake_stream,
-                litellm_metadata=litellm_metadata,
+                remodl_metadata=remodl_metadata,
                 api_key=api_key,
             )
 
         if client is None or not isinstance(client, HTTPHandler):
             sync_httpx_client = _get_httpx_client(
-                params={"ssl_verify": litellm_params.get("ssl_verify", None)}
+                params={"ssl_verify": remodl_params.get("ssl_verify", None)}
             )
         else:
             sync_httpx_client = client
@@ -3824,7 +3824,7 @@ class BaseLLMHTTPHandler:
             model=model,
             messages=[],
             optional_params=image_generation_optional_request_params,
-            litellm_params=dict(litellm_params),
+            remodl_params=dict(remodl_params),
         )
 
         if extra_headers:
@@ -3832,17 +3832,17 @@ class BaseLLMHTTPHandler:
 
         api_base = image_generation_provider_config.get_complete_url(
             model=model,
-            api_base=litellm_params.get("api_base", None),
-            api_key=litellm_params.get("api_key", None),
+            api_base=remodl_params.get("api_base", None),
+            api_key=remodl_params.get("api_key", None),
             optional_params=image_generation_optional_request_params,
-            litellm_params=dict(litellm_params),
+            remodl_params=dict(remodl_params),
         )
 
         data = image_generation_provider_config.transform_image_generation_request(
             model=model,
             prompt=prompt,
             optional_params=image_generation_optional_request_params,
-            litellm_params=dict(litellm_params),
+            remodl_params=dict(remodl_params),
             headers=headers,
         )
 
@@ -3875,11 +3875,11 @@ class BaseLLMHTTPHandler:
             image_generation_provider_config.transform_image_generation_response(
                 model=model,
                 raw_response=response,
-                model_response=litellm.ImageResponse(),
+                model_response=remodl.ImageResponse(),
                 logging_obj=logging_obj,
                 request_data=data,
                 optional_params=image_generation_optional_request_params,
-                litellm_params=dict(litellm_params),
+                remodl_params=dict(remodl_params),
                 encoding=None,
             )
         )
@@ -3893,14 +3893,14 @@ class BaseLLMHTTPHandler:
         image_generation_provider_config: BaseImageGenerationConfig,
         image_generation_optional_request_params: Dict,
         custom_llm_provider: str,
-        litellm_params: Dict,
+        remodl_params: Dict,
         logging_obj: LiteLLMLoggingObj,
         timeout: Union[float, httpx.Timeout],
         extra_headers: Optional[Dict[str, Any]] = None,
         extra_body: Optional[Dict[str, Any]] = None,
         client: Optional[Union[HTTPHandler, AsyncHTTPHandler]] = None,
         fake_stream: bool = False,
-        litellm_metadata: Optional[Dict[str, Any]] = None,
+        remodl_metadata: Optional[Dict[str, Any]] = None,
         api_key: Optional[str] = None,
     ) -> ImageResponse:
         """
@@ -3909,8 +3909,8 @@ class BaseLLMHTTPHandler:
         """
         if client is None or not isinstance(client, AsyncHTTPHandler):
             async_httpx_client = get_async_httpx_client(
-                llm_provider=litellm.LlmProviders(custom_llm_provider),
-                params={"ssl_verify": litellm_params.get("ssl_verify", None)},
+                llm_provider=remodl.LlmProviders(custom_llm_provider),
+                params={"ssl_verify": remodl_params.get("ssl_verify", None)},
             )
         else:
             async_httpx_client = client
@@ -3922,7 +3922,7 @@ class BaseLLMHTTPHandler:
             model=model,
             messages=[],
             optional_params=image_generation_optional_request_params,
-            litellm_params=dict(litellm_params),
+            remodl_params=dict(remodl_params),
         )
 
         if extra_headers:
@@ -3930,17 +3930,17 @@ class BaseLLMHTTPHandler:
 
         api_base = image_generation_provider_config.get_complete_url(
             model=model,
-            api_base=litellm_params.get("api_base", None),
-            api_key=litellm_params.get("api_key", None),
+            api_base=remodl_params.get("api_base", None),
+            api_key=remodl_params.get("api_key", None),
             optional_params=image_generation_optional_request_params,
-            litellm_params=dict(litellm_params),
+            remodl_params=dict(remodl_params),
         )
 
         data = image_generation_provider_config.transform_image_generation_request(
             model=model,
             prompt=prompt,
             optional_params=image_generation_optional_request_params,
-            litellm_params=dict(litellm_params),
+            remodl_params=dict(remodl_params),
             headers=headers,
         )
 
@@ -3973,11 +3973,11 @@ class BaseLLMHTTPHandler:
             image_generation_provider_config.transform_image_generation_response(
                 model=model,
                 raw_response=response,
-                model_response=litellm.ImageResponse(),
+                model_response=remodl.ImageResponse(),
                 logging_obj=logging_obj,
                 request_data=data,
                 optional_params=image_generation_optional_request_params,
-                litellm_params=dict(litellm_params),
+                remodl_params=dict(remodl_params),
                 encoding=None,
             )
         )
@@ -3992,7 +3992,7 @@ class BaseLLMHTTPHandler:
         video_generation_provider_config: BaseVideoConfig,
         video_generation_optional_request_params: Dict,
         custom_llm_provider: str,
-        litellm_params: GenericLiteLLMParams,
+        remodl_params: GenericLiteLLMParams,
         logging_obj: LiteLLMLoggingObj,
         timeout: Union[float, httpx.Timeout],
         extra_headers: Optional[Dict[str, Any]] = None,
@@ -4000,7 +4000,7 @@ class BaseLLMHTTPHandler:
         client: Optional[Union[HTTPHandler, AsyncHTTPHandler]] = None,
         _is_async: bool = False,
         fake_stream: bool = False,
-        litellm_metadata: Optional[Dict[str, Any]] = None,
+        remodl_metadata: Optional[Dict[str, Any]] = None,
         api_key: Optional[str] = None,
     ) -> Union[
         VideoObject,
@@ -4018,20 +4018,20 @@ class BaseLLMHTTPHandler:
                 video_generation_provider_config=video_generation_provider_config,
                 video_generation_optional_request_params=video_generation_optional_request_params,
                 custom_llm_provider=custom_llm_provider,
-                litellm_params=litellm_params,
+                remodl_params=remodl_params,
                 logging_obj=logging_obj,
                 extra_headers=extra_headers,
                 extra_body=extra_body,
                 timeout=timeout,
                 client=client if isinstance(client, AsyncHTTPHandler) else None,
                 fake_stream=fake_stream,
-                litellm_metadata=litellm_metadata,
+                remodl_metadata=remodl_metadata,
                 api_key=api_key,
             )
 
         if client is None or not isinstance(client, HTTPHandler):
             sync_httpx_client = _get_httpx_client(
-                params={"ssl_verify": litellm_params.get("ssl_verify", None)}
+                params={"ssl_verify": remodl_params.get("ssl_verify", None)}
             )
         else:
             sync_httpx_client = client
@@ -4048,15 +4048,15 @@ class BaseLLMHTTPHandler:
 
         api_base = video_generation_provider_config.get_complete_url(
             model=model,
-            api_base=litellm_params.get("api_base", None),
-            litellm_params=dict(litellm_params),
+            api_base=remodl_params.get("api_base", None),
+            remodl_params=dict(remodl_params),
         )
 
         data, files = video_generation_provider_config.transform_video_create_request(
             model=model,
             prompt=prompt,
             video_create_optional_request_params=video_generation_optional_request_params,
-            litellm_params=litellm_params,
+            remodl_params=remodl_params,
             headers=headers,
         )
 
@@ -4111,14 +4111,14 @@ class BaseLLMHTTPHandler:
         video_generation_provider_config: "BaseVideoConfig",
         video_generation_optional_request_params: Dict,
         custom_llm_provider: str,
-        litellm_params: GenericLiteLLMParams,
+        remodl_params: GenericLiteLLMParams,
         logging_obj: LiteLLMLoggingObj,
         timeout: Union[float, httpx.Timeout],
         extra_headers: Optional[Dict[str, Any]] = None,
         extra_body: Optional[Dict[str, Any]] = None,
         client: Optional[Union[HTTPHandler, AsyncHTTPHandler]] = None,
         fake_stream: bool = False,
-        litellm_metadata: Optional[Dict[str, Any]] = None,
+        remodl_metadata: Optional[Dict[str, Any]] = None,
         api_key: Optional[str] = None,
     ) -> VideoObject:
         """
@@ -4127,8 +4127,8 @@ class BaseLLMHTTPHandler:
         """
         if client is None or not isinstance(client, AsyncHTTPHandler):
             async_httpx_client = get_async_httpx_client(
-                llm_provider=litellm.LlmProviders(custom_llm_provider),
-                params={"ssl_verify": litellm_params.get("ssl_verify", None)},
+                llm_provider=remodl.LlmProviders(custom_llm_provider),
+                params={"ssl_verify": remodl_params.get("ssl_verify", None)},
             )
         else:
             async_httpx_client = client
@@ -4145,15 +4145,15 @@ class BaseLLMHTTPHandler:
 
         api_base = video_generation_provider_config.get_complete_url(
             model=model,
-            api_base=litellm_params.get("api_base", None),
-            litellm_params=dict(litellm_params),
+            api_base=remodl_params.get("api_base", None),
+            remodl_params=dict(remodl_params),
         )
 
         data, files = video_generation_provider_config.transform_video_create_request(
             model=model,
             prompt=prompt,
             video_create_optional_request_params=video_generation_optional_request_params,
-            litellm_params=litellm_params,
+            remodl_params=remodl_params,
             headers=headers,
         )
 
@@ -4205,7 +4205,7 @@ class BaseLLMHTTPHandler:
         model: str,
         video_content_provider_config: BaseVideoConfig,
         custom_llm_provider: str,
-        litellm_params: GenericLiteLLMParams,
+        remodl_params: GenericLiteLLMParams,
         logging_obj: LiteLLMLoggingObj,
         timeout: Union[float, httpx.Timeout],
         extra_headers: Optional[Dict[str, Any]] = None,
@@ -4222,7 +4222,7 @@ class BaseLLMHTTPHandler:
                 model=model,
                 video_content_provider_config=video_content_provider_config,
                 custom_llm_provider=custom_llm_provider,
-                litellm_params=litellm_params,
+                remodl_params=remodl_params,
                 logging_obj=logging_obj,
                 timeout=timeout,
                 extra_headers=extra_headers,
@@ -4232,7 +4232,7 @@ class BaseLLMHTTPHandler:
 
         if client is None or not isinstance(client, HTTPHandler):
             sync_httpx_client = _get_httpx_client(
-                params={"ssl_verify": litellm_params.get("ssl_verify", None)}
+                params={"ssl_verify": remodl_params.get("ssl_verify", None)}
             )
         else:
             sync_httpx_client = client
@@ -4248,8 +4248,8 @@ class BaseLLMHTTPHandler:
 
         api_base = video_content_provider_config.get_complete_url(
             model=model,
-            api_base=litellm_params.get("api_base", None),
-            litellm_params=dict(litellm_params),
+            api_base=remodl_params.get("api_base", None),
+            remodl_params=dict(remodl_params),
         )
 
         # Transform the request using the provider config
@@ -4257,7 +4257,7 @@ class BaseLLMHTTPHandler:
             video_id=video_id,
             model=model,
             api_base=api_base,
-            litellm_params=litellm_params,
+            remodl_params=remodl_params,
             headers=headers,
         )
 
@@ -4288,7 +4288,7 @@ class BaseLLMHTTPHandler:
         model: str,
         video_content_provider_config: BaseVideoConfig,
         custom_llm_provider: str,
-        litellm_params: GenericLiteLLMParams,
+        remodl_params: GenericLiteLLMParams,
         logging_obj: LiteLLMLoggingObj,
         timeout: Union[float, httpx.Timeout],
         extra_headers: Optional[Dict[str, Any]] = None,
@@ -4300,8 +4300,8 @@ class BaseLLMHTTPHandler:
         """
         if client is None or not isinstance(client, AsyncHTTPHandler):
             async_httpx_client = get_async_httpx_client(
-                llm_provider=litellm.LlmProviders(custom_llm_provider),
-                params={"ssl_verify": litellm_params.get("ssl_verify", None)},
+                llm_provider=remodl.LlmProviders(custom_llm_provider),
+                params={"ssl_verify": remodl_params.get("ssl_verify", None)},
             )
         else:
             async_httpx_client = client
@@ -4317,8 +4317,8 @@ class BaseLLMHTTPHandler:
 
         api_base = video_content_provider_config.get_complete_url(
             model=model,
-            api_base=litellm_params.get("api_base", None),
-            litellm_params=dict(litellm_params),
+            api_base=remodl_params.get("api_base", None),
+            remodl_params=dict(remodl_params),
         )
 
         # Transform the request using the provider config
@@ -4326,7 +4326,7 @@ class BaseLLMHTTPHandler:
             video_id=video_id,
             model=model,
             api_base=api_base,
-            litellm_params=litellm_params,
+            remodl_params=remodl_params,
             headers=headers,
         )
 
@@ -4358,7 +4358,7 @@ class BaseLLMHTTPHandler:
         model: str,
         video_remix_provider_config: BaseVideoConfig,
         custom_llm_provider: str,
-        litellm_params,
+        remodl_params,
         logging_obj,
         extra_headers: Optional[Dict[str, Any]] = None,
         extra_body: Optional[Dict[str, Any]] = None,
@@ -4379,7 +4379,7 @@ class BaseLLMHTTPHandler:
                 model=model,
                 video_remix_provider_config=video_remix_provider_config,
                 custom_llm_provider=custom_llm_provider,
-                litellm_params=litellm_params,
+                remodl_params=remodl_params,
                 logging_obj=logging_obj,
                 extra_headers=extra_headers,
                 extra_body=extra_body,
@@ -4391,7 +4391,7 @@ class BaseLLMHTTPHandler:
         # For sync calls, use sync HTTP client directly (like video_generation does)
         if client is None or not isinstance(client, HTTPHandler):
             sync_httpx_client = _get_httpx_client(
-                params={"ssl_verify": litellm_params.get("ssl_verify", None)}
+                params={"ssl_verify": remodl_params.get("ssl_verify", None)}
             )
         else:
             sync_httpx_client = client
@@ -4407,8 +4407,8 @@ class BaseLLMHTTPHandler:
 
         api_base = video_remix_provider_config.get_complete_url(
             model=model,
-            api_base=litellm_params.get("api_base", None),
-            litellm_params=dict(litellm_params),
+            api_base=remodl_params.get("api_base", None),
+            remodl_params=dict(remodl_params),
         )
 
         # Transform the request using the provider config
@@ -4417,7 +4417,7 @@ class BaseLLMHTTPHandler:
             prompt=prompt,
             model=model,
             api_base=api_base,
-            litellm_params=litellm_params,
+            remodl_params=remodl_params,
             headers=headers,
             extra_body=extra_body,
         )
@@ -4461,7 +4461,7 @@ class BaseLLMHTTPHandler:
         model: str,
         video_remix_provider_config: BaseVideoConfig,
         custom_llm_provider: str,
-        litellm_params,
+        remodl_params,
         logging_obj,
         extra_headers: Optional[Dict[str, Any]] = None,
         extra_body: Optional[Dict[str, Any]] = None,
@@ -4474,8 +4474,8 @@ class BaseLLMHTTPHandler:
         """
         if client is None or not isinstance(client, AsyncHTTPHandler):
             async_httpx_client = get_async_httpx_client(
-                llm_provider=litellm.LlmProviders(custom_llm_provider),
-                params={"ssl_verify": litellm_params.get("ssl_verify", None)},
+                llm_provider=remodl.LlmProviders(custom_llm_provider),
+                params={"ssl_verify": remodl_params.get("ssl_verify", None)},
             )
         else:
             async_httpx_client = client
@@ -4491,8 +4491,8 @@ class BaseLLMHTTPHandler:
 
         api_base = video_remix_provider_config.get_complete_url(
             model=model,
-            api_base=litellm_params.get("api_base", None),
-            litellm_params=dict(litellm_params),
+            api_base=remodl_params.get("api_base", None),
+            remodl_params=dict(remodl_params),
         )
 
         # Transform the request using the provider config
@@ -4501,7 +4501,7 @@ class BaseLLMHTTPHandler:
             prompt=prompt,
             model=model,
             api_base=api_base,
-            litellm_params=litellm_params,
+            remodl_params=remodl_params,
             headers=headers,
             extra_body=extra_body,
         )
@@ -4546,7 +4546,7 @@ class BaseLLMHTTPHandler:
         model: str,
         video_list_provider_config,
         custom_llm_provider: str,
-        litellm_params,
+        remodl_params,
         logging_obj,
         extra_headers: Optional[Dict[str, Any]] = None,
         extra_query: Optional[Dict[str, Any]] = None,
@@ -4566,7 +4566,7 @@ class BaseLLMHTTPHandler:
                 model=model,
                 video_list_provider_config=video_list_provider_config,
                 custom_llm_provider=custom_llm_provider,
-                litellm_params=litellm_params,
+                remodl_params=remodl_params,
                 logging_obj=logging_obj,
                 extra_headers=extra_headers,
                 extra_query=extra_query,
@@ -4585,7 +4585,7 @@ class BaseLLMHTTPHandler:
                     model=model,
                     video_list_provider_config=video_list_provider_config,
                     custom_llm_provider=custom_llm_provider,
-                    litellm_params=litellm_params,
+                    remodl_params=remodl_params,
                     logging_obj=logging_obj,
                     extra_headers=extra_headers,
                     extra_query=extra_query,
@@ -4602,7 +4602,7 @@ class BaseLLMHTTPHandler:
         model: str,
         video_list_provider_config: BaseVideoConfig,
         custom_llm_provider: str,
-        litellm_params,
+        remodl_params,
         logging_obj,
         extra_headers: Optional[Dict[str, Any]] = None,
         extra_query: Optional[Dict[str, Any]] = None,
@@ -4615,8 +4615,8 @@ class BaseLLMHTTPHandler:
         """
         if client is None or not isinstance(client, AsyncHTTPHandler):
             async_httpx_client = get_async_httpx_client(
-                llm_provider=litellm.LlmProviders(custom_llm_provider),
-                params={"ssl_verify": litellm_params.get("ssl_verify", None)},
+                llm_provider=remodl.LlmProviders(custom_llm_provider),
+                params={"ssl_verify": remodl_params.get("ssl_verify", None)},
             )
         else:
             async_httpx_client = client
@@ -4632,15 +4632,15 @@ class BaseLLMHTTPHandler:
 
         api_base = video_list_provider_config.get_complete_url(
             model=model,
-            api_base=litellm_params.get("api_base", None),
-            litellm_params=dict(litellm_params),
+            api_base=remodl_params.get("api_base", None),
+            remodl_params=dict(remodl_params),
         )
 
         # Transform the request using the provider config
         url, params = video_list_provider_config.transform_video_list_request(
             model=model,
             api_base=api_base,
-            litellm_params=litellm_params,
+            remodl_params=remodl_params,
             headers=headers,
             after=after,
             limit=limit,
@@ -4684,7 +4684,7 @@ class BaseLLMHTTPHandler:
         model: str,
         video_delete_provider_config: BaseVideoConfig,
         custom_llm_provider: str,
-        litellm_params,
+        remodl_params,
         logging_obj,
         extra_headers: Optional[Dict[str, Any]] = None,
         timeout: Optional[float] = None,
@@ -4696,8 +4696,8 @@ class BaseLLMHTTPHandler:
         """
         if client is None or not isinstance(client, AsyncHTTPHandler):
             async_httpx_client = get_async_httpx_client(
-                llm_provider=litellm.LlmProviders(custom_llm_provider),
-                params={"ssl_verify": litellm_params.get("ssl_verify", None)},
+                llm_provider=remodl.LlmProviders(custom_llm_provider),
+                params={"ssl_verify": remodl_params.get("ssl_verify", None)},
             )
         else:
             async_httpx_client = client
@@ -4713,8 +4713,8 @@ class BaseLLMHTTPHandler:
 
         api_base = video_delete_provider_config.get_complete_url(
             model=model,
-            api_base=litellm_params.get("api_base", None),
-            litellm_params=dict(litellm_params),
+            api_base=remodl_params.get("api_base", None),
+            remodl_params=dict(remodl_params),
         )
 
         # Transform the request using the provider config
@@ -4722,7 +4722,7 @@ class BaseLLMHTTPHandler:
             video_id=video_id,
             model=model,
             api_base=api_base,
-            litellm_params=litellm_params,
+            remodl_params=remodl_params,
             headers=headers,
         )
 
@@ -4762,7 +4762,7 @@ class BaseLLMHTTPHandler:
         model: str,
         video_status_provider_config: BaseVideoConfig,
         custom_llm_provider: str,
-        litellm_params,
+        remodl_params,
         logging_obj,
         extra_headers: Optional[Dict[str, Any]] = None,
         extra_body: Optional[Dict[str, Any]] = None,
@@ -4782,7 +4782,7 @@ class BaseLLMHTTPHandler:
                 model=model,
                 video_status_provider_config=video_status_provider_config,
                 custom_llm_provider=custom_llm_provider,
-                litellm_params=litellm_params,
+                remodl_params=remodl_params,
                 logging_obj=logging_obj,
                 extra_headers=extra_headers,
                 extra_body=extra_body,
@@ -4794,7 +4794,7 @@ class BaseLLMHTTPHandler:
         # For sync calls, use sync HTTP client directly (like video_generation does)
         if client is None or not isinstance(client, HTTPHandler):
             sync_httpx_client = _get_httpx_client(
-                params={"ssl_verify": litellm_params.get("ssl_verify", None)}
+                params={"ssl_verify": remodl_params.get("ssl_verify", None)}
             )
         else:
             sync_httpx_client = client
@@ -4810,8 +4810,8 @@ class BaseLLMHTTPHandler:
 
         api_base = video_status_provider_config.get_complete_url(
             model=model,
-            api_base=litellm_params.get("api_base", None),
-            litellm_params=dict(litellm_params),
+            api_base=remodl_params.get("api_base", None),
+            remodl_params=dict(remodl_params),
         )
 
         # Transform the request using the provider config
@@ -4819,7 +4819,7 @@ class BaseLLMHTTPHandler:
             video_id=video_id,
             model=model,
             api_base=api_base,
-            litellm_params=litellm_params,
+            remodl_params=remodl_params,
             headers=headers,
         )
 
@@ -4858,7 +4858,7 @@ class BaseLLMHTTPHandler:
         model: str,
         video_status_provider_config: BaseVideoConfig,
         custom_llm_provider: str,
-        litellm_params,
+        remodl_params,
         logging_obj,
         extra_headers: Optional[Dict[str, Any]] = None,
         extra_body: Optional[Dict[str, Any]] = None,
@@ -4871,8 +4871,8 @@ class BaseLLMHTTPHandler:
         """
         if client is None or not isinstance(client, AsyncHTTPHandler):
             async_httpx_client = get_async_httpx_client(
-                llm_provider=litellm.LlmProviders(custom_llm_provider),
-                params={"ssl_verify": litellm_params.get("ssl_verify", None)},
+                llm_provider=remodl.LlmProviders(custom_llm_provider),
+                params={"ssl_verify": remodl_params.get("ssl_verify", None)},
             )
         else:
             async_httpx_client = client
@@ -4888,8 +4888,8 @@ class BaseLLMHTTPHandler:
 
         api_base = video_status_provider_config.get_complete_url(
             model=model,
-            api_base=litellm_params.get("api_base", None),
-            litellm_params=dict(litellm_params),
+            api_base=remodl_params.get("api_base", None),
+            remodl_params=dict(remodl_params),
         )
 
         # Transform the request using the provider config
@@ -4897,7 +4897,7 @@ class BaseLLMHTTPHandler:
             video_id=video_id,
             model=model,
             api_base=api_base,
-            litellm_params=litellm_params,
+            remodl_params=remodl_params,
             headers=headers,
         )
 
@@ -4938,7 +4938,7 @@ class BaseLLMHTTPHandler:
         vector_store_search_optional_params: VectorStoreSearchOptionalRequestParams,
         vector_store_provider_config: BaseVectorStoreConfig,
         custom_llm_provider: str,
-        litellm_params: GenericLiteLLMParams,
+        remodl_params: GenericLiteLLMParams,
         logging_obj: LiteLLMLoggingObj,
         extra_headers: Optional[Dict[str, Any]] = None,
         extra_body: Optional[Dict[str, Any]] = None,
@@ -4948,22 +4948,22 @@ class BaseLLMHTTPHandler:
     ) -> VectorStoreSearchResponse:
         if client is None or not isinstance(client, AsyncHTTPHandler):
             async_httpx_client = get_async_httpx_client(
-                llm_provider=litellm.LlmProviders(custom_llm_provider),
-                params={"ssl_verify": litellm_params.get("ssl_verify", None)},
+                llm_provider=remodl.LlmProviders(custom_llm_provider),
+                params={"ssl_verify": remodl_params.get("ssl_verify", None)},
             )
         else:
             async_httpx_client = client
 
         headers = vector_store_provider_config.validate_environment(
-            headers=extra_headers or {}, litellm_params=litellm_params
+            headers=extra_headers or {}, remodl_params=remodl_params
         )
 
         if extra_headers:
             headers.update(extra_headers)
 
         api_base = vector_store_provider_config.get_complete_url(
-            api_base=litellm_params.api_base,
-            litellm_params=dict(litellm_params),
+            api_base=remodl_params.api_base,
+            remodl_params=dict(remodl_params),
         )
 
         (
@@ -4974,10 +4974,10 @@ class BaseLLMHTTPHandler:
             query=query,
             vector_store_search_optional_params=vector_store_search_optional_params,
             api_base=api_base,
-            litellm_logging_obj=logging_obj,
-            litellm_params=dict(litellm_params),
+            remodl_logging_obj=logging_obj,
+            remodl_params=dict(remodl_params),
         )
-        all_optional_params: Dict[str, Any] = dict(litellm_params)
+        all_optional_params: Dict[str, Any] = dict(remodl_params)
         all_optional_params.update(vector_store_search_optional_params or {})
         headers, signed_json_body = vector_store_provider_config.sign_request(
             headers=headers,
@@ -5012,7 +5012,7 @@ class BaseLLMHTTPHandler:
 
         return vector_store_provider_config.transform_search_vector_store_response(
             response=response,
-            litellm_logging_obj=logging_obj,
+            remodl_logging_obj=logging_obj,
         )
 
     def vector_store_search_handler(
@@ -5022,7 +5022,7 @@ class BaseLLMHTTPHandler:
         vector_store_search_optional_params: VectorStoreSearchOptionalRequestParams,
         vector_store_provider_config: BaseVectorStoreConfig,
         custom_llm_provider: str,
-        litellm_params: GenericLiteLLMParams,
+        remodl_params: GenericLiteLLMParams,
         logging_obj: LiteLLMLoggingObj,
         extra_headers: Optional[Dict[str, Any]] = None,
         extra_body: Optional[Dict[str, Any]] = None,
@@ -5038,7 +5038,7 @@ class BaseLLMHTTPHandler:
                 query=query,
                 vector_store_search_optional_params=vector_store_search_optional_params,
                 vector_store_provider_config=vector_store_provider_config,
-                litellm_params=litellm_params,
+                remodl_params=remodl_params,
                 logging_obj=logging_obj,
                 custom_llm_provider=custom_llm_provider,
                 extra_headers=extra_headers,
@@ -5049,21 +5049,21 @@ class BaseLLMHTTPHandler:
 
         if client is None or not isinstance(client, HTTPHandler):
             sync_httpx_client = _get_httpx_client(
-                params={"ssl_verify": litellm_params.get("ssl_verify", None)}
+                params={"ssl_verify": remodl_params.get("ssl_verify", None)}
             )
         else:
             sync_httpx_client = client
 
         headers = vector_store_provider_config.validate_environment(
-            headers=extra_headers or {}, litellm_params=litellm_params
+            headers=extra_headers or {}, remodl_params=remodl_params
         )
 
         if extra_headers:
             headers.update(extra_headers)
 
         api_base = vector_store_provider_config.get_complete_url(
-            api_base=litellm_params.api_base,
-            litellm_params=dict(litellm_params),
+            api_base=remodl_params.api_base,
+            remodl_params=dict(remodl_params),
         )
 
         (
@@ -5074,11 +5074,11 @@ class BaseLLMHTTPHandler:
             query=query,
             vector_store_search_optional_params=vector_store_search_optional_params,
             api_base=api_base,
-            litellm_logging_obj=logging_obj,
-            litellm_params=dict(litellm_params),
+            remodl_logging_obj=logging_obj,
+            remodl_params=dict(remodl_params),
         )
 
-        all_optional_params: Dict[str, Any] = dict(litellm_params)
+        all_optional_params: Dict[str, Any] = dict(remodl_params)
         all_optional_params.update(vector_store_search_optional_params or {})
 
         headers, signed_json_body = vector_store_provider_config.sign_request(
@@ -5113,7 +5113,7 @@ class BaseLLMHTTPHandler:
 
         return vector_store_provider_config.transform_search_vector_store_response(
             response=response,
-            litellm_logging_obj=logging_obj,
+            remodl_logging_obj=logging_obj,
         )
 
     async def async_vector_store_create_handler(
@@ -5121,7 +5121,7 @@ class BaseLLMHTTPHandler:
         vector_store_create_optional_params: VectorStoreCreateOptionalRequestParams,
         vector_store_provider_config: BaseVectorStoreConfig,
         custom_llm_provider: str,
-        litellm_params: GenericLiteLLMParams,
+        remodl_params: GenericLiteLLMParams,
         logging_obj: LiteLLMLoggingObj,
         extra_headers: Optional[Dict[str, Any]] = None,
         extra_body: Optional[Dict[str, Any]] = None,
@@ -5131,22 +5131,22 @@ class BaseLLMHTTPHandler:
     ) -> VectorStoreCreateResponse:
         if client is None or not isinstance(client, AsyncHTTPHandler):
             async_httpx_client = get_async_httpx_client(
-                llm_provider=litellm.LlmProviders(custom_llm_provider),
-                params={"ssl_verify": litellm_params.get("ssl_verify", None)},
+                llm_provider=remodl.LlmProviders(custom_llm_provider),
+                params={"ssl_verify": remodl_params.get("ssl_verify", None)},
             )
         else:
             async_httpx_client = client
 
         headers = vector_store_provider_config.validate_environment(
-            headers=extra_headers or {}, litellm_params=litellm_params
+            headers=extra_headers or {}, remodl_params=remodl_params
         )
 
         if extra_headers:
             headers.update(extra_headers)
 
         api_base = vector_store_provider_config.get_complete_url(
-            api_base=litellm_params.api_base,
-            litellm_params=dict(litellm_params),
+            api_base=remodl_params.api_base,
+            remodl_params=dict(remodl_params),
         )
 
         (
@@ -5183,7 +5183,7 @@ class BaseLLMHTTPHandler:
         vector_store_create_optional_params: VectorStoreCreateOptionalRequestParams,
         vector_store_provider_config: BaseVectorStoreConfig,
         custom_llm_provider: str,
-        litellm_params: GenericLiteLLMParams,
+        remodl_params: GenericLiteLLMParams,
         logging_obj: LiteLLMLoggingObj,
         extra_headers: Optional[Dict[str, Any]] = None,
         extra_body: Optional[Dict[str, Any]] = None,
@@ -5197,7 +5197,7 @@ class BaseLLMHTTPHandler:
             return self.async_vector_store_create_handler(
                 vector_store_create_optional_params=vector_store_create_optional_params,
                 vector_store_provider_config=vector_store_provider_config,
-                litellm_params=litellm_params,
+                remodl_params=remodl_params,
                 logging_obj=logging_obj,
                 custom_llm_provider=custom_llm_provider,
                 extra_headers=extra_headers,
@@ -5208,21 +5208,21 @@ class BaseLLMHTTPHandler:
 
         if client is None or not isinstance(client, HTTPHandler):
             sync_httpx_client = _get_httpx_client(
-                params={"ssl_verify": litellm_params.get("ssl_verify", None)}
+                params={"ssl_verify": remodl_params.get("ssl_verify", None)}
             )
         else:
             sync_httpx_client = client
 
         headers = vector_store_provider_config.validate_environment(
-            headers=extra_headers or {}, litellm_params=litellm_params
+            headers=extra_headers or {}, remodl_params=remodl_params
         )
 
         if extra_headers:
             headers.update(extra_headers)
 
         api_base = vector_store_provider_config.get_complete_url(
-            api_base=litellm_params.api_base,
-            litellm_params=dict(litellm_params),
+            api_base=remodl_params.api_base,
+            remodl_params=dict(remodl_params),
         )
 
         (
@@ -5265,7 +5265,7 @@ class BaseLLMHTTPHandler:
         generate_content_config_dict: Dict,
         tools: Any,
         custom_llm_provider: str,
-        litellm_params: GenericLiteLLMParams,
+        remodl_params: GenericLiteLLMParams,
         logging_obj: LiteLLMLoggingObj,
         extra_headers: Optional[Dict[str, Any]] = None,
         extra_body: Optional[Dict[str, Any]] = None,
@@ -5273,13 +5273,13 @@ class BaseLLMHTTPHandler:
         _is_async: bool = False,
         client: Optional[Union[HTTPHandler, AsyncHTTPHandler]] = None,
         stream: bool = False,
-        litellm_metadata: Optional[Dict[str, Any]] = None,
+        remodl_metadata: Optional[Dict[str, Any]] = None,
     ) -> Any:
         """
         Handles Google GenAI generate content requests.
         When _is_async=True, returns a coroutine instead of making the call directly.
         """
-        from litellm.google_genai.streaming_iterator import (
+        from remodl.google_genai.streaming_iterator import (
             GoogleGenAIGenerateContentStreamingIterator,
         )
 
@@ -5291,19 +5291,19 @@ class BaseLLMHTTPHandler:
                 generate_content_config_dict=generate_content_config_dict,
                 tools=tools,
                 custom_llm_provider=custom_llm_provider,
-                litellm_params=litellm_params,
+                remodl_params=remodl_params,
                 logging_obj=logging_obj,
                 extra_headers=extra_headers,
                 extra_body=extra_body,
                 timeout=timeout,
                 client=client if isinstance(client, AsyncHTTPHandler) else None,
                 stream=stream,
-                litellm_metadata=litellm_metadata,
+                remodl_metadata=remodl_metadata,
             )
 
         if client is None or not isinstance(client, HTTPHandler):
             sync_httpx_client = _get_httpx_client(
-                params={"ssl_verify": litellm_params.get("ssl_verify", None)}
+                params={"ssl_verify": remodl_params.get("ssl_verify", None)}
             )
         else:
             sync_httpx_client = client
@@ -5313,9 +5313,9 @@ class BaseLLMHTTPHandler:
             headers,
             api_base,
         ) = generate_content_provider_config.sync_get_auth_token_and_url(
-            api_base=litellm_params.api_base,
+            api_base=remodl_params.api_base,
             model=model,
-            litellm_params=dict(litellm_params),
+            remodl_params=dict(remodl_params),
             stream=stream,
         )
 
@@ -5359,7 +5359,7 @@ class BaseLLMHTTPHandler:
                     model=model,
                     logging_obj=logging_obj,
                     generate_content_provider_config=generate_content_provider_config,
-                    litellm_metadata=litellm_metadata or {},
+                    remodl_metadata=remodl_metadata or {},
                     custom_llm_provider=custom_llm_provider,
                     request_body=data,
                 )
@@ -5390,27 +5390,27 @@ class BaseLLMHTTPHandler:
         generate_content_config_dict: Dict,
         tools: Any,
         custom_llm_provider: str,
-        litellm_params: GenericLiteLLMParams,
+        remodl_params: GenericLiteLLMParams,
         logging_obj: LiteLLMLoggingObj,
         extra_headers: Optional[Dict[str, Any]] = None,
         extra_body: Optional[Dict[str, Any]] = None,
         timeout: Optional[Union[float, httpx.Timeout]] = None,
         client: Optional[AsyncHTTPHandler] = None,
         stream: bool = False,
-        litellm_metadata: Optional[Dict[str, Any]] = None,
+        remodl_metadata: Optional[Dict[str, Any]] = None,
     ) -> Any:
         """
         Async version of the generate content handler.
         Uses async HTTP client to make requests.
         """
-        from litellm.google_genai.streaming_iterator import (
+        from remodl.google_genai.streaming_iterator import (
             AsyncGoogleGenAIGenerateContentStreamingIterator,
         )
 
         if client is None or not isinstance(client, AsyncHTTPHandler):
             async_httpx_client = get_async_httpx_client(
-                llm_provider=litellm.LlmProviders(custom_llm_provider),
-                params={"ssl_verify": litellm_params.get("ssl_verify", None)},
+                llm_provider=remodl.LlmProviders(custom_llm_provider),
+                params={"ssl_verify": remodl_params.get("ssl_verify", None)},
             )
         else:
             async_httpx_client = client
@@ -5421,9 +5421,9 @@ class BaseLLMHTTPHandler:
             api_base,
         ) = await generate_content_provider_config.get_auth_token_and_url(
             model=model,
-            litellm_params=dict(litellm_params),
+            remodl_params=dict(remodl_params),
             stream=stream,
-            api_base=litellm_params.api_base,
+            api_base=remodl_params.api_base,
         )
 
         if extra_headers:
@@ -5466,7 +5466,7 @@ class BaseLLMHTTPHandler:
                     model=model,
                     logging_obj=logging_obj,
                     generate_content_provider_config=generate_content_provider_config,
-                    litellm_metadata=litellm_metadata or {},
+                    remodl_metadata=remodl_metadata or {},
                     custom_llm_provider=custom_llm_provider,
                     request_body=data,
                 )
@@ -5500,7 +5500,7 @@ class BaseLLMHTTPHandler:
         text_to_speech_provider_config: BaseTextToSpeechConfig,
         text_to_speech_optional_params: Dict,
         custom_llm_provider: str,
-        litellm_params: Dict,
+        remodl_params: Dict,
         logging_obj: LiteLLMLoggingObj,
         timeout: Union[float, httpx.Timeout],
         extra_headers: Optional[Dict[str, Any]] = None,
@@ -5522,7 +5522,7 @@ class BaseLLMHTTPHandler:
                 text_to_speech_provider_config=text_to_speech_provider_config,
                 text_to_speech_optional_params=text_to_speech_optional_params,
                 custom_llm_provider=custom_llm_provider,
-                litellm_params=litellm_params,
+                remodl_params=remodl_params,
                 logging_obj=logging_obj,
                 extra_headers=extra_headers,
                 timeout=timeout,
@@ -5531,16 +5531,16 @@ class BaseLLMHTTPHandler:
 
         if client is None or not isinstance(client, HTTPHandler):
             sync_httpx_client = _get_httpx_client(
-                params={"ssl_verify": litellm_params.get("ssl_verify", None)}
+                params={"ssl_verify": remodl_params.get("ssl_verify", None)}
             )
         else:
             sync_httpx_client = client
 
         headers = text_to_speech_provider_config.validate_environment(
-            api_key=litellm_params.get("api_key"),
+            api_key=remodl_params.get("api_key"),
             headers=extra_headers or {},
             model=model,
-            api_base=litellm_params.get("api_base"),
+            api_base=remodl_params.get("api_base"),
         )
 
         if extra_headers:
@@ -5548,8 +5548,8 @@ class BaseLLMHTTPHandler:
 
         api_base = text_to_speech_provider_config.get_complete_url(
             model=model,
-            api_base=litellm_params.get("api_base"),
-            litellm_params=litellm_params,
+            api_base=remodl_params.get("api_base"),
+            remodl_params=remodl_params,
         )
 
         request_data = text_to_speech_provider_config.transform_text_to_speech_request(
@@ -5557,7 +5557,7 @@ class BaseLLMHTTPHandler:
             input=input,
             voice=voice,
             optional_params=text_to_speech_optional_params,
-            litellm_params=litellm_params,
+            remodl_params=remodl_params,
             headers=headers,
         )
 
@@ -5617,7 +5617,7 @@ class BaseLLMHTTPHandler:
         text_to_speech_provider_config: BaseTextToSpeechConfig,
         text_to_speech_optional_params: Dict,
         custom_llm_provider: str,
-        litellm_params: Dict,
+        remodl_params: Dict,
         logging_obj: LiteLLMLoggingObj,
         timeout: Union[float, httpx.Timeout],
         extra_headers: Optional[Dict[str, Any]] = None,
@@ -5629,17 +5629,17 @@ class BaseLLMHTTPHandler:
         """
         if client is None or not isinstance(client, AsyncHTTPHandler):
             async_httpx_client = get_async_httpx_client(
-                llm_provider=litellm.LlmProviders(custom_llm_provider),
-                params={"ssl_verify": litellm_params.get("ssl_verify", None)},
+                llm_provider=remodl.LlmProviders(custom_llm_provider),
+                params={"ssl_verify": remodl_params.get("ssl_verify", None)},
             )
         else:
             async_httpx_client = client
 
         headers = text_to_speech_provider_config.validate_environment(
-            api_key=litellm_params.get("api_key"),
+            api_key=remodl_params.get("api_key"),
             headers=extra_headers or {},
             model=model,
-            api_base=litellm_params.get("api_base"),
+            api_base=remodl_params.get("api_base"),
         )
 
         if extra_headers:
@@ -5647,8 +5647,8 @@ class BaseLLMHTTPHandler:
 
         api_base = text_to_speech_provider_config.get_complete_url(
             model=model,
-            api_base=litellm_params.get("api_base"),
-            litellm_params=litellm_params,
+            api_base=remodl_params.get("api_base"),
+            remodl_params=remodl_params,
         )
 
         request_data = text_to_speech_provider_config.transform_text_to_speech_request(
@@ -5656,7 +5656,7 @@ class BaseLLMHTTPHandler:
             input=input,
             voice=voice,
             optional_params=text_to_speech_optional_params,
-            litellm_params=litellm_params,
+            remodl_params=remodl_params,
             headers=headers,
         )
 

@@ -3,13 +3,13 @@ from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple, Union
 
 import httpx
 
-from litellm.types.rerank import RerankBilledUnits, RerankResponse
-from litellm.types.utils import ModelInfo
+from remodl.types.rerank import RerankBilledUnits, RerankResponse
+from remodl.types.utils import ModelInfo
 
 from ..chat.transformation import BaseLLMException
 
 if TYPE_CHECKING:
-    from litellm.litellm_core_utils.litellm_logging import Logging as _LiteLLMLoggingObj
+    from remodl.remodl_core_utils.remodl_logging import Logging as _LiteLLMLoggingObj
 
     LiteLLMLoggingObj = _LiteLLMLoggingObj
 else:
@@ -45,7 +45,7 @@ class BaseRerankConfig(ABC):
         api_key: Optional[str] = None,
         request_data: dict = {},
         optional_params: dict = {},
-        litellm_params: dict = {},
+        remodl_params: dict = {},
     ) -> RerankResponse:
         return model_response
 
@@ -102,7 +102,7 @@ class BaseRerankConfig(ABC):
 
         Input:
             - model: str, the model name without provider prefix
-            - custom_llm_provider: str, the provider used for the model. If provided, used to check if the litellm model info is for that provider.
+            - custom_llm_provider: str, the provider used for the model. If provided, used to check if the remodl model info is for that provider.
             - num_queries: int, the number of queries to calculate the cost for
             - model_info: ModelInfo, the model info for the given model
 

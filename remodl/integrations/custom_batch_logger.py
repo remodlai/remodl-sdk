@@ -8,9 +8,9 @@ import asyncio
 import time
 from typing import List, Optional
 
-import litellm
-from litellm._logging import verbose_logger
-from litellm.integrations.custom_logger import CustomLogger
+import remodl
+from remodl._logging import verbose_logger
+from remodl.integrations.custom_logger import CustomLogger
 
 
 class CustomBatchLogger(CustomLogger):
@@ -26,8 +26,8 @@ class CustomBatchLogger(CustomLogger):
             flush_lock (Optional[asyncio.Lock], optional): Lock to use when flushing the queue. Defaults to None. Only used for custom loggers that do batching
         """
         self.log_queue: List = []
-        self.flush_interval = flush_interval or litellm.DEFAULT_FLUSH_INTERVAL_SECONDS
-        self.batch_size: int = batch_size or litellm.DEFAULT_BATCH_SIZE
+        self.flush_interval = flush_interval or remodl.DEFAULT_FLUSH_INTERVAL_SECONDS
+        self.batch_size: int = batch_size or remodl.DEFAULT_BATCH_SIZE
         self.last_flush_time = time.time()
         self.flush_lock = flush_lock
 

@@ -7,20 +7,20 @@ import os
 from typing import TYPE_CHECKING, Dict, List, Literal, Optional, Union
 
 if TYPE_CHECKING:
-    from litellm.types.llms.bedrock import BedrockCreateBatchRequest
+    from remodl.types.llms.bedrock import BedrockCreateBatchRequest
 
 import httpx
 
-import litellm
-from litellm.llms.base_llm.anthropic_messages.transformation import (
+import remodl
+from remodl.llms.base_llm.anthropic_messages.transformation import (
     BaseAnthropicMessagesConfig,
 )
-from litellm.llms.base_llm.base_utils import BaseLLMModelInfo
-from litellm.llms.base_llm.chat.transformation import BaseLLMException
-from litellm.secret_managers.main import get_secret
+from remodl.llms.base_llm.base_utils import BaseLLMModelInfo
+from remodl.llms.base_llm.chat.transformation import BaseLLMException
+from remodl.secret_managers.main import get_secret
 
 if TYPE_CHECKING:
-    from litellm.types.llms.openai import AllMessageValues
+    from remodl.types.llms.openai import AllMessageValues
 
 
 class BedrockError(BaseLLMException):
@@ -127,7 +127,7 @@ def init_bedrock_client(
     timeout: Optional[Union[float, httpx.Timeout]] = None,
 ):
     # check for custom AWS_REGION_NAME and use it if not passed to init_bedrock_client
-    litellm_aws_region_name = get_secret("AWS_REGION_NAME", None)
+    remodl_aws_region_name = get_secret("AWS_REGION_NAME", None)
     standard_aws_region_name = get_secret("AWS_REGION", None)
     ## CHECK IS  'os.environ/' passed in
     # Define the list of parameters to check
@@ -159,15 +159,15 @@ def init_bedrock_client(
     ) = params_to_check
 
     # SSL certificates (a.k.a CA bundle) used to verify the identity of requested hosts.
-    ssl_verify = os.getenv("SSL_VERIFY", litellm.ssl_verify)
+    ssl_verify = os.getenv("SSL_VERIFY", remodl.ssl_verify)
 
     ### SET REGION NAME
     if region_name:
         pass
     elif aws_region_name:
         region_name = aws_region_name
-    elif litellm_aws_region_name:
-        region_name = litellm_aws_region_name
+    elif remodl_aws_region_name:
+        region_name = remodl_aws_region_name
     elif standard_aws_region_name:
         region_name = standard_aws_region_name
     else:
@@ -255,7 +255,7 @@ def init_bedrock_client(
         )
     elif aws_access_key_id is not None:
         # uses auth params passed to completion
-        # aws_access_key_id is not None, assume user is trying to auth using litellm.completion
+        # aws_access_key_id is not None, assume user is trying to auth using remodl.completion
 
         client = boto3.client(
             service_name="bedrock-runtime",
@@ -323,7 +323,7 @@ class ModelResponseIterator:
 
 def get_bedrock_tool_name(response_tool_name: str) -> str:
     """
-    If litellm formatted the input tool name, we need to convert it back to the original name.
+    If remodl formatted the input tool name, we need to convert it back to the original name.
 
     Args:
         response_tool_name (str): The name of the tool as received from the response.
@@ -332,8 +332,8 @@ def get_bedrock_tool_name(response_tool_name: str) -> str:
         str: The original name of the tool.
     """
 
-    if response_tool_name in litellm.bedrock_tool_name_mappings.cache_dict:
-        response_tool_name = litellm.bedrock_tool_name_mappings.cache_dict[
+    if response_tool_name in remodl.bedrock_tool_name_mappings.cache_dict:
+        response_tool_name = remodl.bedrock_tool_name_mappings.cache_dict[
             response_tool_name
         ]
     return response_tool_name
@@ -363,7 +363,7 @@ class BedrockModelInfo(BaseLLMModelInfo):
         model: str,
         messages: List["AllMessageValues"],
         optional_params: dict,
-        litellm_params: dict,
+        remodl_params: dict,
         api_key: Optional[str] = None,
         api_base: Optional[str] = None,
     ) -> dict:
@@ -392,7 +392,7 @@ class BedrockModelInfo(BaseLLMModelInfo):
         return model
 
     @staticmethod
-    def get_non_litellm_routing_model_name(model: str) -> str:
+    def get_non_remodl_routing_model_name(model: str) -> str:
         if model.startswith("bedrock/"):
             model = model.split("/", 1)[1]
 
@@ -413,7 +413,7 @@ class BedrockModelInfo(BaseLLMModelInfo):
         AND "meta.llama3-2-11b-instruct-v1:0" -> "meta.llama3-2-11b-instruct-v1"
         """
 
-        model = BedrockModelInfo.get_non_litellm_routing_model_name(model=model)
+        model = BedrockModelInfo.get_non_remodl_routing_model_name(model=model)
         model = BedrockModelInfo.extract_model_name_from_arn(model)
 
         potential_region = model.split(".", 1)[0]
@@ -465,10 +465,10 @@ class BedrockModelInfo(BaseLLMModelInfo):
                 return route_type
 
         base_model = BedrockModelInfo.get_base_model(model)
-        alt_model = BedrockModelInfo.get_non_litellm_routing_model_name(model=model)
+        alt_model = BedrockModelInfo.get_non_remodl_routing_model_name(model=model)
         if (
-            base_model in litellm.bedrock_converse_models
-            or alt_model in litellm.bedrock_converse_models
+            base_model in remodl.bedrock_converse_models
+            or alt_model in remodl.bedrock_converse_models
         ):
             return "converse"
         return "invoke"
@@ -517,23 +517,23 @@ class BedrockModelInfo(BaseLLMModelInfo):
 
         Only route to AmazonAnthropicClaude3MessagesConfig() for BaseMessagesConfig
 
-        All other routes should return None since they will go through litellm.completion
+        All other routes should return None since they will go through remodl.completion
         """
 
         #########################################################
-        # Converse routes should go through litellm.completion()
+        # Converse routes should go through remodl.completion()
         if BedrockModelInfo._explicit_converse_route(model):
             return None
 
         #########################################################
-        # This goes through litellm.AmazonAnthropicClaude3MessagesConfig()
+        # This goes through remodl.AmazonAnthropicClaude3MessagesConfig()
         # Since bedrock Invoke supports Native Anthropic Messages API
         #########################################################
         if "claude" in model:
-            return litellm.AmazonAnthropicClaudeMessagesConfig()
+            return remodl.AmazonAnthropicClaudeMessagesConfig()
 
         #########################################################
-        # These routes will go through litellm.completion()
+        # These routes will go through remodl.completion()
         #########################################################
         return None
 
@@ -637,7 +637,7 @@ class CommonBatchFilesUtils:
 
         self._base_aws = BaseAWSLLM()
 
-    def get_bedrock_model_id_from_litellm_model(self, model: str) -> str:
+    def get_bedrock_model_id_from_remodl_model(self, model: str) -> str:
         """
         Extract the actual Bedrock model ID from LiteLLM model name.
 
@@ -680,23 +680,23 @@ class CommonBatchFilesUtils:
         Extract model ID from S3 file path.
 
         The Bedrock file transformation creates S3 objects with the model name embedded:
-        Format: s3://bucket/litellm-bedrock-files-{model}-{uuid}.jsonl
+        Format: s3://bucket/remodl-bedrock-files-{model}-{uuid}.jsonl
         """
         # Check if model is provided in optional_params first
         if "model" in optional_params and optional_params["model"]:
-            return self.get_bedrock_model_id_from_litellm_model(
+            return self.get_bedrock_model_id_from_remodl_model(
                 optional_params["model"]
             )
 
         # Extract model from S3 URI path
-        # Expected format: s3://bucket/litellm-bedrock-files-{model}-{uuid}.jsonl
+        # Expected format: s3://bucket/remodl-bedrock-files-{model}-{uuid}.jsonl
         try:
             bucket, object_key = self.parse_s3_uri(s3_uri)
 
             # Extract model from object key if it follows our naming pattern
-            if object_key.startswith("litellm-bedrock-files-"):
+            if object_key.startswith("remodl-bedrock-files-"):
                 # Remove prefix and suffix to get model part
-                model_part = object_key[22:]  # Remove "litellm-bedrock-files-"
+                model_part = object_key[22:]  # Remove "remodl-bedrock-files-"
                 # Find the last dash before the UUID
                 parts = model_part.split("-")
                 if len(parts) > 1:
@@ -785,7 +785,7 @@ class CommonBatchFilesUtils:
             else request_data,
         )
 
-    def generate_unique_job_name(self, model: str, prefix: str = "litellm") -> str:
+    def generate_unique_job_name(self, model: str, prefix: str = "remodl") -> str:
         """
         Generate a unique job name for AWS services.
         AWS services often have length limits, so this creates a concise name.
@@ -797,27 +797,27 @@ class CommonBatchFilesUtils:
         Returns:
             Unique job name (≤ 63 characters for Bedrock compatibility)
         """
-        from litellm._uuid import uuid
+        from remodl._uuid import uuid
 
         unique_id = str(uuid.uuid4())[:8]
         # Format: {prefix}-batch-{model}-{uuid}
-        # Example: litellm-batch-claude-266c398e
+        # Example: remodl-batch-claude-266c398e
         job_name = f"{prefix}-batch-{unique_id}"
 
         return job_name
 
     def get_s3_bucket_and_key_from_config(
         self,
-        litellm_params: dict,
+        remodl_params: dict,
         optional_params: dict,
         bucket_env_var: str = "AWS_S3_BUCKET_NAME",
-        key_prefix: str = "litellm",
+        key_prefix: str = "remodl",
     ) -> tuple:
         """
         Get S3 bucket and generate a unique key from configuration.
 
         Args:
-            litellm_params: LiteLLM parameters
+            remodl_params: LiteLLM parameters
             optional_params: Optional parameters
             bucket_env_var: Environment variable name for bucket
             key_prefix: Prefix for the S3 key
@@ -827,11 +827,11 @@ class CommonBatchFilesUtils:
         """
         import time
 
-        from litellm._uuid import uuid
+        from remodl._uuid import uuid
 
         # Get bucket name
         bucket_name = (
-            litellm_params.get("s3_bucket_name")
+            remodl_params.get("s3_bucket_name")
             or optional_params.get("s3_bucket_name")
             or os.getenv(bucket_env_var)
         )

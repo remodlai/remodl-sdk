@@ -3,23 +3,23 @@ from typing import Any, Dict, Optional, Union
 
 import httpx
 
-import litellm
-from litellm._logging import verbose_logger
-from litellm.caching import InMemoryCache
-from litellm.constants import SECRET_MANAGER_REFRESH_INTERVAL
-from litellm.llms.custom_httpx.http_handler import (
+import remodl
+from remodl._logging import verbose_logger
+from remodl.caching import InMemoryCache
+from remodl.constants import SECRET_MANAGER_REFRESH_INTERVAL
+from remodl.llms.custom_httpx.http_handler import (
     _get_httpx_client,
     get_async_httpx_client,
     httpxSpecialProvider,
 )
-from litellm.proxy._types import KeyManagementSystem
+from remodl.proxy._types import KeyManagementSystem
 
 from .base_secret_manager import BaseSecretManager
 
 
 class HashicorpSecretManager(BaseSecretManager):
     def __init__(self):
-        from litellm.proxy.proxy_server import CommonProxyErrors, premium_user
+        from remodl.proxy.proxy_server import CommonProxyErrors, premium_user
 
         # Vault-specific config
         self.vault_addr = os.getenv("HCP_VAULT_ADDR", "http://127.0.0.1:8200")
@@ -38,8 +38,8 @@ class HashicorpSecretManager(BaseSecretManager):
                 "Missing Vault token. Please set HCP_VAULT_TOKEN in your environment."
             )
 
-        litellm.secret_manager_client = self
-        litellm._key_management_system = KeyManagementSystem.HASHICORP_VAULT
+        remodl.secret_manager_client = self
+        remodl._key_management_system = KeyManagementSystem.HASHICORP_VAULT
         _refresh_interval = os.environ.get(
             "HCP_VAULT_REFRESH_INTERVAL", SECRET_MANAGER_REFRESH_INTERVAL
         )

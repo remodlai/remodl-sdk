@@ -1,7 +1,7 @@
 from fastapi import Request
 from fastapi_sso.sso.base import OpenID
 
-from litellm.integrations.custom_logger import CustomLogger
+from remodl.integrations.custom_logger import CustomLogger
 
 
 class CustomSSOLoginHandler(CustomLogger):

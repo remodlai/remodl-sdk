@@ -5,7 +5,7 @@ from typing import Coroutine, Optional
 
 from typing_extensions import TypedDict
 
-from litellm._logging import verbose_logger
+from remodl._logging import verbose_logger
 
 
 class LoggingTask(TypedDict):

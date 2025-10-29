@@ -19,15 +19,15 @@ from typing import (
 import httpx
 from pydantic import BaseModel
 
-from litellm._logging import verbose_logger
-from litellm.caching.caching import DualCache
-from litellm.constants import (
+from remodl._logging import verbose_logger
+from remodl.caching.caching import DualCache
+from remodl.constants import (
     BEDROCK_EMBEDDING_PROVIDERS_LITERAL,
     BEDROCK_INVOKE_PROVIDERS_LITERAL,
     BEDROCK_MAX_POLICY_SIZE,
 )
-from litellm.litellm_core_utils.dd_tracing import tracer
-from litellm.secret_managers.main import get_secret, get_secret_str
+from remodl.remodl_core_utils.dd_tracing import tracer
+from remodl.secret_managers.main import get_secret, get_secret_str
 
 if TYPE_CHECKING:
     from botocore.awsrequest import AWSPreparedRequest
@@ -218,7 +218,7 @@ class BaseAWSLLM:
                 # If aws_session_name is not provided, generate a default one
                 if aws_session_name is None:
                     aws_session_name = (
-                        f"litellm-session-{int(datetime.now().timestamp())}"
+                        f"remodl-session-{int(datetime.now().timestamp())}"
                     )
                 credentials, _cache_ttl = self._auth_with_aws_role(
                     aws_access_key_id=aws_access_key_id,
@@ -441,14 +441,14 @@ class BaseAWSLLM:
             else:
                 aws_region_name = self._get_aws_region_from_model_arn(model)
             # check env #
-            litellm_aws_region_name = get_secret("AWS_REGION_NAME", None)
+            remodl_aws_region_name = get_secret("AWS_REGION_NAME", None)
 
             if (
                 aws_region_name is None
-                and litellm_aws_region_name is not None
-                and isinstance(litellm_aws_region_name, str)
+                and remodl_aws_region_name is not None
+                and isinstance(remodl_aws_region_name, str)
             ):
-                aws_region_name = litellm_aws_region_name
+                aws_region_name = remodl_aws_region_name
 
             standard_aws_region_name = get_secret("AWS_REGION", None)
             if (
@@ -486,12 +486,12 @@ class BaseAWSLLM:
         """
         if aws_region_name is None:
             # check env #
-            litellm_aws_region_name = get_secret("AWS_REGION_NAME", None)
+            remodl_aws_region_name = get_secret("AWS_REGION_NAME", None)
 
-            if litellm_aws_region_name is not None and isinstance(
-                litellm_aws_region_name, str
+            if remodl_aws_region_name is not None and isinstance(
+                remodl_aws_region_name, str
             ):
-                aws_region_name = litellm_aws_region_name
+                aws_region_name = remodl_aws_region_name
 
             standard_aws_region_name = get_secret("AWS_REGION", None)
             if standard_aws_region_name is not None and isinstance(
@@ -549,7 +549,7 @@ class BaseAWSLLM:
             "RoleSessionName": aws_session_name,
             "WebIdentityToken": oidc_token,
             "DurationSeconds": 3600,
-            "Policy": '{"Version":"2012-10-17","Statement":[{"Sid":"BedrockLiteLLM","Effect":"Allow","Action":["bedrock:InvokeModel","bedrock:InvokeModelWithResponseStream"],"Resource":"*","Condition":{"Bool":{"aws:SecureTransport":"true"},"StringLike":{"aws:UserAgent":"litellm/*"}}}]}',
+            "Policy": '{"Version":"2012-10-17","Statement":[{"Sid":"BedrockLiteLLM","Effect":"Allow","Action":["bedrock:InvokeModel","bedrock:InvokeModelWithResponseStream"],"Resource":"*","Condition":{"Bool":{"aws:SecureTransport":"true"},"StringLike":{"aws:UserAgent":"remodl/*"}}}]}',
         }
 
         # Add ExternalId parameter if provided

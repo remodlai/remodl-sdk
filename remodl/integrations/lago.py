@@ -1,17 +1,17 @@
 # What is this?
-## On Success events log cost to Lago - https://github.com/BerriAI/litellm/issues/3639
+## On Success events log cost to Lago - https://github.com/BerriAI/remodl/issues/3639
 
 import json
 import os
-from litellm._uuid import uuid
+from remodl._uuid import uuid
 from typing import Literal, Optional
 
 import httpx
 
-import litellm
-from litellm._logging import verbose_logger
-from litellm.integrations.custom_logger import CustomLogger
-from litellm.llms.custom_httpx.http_handler import (
+import remodl
+from remodl._logging import verbose_logger
+from remodl.integrations.custom_logger import CustomLogger
+from remodl.llms.custom_httpx.http_handler import (
     HTTPHandler,
     get_async_httpx_client,
     httpxSpecialProvider,
@@ -63,15 +63,15 @@ class LagoLogger(CustomLogger):
             raise Exception("Missing keys={} in environment.".format(missing_keys))
 
     def _common_logic(self, kwargs: dict, response_obj) -> dict:
-        response_obj.get("id", kwargs.get("litellm_call_id"))
+        response_obj.get("id", kwargs.get("remodl_call_id"))
         get_utc_datetime().isoformat()
         cost = kwargs.get("response_cost", None)
         model = kwargs.get("model")
         usage = {}
 
         if (
-            isinstance(response_obj, litellm.ModelResponse)
-            or isinstance(response_obj, litellm.EmbeddingResponse)
+            isinstance(response_obj, remodl.ModelResponse)
+            or isinstance(response_obj, remodl.EmbeddingResponse)
         ) and hasattr(response_obj, "usage"):
             usage = {
                 "prompt_tokens": response_obj["usage"].get("prompt_tokens", 0),
@@ -79,12 +79,12 @@ class LagoLogger(CustomLogger):
                 "total_tokens": response_obj["usage"].get("total_tokens"),
             }
 
-        litellm_params = kwargs.get("litellm_params", {}) or {}
-        proxy_server_request = litellm_params.get("proxy_server_request") or {}
+        remodl_params = kwargs.get("remodl_params", {}) or {}
+        proxy_server_request = remodl_params.get("proxy_server_request") or {}
         end_user_id = proxy_server_request.get("body", {}).get("user", None)
-        user_id = litellm_params["metadata"].get("user_api_key_user_id", None)
-        team_id = litellm_params["metadata"].get("user_api_key_team_id", None)
-        litellm_params["metadata"].get("user_api_key_org_id", None)
+        user_id = remodl_params["metadata"].get("user_api_key_user_id", None)
+        team_id = remodl_params["metadata"].get("user_api_key_team_id", None)
+        remodl_params["metadata"].get("user_api_key_org_id", None)
 
         charge_by: Literal["end_user_id", "team_id", "user_id"] = "end_user_id"
         external_customer_id: Optional[str] = None

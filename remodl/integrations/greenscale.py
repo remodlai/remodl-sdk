@@ -2,7 +2,7 @@ import json
 import traceback
 from datetime import datetime, timezone
 
-import litellm
+import remodl
 
 
 class GreenscaleLogger:
@@ -37,7 +37,7 @@ class GreenscaleLogger:
 
             # Add additional metadata keys to tags
             tags = []
-            metadata = kwargs.get("litellm_params", {}).get("metadata", {})
+            metadata = kwargs.get("remodl_params", {}).get("metadata", {})
             for key, value in metadata.items():
                 if key.startswith("greenscale"):
                     if key == "greenscale_project":
@@ -54,7 +54,7 @@ class GreenscaleLogger:
             if self.greenscale_logging_url is None:
                 raise Exception("Greenscale Logger Error - No logging URL found")
 
-            response = litellm.module_level_client.post(
+            response = remodl.module_level_client.post(
                 self.greenscale_logging_url,
                 headers=self.headers,
                 data=json.dumps(data, default=str),

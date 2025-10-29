@@ -1,6 +1,6 @@
 from typing import List, Union
 
-from litellm.types.llms.openai import AllMessageValues, OpenAITextCompletionUserMessage
+from remodl.types.llms.openai import AllMessageValues, OpenAITextCompletionUserMessage
 
 from ...base_llm.completion.transformation import BaseTextCompletionConfig
 from ...openai.completion.utils import _transform_prompt
@@ -10,7 +10,7 @@ from ..common_utils import FireworksAIMixin
 class FireworksAITextCompletionConfig(FireworksAIMixin, BaseTextCompletionConfig):
     def get_supported_openai_params(self, model: str) -> list:
         """
-        See how LiteLLM supports Provider-specific parameters - https://docs.litellm.ai/docs/completion/provider_specific_params#proxy-usage
+        See how LiteLLM supports Provider-specific parameters - https://docs.remodl.ai/docs/completion/provider_specific_params#proxy-usage
         """
         return [
             "max_tokens",

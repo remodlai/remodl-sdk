@@ -8,19 +8,19 @@ from typing import Any, List, Optional, Tuple, cast, overload
 
 from jinja2.sandbox import ImmutableSandboxedEnvironment
 
-import litellm
-import litellm.types
-import litellm.types.llms
-from litellm import verbose_logger
-from litellm._uuid import uuid
-from litellm.llms.custom_httpx.http_handler import HTTPHandler, get_async_httpx_client
-from litellm.types.files import get_file_extension_from_mime_type
-from litellm.types.llms.anthropic import *
-from litellm.types.llms.bedrock import CachePointBlock
-from litellm.types.llms.bedrock import MessageBlock as BedrockMessageBlock
-from litellm.types.llms.custom_http import httpxSpecialProvider
-from litellm.types.llms.ollama import OllamaVisionModelObject
-from litellm.types.llms.openai import (
+import remodl
+import remodl.types
+import remodl.types.llms
+from remodl import verbose_logger
+from remodl._uuid import uuid
+from remodl.llms.custom_httpx.http_handler import HTTPHandler, get_async_httpx_client
+from remodl.types.files import get_file_extension_from_mime_type
+from remodl.types.llms.anthropic import *
+from remodl.types.llms.bedrock import CachePointBlock
+from remodl.types.llms.bedrock import MessageBlock as BedrockMessageBlock
+from remodl.types.llms.custom_http import httpxSpecialProvider
+from remodl.types.llms.ollama import OllamaVisionModelObject
+from remodl.types.llms.openai import (
     AllMessageValues,
     ChatCompletionAssistantMessage,
     ChatCompletionAssistantToolCall,
@@ -33,10 +33,10 @@ from litellm.types.llms.openai import (
     ChatCompletionUserMessage,
     OpenAIMessageContentListBlock,
 )
-from litellm.types.llms.vertex_ai import FunctionCall as VertexFunctionCall
-from litellm.types.llms.vertex_ai import FunctionResponse as VertexFunctionResponse
-from litellm.types.llms.vertex_ai import PartType as VertexPartType
-from litellm.types.utils import GenericImageParsingChunk
+from remodl.types.llms.vertex_ai import FunctionCall as VertexFunctionCall
+from remodl.types.llms.vertex_ai import FunctionResponse as VertexFunctionResponse
+from remodl.types.llms.vertex_ai import PartType as VertexPartType
+from remodl.types.utils import GenericImageParsingChunk
 
 from .common_utils import convert_content_list_to_str, is_non_content_values_set
 from .image_handling import convert_url_to_base64
@@ -56,7 +56,7 @@ BAD_MESSAGE_ERROR_STR = "Invalid Message "
 DEFAULT_USER_CONTINUE_MESSAGE = {
     "role": "user",
     "content": "Please continue.",
-}  # similar to autogen. Only used if `litellm.modify_params=True`.
+}  # similar to autogen. Only used if `remodl.modify_params=True`.
 
 DEFAULT_USER_CONTINUE_MESSAGE_TYPED = ChatCompletionUserMessage(
     role="user",
@@ -72,7 +72,7 @@ DEFAULT_ASSISTANT_CONTINUE_MESSAGE = ChatCompletionAssistantMessage(
             "text": "Please continue.",
         }
     ],
-)  # similar to autogen. Only used if `litellm.modify_params=True`.
+)  # similar to autogen. Only used if `remodl.modify_params=True`.
 
 
 def map_system_message_pt(messages: list) -> list:
@@ -263,7 +263,7 @@ def ollama_pt(
             prompt += f"### Assistant:\n{assistant_content_str}\n\n"
 
         if msg_i == init_msg_i:  # prevent infinite loops
-            raise litellm.BadRequestError(
+            raise remodl.BadRequestError(
                 message=BAD_MESSAGE_ERROR_STR + f"passed in {messages[msg_i]}",
                 model=model,
                 llm_provider="ollama",
@@ -461,7 +461,7 @@ async def _afetch_and_extract_template(
 
     Returns: (chat_template, bos_token, eos_token)
     """
-    from litellm.litellm_core_utils.prompt_templates.huggingface_template_handler import (
+    from remodl.remodl_core_utils.prompt_templates.huggingface_template_handler import (
         _extract_token_value,
     )
 
@@ -470,11 +470,11 @@ async def _afetch_and_extract_template(
 
     if chat_template is None:
         # Fetch or retrieve cached tokenizer config
-        if model in litellm.known_tokenizer_config:
-            tokenizer_config = litellm.known_tokenizer_config[model]
+        if model in remodl.known_tokenizer_config:
+            tokenizer_config = remodl.known_tokenizer_config[model]
         else:
             tokenizer_config = await get_config_fn(hf_model_name=model)
-            litellm.known_tokenizer_config.update({model: tokenizer_config})
+            remodl.known_tokenizer_config.update({model: tokenizer_config})
 
         # Try to get chat template from tokenizer_config.json first
         if (
@@ -523,7 +523,7 @@ def _fetch_and_extract_template(
 
     Returns: (chat_template, bos_token, eos_token)
     """
-    from litellm.litellm_core_utils.prompt_templates.huggingface_template_handler import (
+    from remodl.remodl_core_utils.prompt_templates.huggingface_template_handler import (
         _extract_token_value,
     )
 
@@ -532,11 +532,11 @@ def _fetch_and_extract_template(
 
     if chat_template is None:
         # Fetch or retrieve cached tokenizer config
-        if model in litellm.known_tokenizer_config:
-            tokenizer_config = litellm.known_tokenizer_config[model]
+        if model in remodl.known_tokenizer_config:
+            tokenizer_config = remodl.known_tokenizer_config[model]
         else:
             tokenizer_config = get_config_fn(hf_model_name=model)
-            litellm.known_tokenizer_config.update({model: tokenizer_config})
+            remodl.known_tokenizer_config.update({model: tokenizer_config})
 
         # Try to get chat template from tokenizer_config.json first
         if (
@@ -581,7 +581,7 @@ async def ahf_chat_template(
     model: str, messages: list, chat_template: Optional[Any] = None
 ):
     """HuggingFace chat template (async version)"""
-    from litellm.litellm_core_utils.prompt_templates.huggingface_template_handler import (
+    from remodl.remodl_core_utils.prompt_templates.huggingface_template_handler import (
         _aget_chat_template_file,
         _aget_tokenizer_config,
         strftime_now,
@@ -608,7 +608,7 @@ async def ahf_chat_template(
 
 def hf_chat_template(model: str, messages: list, chat_template: Optional[Any] = None):
     """HuggingFace chat template (sync version)"""
-    from litellm.litellm_core_utils.prompt_templates.huggingface_template_handler import (
+    from remodl.remodl_core_utils.prompt_templates.huggingface_template_handler import (
         _get_chat_template_file,
         _get_tokenizer_config,
         strftime_now,
@@ -983,9 +983,9 @@ def convert_to_anthropic_tool_invoke_xml(tool_calls: list) -> str:
 def anthropic_messages_pt_xml(messages: list):
     """
     format messages for anthropic
-    1. Anthropic supports roles like "user" and "assistant", (here litellm translates system-> assistant)
+    1. Anthropic supports roles like "user" and "assistant", (here remodl translates system-> assistant)
     2. The first message always needs to be of role "user"
-    3. Each message must alternate between "user" and "assistant" (this is not addressed as now by litellm)
+    3. Each message must alternate between "user" and "assistant" (this is not addressed as now by remodl)
     4. final assistant content cannot end with trailing whitespace (anthropic raises an error otherwise)
     5. System messages are a separate param to the Messages API (used for tool calling)
     6. Ensure we only accept role, content. (message.name is not supported)
@@ -1051,13 +1051,13 @@ def anthropic_messages_pt_xml(messages: list):
             new_messages.append({"role": "assistant", "content": assistant_content})
 
     if not new_messages or new_messages[0]["role"] != "user":
-        if litellm.modify_params:
+        if remodl.modify_params:
             new_messages.insert(
                 0, {"role": "user", "content": [{"type": "text", "text": "."}]}
             )
         else:
             raise Exception(
-                "Invalid first message. Should always start with 'role'='user' for Anthropic. System prompt is sent separately for Anthropic. set 'litellm.modify_params = True' or 'litellm_settings:modify_params = True' on proxy, to insert a placeholder user message - '.' as the first message, "
+                "Invalid first message. Should always start with 'role'='user' for Anthropic. System prompt is sent separately for Anthropic. set 'remodl.modify_params = True' or 'remodl_settings:modify_params = True' on proxy, to insert a placeholder user message - '.' as the first message, "
             )
 
     if new_messages[-1]["role"] == "assistant":
@@ -1661,7 +1661,7 @@ def anthropic_messages_pt(  # noqa: PLR0915
     format messages for anthropic
     1. Anthropic supports roles like "user" and "assistant" (system prompt sent separately)
     2. The first message always needs to be of role "user"
-    3. Each message must alternate between "user" and "assistant" (this is not addressed as now by litellm)
+    3. Each message must alternate between "user" and "assistant" (this is not addressed as now by remodl)
     4. final assistant content cannot end with trailing whitespace (anthropic raises an error otherwise)
     5. System messages are a separate param to the Messages API
     6. Ensure we only accept role, content. (message.name is not supported)
@@ -1677,9 +1677,9 @@ def anthropic_messages_pt(  # noqa: PLR0915
     ] = []
 
     if len(messages) == 0:
-        if not litellm.modify_params:
-            raise litellm.BadRequestError(
-                message=f"Anthropic requires at least one non-system message. Either provide one, or set `litellm.modify_params = True` // `litellm_settings::modify_params: True` to add the dummy user message - {DEFAULT_USER_CONTINUE_MESSAGE_TYPED}.",
+        if not remodl.modify_params:
+            raise remodl.BadRequestError(
+                message=f"Anthropic requires at least one non-system message. Either provide one, or set `remodl.modify_params = True` // `remodl_settings::modify_params: True` to add the dummy user message - {DEFAULT_USER_CONTINUE_MESSAGE_TYPED}.",
                 model=model,
                 llm_provider=llm_provider,
             )
@@ -1872,7 +1872,7 @@ def anthropic_messages_pt(  # noqa: PLR0915
             new_messages.append({"role": "assistant", "content": assistant_content})
 
         if msg_i == init_msg_i:  # prevent infinite loops
-            raise litellm.BadRequestError(
+            raise remodl.BadRequestError(
                 message=BAD_MESSAGE_ERROR_STR + f"passed in {messages[msg_i]}",
                 model=model,
                 llm_provider=llm_provider,
@@ -1965,7 +1965,7 @@ def get_system_prompt(messages):
     return system_prompt, messages
 
 
-from litellm.types.llms.cohere import (
+from remodl.types.llms.cohere import (
     CallObject,
     ChatHistory,
     ChatHistoryChatBot,
@@ -2261,7 +2261,7 @@ def cohere_messages_pt_v2(  # noqa: PLR0915
             )
 
         if msg_i == init_msg_i:  # prevent infinite loops
-            raise litellm.BadRequestError(
+            raise remodl.BadRequestError(
                 message=BAD_MESSAGE_ERROR_STR + f"passed in {messages[msg_i]}",
                 model=model,
                 llm_provider=llm_provider,
@@ -2289,7 +2289,7 @@ def cohere_message_pt(messages: list):
 
 def amazon_titan_pt(
     messages: list,
-):  # format - https://github.com/BerriAI/litellm/issues/1896
+):  # format - https://github.com/BerriAI/remodl/issues/1896
     """
     Amazon Titan uses 'User:' and 'Bot: in it's prompt template
     """
@@ -2364,7 +2364,7 @@ def _gemini_vision_convert_messages(messages: list):
             if isinstance(message["content"], str):
                 prompt += message["content"]
             elif isinstance(message["content"], list):
-                # see https://docs.litellm.ai/docs/providers/openai#openai-vision-models
+                # see https://docs.remodl.ai/docs/providers/openai#openai-vision-models
                 for element in message["content"]:
                     if isinstance(element, dict):
                         if element["type"] == "text":
@@ -2442,7 +2442,7 @@ def gemini_text_image_pt(messages: list):
         if isinstance(message["content"], str):
             prompt += message["content"]
         elif isinstance(message["content"], list):
-            # see https://docs.litellm.ai/docs/providers/openai#openai-vision-models
+            # see https://docs.remodl.ai/docs/providers/openai#openai-vision-models
             for element in message["content"]:
                 if isinstance(element, dict):
                     if element["type"] == "text":
@@ -2461,7 +2461,7 @@ def azure_text_pt(messages: list):
         if isinstance(message["content"], str):
             prompt += message["content"]
         elif isinstance(message["content"], list):
-            # see https://docs.litellm.ai/docs/providers/openai#openai-vision-models
+            # see https://docs.remodl.ai/docs/providers/openai#openai-vision-models
             for element in message["content"]:
                 if isinstance(element, dict):
                     if element["type"] == "text":
@@ -2496,26 +2496,26 @@ from email.message import Message
 
 import httpx
 
-from litellm.types.llms.bedrock import (
+from remodl.types.llms.bedrock import (
     BedrockConverseReasoningContentBlock,
     BedrockConverseReasoningTextBlock,
 )
-from litellm.types.llms.bedrock import ContentBlock as BedrockContentBlock
-from litellm.types.llms.bedrock import DocumentBlock as BedrockDocumentBlock
-from litellm.types.llms.bedrock import ImageBlock as BedrockImageBlock
-from litellm.types.llms.bedrock import SourceBlock as BedrockSourceBlock
-from litellm.types.llms.bedrock import ToolBlock as BedrockToolBlock
-from litellm.types.llms.bedrock import (
+from remodl.types.llms.bedrock import ContentBlock as BedrockContentBlock
+from remodl.types.llms.bedrock import DocumentBlock as BedrockDocumentBlock
+from remodl.types.llms.bedrock import ImageBlock as BedrockImageBlock
+from remodl.types.llms.bedrock import SourceBlock as BedrockSourceBlock
+from remodl.types.llms.bedrock import ToolBlock as BedrockToolBlock
+from remodl.types.llms.bedrock import (
     ToolInputSchemaBlock as BedrockToolInputSchemaBlock,
 )
-from litellm.types.llms.bedrock import ToolJsonSchemaBlock as BedrockToolJsonSchemaBlock
-from litellm.types.llms.bedrock import ToolResultBlock as BedrockToolResultBlock
-from litellm.types.llms.bedrock import (
+from remodl.types.llms.bedrock import ToolJsonSchemaBlock as BedrockToolJsonSchemaBlock
+from remodl.types.llms.bedrock import ToolResultBlock as BedrockToolResultBlock
+from remodl.types.llms.bedrock import (
     ToolResultContentBlock as BedrockToolResultContentBlock,
 )
-from litellm.types.llms.bedrock import ToolSpecBlock as BedrockToolSpecBlock
-from litellm.types.llms.bedrock import ToolUseBlock as BedrockToolUseBlock
-from litellm.types.llms.bedrock import VideoBlock as BedrockVideoBlock
+from remodl.types.llms.bedrock import ToolSpecBlock as BedrockToolSpecBlock
+from remodl.types.llms.bedrock import ToolUseBlock as BedrockToolUseBlock
+from remodl.types.llms.bedrock import VideoBlock as BedrockVideoBlock
 
 
 def _parse_content_type(content_type: str) -> str:
@@ -2602,13 +2602,13 @@ class BedrockImageProcessor:
         """Validate image format and mime type for both images and documents."""
 
         supported_image_formats = (
-            litellm.AmazonConverseConfig().get_supported_image_types()
+            remodl.AmazonConverseConfig().get_supported_image_types()
         )
         supported_doc_formats = (
-            litellm.AmazonConverseConfig().get_supported_document_types()
+            remodl.AmazonConverseConfig().get_supported_document_types()
         )
         supported_video_formats = (
-            litellm.AmazonConverseConfig().get_supported_video_types()
+            remodl.AmazonConverseConfig().get_supported_video_types()
         )
 
         document_types = ["application", "text"]
@@ -2641,7 +2641,7 @@ class BedrockImageProcessor:
         - Primary method - uses `mimetypes.guess_all_extensions`
         - Fallback method - uses `get_file_extension_from_mime_type`
 
-        Relevant Issue: https://github.com/BerriAI/litellm/issues/12260
+        Relevant Issue: https://github.com/BerriAI/remodl/issues/12260
 
         `mimetypes` is not available in docker containers, so we fallback to `get_file_extension_from_mime_type`
 
@@ -2660,7 +2660,7 @@ class BedrockImageProcessor:
 
         # Fallback to types/files.py if mimetypes doesn't return valid extensions
         #################
-        # litellm runs on docker containers and `mimetypes` depends on the installed mimetypes of the OS
+        # remodl runs on docker containers and `mimetypes` depends on the installed mimetypes of the OS
         # we fallback to well known mime types in types/files.py if mimetypes doesn't return valid extensions
         if not valid_extensions:
             try:
@@ -2691,7 +2691,7 @@ class BedrockImageProcessor:
         is_document = any(mime_type.startswith(doc_type) for doc_type in document_types)
 
         supported_video_formats = (
-            litellm.AmazonConverseConfig().get_supported_video_types()
+            remodl.AmazonConverseConfig().get_supported_video_types()
         )
         is_video = any(
             image_format.startswith(video_type)
@@ -2910,7 +2910,7 @@ def _insert_assistant_continue_message(
     """
     Add dummy message between user/tool result blocks.
 
-    Conversation blocks and tool result blocks cannot be provided in the same turn. Issue: https://github.com/BerriAI/litellm/issues/6053
+    Conversation blocks and tool result blocks cannot be provided in the same turn. Issue: https://github.com/BerriAI/remodl/issues/6053
     """
     if assistant_continue_message is not None:
         if isinstance(assistant_continue_message, str):
@@ -2928,7 +2928,7 @@ def _insert_assistant_continue_message(
                     content=[BedrockContentBlock(text=text)],
                 )
             )
-    elif litellm.modify_params:
+    elif remodl.modify_params:
         text = convert_content_list_to_str(
             cast(ChatCompletionAssistantMessage, DEFAULT_ASSISTANT_CONTINUE_MESSAGE)
         )
@@ -2951,13 +2951,13 @@ def get_user_message_block_or_continue_message(
     Returns the user content block
     if content block is an empty string, then return the default continue message
 
-    Relevant Issue: https://github.com/BerriAI/litellm/issues/7169
+    Relevant Issue: https://github.com/BerriAI/remodl/issues/7169
     """
     content_block = message.get("content", None)
 
     # Handle None case
     if content_block is None or (
-        user_continue_message is None and litellm.modify_params is False
+        user_continue_message is None and remodl.modify_params is False
     ):
         return skip_empty_text_blocks(message=message)
 
@@ -3156,13 +3156,13 @@ def get_assistant_message_block_or_continue_message(
     Returns the user content block
     if content block is an empty string, then return the default continue message
 
-    Relevant Issue: https://github.com/BerriAI/litellm/issues/7169
+    Relevant Issue: https://github.com/BerriAI/remodl/issues/7169
     """
     content_block = message.get("content", None)
 
     # Handle Base case
     if content_block is None or (
-        assistant_continue_message is None and litellm.modify_params is False
+        assistant_continue_message is None and remodl.modify_params is False
     ):
         return skip_empty_text_blocks(message=message)
 
@@ -3206,14 +3206,14 @@ class BedrockConverseMessagesProcessor:
         if messages[0].get("role") is not None and messages[0]["role"] == "assistant":
             if user_continue_message is not None:
                 messages.insert(0, user_continue_message)
-            elif litellm.modify_params:
+            elif remodl.modify_params:
                 messages.insert(0, DEFAULT_USER_CONTINUE_MESSAGE)
 
         # if final message is assistant message
         if messages[-1].get("role") is not None and messages[-1]["role"] == "assistant":
             if user_continue_message is not None:
                 messages.append(user_continue_message)
-            elif litellm.modify_params:
+            elif remodl.modify_params:
                 messages.append(DEFAULT_USER_CONTINUE_MESSAGE)
         return messages
 
@@ -3232,7 +3232,7 @@ class BedrockConverseMessagesProcessor:
 
         ## BASE CASE ##
         if len(messages) == 0:
-            raise litellm.BadRequestError(
+            raise remodl.BadRequestError(
                 message=BAD_MESSAGE_ERROR_STR
                 + "bedrock requires at least one non-system message",
                 model=model,
@@ -3283,7 +3283,7 @@ class BedrockConverseMessagesProcessor:
                                 )
                                 _parts.append(_part)
                             _cache_point_block = (
-                                litellm.AmazonConverseConfig()._get_cache_point_block(
+                                remodl.AmazonConverseConfig()._get_cache_point_block(
                                     message_block=cast(
                                         OpenAIMessageContentListBlock, element
                                     ),
@@ -3298,7 +3298,7 @@ class BedrockConverseMessagesProcessor:
                 ):
                     _part = BedrockContentBlock(text=messages[msg_i]["content"])
                     _cache_point_block = (
-                        litellm.AmazonConverseConfig()._get_cache_point_block(
+                        remodl.AmazonConverseConfig()._get_cache_point_block(
                             message_block, block_type="content_block"
                         )
                     )
@@ -3311,7 +3311,7 @@ class BedrockConverseMessagesProcessor:
                 if len(contents) > 0 and contents[-1]["role"] == "user":
                     if (
                         assistant_continue_message is not None
-                        or litellm.modify_params is True
+                        or remodl.modify_params is True
                     ):
                         # if last message was a 'user' message, then add a dummy assistant message (bedrock requires alternating roles)
                         contents = _insert_assistant_continue_message(
@@ -3367,7 +3367,7 @@ class BedrockConverseMessagesProcessor:
                 if len(contents) > 0 and contents[-1]["role"] == "user":
                     if (
                         assistant_continue_message is not None
-                        or litellm.modify_params is True
+                        or remodl.modify_params is True
                     ):
                         # if last message was a 'user' message, then add a dummy assistant message (bedrock requires alternating roles)
                         contents = _insert_assistant_continue_message(
@@ -3442,7 +3442,7 @@ class BedrockConverseMessagesProcessor:
                                 assistants_parts.append(assistants_part)
                                 # Add cache point block for assistant content elements
                         _cache_point_block = (
-                            litellm.AmazonConverseConfig()._get_cache_point_block(
+                            remodl.AmazonConverseConfig()._get_cache_point_block(
                                 message_block=cast(
                                     OpenAIMessageContentListBlock, element
                                 ),
@@ -3460,7 +3460,7 @@ class BedrockConverseMessagesProcessor:
                     )
                     # Add cache point block for assistant string content
                     _cache_point_block = (
-                        litellm.AmazonConverseConfig()._get_cache_point_block(
+                        remodl.AmazonConverseConfig()._get_cache_point_block(
                             assistant_message_block, block_type="content_block"
                         )
                     )
@@ -3481,7 +3481,7 @@ class BedrockConverseMessagesProcessor:
                 )
 
             if msg_i == init_msg_i:  # prevent infinite loops
-                raise litellm.BadRequestError(
+                raise remodl.BadRequestError(
                     message=BAD_MESSAGE_ERROR_STR + f"passed in {messages[msg_i]}",
                     model=model,
                     llm_provider=llm_provider,
@@ -3518,7 +3518,7 @@ class BedrockConverseMessagesProcessor:
         file_id = file_message.get("file_id")
 
         if file_data is None and file_id is None:
-            raise litellm.BadRequestError(
+            raise remodl.BadRequestError(
                 message="file_data and file_id cannot both be None. Got={}".format(
                     message
                 ),
@@ -3539,7 +3539,7 @@ class BedrockConverseMessagesProcessor:
         file_id = file_message.get("file_id")
         format = file_message.get("format")
         if file_data is None and file_id is None:
-            raise litellm.BadRequestError(
+            raise remodl.BadRequestError(
                 message="file_data and file_id cannot both be None. Got={}".format(
                     message
                 ),
@@ -3561,7 +3561,7 @@ class BedrockConverseMessagesProcessor:
 
         Handle error raised by bedrock if thinking blocks are provided for a non-thinking model (e.g. nova with tool use)
 
-        Relevant Issue: https://github.com/BerriAI/litellm/issues/9063
+        Relevant Issue: https://github.com/BerriAI/remodl/issues/9063
         """
         filtered_thinking_blocks = []
         for block in thinking_blocks:
@@ -3596,7 +3596,7 @@ def _bedrock_converse_messages_pt(  # noqa: PLR0915
 
     - Roles must alternate b/w 'user' and 'model' (same as anthropic -> merge consecutive roles)
     - Please ensure that function response turn comes immediately after a function call turn
-    - Conversation blocks and tool result blocks cannot be provided in the same turn. Issue: https://github.com/BerriAI/litellm/issues/6053
+    - Conversation blocks and tool result blocks cannot be provided in the same turn. Issue: https://github.com/BerriAI/remodl/issues/6053
     """
 
     contents: List[BedrockMessageBlock] = []
@@ -3604,7 +3604,7 @@ def _bedrock_converse_messages_pt(  # noqa: PLR0915
 
     ## BASE CASE ##
     if len(messages) == 0:
-        raise litellm.BadRequestError(
+        raise remodl.BadRequestError(
             message=BAD_MESSAGE_ERROR_STR
             + "bedrock requires at least one non-system message",
             model=model,
@@ -3615,14 +3615,14 @@ def _bedrock_converse_messages_pt(  # noqa: PLR0915
     if messages[0].get("role") is not None and messages[0]["role"] == "assistant":
         if user_continue_message is not None:
             messages.insert(0, user_continue_message)
-        elif litellm.modify_params:
+        elif remodl.modify_params:
             messages.insert(0, DEFAULT_USER_CONTINUE_MESSAGE)
 
     # if final message is assistant message
     if messages[-1].get("role") is not None and messages[-1]["role"] == "assistant":
         if user_continue_message is not None:
             messages.append(user_continue_message)
-        elif litellm.modify_params:
+        elif remodl.modify_params:
             messages.append(DEFAULT_USER_CONTINUE_MESSAGE)
 
     while msg_i < len(messages):
@@ -3667,7 +3667,7 @@ def _bedrock_converse_messages_pt(  # noqa: PLR0915
                             )
                             _parts.append(_part)
                         _cache_point_block = (
-                            litellm.AmazonConverseConfig()._get_cache_point_block(
+                            remodl.AmazonConverseConfig()._get_cache_point_block(
                                 message_block=cast(
                                     OpenAIMessageContentListBlock, element
                                 ),
@@ -3680,7 +3680,7 @@ def _bedrock_converse_messages_pt(  # noqa: PLR0915
             elif message_block["content"] and isinstance(message_block["content"], str):
                 _part = BedrockContentBlock(text=messages[msg_i]["content"])
                 _cache_point_block = (
-                    litellm.AmazonConverseConfig()._get_cache_point_block(
+                    remodl.AmazonConverseConfig()._get_cache_point_block(
                         message_block, block_type="content_block"
                     )
                 )
@@ -3693,7 +3693,7 @@ def _bedrock_converse_messages_pt(  # noqa: PLR0915
             if len(contents) > 0 and contents[-1]["role"] == "user":
                 if (
                     assistant_continue_message is not None
-                    or litellm.modify_params is True
+                    or remodl.modify_params is True
                 ):
                     # if last message was a 'user' message, then add a dummy assistant message (bedrock requires alternating roles)
                     contents = _insert_assistant_continue_message(
@@ -3749,7 +3749,7 @@ def _bedrock_converse_messages_pt(  # noqa: PLR0915
             if len(contents) > 0 and contents[-1]["role"] == "user":
                 if (
                     assistant_continue_message is not None
-                    or litellm.modify_params is True
+                    or remodl.modify_params is True
                 ):
                     # if last message was a 'user' message, then add a dummy assistant message (bedrock requires alternating roles)
                     contents = _insert_assistant_continue_message(
@@ -3816,7 +3816,7 @@ def _bedrock_converse_messages_pt(  # noqa: PLR0915
                             assistants_parts.append(assistants_part)
                         # Add cache point block for assistant content elements
                         _cache_point_block = (
-                            litellm.AmazonConverseConfig()._get_cache_point_block(
+                            remodl.AmazonConverseConfig()._get_cache_point_block(
                                 message_block=cast(
                                     OpenAIMessageContentListBlock, element
                                 ),
@@ -3830,7 +3830,7 @@ def _bedrock_converse_messages_pt(  # noqa: PLR0915
                 assistant_content.append(BedrockContentBlock(text=_assistant_content))
                 # Add cache point block for assistant string content
                 _cache_point_block = (
-                    litellm.AmazonConverseConfig()._get_cache_point_block(
+                    remodl.AmazonConverseConfig()._get_cache_point_block(
                         assistant_message_block, block_type="content_block"
                     )
                 )
@@ -3850,7 +3850,7 @@ def _bedrock_converse_messages_pt(  # noqa: PLR0915
             )
 
         if msg_i == init_msg_i:  # prevent infinite loops
-            raise litellm.BadRequestError(
+            raise remodl.BadRequestError(
                 message=BAD_MESSAGE_ERROR_STR + f"passed in {messages[msg_i]}",
                 model=model,
                 llm_provider=llm_provider,
@@ -3887,7 +3887,7 @@ def make_valid_bedrock_tool_name(input_tool_name: str) -> str:
     if input_tool_name != valid_string:
         # passed tool name was formatted to become valid
         # store it internally so we can use for the response
-        litellm.bedrock_tool_name_mappings.set_cache(
+        remodl.bedrock_tool_name_mappings.set_cache(
             key=valid_string, value=input_tool_name
         )
 
@@ -3952,7 +3952,7 @@ def _bedrock_tools_pt(tools: List) -> List[BedrockToolBlock]:
         }
     ]
     """
-    from litellm.litellm_core_utils.prompt_templates.common_utils import unpack_defs
+    from remodl.remodl_core_utils.prompt_templates.common_utils import unpack_defs
 
     tool_block_list: List[BedrockToolBlock] = []
     for tool in tools:
@@ -3961,7 +3961,7 @@ def _bedrock_tools_pt(tools: List) -> List[BedrockToolBlock]:
         )
         name = tool.get("function", {}).get("name", "")
 
-        # related issue: https://github.com/BerriAI/litellm/issues/5007
+        # related issue: https://github.com/BerriAI/remodl/issues/5007
         # Bedrock tool names must satisfy regular expression pattern: [a-zA-Z][a-zA-Z0-9_]* ensure this is true
         name = make_valid_bedrock_tool_name(input_tool_name=name)
         _tool_description = tool.get("function", {}).get("description", None)
@@ -4030,12 +4030,12 @@ def response_schema_prompt(model: str, response_schema: dict) -> str:
     response_schema_as_message = [
         {"role": "user", "content": "{}".format(response_schema)}
     ]
-    if f"{model}/response_schema_prompt" in litellm.custom_prompt_dict:
-        custom_prompt_details = litellm.custom_prompt_dict[
+    if f"{model}/response_schema_prompt" in remodl.custom_prompt_dict:
+        custom_prompt_details = remodl.custom_prompt_dict[
             f"{model}/response_schema_prompt"
         ]  # allow user to define custom response schema prompt by model
-    elif "response_schema_prompt" in litellm.custom_prompt_dict:
-        custom_prompt_details = litellm.custom_prompt_dict["response_schema_prompt"]
+    elif "response_schema_prompt" in remodl.custom_prompt_dict:
+        custom_prompt_details = remodl.custom_prompt_dict["response_schema_prompt"]
 
     if custom_prompt_details is not None:
         return custom_prompt(
@@ -4123,7 +4123,7 @@ def prompt_factory(
     if custom_llm_provider == "ollama":
         return ollama_pt(model=model, messages=messages)
     elif custom_llm_provider == "anthropic":
-        if litellm.AnthropicTextConfig._is_anthropic_text_model(model):
+        if remodl.AnthropicTextConfig._is_anthropic_text_model(model):
             return anthropic_pt(messages=messages)
         return anthropic_messages_pt(
             messages=messages, model=model, llm_provider=custom_llm_provider
@@ -4133,14 +4133,14 @@ def prompt_factory(
     elif custom_llm_provider == "gemini":
         if (
             model == "gemini-pro-vision"
-            or litellm.supports_vision(model=model)
-            or litellm.supports_vision(model=custom_llm_provider + "/" + model)
+            or remodl.supports_vision(model=model)
+            or remodl.supports_vision(model=custom_llm_provider + "/" + model)
         ):
             return _gemini_vision_convert_messages(messages=messages)
         else:
             return gemini_text_image_pt(messages=messages)
     elif custom_llm_provider == "mistral":
-        return litellm.MistralConfig()._transform_messages(
+        return remodl.MistralConfig()._transform_messages(
             messages=messages, model=model
         )
     elif custom_llm_provider == "bedrock":
@@ -4172,7 +4172,7 @@ def prompt_factory(
     elif custom_llm_provider == "azure_text":
         return azure_text_pt(messages=messages)
     elif custom_llm_provider == "watsonx":
-        from litellm.llms.watsonx.chat.transformation import IBMWatsonXChatConfig
+        from remodl.llms.watsonx.chat.transformation import IBMWatsonXChatConfig
 
         return IBMWatsonXChatConfig.apply_prompt_template(
             model=model, messages=messages

@@ -4,19 +4,19 @@ import time
 import traceback
 from typing import Dict, Iterable, List, Literal, Optional, Tuple, Union
 
-import litellm
-from litellm._logging import verbose_logger
-from litellm._uuid import uuid
-from litellm.constants import RESPONSE_FORMAT_TOOL_NAME
-from litellm.litellm_core_utils.prompt_templates.common_utils import (
+import remodl
+from remodl._logging import verbose_logger
+from remodl._uuid import uuid
+from remodl.constants import RESPONSE_FORMAT_TOOL_NAME
+from remodl.remodl_core_utils.prompt_templates.common_utils import (
     _extract_reasoning_content,
 )
-from litellm.types.llms.databricks import DatabricksTool
-from litellm.types.llms.openai import (
+from remodl.types.llms.databricks import DatabricksTool
+from remodl.types.llms.openai import (
     ChatCompletionThinkingBlock,
     OpenAIModerationResponse,
 )
-from litellm.types.utils import (
+from remodl.types.utils import (
     ChatCompletionDeltaToolCall,
     ChatCompletionMessageToolCall,
     ChatCompletionRedactedThinkingBlock,
@@ -27,8 +27,8 @@ from litellm.types.utils import (
     HiddenParams,
     ImageResponse,
 )
-from litellm.types.utils import Logprobs as TextCompletionLogprobs
-from litellm.types.utils import (
+from remodl.types.utils import Logprobs as TextCompletionLogprobs
+from remodl.types.utils import (
     Message,
     ModelResponse,
     ModelResponseStream,
@@ -84,7 +84,7 @@ def convert_tool_call_to_json_mode(
             "arguments"
         )
         if json_mode_content_str is not None:
-            message = litellm.Message(content=json_mode_content_str)
+            message = remodl.Message(content=json_mode_content_str)
             finish_reason = "stop"
             return message, finish_reason
     return None, None
@@ -493,7 +493,7 @@ def convert_to_model_response_object(  # noqa: PLR0915
                         "function"
                     ].get("arguments")
                     if json_mode_content_str is not None:
-                        message = litellm.Message(content=json_mode_content_str)
+                        message = remodl.Message(content=json_mode_content_str)
                         finish_reason = "stop"
                 if message is None:
                     provider_specific_fields = {}
@@ -568,7 +568,7 @@ def convert_to_model_response_object(  # noqa: PLR0915
             model_response_object.choices = choice_list  # type: ignore
 
             if "usage" in response_object and response_object["usage"] is not None:
-                usage_object = litellm.Usage(**response_object["usage"])
+                usage_object = remodl.Usage(**response_object["usage"])
                 setattr(model_response_object, "usage", usage_object)
             if "created" in response_object:
                 model_response_object.created = _safe_convert_created_field(
@@ -611,7 +611,7 @@ def convert_to_model_response_object(  # noqa: PLR0915
             if _response_headers is not None:
                 model_response_object._response_headers = _response_headers
 
-            special_keys = list(litellm.ModelResponse.model_fields.keys())
+            special_keys = list(remodl.ModelResponse.model_fields.keys())
             special_keys.append("usage")
             for k, v in response_object.items():
                 if k not in special_keys:

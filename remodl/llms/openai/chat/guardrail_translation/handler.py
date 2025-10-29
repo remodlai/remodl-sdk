@@ -17,14 +17,14 @@ This pattern can be replicated for other message formats (e.g., Anthropic).
 import asyncio
 from typing import TYPE_CHECKING, Any, Coroutine, Dict, List, Optional, Tuple, cast
 
-import litellm
-from litellm._logging import verbose_proxy_logger
-from litellm.llms.base_llm.guardrail_translation.base_translation import BaseTranslation
-from litellm.types.utils import Choices
+import remodl
+from remodl._logging import verbose_proxy_logger
+from remodl.llms.base_llm.guardrail_translation.base_translation import BaseTranslation
+from remodl.types.utils import Choices
 
 if TYPE_CHECKING:
-    from litellm.integrations.custom_guardrail import CustomGuardrail
-    from litellm.types.utils import ModelResponse
+    from remodl.integrations.custom_guardrail import CustomGuardrail
+    from remodl.types.utils import ModelResponse
 
 
 class OpenAIChatCompletionsHandler(BaseTranslation):
@@ -205,7 +205,7 @@ class OpenAIChatCompletionsHandler(BaseTranslation):
         Override this method to customize text content detection.
         """
         for choice in response.choices:
-            if isinstance(choice, litellm.Choices):
+            if isinstance(choice, remodl.Choices):
                 if choice.message.content and isinstance(choice.message.content, str):
                     return True
         return False
@@ -223,7 +223,7 @@ class OpenAIChatCompletionsHandler(BaseTranslation):
 
         Override this method to customize text extraction logic.
         """
-        if not isinstance(choice, litellm.Choices):
+        if not isinstance(choice, remodl.Choices):
             return
 
         verbose_proxy_logger.debug(

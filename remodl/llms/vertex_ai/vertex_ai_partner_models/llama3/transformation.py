@@ -3,10 +3,10 @@ from typing import Any, List, Optional
 
 import httpx
 
-from litellm.litellm_core_utils.litellm_logging import Logging as LiteLLMLoggingObj
-from litellm.llms.openai.chat.gpt_transformation import OpenAIGPTConfig
-from litellm.types.llms.openai import AllMessageValues, OpenAIChatCompletionResponse
-from litellm.types.utils import ModelResponse, Usage
+from remodl.remodl_core_utils.remodl_logging import Logging as LiteLLMLoggingObj
+from remodl.llms.openai.chat.gpt_transformation import OpenAIGPTConfig
+from remodl.types.llms.openai import AllMessageValues, OpenAIChatCompletionResponse
+from remodl.types.utils import ModelResponse, Usage
 
 from ...common_utils import VertexAIError
 
@@ -88,7 +88,7 @@ class VertexAILlama3Config(OpenAIGPTConfig):
         request_data: dict,
         messages: List[AllMessageValues],
         optional_params: dict,
-        litellm_params: dict,
+        remodl_params: dict,
         encoding: Any,
         api_key: Optional[str] = None,
         json_mode: Optional[bool] = None,

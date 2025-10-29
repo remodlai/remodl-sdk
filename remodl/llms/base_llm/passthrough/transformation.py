@@ -6,8 +6,8 @@ from ..base_utils import BaseLLMModelInfo
 if TYPE_CHECKING:
     from httpx import URL, Headers, Response
 
-    from litellm.litellm_core_utils.litellm_logging import Logging as LiteLLMLoggingObj
-    from litellm.types.utils import CostResponseTypes
+    from remodl.remodl_core_utils.remodl_logging import Logging as LiteLLMLoggingObj
+    from remodl.types.utils import CostResponseTypes
 
     from ..chat.transformation import BaseLLMException
 
@@ -60,7 +60,7 @@ class BasePassthroughConfig(BaseLLMModelInfo):
         model: str,
         endpoint: str,
         request_query_params: Optional[dict],
-        litellm_params: dict,
+        remodl_params: dict,
     ) -> Tuple["URL", str]:
         """
         Get the complete url for the request
@@ -73,7 +73,7 @@ class BasePassthroughConfig(BaseLLMModelInfo):
     def sign_request(
         self,
         headers: dict,
-        litellm_params: dict,
+        remodl_params: dict,
         request_data: Optional[dict],
         api_base: str,
         model: Optional[str] = None,
@@ -95,7 +95,7 @@ class BasePassthroughConfig(BaseLLMModelInfo):
     def get_error_class(
         self, error_message: str, status_code: int, headers: Union[dict, "Headers"]
     ) -> "BaseLLMException":
-        from litellm.llms.base_llm.chat.transformation import BaseLLMException
+        from remodl.llms.base_llm.chat.transformation import BaseLLMException
 
         return BaseLLMException(
             status_code=status_code, message=error_message, headers=headers
@@ -115,7 +115,7 @@ class BasePassthroughConfig(BaseLLMModelInfo):
     def handle_logging_collected_chunks(
         self,
         all_chunks: List[str],
-        litellm_logging_obj: "LiteLLMLoggingObj",
+        remodl_logging_obj: "LiteLLMLoggingObj",
         model: str,
         custom_llm_provider: str,
         endpoint: str,

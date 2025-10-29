@@ -7,13 +7,13 @@ from typing import Dict, List, Literal, Optional, TypedDict, Union
 
 import httpx
 
-from litellm.litellm_core_utils.litellm_logging import Logging as LiteLLMLoggingObj
-from litellm.llms.base_llm.search.transformation import (
+from remodl.remodl_core_utils.remodl_logging import Logging as LiteLLMLoggingObj
+from remodl.llms.base_llm.search.transformation import (
     BaseSearchConfig,
     SearchResponse,
     SearchResult,
 )
-from litellm.secret_managers.main import get_secret_str
+from remodl.secret_managers.main import get_secret_str
 
 
 class _GooglePSESearchRequestRequired(TypedDict):

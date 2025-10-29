@@ -6,36 +6,36 @@ from typing import TYPE_CHECKING, Any, List, Optional, Tuple, Union, cast, get_a
 
 import httpx
 
-import litellm
-from litellm._logging import verbose_logger
-from litellm.litellm_core_utils.core_helpers import map_finish_reason
-from litellm.litellm_core_utils.logging_utils import track_llm_api_timing
-from litellm.litellm_core_utils.prompt_templates.factory import (
+import remodl
+from remodl._logging import verbose_logger
+from remodl.remodl_core_utils.core_helpers import map_finish_reason
+from remodl.remodl_core_utils.logging_utils import track_llm_api_timing
+from remodl.remodl_core_utils.prompt_templates.factory import (
     cohere_message_pt,
     custom_prompt,
     deepseek_r1_pt,
     prompt_factory,
 )
-from litellm.llms.base_llm.chat.transformation import BaseConfig, BaseLLMException
-from litellm.llms.bedrock.chat.invoke_handler import make_call, make_sync_call
-from litellm.llms.bedrock.common_utils import BedrockError
-from litellm.llms.custom_httpx.http_handler import (
+from remodl.llms.base_llm.chat.transformation import BaseConfig, BaseLLMException
+from remodl.llms.bedrock.chat.invoke_handler import make_call, make_sync_call
+from remodl.llms.bedrock.common_utils import BedrockError
+from remodl.llms.custom_httpx.http_handler import (
     AsyncHTTPHandler,
     HTTPHandler,
     _get_httpx_client,
 )
-from litellm.types.llms.openai import AllMessageValues
-from litellm.types.utils import ModelResponse, Usage
-from litellm.utils import CustomStreamWrapper
+from remodl.types.llms.openai import AllMessageValues
+from remodl.types.utils import ModelResponse, Usage
+from remodl.utils import CustomStreamWrapper
 
 if TYPE_CHECKING:
-    from litellm.litellm_core_utils.litellm_logging import Logging as _LiteLLMLoggingObj
+    from remodl.remodl_core_utils.remodl_logging import Logging as _LiteLLMLoggingObj
 
     LiteLLMLoggingObj = _LiteLLMLoggingObj
 else:
     LiteLLMLoggingObj = Any
 
-from litellm.llms.bedrock.base_aws_llm import BaseAWSLLM
+from remodl.llms.bedrock.base_aws_llm import BaseAWSLLM
 
 
 class AmazonInvokeConfig(BaseConfig, BaseAWSLLM):
@@ -76,7 +76,7 @@ class AmazonInvokeConfig(BaseConfig, BaseAWSLLM):
         api_key: Optional[str],
         model: str,
         optional_params: dict,
-        litellm_params: dict,
+        remodl_params: dict,
         stream: Optional[bool] = None,
     ) -> str:
         """
@@ -139,13 +139,13 @@ class AmazonInvokeConfig(BaseConfig, BaseAWSLLM):
         model: str,
         messages: List[AllMessageValues],
         optional_params: dict,
-        litellm_params: dict,
+        remodl_params: dict,
         headers: dict,
     ) -> dict:
         ## SETUP ##
         stream = optional_params.pop("stream", None)
-        custom_prompt_dict: dict = litellm_params.pop("custom_prompt_dict", None) or {}
-        hf_model_name = litellm_params.get("hf_model_name", None)
+        custom_prompt_dict: dict = remodl_params.pop("custom_prompt_dict", None) or {}
+        hf_model_name = remodl_params.get("hf_model_name", None)
 
         provider = self.get_bedrock_invoke_provider(model)
 
@@ -165,7 +165,7 @@ class AmazonInvokeConfig(BaseConfig, BaseAWSLLM):
         if provider == "cohere":
             if model.startswith("cohere.command-r"):
                 ## LOAD CONFIG
-                config = litellm.AmazonCohereChatConfig().get_config()
+                config = remodl.AmazonCohereChatConfig().get_config()
                 for k, v in config.items():
                     if (
                         k not in inference_params
@@ -177,7 +177,7 @@ class AmazonInvokeConfig(BaseConfig, BaseAWSLLM):
                 request_data = _data
             else:
                 ## LOAD CONFIG
-                config = litellm.AmazonCohereConfig.get_config()
+                config = remodl.AmazonCohereConfig.get_config()
                 for k, v in config.items():
                     if (
                         k not in inference_params
@@ -190,27 +190,27 @@ class AmazonInvokeConfig(BaseConfig, BaseAWSLLM):
                 request_data = {"prompt": prompt, **inference_params}
         elif provider == "anthropic":
             transformed_request = (
-                litellm.AmazonAnthropicClaudeConfig().transform_request(
+                remodl.AmazonAnthropicClaudeConfig().transform_request(
                     model=model,
                     messages=messages,
                     optional_params=optional_params,
-                    litellm_params=litellm_params,
+                    remodl_params=remodl_params,
                     headers=headers,
                 )
             )
 
             return transformed_request
         elif provider == "nova":
-            return litellm.AmazonInvokeNovaConfig().transform_request(
+            return remodl.AmazonInvokeNovaConfig().transform_request(
                 model=model,
                 messages=messages,
                 optional_params=optional_params,
-                litellm_params=litellm_params,
+                remodl_params=remodl_params,
                 headers=headers,
             )
         elif provider == "ai21":
             ## LOAD CONFIG
-            config = litellm.AmazonAI21Config.get_config()
+            config = remodl.AmazonAI21Config.get_config()
             for k, v in config.items():
                 if (
                     k not in inference_params
@@ -220,7 +220,7 @@ class AmazonInvokeConfig(BaseConfig, BaseAWSLLM):
             request_data = {"prompt": prompt, **inference_params}
         elif provider == "mistral":
             ## LOAD CONFIG
-            config = litellm.AmazonMistralConfig.get_config()
+            config = remodl.AmazonMistralConfig.get_config()
             for k, v in config.items():
                 if (
                     k not in inference_params
@@ -230,7 +230,7 @@ class AmazonInvokeConfig(BaseConfig, BaseAWSLLM):
             request_data = {"prompt": prompt, **inference_params}
         elif provider == "amazon":  # amazon titan
             ## LOAD CONFIG
-            config = litellm.AmazonTitanConfig.get_config()
+            config = remodl.AmazonTitanConfig.get_config()
             for k, v in config.items():
                 if (
                     k not in inference_params
@@ -243,7 +243,7 @@ class AmazonInvokeConfig(BaseConfig, BaseAWSLLM):
             }
         elif provider == "meta" or provider == "llama" or provider == "deepseek_r1":
             ## LOAD CONFIG
-            config = litellm.AmazonLlamaConfig.get_config()
+            config = remodl.AmazonLlamaConfig.get_config()
             for k, v in config.items():
                 if (
                     k not in inference_params
@@ -269,7 +269,7 @@ class AmazonInvokeConfig(BaseConfig, BaseAWSLLM):
         request_data: dict,
         messages: List[AllMessageValues],
         optional_params: dict,
-        litellm_params: dict,
+        remodl_params: dict,
         encoding: Any,
         api_key: Optional[str] = None,
         json_mode: Optional[bool] = None,
@@ -296,7 +296,7 @@ class AmazonInvokeConfig(BaseConfig, BaseAWSLLM):
                         completion_response["generations"][0]["finish_reason"]
                     )
             elif provider == "anthropic":
-                return litellm.AmazonAnthropicClaudeConfig().transform_response(
+                return remodl.AmazonAnthropicClaudeConfig().transform_response(
                     model=model,
                     raw_response=raw_response,
                     model_response=model_response,
@@ -304,13 +304,13 @@ class AmazonInvokeConfig(BaseConfig, BaseAWSLLM):
                     request_data=request_data,
                     messages=messages,
                     optional_params=optional_params,
-                    litellm_params=litellm_params,
+                    remodl_params=remodl_params,
                     encoding=encoding,
                     api_key=api_key,
                     json_mode=json_mode,
                 )
             elif provider == "nova":
-                return litellm.AmazonInvokeNovaConfig().transform_response(
+                return remodl.AmazonInvokeNovaConfig().transform_response(
                     model=model,
                     raw_response=raw_response,
                     model_response=model_response,
@@ -318,7 +318,7 @@ class AmazonInvokeConfig(BaseConfig, BaseAWSLLM):
                     request_data=request_data,
                     messages=messages,
                     optional_params=optional_params,
-                    litellm_params=litellm_params,
+                    remodl_params=remodl_params,
                     encoding=encoding,
                 )
             elif provider == "ai21":
@@ -328,7 +328,7 @@ class AmazonInvokeConfig(BaseConfig, BaseAWSLLM):
             elif provider == "meta" or provider == "llama" or provider == "deepseek_r1":
                 outputText = completion_response["generation"]
             elif provider == "mistral":
-                outputText = litellm.AmazonMistralConfig.get_outputText(
+                outputText = remodl.AmazonMistralConfig.get_outputText(
                     completion_response, model_response
                 )
             else:  # amazon titan
@@ -375,12 +375,12 @@ class AmazonInvokeConfig(BaseConfig, BaseAWSLLM):
         )
 
         prompt_tokens = int(
-            bedrock_input_tokens or litellm.token_counter(messages=messages)
+            bedrock_input_tokens or remodl.token_counter(messages=messages)
         )
 
         completion_tokens = int(
             bedrock_output_tokens
-            or litellm.token_counter(
+            or remodl.token_counter(
                 text=model_response.choices[0].message.content,  # type: ignore
                 count_response_tokens=True,
             )
@@ -403,7 +403,7 @@ class AmazonInvokeConfig(BaseConfig, BaseAWSLLM):
         model: str,
         messages: List[AllMessageValues],
         optional_params: dict,
-        litellm_params: dict,
+        remodl_params: dict,
         api_key: Optional[str] = None,
         api_base: Optional[str] = None,
     ) -> dict:
@@ -501,7 +501,7 @@ class AmazonInvokeConfig(BaseConfig, BaseAWSLLM):
     @staticmethod
     def get_bedrock_invoke_provider(
         model: str,
-    ) -> Optional[litellm.BEDROCK_INVOKE_PROVIDERS_LITERAL]:
+    ) -> Optional[remodl.BEDROCK_INVOKE_PROVIDERS_LITERAL]:
         """
         Helper function to get the bedrock provider from the model
 
@@ -515,8 +515,8 @@ class AmazonInvokeConfig(BaseConfig, BaseAWSLLM):
             model = model.replace("invoke/", "", 1)
 
         _split_model = model.split(".")[0]
-        if _split_model in get_args(litellm.BEDROCK_INVOKE_PROVIDERS_LITERAL):
-            return cast(litellm.BEDROCK_INVOKE_PROVIDERS_LITERAL, _split_model)
+        if _split_model in get_args(remodl.BEDROCK_INVOKE_PROVIDERS_LITERAL):
+            return cast(remodl.BEDROCK_INVOKE_PROVIDERS_LITERAL, _split_model)
 
         # If not a known provider, check for pattern with two slashes
         provider = AmazonInvokeConfig._get_provider_from_model_path(model)
@@ -527,7 +527,7 @@ class AmazonInvokeConfig(BaseConfig, BaseAWSLLM):
         if "nova" in model:
             return "nova"
 
-        for provider in get_args(litellm.BEDROCK_INVOKE_PROVIDERS_LITERAL):
+        for provider in get_args(remodl.BEDROCK_INVOKE_PROVIDERS_LITERAL):
             if provider in model:
                 return provider
         return None
@@ -535,7 +535,7 @@ class AmazonInvokeConfig(BaseConfig, BaseAWSLLM):
     @staticmethod
     def _get_provider_from_model_path(
         model_path: str,
-    ) -> Optional[litellm.BEDROCK_INVOKE_PROVIDERS_LITERAL]:
+    ) -> Optional[remodl.BEDROCK_INVOKE_PROVIDERS_LITERAL]:
         """
         Helper function to get the provider from a model path with format: provider/model-name
 
@@ -548,8 +548,8 @@ class AmazonInvokeConfig(BaseConfig, BaseAWSLLM):
         parts = model_path.split("/")
         if len(parts) >= 1:
             provider = parts[0]
-            if provider in get_args(litellm.BEDROCK_INVOKE_PROVIDERS_LITERAL):
-                return cast(litellm.BEDROCK_INVOKE_PROVIDERS_LITERAL, provider)
+            if provider in get_args(remodl.BEDROCK_INVOKE_PROVIDERS_LITERAL):
+                return cast(remodl.BEDROCK_INVOKE_PROVIDERS_LITERAL, provider)
         return None
 
     def convert_messages_to_prompt(

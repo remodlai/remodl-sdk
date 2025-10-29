@@ -8,9 +8,9 @@ from typing import TYPE_CHECKING, Any, AsyncIterator, Iterator, List, Optional, 
 if TYPE_CHECKING:
     from pydantic import BaseModel
 
-    from litellm import LiteLLMLoggingObj, ModelResponse
-    from litellm.llms.base_llm.base_model_iterator import BaseModelResponseIterator
-    from litellm.types.llms.openai import AllMessageValues
+    from remodl import LiteLLMLoggingObj, ModelResponse
+    from remodl.llms.base_llm.base_model_iterator import BaseModelResponseIterator
+    from remodl.types.llms.openai import AllMessageValues
 
 
 class CompletionTransformationBridge(ABC):
@@ -20,9 +20,9 @@ class CompletionTransformationBridge(ABC):
         model: str,
         messages: List["AllMessageValues"],
         optional_params: dict,
-        litellm_params: dict,
+        remodl_params: dict,
         headers: dict,
-        litellm_logging_obj: "LiteLLMLoggingObj",
+        remodl_logging_obj: "LiteLLMLoggingObj",
     ) -> dict:
         """Transform /chat/completions api request to another request"""
         pass
@@ -37,7 +37,7 @@ class CompletionTransformationBridge(ABC):
         request_data: dict,
         messages: List["AllMessageValues"],
         optional_params: dict,
-        litellm_params: dict,
+        remodl_params: dict,
         encoding: Any,
         api_key: Optional[str] = None,
         json_mode: Optional[bool] = None,

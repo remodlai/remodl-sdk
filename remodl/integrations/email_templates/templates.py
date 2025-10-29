@@ -15,7 +15,7 @@ KEY_CREATED_EMAIL_TEMPLATE = """
 
                     <h2>Usage Example</h2>
 
-                    Detailed Documentation on <a href="https://docs.litellm.ai/docs/proxy/user_keys">Usage with OpenAI Python SDK, Langchain, LlamaIndex, Curl</a>
+                    Detailed Documentation on <a href="https://docs.remodl.ai/docs/proxy/user_keys">Usage with OpenAI Python SDK, Langchain, LlamaIndex, Curl</a>
 
                     <pre>
 

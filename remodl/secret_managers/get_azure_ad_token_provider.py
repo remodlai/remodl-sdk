@@ -1,8 +1,8 @@
 import os
 from typing import Any, Callable, Optional, Union
 
-from litellm._logging import verbose_logger
-from litellm.types.secret_managers.get_azure_ad_token_provider import (
+from remodl._logging import verbose_logger
+from remodl.types.secret_managers.get_azure_ad_token_provider import (
     AzureCredentialType,
 )
 

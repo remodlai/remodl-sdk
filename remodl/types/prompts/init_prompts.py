@@ -28,7 +28,7 @@ class PromptLiteLLMParams(BaseModel):
 
 class PromptSpec(BaseModel):
     prompt_id: str
-    litellm_params: PromptLiteLLMParams
+    remodl_params: PromptLiteLLMParams
     prompt_info: PromptInfo
     created_at: Optional[datetime] = None
     updated_at: Optional[datetime] = None
@@ -46,7 +46,7 @@ class PromptSpec(BaseModel):
 
 
 class PromptTemplateBase(BaseModel):
-    litellm_prompt_id: str
+    remodl_prompt_id: str
     content: str
     metadata: Optional[Dict[str, Any]] = None
 

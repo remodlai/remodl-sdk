@@ -126,11 +126,11 @@ Override these methods to customize behavior:
 ### Remove PII Before TTS
 
 ```python
-import litellm
+import remodl
 from pathlib import Path
 
 speech_file_path = Path(__file__).parent / "speech.mp3"
-response = litellm.speech(
+response = remodl.speech(
     model="tts-1",
     voice="alloy",
     input="Hi, this is John Doe calling from john@company.com",
@@ -143,11 +143,11 @@ response.stream_to_file(speech_file_path)
 ### Content Moderation Before TTS
 
 ```python
-import litellm
+import remodl
 from pathlib import Path
 
 speech_file_path = Path(__file__).parent / "speech.mp3"
-response = litellm.speech(
+response = remodl.speech(
     model="tts-1-hd",
     voice="nova",
     input="Your text here",
@@ -159,13 +159,13 @@ response.stream_to_file(speech_file_path)
 ### Async TTS with Guardrails
 
 ```python
-import litellm
+import remodl
 import asyncio
 from pathlib import Path
 
 async def generate_speech():
     speech_file_path = Path(__file__).parent / "speech.mp3"
-    response = await litellm.aspeech(
+    response = await remodl.aspeech(
         model="tts-1",
         voice="echo",
         input="Text to convert to speech",

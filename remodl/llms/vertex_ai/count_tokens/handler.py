@@ -1,7 +1,7 @@
 from typing import Any, Dict, Optional, Tuple
 
-from litellm.llms.gemini.count_tokens.handler import GoogleAIStudioTokenCounter
-from litellm.llms.vertex_ai.vertex_llm_base import VertexBase
+from remodl.llms.gemini.count_tokens.handler import GoogleAIStudioTokenCounter
+from remodl.llms.vertex_ai.vertex_llm_base import VertexBase
 
 
 class VertexAITokenCounter(GoogleAIStudioTokenCounter, VertexBase):
@@ -11,16 +11,16 @@ class VertexAITokenCounter(GoogleAIStudioTokenCounter, VertexBase):
         api_key: Optional[str] = None,
         headers: Optional[Dict[str, Any]] = None,
         model: str = "",
-        litellm_params: Optional[Dict[str, Any]] = None,
+        remodl_params: Optional[Dict[str, Any]] = None,
     ) -> Tuple[Dict[str, Any], str]:
         """
         Returns a Tuple of headers and url for the Vertex AI countTokens endpoint.
         """
-        litellm_params = litellm_params or {}
-        vertex_credentials = self.get_vertex_ai_credentials(litellm_params=litellm_params)
-        vertex_project = self.get_vertex_ai_project(litellm_params=litellm_params)
-        vertex_location = self.get_vertex_ai_location(litellm_params=litellm_params)
-        should_use_v1beta1_features = self.is_using_v1beta1_features(litellm_params)
+        remodl_params = remodl_params or {}
+        vertex_credentials = self.get_vertex_ai_credentials(remodl_params=remodl_params)
+        vertex_project = self.get_vertex_ai_project(remodl_params=remodl_params)
+        vertex_location = self.get_vertex_ai_location(remodl_params=remodl_params)
+        should_use_v1beta1_features = self.is_using_v1beta1_features(remodl_params)
         _auth_header, vertex_project = await self._ensure_access_token_async(
             credentials=vertex_credentials,
             project_id=vertex_project,

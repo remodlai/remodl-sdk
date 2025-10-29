@@ -14,10 +14,10 @@ Translations handled by LiteLLM:
 
 from typing import List, Optional
 
-import litellm
-from litellm import verbose_logger
-from litellm.types.llms.openai import AllMessageValues
-from litellm.utils import get_model_info, supports_reasoning
+import remodl
+from remodl import verbose_logger
+from remodl.types.llms.openai import AllMessageValues
+from remodl.utils import get_model_info, supports_reasoning
 
 from ...openai.chat.o_series_transformation import OpenAIOSeriesConfig
 
@@ -27,7 +27,7 @@ class AzureOpenAIO1Config(OpenAIOSeriesConfig):
         """
         Get the supported OpenAI params for the Azure O-Series models
         """
-        all_openai_params = litellm.OpenAIGPTConfig().get_supported_openai_params(
+        all_openai_params = remodl.OpenAIGPTConfig().get_supported_openai_params(
             model=model
         )
         non_supported_params = [
@@ -55,10 +55,10 @@ class AzureOpenAIO1Config(OpenAIOSeriesConfig):
         
 
         #########################################################
-        # Case 1: If the model is recognized and in litellm model cost map
+        # Case 1: If the model is recognized and in remodl model cost map
         # then check if it supports reasoning
         #########################################################
-        if model in litellm.model_list_set:
+        if model in remodl.model_list_set:
             if supports_reasoning(model):
                 o_series_only_param.append("reasoning_effort")
         #########################################################
@@ -86,7 +86,7 @@ class AzureOpenAIO1Config(OpenAIOSeriesConfig):
 
         if (
             model and "o3" in model
-        ):  # o3 models support streaming - https://github.com/BerriAI/litellm/issues/8274
+        ):  # o3 models support streaming - https://github.com/BerriAI/remodl/issues/8274
             return False
 
         if model is not None:
@@ -113,12 +113,12 @@ class AzureOpenAIO1Config(OpenAIOSeriesConfig):
         model: str,
         messages: List[AllMessageValues],
         optional_params: dict,
-        litellm_params: dict,
+        remodl_params: dict,
         headers: dict,
     ) -> dict:
         model = model.replace(
             "o_series/", ""
         )  # handle o_series/my-random-deployment-name
         return super().transform_request(
-            model, messages, optional_params, litellm_params, headers
+            model, messages, optional_params, remodl_params, headers
         )

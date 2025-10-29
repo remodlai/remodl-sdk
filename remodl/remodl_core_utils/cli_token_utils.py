@@ -14,7 +14,7 @@ from typing import Optional
 def get_cli_token_file_path() -> str:
     """Get the path to the CLI token file"""
     home_dir = Path.home()
-    config_dir = home_dir / ".litellm"
+    config_dir = home_dir / ".remodl"
     return str(config_dir / "token.json")
 
 
@@ -31,21 +31,21 @@ def load_cli_token() -> Optional[dict]:
         return None
 
 
-def get_litellm_gateway_api_key() -> Optional[str]:
+def get_remodl_gateway_api_key() -> Optional[str]:
     """
     Get the stored CLI API key for use with LiteLLM SDK.
     
-    This function reads the token file created by `litellm-proxy login`
+    This function reads the token file created by `remodl-proxy login`
     and returns the API key for use in Python scripts.
     
     Returns:
         str: The API key if found, None otherwise
         
     Example:
-        >>> import litellm
-        >>> api_key = litellm.get_litellm_gateway_api_key()
+        >>> import remodl
+        >>> api_key = remodl.get_remodl_gateway_api_key()
         >>> if api_key:
-        >>>     response = litellm.completion(
+        >>>     response = remodl.completion(
         >>>         model="gpt-3.5-turbo",
         >>>         messages=[{"role": "user", "content": "Hello"}],
         >>>         api_key=api_key,

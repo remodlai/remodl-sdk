@@ -8,7 +8,7 @@ from typing import TYPE_CHECKING, Any, Callable, Optional, Union
 
 import httpx
 
-from litellm.types.utils import ModelResponse
+from remodl.types.utils import ModelResponse
 
 from ...openai.openai import OpenAIChatCompletion
 from ..common_utils import BaseAzureLLM
@@ -23,7 +23,7 @@ class AzureOpenAIO1ChatCompletion(BaseAzureLLM, OpenAIChatCompletion):
         model_response: ModelResponse,
         timeout: Union[float, httpx.Timeout],
         optional_params: dict,
-        litellm_params: dict,
+        remodl_params: dict,
         logging_obj: Any,
         model: Optional[str] = None,
         messages: Optional[list] = None,
@@ -44,7 +44,7 @@ class AzureOpenAIO1ChatCompletion(BaseAzureLLM, OpenAIChatCompletion):
         shared_session: Optional["ClientSession"] = None,
     ):
         client = self.get_azure_openai_client(
-            litellm_params=litellm_params,
+            remodl_params=remodl_params,
             api_key=api_key,
             api_base=api_base,
             api_version=api_version,
@@ -55,7 +55,7 @@ class AzureOpenAIO1ChatCompletion(BaseAzureLLM, OpenAIChatCompletion):
             model_response=model_response,
             timeout=timeout,
             optional_params=optional_params,
-            litellm_params=litellm_params,
+            remodl_params=remodl_params,
             logging_obj=logging_obj,
             model=model,
             messages=messages,

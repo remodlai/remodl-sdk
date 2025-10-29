@@ -3,7 +3,7 @@ from typing import Any, Dict, List, Literal, Optional, Union
 from fastapi import HTTPException
 from pydantic import BaseModel, EmailStr, field_validator
 
-from litellm.proxy._types import (
+from remodl.proxy._types import (
     LiteLLM_UserTableWithKeyCount,
     UpdateUserRequest,
     UpdateUserRequestNoUserIDorEmail,

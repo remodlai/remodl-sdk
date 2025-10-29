@@ -2,11 +2,11 @@ from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple, Union
 
 import httpx
 
-import litellm
-from litellm.llms.azure.common_utils import BaseAzureLLM
-from litellm.llms.base_llm.vector_store.transformation import BaseVectorStoreConfig
-from litellm.types.router import GenericLiteLLMParams
-from litellm.types.vector_stores import (
+import remodl
+from remodl.llms.azure.common_utils import BaseAzureLLM
+from remodl.llms.base_llm.vector_store.transformation import BaseVectorStoreConfig
+from remodl.types.router import GenericLiteLLMParams
+from remodl.types.vector_stores import (
     VectorStoreCreateOptionalRequestParams,
     VectorStoreCreateResponse,
     VectorStoreResultContent,
@@ -16,7 +16,7 @@ from litellm.types.vector_stores import (
 )
 
 if TYPE_CHECKING:
-    from litellm.litellm_core_utils.litellm_logging import Logging as _LiteLLMLoggingObj
+    from remodl.remodl_core_utils.remodl_logging import Logging as _LiteLLMLoggingObj
 
     LiteLLMLoggingObj = _LiteLLMLoggingObj
 else:
@@ -28,24 +28,24 @@ class AzureAIVectorStoreConfig(BaseVectorStoreConfig, BaseAzureLLM):
     Configuration for Azure AI Search Vector Store
 
     This implementation uses the Azure AI Search API for vector store operations.
-    Supports vector search with embeddings generated via litellm.embeddings.
+    Supports vector search with embeddings generated via remodl.embeddings.
     """
 
     def __init__(self):
         super().__init__()
 
     def validate_environment(
-        self, headers: dict, litellm_params: Optional[GenericLiteLLMParams]
+        self, headers: dict, remodl_params: Optional[GenericLiteLLMParams]
     ) -> dict:
 
-        basic_headers = self._base_validate_azure_environment(headers, litellm_params)
+        basic_headers = self._base_validate_azure_environment(headers, remodl_params)
         basic_headers.update({"Content-Type": "application/json"})
         return basic_headers
 
     def get_complete_url(
         self,
         api_base: Optional[str],
-        litellm_params: dict,
+        remodl_params: dict,
     ) -> str:
         """
         Get the base endpoint for Azure AI Search API
@@ -55,13 +55,13 @@ class AzureAIVectorStoreConfig(BaseVectorStoreConfig, BaseAzureLLM):
         if api_base:
             return api_base.rstrip("/")
 
-        # Get search service name from litellm_params
-        search_service_name = litellm_params.get("azure_search_service_name")
+        # Get search service name from remodl_params
+        search_service_name = remodl_params.get("azure_search_service_name")
 
         if not search_service_name:
             raise ValueError(
                 "Azure AI Search service name is required. "
-                "Provide it via litellm_params['azure_search_service_name'] or api_base parameter"
+                "Provide it via remodl_params['azure_search_service_name'] or api_base parameter"
             )
 
         # Azure AI Search endpoint
@@ -73,42 +73,42 @@ class AzureAIVectorStoreConfig(BaseVectorStoreConfig, BaseAzureLLM):
         query: Union[str, List[str]],
         vector_store_search_optional_params: VectorStoreSearchOptionalRequestParams,
         api_base: str,
-        litellm_logging_obj: LiteLLMLoggingObj,
-        litellm_params: dict,
+        remodl_logging_obj: LiteLLMLoggingObj,
+        remodl_params: dict,
     ) -> Tuple[str, Dict[str, Any]]:
         """
         Transform search request for Azure AI Search API
 
-        Generates embeddings using litellm.embeddings and constructs Azure AI Search request
+        Generates embeddings using remodl.embeddings and constructs Azure AI Search request
         """
         # Convert query to string if it's a list
         if isinstance(query, list):
             query = " ".join(query)
 
-        # Get embedding model from litellm_params (required)
-        embedding_model = litellm_params.get("litellm_embedding_model")
+        # Get embedding model from remodl_params (required)
+        embedding_model = remodl_params.get("remodl_embedding_model")
         if not embedding_model:
             raise ValueError(
-                "embedding_model is required in litellm_params for Azure AI Search. "
-                "Example: litellm_params['embedding_model'] = 'azure/text-embedding-3-large'"
+                "embedding_model is required in remodl_params for Azure AI Search. "
+                "Example: remodl_params['embedding_model'] = 'azure/text-embedding-3-large'"
             )
 
-        embedding_config = litellm_params.get("litellm_embedding_config", {})
+        embedding_config = remodl_params.get("remodl_embedding_config", {})
         if not embedding_config:
             raise ValueError(
-                "embedding_config is required in litellm_params for Azure AI Search. "
-                "Example: litellm_params['embedding_config'] = {'api_base': 'https://krris-mh44uf7y-eastus2.cognitiveservices.azure.com/', 'api_key': 'os.environ/AZURE_API_KEY', 'api_version': '2025-09-01'}"
+                "embedding_config is required in remodl_params for Azure AI Search. "
+                "Example: remodl_params['embedding_config'] = {'api_base': 'https://krris-mh44uf7y-eastus2.cognitiveservices.azure.com/', 'api_key': 'os.environ/AZURE_API_KEY', 'api_version': '2025-09-01'}"
             )
 
         # Get vector field name (defaults to contentVector)
-        vector_field = litellm_params.get("azure_search_vector_field", "contentVector")
+        vector_field = remodl_params.get("azure_search_vector_field", "contentVector")
 
         # Get top_k (number of results to return)
         top_k = vector_store_search_optional_params.get("top_k", 10)
 
-        # Generate embedding for the query using litellm.embeddings
+        # Generate embedding for the query using remodl.embeddings
         try:
-            embedding_response = litellm.embedding(
+            embedding_response = remodl.embedding(
                 model=embedding_model,
                 input=[query],
                 **embedding_config,
@@ -139,14 +139,14 @@ class AzureAIVectorStoreConfig(BaseVectorStoreConfig, BaseAzureLLM):
         #########################################################
         # Update logging object with details of the request
         #########################################################
-        litellm_logging_obj.model_call_details["input"] = query
-        litellm_logging_obj.model_call_details["embedding_model"] = embedding_model
-        litellm_logging_obj.model_call_details["top_k"] = top_k
+        remodl_logging_obj.model_call_details["input"] = query
+        remodl_logging_obj.model_call_details["embedding_model"] = embedding_model
+        remodl_logging_obj.model_call_details["top_k"] = top_k
 
         return url, request_body
 
     def transform_search_vector_store_response(
-        self, response: httpx.Response, litellm_logging_obj: LiteLLMLoggingObj
+        self, response: httpx.Response, remodl_logging_obj: LiteLLMLoggingObj
     ) -> VectorStoreSearchResponse:
         """
         Transform Azure AI Search API response to standard vector store search response
@@ -213,7 +213,7 @@ class AzureAIVectorStoreConfig(BaseVectorStoreConfig, BaseAzureLLM):
 
             return VectorStoreSearchResponse(
                 object="vector_store.search_results.page",
-                search_query=litellm_logging_obj.model_call_details.get("input", ""),
+                search_query=remodl_logging_obj.model_call_details.get("input", ""),
                 data=search_results,
             )
 

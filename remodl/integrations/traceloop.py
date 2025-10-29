@@ -1,6 +1,6 @@
 import traceback
 
-from litellm._logging import verbose_logger
+from remodl._logging import verbose_logger
 
 
 class TraceloopLogger:
@@ -50,7 +50,7 @@ class TraceloopLogger:
             start_time = int(start_time.timestamp())
             end_time = int(end_time.timestamp())
             span = tracer.start_span(
-                "litellm.completion", kind=SpanKind.CLIENT, start_time=start_time
+                "remodl.completion", kind=SpanKind.CLIENT, start_time=start_time
             )
 
             if span.is_recording():

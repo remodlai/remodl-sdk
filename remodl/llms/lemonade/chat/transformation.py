@@ -5,13 +5,13 @@ from typing import Any, List, Optional, Tuple, Union
 
 import httpx
 
-import litellm
-from litellm.litellm_core_utils.litellm_logging import Logging as LiteLLMLoggingObj
-from litellm.secret_managers.main import get_secret_str
-from litellm.types.llms.openai import (
+import remodl
+from remodl.remodl_core_utils.remodl_logging import Logging as LiteLLMLoggingObj
+from remodl.secret_managers.main import get_secret_str
+from remodl.types.llms.openai import (
     AllMessageValues,
 )
-from litellm.types.utils import ModelResponse
+from remodl.types.utils import ModelResponse
 
 from ...openai_like.chat.transformation import OpenAILikeChatConfig
 
@@ -84,7 +84,7 @@ class LemonadeChatConfig(OpenAILikeChatConfig):
 
         # Getting the list of models from lemonade
         try:
-            response = litellm.module_level_client.get(
+            response = remodl.module_level_client.get(
                 url=f"{api_base}/models",
             )
         except Exception as e:
@@ -123,7 +123,7 @@ class LemonadeChatConfig(OpenAILikeChatConfig):
         request_data: dict,
         messages: List[AllMessageValues],
         optional_params: dict,
-        litellm_params: dict,
+        remodl_params: dict,
         encoding: Any,
         api_key: Optional[str] = None,
         json_mode: Optional[bool] = None,
@@ -138,7 +138,7 @@ class LemonadeChatConfig(OpenAILikeChatConfig):
             encoding=encoding,
             optional_params=optional_params,
             json_mode=json_mode,
-            litellm_params=litellm_params,
+            remodl_params=remodl_params,
             api_key=api_key,
         )
 

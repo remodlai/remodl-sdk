@@ -4,7 +4,7 @@ Wandb Chat Completions API - Transformation
 This is OpenAI compatible - no translation needed / occurs
 """
 
-from litellm.llms.openai.chat.gpt_transformation import OpenAIGPTConfig
+from remodl.llms.openai.chat.gpt_transformation import OpenAIGPTConfig
 
 
 class WandbConfig(OpenAIGPTConfig):

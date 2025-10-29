@@ -2,8 +2,8 @@ from typing import List, Optional, Union
 
 import httpx
 
-from litellm import verbose_logger
-from litellm.llms.base_llm.chat.transformation import BaseLLMException
+from remodl import verbose_logger
+from remodl.llms.base_llm.chat.transformation import BaseLLMException
 
 
 class OllamaError(BaseLLMException):
@@ -46,7 +46,7 @@ def _convert_image(image):
     return base64.b64encode(jpeg_image.getvalue()).decode("utf-8")
 
 
-from litellm.llms.base_llm.base_utils import BaseLLMModelInfo
+from remodl.llms.base_llm.base_utils import BaseLLMModelInfo
 
 
 class OllamaModelInfo(BaseLLMModelInfo):
@@ -58,23 +58,23 @@ class OllamaModelInfo(BaseLLMModelInfo):
 
     @staticmethod
     def get_api_key(api_key=None) -> Optional[str]:
-        """Get API key from environment variables or litellm configuration"""
+        """Get API key from environment variables or remodl configuration"""
         import os
 
-        import litellm
-        from litellm.secret_managers.main import get_secret_str
+        import remodl
+        from remodl.secret_managers.main import get_secret_str
 
         return (
             os.environ.get("OLLAMA_API_KEY")
-            or litellm.api_key
-            or litellm.openai_key
+            or remodl.api_key
+            or remodl.openai_key
             or get_secret_str("OLLAMA_API_KEY")
         )
 
 
     @staticmethod
     def get_api_base(api_base: Optional[str] = None) -> str:
-        from litellm.secret_managers.main import get_secret_str
+        from remodl.secret_managers.main import get_secret_str
 
         # env var OLLAMA_API_BASE or default
         return api_base or get_secret_str("OLLAMA_API_BASE") or "http://localhost:11434"
@@ -114,7 +114,7 @@ class OllamaModelInfo(BaseLLMModelInfo):
             verbose_logger.warning(f"Error retrieving ollama tag endpoint: {e}")
             # If tags endpoint fails, fall back to static list
             try:
-                from litellm import models_by_provider
+                from remodl import models_by_provider
 
                 static = models_by_provider.get("ollama", []) or []
                 return [f"ollama/{m}" for m in static]
@@ -133,7 +133,7 @@ class OllamaModelInfo(BaseLLMModelInfo):
         model: str,
         messages: list,
         optional_params: dict,
-        litellm_params: dict,
+        remodl_params: dict,
         api_key=None,
         api_base=None,
     ) -> dict:

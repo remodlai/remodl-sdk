@@ -3,11 +3,11 @@ from typing import Callable
 
 import httpx
 
-from litellm.litellm_core_utils.prompt_templates.factory import (
+from remodl.remodl_core_utils.prompt_templates.factory import (
     custom_prompt,
     prompt_factory,
 )
-from litellm.utils import ModelResponse, Usage
+from remodl.utils import ModelResponse, Usage
 
 llm = None
 
@@ -45,7 +45,7 @@ def completion(
     logging_obj,
     optional_params: dict,
     custom_prompt_dict={},
-    litellm_params=None,
+    remodl_params=None,
     logger_fn=None,
 ):
     global llm
@@ -115,9 +115,9 @@ def batch_completions(
 ):
     """
     Example usage:
-    import litellm
+    import remodl
     import os
-    from litellm import batch_completion
+    from remodl import batch_completion
 
 
     responses = batch_completion(

@@ -1,4 +1,4 @@
-from litellm.llms.openai.image_generation import GPTImageGenerationConfig
+from remodl.llms.openai.image_generation import GPTImageGenerationConfig
 
 
 class AzureFoundryFluxImageGenerationConfig(GPTImageGenerationConfig):

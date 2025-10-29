@@ -10,17 +10,17 @@ from typing import Any, Dict, List, Optional, Tuple, Union
 
 from httpx import URL, Response
 
-from litellm._uuid import uuid
-from litellm.llms.base_llm.chat.transformation import LiteLLMLoggingObj
-from litellm.llms.base_llm.rerank.transformation import BaseRerankConfig
-from litellm.types.rerank import (
+from remodl._uuid import uuid
+from remodl.llms.base_llm.chat.transformation import LiteLLMLoggingObj
+from remodl.llms.base_llm.rerank.transformation import BaseRerankConfig
+from remodl.types.rerank import (
     OptionalRerankParams,
     RerankBilledUnits,
     RerankResponse,
     RerankResponseMeta,
     RerankTokens,
 )
-from litellm.types.utils import ModelInfo
+from remodl.types.utils import ModelInfo
 
 
 class JinaAIRerankConfig(BaseRerankConfig):
@@ -80,7 +80,7 @@ class JinaAIRerankConfig(BaseRerankConfig):
         api_key: Optional[str] = None,
         request_data: Dict = {},
         optional_params: Dict = {},
-        litellm_params: Dict = {},
+        remodl_params: Dict = {},
     ) -> RerankResponse:
         if raw_response.status_code != 200:
             raise Exception(raw_response.text)

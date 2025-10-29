@@ -3,19 +3,19 @@ import concurrent.futures
 import json
 from typing import TYPE_CHECKING, Any, Dict, List, Optional, Union
 
-import litellm
-from litellm._logging import verbose_logger
-from litellm.llms.base_llm.realtime.transformation import BaseRealtimeConfig
-from litellm.types.llms.openai import (
+import remodl
+from remodl._logging import verbose_logger
+from remodl.llms.base_llm.realtime.transformation import BaseRealtimeConfig
+from remodl.types.llms.openai import (
     OpenAIRealtimeEvents,
     OpenAIRealtimeOutputItemDone,
     OpenAIRealtimeResponseDelta,
     OpenAIRealtimeStreamResponseBaseObject,
     OpenAIRealtimeStreamSessionEvents,
 )
-from litellm.types.realtime import ALL_DELTA_TYPES
+from remodl.types.realtime import ALL_DELTA_TYPES
 
-from .litellm_logging import Logging as LiteLLMLogging
+from .remodl_logging import Logging as LiteLLMLogging
 
 if TYPE_CHECKING:
     from websockets.asyncio.client import ClientConnection
@@ -49,7 +49,7 @@ class RealTimeStreaming:
         self.messages: List[OpenAIRealtimeEvents] = []
         self.input_message: Dict = {}
 
-        _logged_real_time_event_types = litellm.logged_real_time_event_types
+        _logged_real_time_event_types = remodl.logged_real_time_event_types
 
         if _logged_real_time_event_types is None:
             _logged_real_time_event_types = DefaultLoggedRealTimeEventTypes

@@ -6,14 +6,14 @@ Get num retries for an exception.
 
 from typing import Dict, Optional, Union
 
-from litellm.exceptions import (
+from remodl.exceptions import (
     AuthenticationError,
     BadRequestError,
     ContentPolicyViolationError,
     RateLimitError,
     Timeout,
 )
-from litellm.types.router import RetryPolicy
+from remodl.types.router import RetryPolicy
 
 
 def get_num_retries_from_retry_policy(

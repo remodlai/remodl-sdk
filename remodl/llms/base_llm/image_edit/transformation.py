@@ -5,14 +5,14 @@ from typing import TYPE_CHECKING, Any, Dict, Optional, Tuple
 import httpx
 from httpx._types import RequestFiles
 
-from litellm.types.images.main import ImageEditOptionalRequestParams
-from litellm.types.responses.main import *
-from litellm.types.router import GenericLiteLLMParams
-from litellm.types.utils import FileTypes
+from remodl.types.images.main import ImageEditOptionalRequestParams
+from remodl.types.responses.main import *
+from remodl.types.router import GenericLiteLLMParams
+from remodl.types.utils import FileTypes
 
 if TYPE_CHECKING:
-    from litellm.litellm_core_utils.litellm_logging import Logging as _LiteLLMLoggingObj
-    from litellm.utils import ImageResponse as _ImageResponse
+    from remodl.remodl_core_utils.remodl_logging import Logging as _LiteLLMLoggingObj
+    from remodl.utils import ImageResponse as _ImageResponse
 
     from ..chat.transformation import BaseLLMException as _BaseLLMException
 
@@ -75,7 +75,7 @@ class BaseImageEditConfig(ABC):
         self,
         model: str,
         api_base: Optional[str],
-        litellm_params: dict,
+        remodl_params: dict,
     ) -> str:
         """
         OPTIONAL
@@ -95,7 +95,7 @@ class BaseImageEditConfig(ABC):
         prompt: str,
         image: FileTypes,
         image_edit_optional_request_params: Dict,
-        litellm_params: GenericLiteLLMParams,
+        remodl_params: GenericLiteLLMParams,
         headers: dict,
     ) -> Tuple[Dict, RequestFiles]:
         pass

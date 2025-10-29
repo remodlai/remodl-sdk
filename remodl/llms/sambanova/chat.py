@@ -6,7 +6,7 @@ this is OpenAI compatible - no translation needed / occurs
 
 from typing import Optional, Union
 
-from litellm.llms.openai.chat.gpt_transformation import OpenAIGPTConfig
+from remodl.llms.openai.chat.gpt_transformation import OpenAIGPTConfig
 
 
 class SambanovaConfig(OpenAIGPTConfig):
@@ -54,7 +54,7 @@ class SambanovaConfig(OpenAIGPTConfig):
         Get the supported OpenAI params for the given model
 
         """
-        from litellm.utils import supports_function_calling
+        from remodl.utils import supports_function_calling
 
         params = [
             "max_completion_tokens",

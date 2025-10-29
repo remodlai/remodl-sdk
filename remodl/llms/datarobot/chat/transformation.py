@@ -5,7 +5,7 @@ Calls done in OpenAI/openai.py as DataRobot is openai-compatible.
 """
 
 from typing import Optional, Tuple
-from litellm.secret_managers.main import get_secret_str
+from remodl.secret_managers.main import get_secret_str
 from urllib.parse import urlparse, urlunparse
 from ...openai_like.chat.transformation import OpenAILikeChatConfig
 
@@ -75,7 +75,7 @@ class DataRobotConfig(OpenAILikeChatConfig):
         api_key: Optional[str],
         model: str,
         optional_params: dict,
-        litellm_params: dict,
+        remodl_params: dict,
         stream: Optional[bool] = None,
     ) -> str:
         """

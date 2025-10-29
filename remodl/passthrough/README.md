@@ -6,17 +6,17 @@ E.g. Route to VLLM's `/classify` endpoint:
 ## SDK (Basic)
 
 ```python
-import litellm
+import remodl
 
 
-response = litellm.llm_passthrough_route(
+response = remodl.llm_passthrough_route(
     model="hosted_vllm/papluca/xlm-roberta-base-language-detection",
     method="POST",
     endpoint="classify",
     api_base="http://localhost:8090",
     api_key=None,
     json={
-        "model": "swapped-for-litellm-model",
+        "model": "swapped-for-remodl-model",
         "input": "Hello, world!",
     }
 )
@@ -28,13 +28,13 @@ print(response)
 
 ```python
 import asyncio
-from litellm import Router
+from remodl import Router
 
 router = Router(
     model_list=[
         {
             "model_name": "roberta-base-language-detection",
-            "litellm_params": {
+            "remodl_params": {
                 "model": "hosted_vllm/papluca/xlm-roberta-base-language-detection",
                 "api_base": "http://localhost:8090", 
             }
@@ -69,7 +69,7 @@ if __name__ == "__main__":
 ```yaml
 model_list:
   - model_name: roberta-base-language-detection
-    litellm_params:
+    remodl_params:
       model: hosted_vllm/papluca/xlm-roberta-base-language-detection
       api_base: http://localhost:8090
 ```
@@ -77,7 +77,7 @@ model_list:
 2. Run the proxy
 
 ```bash
-litellm proxy --config config.yaml
+remodl proxy --config config.yaml
 
 # RUNNING on http://localhost:4000
 ```
@@ -93,12 +93,12 @@ curl -X POST http://localhost:4000/vllm/classify \
 
 # How to add a provider for passthrough
 
-See [VLLMModelInfo](https://github.com/BerriAI/litellm/blob/main/litellm/llms/vllm/common_utils.py) for an example.
+See [VLLMModelInfo](https://github.com/BerriAI/remodl/blob/main/remodl/llms/vllm/common_utils.py) for an example.
 
 1. Inherit from BaseModelInfo
 
 ```python
-from litellm.llms.base_llm.base_utils import BaseLLMModelInfo
+from remodl.llms.base_llm.base_utils import BaseLLMModelInfo
 
 class VLLMModelInfo(BaseLLMModelInfo):
     pass
@@ -107,8 +107,8 @@ class VLLMModelInfo(BaseLLMModelInfo):
 2. Register the provider in the ProviderConfigManager.get_provider_model_info
 
 ```python
-from litellm.utils import ProviderConfigManager
-from litellm.types.utils import LlmProviders
+from remodl.utils import ProviderConfigManager
+from remodl.types.utils import LlmProviders
 
 provider_config = ProviderConfigManager.get_provider_model_info(
     model="my-test-model", provider=LlmProviders.VLLM

@@ -6,12 +6,12 @@ from typing import Any, Dict, List, Optional, Union
 
 import httpx
 
-from litellm._uuid import uuid
-from litellm.litellm_core_utils.litellm_logging import Logging as LiteLLMLoggingObj
-from litellm.llms.base_llm.chat.transformation import BaseLLMException
-from litellm.llms.base_llm.rerank.transformation import BaseRerankConfig
-from litellm.secret_managers.main import get_secret_str
-from litellm.types.rerank import (
+from remodl._uuid import uuid
+from remodl.remodl_core_utils.remodl_logging import Logging as LiteLLMLoggingObj
+from remodl.llms.base_llm.chat.transformation import BaseLLMException
+from remodl.llms.base_llm.rerank.transformation import BaseRerankConfig
+from remodl.secret_managers.main import get_secret_str
+from remodl.types.rerank import (
     OptionalRerankParams,
     RerankBilledUnits,
     RerankRequest,
@@ -138,7 +138,7 @@ class HostedVLLMRerankConfig(BaseRerankConfig):
         api_key: Optional[str] = None,
         request_data: dict = {},
         optional_params: dict = {},
-        litellm_params: dict = {},
+        remodl_params: dict = {},
     ) -> RerankResponse:
         """
         Process response from Hosted VLLM rerank API

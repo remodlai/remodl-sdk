@@ -5,14 +5,14 @@ from typing import Any, Dict, Optional
 
 import httpx
 
-from litellm._logging import verbose_logger
-from litellm.llms.base_llm.ocr.transformation import (
+from remodl._logging import verbose_logger
+from remodl.llms.base_llm.ocr.transformation import (
     BaseOCRConfig,
     DocumentType,
     OCRRequestData,
     OCRResponse,
 )
-from litellm.secret_managers.main import get_secret_str
+from remodl.secret_managers.main import get_secret_str
 
 
 class MistralOCRConfig(BaseOCRConfig):

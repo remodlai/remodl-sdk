@@ -7,9 +7,9 @@ This config enables pass-through behavior to the proxy's /v1/responses endpoint.
 
 from typing import Optional
 
-from litellm.llms.openai.responses.transformation import OpenAIResponsesAPIConfig
-from litellm.secret_managers.main import get_secret_str
-from litellm.types.utils import LlmProviders
+from remodl.llms.openai.responses.transformation import OpenAIResponsesAPIConfig
+from remodl.secret_managers.main import get_secret_str
+from remodl.types.utils import LlmProviders
 
 
 class LiteLLMProxyResponsesAPIConfig(OpenAIResponsesAPIConfig):
@@ -27,7 +27,7 @@ class LiteLLMProxyResponsesAPIConfig(OpenAIResponsesAPIConfig):
     def get_complete_url(
         self,
         api_base: Optional[str],
-        litellm_params: dict,
+        remodl_params: dict,
     ) -> str:
         """
         Get the endpoint for LiteLLM Proxy responses API.

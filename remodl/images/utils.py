@@ -1,11 +1,11 @@
 from io import BufferedReader, BytesIO
 from typing import Any, Dict, cast, get_type_hints
 
-import litellm
-from litellm.litellm_core_utils.token_counter import get_image_type
-from litellm.llms.base_llm.image_edit.transformation import BaseImageEditConfig
-from litellm.types.files import FILE_MIME_TYPES, FileType
-from litellm.types.images.main import ImageEditOptionalRequestParams
+import remodl
+from remodl.remodl_core_utils.token_counter import get_image_type
+from remodl.llms.base_llm.image_edit.transformation import BaseImageEditConfig
+from remodl.types.files import FILE_MIME_TYPES, FileType
+from remodl.types.images.main import ImageEditOptionalRequestParams
 
 
 class ImageEditRequestUtils:
@@ -39,7 +39,7 @@ class ImageEditRequestUtils:
         ]
 
         if unsupported_params:
-            raise litellm.UnsupportedParamsError(
+            raise remodl.UnsupportedParamsError(
                 model=model,
                 message=f"The following parameters are not supported for model {model}: {', '.join(unsupported_params)}",
             )
@@ -48,7 +48,7 @@ class ImageEditRequestUtils:
         mapped_params = image_edit_provider_config.map_openai_params(
             image_edit_optional_params=image_edit_optional_params,
             model=model,
-            drop_params=litellm.drop_params,
+            drop_params=remodl.drop_params,
         )
 
         return mapped_params

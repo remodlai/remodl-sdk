@@ -1,7 +1,7 @@
 from typing import Any, Dict, List, cast, get_type_hints
 
-from litellm.types.llms.anthropic import AnthropicMessagesRequestOptionalParams
-from litellm.types.llms.anthropic_messages.anthropic_response import (
+from remodl.types.llms.anthropic import AnthropicMessagesRequestOptionalParams
+from remodl.types.llms.anthropic_messages.anthropic_response import (
     AnthropicMessagesResponse,
 )
 
@@ -37,25 +37,25 @@ def mock_response(
     """
     Mock response for Anthropic messages
     """
-    from litellm.exceptions import (
+    from remodl.exceptions import (
         ContextWindowExceededError,
         InternalServerError,
         RateLimitError,
     )
 
-    if mock_response == "litellm.InternalServerError":
+    if mock_response == "remodl.InternalServerError":
         raise InternalServerError(
             message="this is a mock internal server error",
             llm_provider="anthropic",
             model=model,
         )
-    elif mock_response == "litellm.ContextWindowExceededError":
+    elif mock_response == "remodl.ContextWindowExceededError":
         raise ContextWindowExceededError(
             message="this is a mock context window exceeded error",
             llm_provider="anthropic",
             model=model,
         )
-    elif mock_response == "litellm.RateLimitError":
+    elif mock_response == "remodl.RateLimitError":
         raise RateLimitError(
             message="this is a mock rate limit error",
             llm_provider="anthropic",

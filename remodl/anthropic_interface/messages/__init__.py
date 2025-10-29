@@ -5,20 +5,20 @@ Use this to call LLMs in Anthropic /messages Request/Response format
 
 This is an __init__.py file to allow the following interface
 
-- litellm.messages.acreate
-- litellm.messages.create
+- remodl.messages.acreate
+- remodl.messages.create
 
 """
 
 from typing import Any, AsyncIterator, Coroutine, Dict, List, Optional, Union
 
-from litellm.llms.anthropic.experimental_pass_through.messages.handler import (
+from remodl.llms.anthropic.experimental_pass_through.messages.handler import (
     anthropic_messages as _async_anthropic_messages,
 )
-from litellm.llms.anthropic.experimental_pass_through.messages.handler import (
+from remodl.llms.anthropic.experimental_pass_through.messages.handler import (
     anthropic_messages_handler as _sync_anthropic_messages,
 )
-from litellm.types.llms.anthropic_messages.anthropic_response import (
+from remodl.types.llms.anthropic_messages.anthropic_response import (
     AnthropicMessagesResponse,
 )
 

@@ -12,11 +12,11 @@ Docs - https://docs.aws.amazon.com/bedrock/latest/userguide/model-parameters-tit
 import types
 from typing import List, Optional, Union
 
-from litellm.types.llms.bedrock import (
+from remodl.types.llms.bedrock import (
     AmazonTitanV2EmbeddingRequest,
     AmazonTitanV2EmbeddingResponse,
 )
-from litellm.types.utils import Embedding, EmbeddingResponse, Usage
+from remodl.types.utils import Embedding, EmbeddingResponse, Usage
 
 
 class AmazonTitanV2Config:

@@ -3,7 +3,7 @@ from typing import List, Literal, Optional, Union
 
 from typing_extensions import TypedDict
 
-from litellm.types.utils import StandardLoggingUserAPIKeyMetadata
+from remodl.types.utils import StandardLoggingUserAPIKeyMetadata
 
 
 class LinkDict(TypedDict, total=False):

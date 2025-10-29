@@ -7,7 +7,7 @@ Used because there are differences in how Google AI Studio and Vertex AI Gemini 
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from litellm.types.utils import ModelInfo, Usage
+    from remodl.types.utils import ModelInfo, Usage
 
 
 def cost_per_web_search_request(usage: "Usage", model_info: "ModelInfo") -> float:
@@ -25,7 +25,7 @@ def cost_per_web_search_request(usage: "Usage", model_info: "ModelInfo") -> floa
     Returns:
         The cost of the web search request.
     """
-    from litellm.types.utils import PromptTokensDetailsWrapper
+    from remodl.types.utils import PromptTokensDetailsWrapper
 
     # check if usage object has web search requests
     cost_per_llm_call_with_web_search = 35e-3

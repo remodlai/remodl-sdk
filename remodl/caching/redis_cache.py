@@ -16,12 +16,12 @@ import time
 from datetime import timedelta
 from typing import TYPE_CHECKING, Any, List, Optional, Tuple, Union, cast
 
-import litellm
-from litellm._logging import print_verbose, verbose_logger
-from litellm.litellm_core_utils.core_helpers import _get_parent_otel_span_from_kwargs
-from litellm.litellm_core_utils.coroutine_checker import coroutine_checker
-from litellm.types.caching import RedisPipelineIncrementOperation
-from litellm.types.services import ServiceTypes
+import remodl
+from remodl._logging import print_verbose, verbose_logger
+from remodl.remodl_core_utils.core_helpers import _get_parent_otel_span_from_kwargs
+from remodl.remodl_core_utils.coroutine_checker import coroutine_checker
+from remodl.types.caching import RedisPipelineIncrementOperation
+from remodl.types.services import ServiceTypes
 
 from .base_cache import BaseCache
 
@@ -84,7 +84,7 @@ def _get_call_stack_info(num_frames: int = 2) -> str:
 
 
 class RedisCache(BaseCache):
-    # if users don't provider one, use the default litellm cache
+    # if users don't provider one, use the default remodl cache
 
     def __init__(
         self,
@@ -97,7 +97,7 @@ class RedisCache(BaseCache):
         socket_timeout: Optional[float] = 5.0,  # default 5 second timeout
         **kwargs,
     ):
-        from litellm._service_logger import ServiceLogging
+        from remodl._service_logger import ServiceLogging
 
         from .._redis import get_redis_client, get_redis_connection_pool
 
@@ -168,15 +168,15 @@ class RedisCache(BaseCache):
                 "Error connecting to Sync Redis client", extra={"error": str(e)}
             )
 
-        if litellm.default_redis_ttl is not None:
-            super().__init__(default_ttl=int(litellm.default_redis_ttl))
+        if remodl.default_redis_ttl is not None:
+            super().__init__(default_ttl=int(remodl.default_redis_ttl))
         else:
             super().__init__()  # defaults to 60s
 
     def init_async_client(
         self,
     ) -> Union[async_redis_client, async_redis_cluster_client]:
-        from litellm import in_memory_llm_clients_cache
+        from remodl import in_memory_llm_clients_cache
 
         from .._redis import get_redis_async_client, get_redis_connection_pool
 
@@ -228,7 +228,7 @@ class RedisCache(BaseCache):
         except Exception as e:
             # NON blocking - notify users Redis is throwing an exception
             print_verbose(
-                f"litellm.caching.caching: set() - Got exception from REDIS : {str(e)}"
+                f"remodl.caching.caching: set() - Got exception from REDIS : {str(e)}"
             )
 
     def increment_cache(
@@ -735,7 +735,7 @@ class RedisCache(BaseCache):
         except Exception as e:
             # NON blocking - notify users Redis is throwing an exception
             verbose_logger.error(
-                "litellm.caching.caching: get() - Got exception from REDIS: ", e
+                "remodl.caching.caching: get() - Got exception from REDIS: ", e
             )
 
     def _run_redis_mget_operation(self, keys: List[str]) -> List[Any]:
@@ -854,7 +854,7 @@ class RedisCache(BaseCache):
                 )
             )
             print_verbose(
-                f"litellm.caching.caching: async get() - Got exception from REDIS: {str(e)}"
+                f"remodl.caching.caching: async get() - Got exception from REDIS: {str(e)}"
             )
 
     async def async_batch_get_cache(

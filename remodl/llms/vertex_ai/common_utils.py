@@ -4,15 +4,15 @@ from typing import Any, Dict, List, Literal, Optional, Set, Tuple, Union, get_ty
 
 import httpx
 
-import litellm
-from litellm import supports_response_schema, supports_system_messages, verbose_logger
-from litellm.constants import DEFAULT_MAX_RECURSE_DEPTH
-from litellm.litellm_core_utils.prompt_templates.common_utils import unpack_defs
-from litellm.llms.base_llm.base_utils import BaseLLMModelInfo, BaseTokenCounter
-from litellm.llms.base_llm.chat.transformation import BaseLLMException
-from litellm.types.llms.openai import AllMessageValues
-from litellm.types.llms.vertex_ai import PartType, Schema
-from litellm.types.utils import TokenCountResponse
+import remodl
+from remodl import supports_response_schema, supports_system_messages, verbose_logger
+from remodl.constants import DEFAULT_MAX_RECURSE_DEPTH
+from remodl.remodl_core_utils.prompt_templates.common_utils import unpack_defs
+from remodl.llms.base_llm.base_utils import BaseLLMModelInfo, BaseTokenCounter
+from remodl.llms.base_llm.chat.transformation import BaseLLMException
+from remodl.types.llms.openai import AllMessageValues
+from remodl.types.llms.vertex_ai import PartType, Schema
+from remodl.types.utils import TokenCountResponse
 
 
 class VertexAIError(BaseLLMException):
@@ -34,13 +34,13 @@ class VertexAIModelRoute(str, Enum):
     NON_GEMINI = "non_gemini"
 
 
-def get_vertex_ai_model_route(model: str, litellm_params: Optional[dict] = None) -> VertexAIModelRoute:
+def get_vertex_ai_model_route(model: str, remodl_params: Optional[dict] = None) -> VertexAIModelRoute:
     """
     Determine which handler to use for a Vertex AI model based on the model name.
     
     Args:
         model: The model name (e.g., "llama3-405b", "gemini-pro", "gemma/gemma-3-12b-it", "openai/gpt-oss-120b")
-        litellm_params: Optional litellm parameters dict that may contain base_model for routing
+        remodl_params: Optional remodl parameters dict that may contain base_model for routing
         
     Returns:
         VertexAIModelRoute: The route enum indicating which handler should be used
@@ -58,13 +58,13 @@ def get_vertex_ai_model_route(model: str, litellm_params: Optional[dict] = None)
         >>> get_vertex_ai_model_route("openai/gpt-oss-120b")
         VertexAIModelRoute.MODEL_GARDEN
     """
-    from litellm.llms.vertex_ai.vertex_ai_partner_models.main import (
+    from remodl.llms.vertex_ai.vertex_ai_partner_models.main import (
         VertexAIPartnerModels,
     )
 
-    # Check base_model in litellm_params for gemini override
-    if litellm_params and litellm_params.get("base_model") is not None:
-        if "gemini" in litellm_params["base_model"]:
+    # Check base_model in remodl_params for gemini override
+    if remodl_params and remodl_params.get("base_model") is not None:
+        if "gemini" in remodl_params["base_model"]:
             return VertexAIModelRoute.GEMINI
     
     # Check for partner models (llama, mistral, claude, etc.)
@@ -99,11 +99,11 @@ def get_supports_system_message(
         )
 
         # Vertex Models called in the `/gemini` request/response format also support system messages
-        if litellm.VertexGeminiConfig._is_model_gemini_spec_model(model):
+        if remodl.VertexGeminiConfig._is_model_gemini_spec_model(model):
             supports_system_message = True
     except Exception as e:
         verbose_logger.warning(
-            "Unable to identify if system message supported. Defaulting to 'False'. Received error message - {}\nAdd it here - https://github.com/BerriAI/litellm/blob/main/model_prices_and_context_window.json".format(
+            "Unable to identify if system message supported. Defaulting to 'False'. Received error message - {}\nAdd it here - https://github.com/BerriAI/remodl/blob/main/model_prices_and_context_window.json".format(
                 str(e)
             )
         )
@@ -144,7 +144,7 @@ def _get_vertex_url(
     url: Optional[str] = None
     endpoint: Optional[str] = None
 
-    model = litellm.VertexGeminiConfig.get_model_for_vertex_ai_url(model=model)
+    model = remodl.VertexGeminiConfig.get_model_for_vertex_ai_url(model=model)
     if mode == "chat":
         ### SET RUNTIME ENDPOINT ###
         endpoint = "generateContent"
@@ -227,7 +227,7 @@ def _get_gemini_url(
         )
     elif mode == "image_generation":
         raise ValueError(
-            "LiteLLM's `gemini/` route does not support image generation yet. Let us know if you need this feature by opening an issue at https://github.com/BerriAI/litellm/issues"
+            "LiteLLM's `gemini/` route does not support image generation yet. Let us know if you need this feature by opening an issue at https://github.com/BerriAI/remodl/issues"
         )
     else:
         raise ValueError(f"Unsupported mode: {mode}")
@@ -240,7 +240,7 @@ def _check_text_in_content(parts: List[PartType]) -> bool:
     check that user_content has 'text' parameter.
         - Known Vertex Error: Unable to submit request because it must have a text parameter.
         - 'text' param needs to be present (empty strings are valid)
-        - Relevant Issue: https://github.com/BerriAI/litellm/issues/5515
+        - Relevant Issue: https://github.com/BerriAI/remodl/issues/5515
     """
     has_text_param = False
     for part in parts:
@@ -318,7 +318,7 @@ def _build_vertex_schema(parameters: dict, add_property_ordering: bool = False):
 
 def _filter_anyof_fields(schema_dict: Dict[str, Any]) -> Dict[str, Any]:
     """
-    When anyof is present, only keep the anyof field and its contents - otherwise VertexAI will throw an error - https://github.com/BerriAI/litellm/issues/11164
+    When anyof is present, only keep the anyof field and its contents - otherwise VertexAI will throw an error - https://github.com/BerriAI/remodl/issues/11164
     Filter out other fields in the same dict.
 
     E.g. {"anyOf": [{"type": "string"}, {"type": "null"}], "default": "test"} -> {"anyOf": [{"type": "string"}, {"type": "null"}]}
@@ -613,7 +613,7 @@ def construct_target_url(
 
     If missing, use defaults
 
-    Handle cachedContent scenario - https://github.com/BerriAI/litellm/issues/5460
+    Handle cachedContent scenario - https://github.com/BerriAI/remodl/issues/5460
 
     Constructed Url:
     POST https://LOCATION-aiplatform.googleapis.com/{version}/projects/PROJECT_ID/locations/LOCATION/cachedContents
@@ -656,7 +656,7 @@ def is_global_only_vertex_model(model: str) -> bool:
     Returns:
         True if the model is only available in global region, False otherwise
     """
-    from litellm.utils import get_supported_regions
+    from remodl.utils import get_supported_regions
 
     supported_regions = get_supported_regions(
         model=model, custom_llm_provider="vertex_ai"
@@ -682,7 +682,7 @@ class VertexAIModelInfo(BaseLLMModelInfo):
         model: str,
         messages: List[AllMessageValues],
         optional_params: dict,
-        litellm_params: dict,
+        remodl_params: dict,
         api_key: Optional[str] = None,
         api_base: Optional[str] = None,
     ) -> dict:
@@ -725,7 +725,7 @@ class VertexAITokenCounter(BaseTokenCounter):
         self, 
         custom_llm_provider: Optional[str] = None,
     ) -> bool:
-        from litellm.types.utils import LlmProviders
+        from remodl.types.utils import LlmProviders
         return custom_llm_provider == LlmProviders.VERTEX_AI.value
     
     async def count_tokens(
@@ -738,9 +738,9 @@ class VertexAITokenCounter(BaseTokenCounter):
     ) -> Optional[TokenCountResponse]:
         import copy
 
-        from litellm.llms.vertex_ai.count_tokens.handler import VertexAITokenCounter
+        from remodl.llms.vertex_ai.count_tokens.handler import VertexAITokenCounter
         deployment = deployment or {}
-        count_tokens_params_request = copy.deepcopy(deployment.get("litellm_params", {}))
+        count_tokens_params_request = copy.deepcopy(deployment.get("remodl_params", {}))
         count_tokens_params = {
             "model": model_to_use,
             "contents": contents,

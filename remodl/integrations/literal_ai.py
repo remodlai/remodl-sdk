@@ -2,19 +2,19 @@
 # This file contains the LiteralAILogger class which is used to log steps to the LiteralAI observability platform.
 import asyncio
 import os
-from litellm._uuid import uuid
+from remodl._uuid import uuid
 from typing import List, Optional
 
 import httpx
 
-from litellm._logging import verbose_logger
-from litellm.integrations.custom_batch_logger import CustomBatchLogger
-from litellm.llms.custom_httpx.http_handler import (
+from remodl._logging import verbose_logger
+from remodl.integrations.custom_batch_logger import CustomBatchLogger
+from remodl.llms.custom_httpx.http_handler import (
     HTTPHandler,
     get_async_httpx_client,
     httpxSpecialProvider,
 )
-from litellm.types.utils import StandardLoggingPayload
+from remodl.types.utils import StandardLoggingPayload
 
 
 class LiteralAILogger(CustomBatchLogger):
@@ -29,7 +29,7 @@ class LiteralAILogger(CustomBatchLogger):
         self.headers = {
             "Content-Type": "application/json",
             "x-api-key": literalai_api_key or os.getenv("LITERAL_API_KEY"),
-            "x-client-name": "litellm",
+            "x-client-name": "remodl",
         }
         if env:
             self.headers["x-env"] = env
@@ -189,7 +189,7 @@ class LiteralAILogger(CustomBatchLogger):
         if logging_payload is None:
             raise ValueError("standard_logging_object not found in kwargs")
         clean_metadata = logging_payload["metadata"]
-        metadata = kwargs.get("litellm_params", {}).get("metadata", {})
+        metadata = kwargs.get("remodl_params", {}).get("metadata", {})
 
         settings = logging_payload["model_parameters"]
         messages = logging_payload["messages"]
@@ -231,7 +231,7 @@ class LiteralAILogger(CustomBatchLogger):
                 "tokenCount": logging_payload["total_tokens"],
                 "promptId": prompt_id,
                 "variables": variables,
-                "provider": kwargs.get("custom_llm_provider", "litellm"),
+                "provider": kwargs.get("custom_llm_provider", "remodl"),
                 "model": kwargs.get("model", ""),
                 "duration": (end_time - start_time).total_seconds(),
                 "settings": settings,

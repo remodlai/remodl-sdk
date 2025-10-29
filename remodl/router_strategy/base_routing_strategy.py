@@ -6,10 +6,10 @@ import asyncio
 from abc import ABC
 from typing import Dict, List, Optional, Set, Tuple, Union
 
-from litellm._logging import verbose_router_logger
-from litellm.caching.caching import DualCache
-from litellm.caching.redis_cache import RedisPipelineIncrementOperation
-from litellm.constants import DEFAULT_REDIS_SYNC_INTERVAL
+from remodl._logging import verbose_router_logger
+from remodl.caching.caching import DualCache
+from remodl.caching.redis_cache import RedisPipelineIncrementOperation
+from remodl.constants import DEFAULT_REDIS_SYNC_INTERVAL
 
 
 class BaseRoutingStrategy(ABC):

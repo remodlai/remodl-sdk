@@ -3,8 +3,8 @@ DataDog Integration - sends logs to /api/v2/log
 
 DD Reference API: https://docs.datadoghq.com/api/latest/logs
 
-`async_log_success_event` - used by litellm proxy to send logs to datadog
-`log_success_event` - sync version of logging to DataDog, only used on litellm Python SDK, if user opts in to using sync functions
+`async_log_success_event` - used by remodl proxy to send logs to datadog
+`log_success_event` - sync version of logging to DataDog, only used on remodl Python SDK, if user opts in to using sync functions
 
 async_log_success_event:  will store batch of DD_MAX_BATCH_SIZE in memory and flush to Datadog once it reaches DD_MAX_BATCH_SIZE or every 5 seconds
 
@@ -17,25 +17,25 @@ import asyncio
 import datetime
 import os
 import traceback
-from litellm._uuid import uuid
+from remodl._uuid import uuid
 from datetime import datetime as datetimeObj
 from typing import Any, Dict, List, Optional, Union
 
 import httpx
 from httpx import Response
 
-import litellm
-from litellm._logging import verbose_logger
-from litellm.integrations.custom_batch_logger import CustomBatchLogger
-from litellm.llms.custom_httpx.http_handler import (
+import remodl
+from remodl._logging import verbose_logger
+from remodl.integrations.custom_batch_logger import CustomBatchLogger
+from remodl.llms.custom_httpx.http_handler import (
     _get_httpx_client,
     get_async_httpx_client,
     httpxSpecialProvider,
 )
-from litellm.types.integrations.base_health_check import IntegrationHealthCheckStatus
-from litellm.types.integrations.datadog import *
-from litellm.types.services import ServiceLoggerPayload, ServiceTypes
-from litellm.types.utils import StandardLoggingPayload
+from remodl.types.integrations.base_health_check import IntegrationHealthCheckStatus
+from remodl.types.integrations.datadog import *
+from remodl.types.services import ServiceLoggerPayload, ServiceTypes
+from remodl.types.utils import StandardLoggingPayload
 
 from ..additional_logging_utils import AdditionalLoggingUtils
 
@@ -73,7 +73,7 @@ class DataDogLogger(
                 raise Exception("DD_SITE is not set in .env, set 'DD_SITE=<>")
             
             #########################################################
-            # Handle datadog_params set as litellm.datadog_params
+            # Handle datadog_params set as remodl.datadog_params
             #########################################################
             dict_datadog_params = self._get_datadog_params()
             kwargs.update(dict_datadog_params)
@@ -110,17 +110,17 @@ class DataDogLogger(
 
     def _get_datadog_params(self) -> Dict:
         """
-        Get the datadog_params from litellm.datadog_params
+        Get the datadog_params from remodl.datadog_params
 
         These are params specific to initializing the DataDogLogger e.g. turn_off_message_logging
         """
         dict_datadog_params: Dict = {}
-        if litellm.datadog_params is not None:
-            if isinstance(litellm.datadog_params, DatadogInitParams):
-                dict_datadog_params = litellm.datadog_params.model_dump()
-            elif isinstance(litellm.datadog_params, Dict):
+        if remodl.datadog_params is not None:
+            if isinstance(remodl.datadog_params, DatadogInitParams):
+                dict_datadog_params = remodl.datadog_params.model_dump()
+            elif isinstance(remodl.datadog_params, Dict):
                 # only allow params that are of DatadogInitParams
-                dict_datadog_params = DatadogInitParams(**litellm.datadog_params).model_dump()
+                dict_datadog_params = DatadogInitParams(**remodl.datadog_params).model_dump()
         return dict_datadog_params
 
     async def async_log_success_event(self, kwargs, response_obj, start_time, end_time):
@@ -211,7 +211,7 @@ class DataDogLogger(
         - instantly logs it on DD API
         """
         try:
-            if litellm.datadog_use_v1 is True:
+            if remodl.datadog_use_v1 is True:
                 dd_payload = self._create_v0_logging_payload(
                     kwargs=kwargs,
                     response_obj=response_obj,
@@ -274,7 +274,7 @@ class DataDogLogger(
         standard_logging_object: StandardLoggingPayload,
         status: DataDogStatus,
     ) -> DatadogPayload:
-        from litellm.litellm_core_utils.safe_json_dumps import safe_dumps
+        from remodl.remodl_core_utils.safe_json_dumps import safe_dumps
         json_payload = safe_dumps(standard_logging_object)
         verbose_logger.debug("Datadog: Logger - Logging payload = %s", json_payload)
         dd_payload = DatadogPayload(
@@ -340,7 +340,7 @@ class DataDogLogger(
 
         import gzip
 
-        from litellm.litellm_core_utils.safe_json_dumps import safe_dumps
+        from remodl.remodl_core_utils.safe_json_dumps import safe_dumps
         compressed_data = gzip.compress(safe_dumps(data).encode("utf-8"))
         response = await self.async_client.post(
             url=self.intake_url,
@@ -370,7 +370,7 @@ class DataDogLogger(
         try:
             _payload_dict = payload.model_dump()
             _payload_dict.update(event_metadata or {})
-            from litellm.litellm_core_utils.safe_json_dumps import safe_dumps
+            from remodl.remodl_core_utils.safe_json_dumps import safe_dumps
             _dd_message_str = safe_dumps(_payload_dict)
             _dd_payload = DatadogPayload(
                 ddsource=self._get_datadog_source(),
@@ -411,7 +411,7 @@ class DataDogLogger(
             _payload_dict = payload.model_dump()
             _payload_dict.update(event_metadata or {})
 
-            from litellm.litellm_core_utils.safe_json_dumps import safe_dumps
+            from remodl.remodl_core_utils.safe_json_dumps import safe_dumps
             _dd_message_str = safe_dumps(_payload_dict)
             _dd_payload = DatadogPayload(
                 ddsource=self._get_datadog_source(),
@@ -440,16 +440,16 @@ class DataDogLogger(
         Note: This is our V1 Version of DataDog Logging Payload
 
 
-        (Not Recommended) If you want this to get logged set `litellm.datadog_use_v1 = True`
+        (Not Recommended) If you want this to get logged set `remodl.datadog_use_v1 = True`
         """
 
-        litellm_params = kwargs.get("litellm_params", {})
+        remodl_params = kwargs.get("remodl_params", {})
         metadata = (
-            litellm_params.get("metadata", {}) or {}
-        )  # if litellm_params['metadata'] == None
+            remodl_params.get("metadata", {}) or {}
+        )  # if remodl_params['metadata'] == None
         messages = kwargs.get("messages")
         optional_params = kwargs.get("optional_params", {})
-        call_type = kwargs.get("call_type", "litellm.completion")
+        call_type = kwargs.get("call_type", "remodl.completion")
         cache_hit = kwargs.get("cache_hit", False)
         usage = response_obj["usage"]
         id = response_obj.get("id", str(uuid.uuid4()))
@@ -466,11 +466,11 @@ class DataDogLogger(
 
         # Clean Metadata before logging - never log raw metadata
         # the raw metadata can contain circular references which leads to infinite recursion
-        # we clean out all extra litellm metadata params before logging
+        # we clean out all extra remodl metadata params before logging
         clean_metadata = {}
         if isinstance(metadata, dict):
             for key, value in metadata.items():
-                # clean litellm metadata before logging
+                # clean remodl metadata before logging
                 if key in [
                     "endpoint",
                     "caching_groups",
@@ -499,7 +499,7 @@ class DataDogLogger(
             "metadata": clean_metadata,
         }
 
-        from litellm.litellm_core_utils.safe_json_dumps import safe_dumps
+        from remodl.remodl_core_utils.safe_json_dumps import safe_dumps
         json_payload = safe_dumps(payload)
 
         verbose_logger.debug("Datadog: Logger - Logging payload = %s", json_payload)
@@ -526,7 +526,7 @@ class DataDogLogger(
         """
         base_tags = {
             "env": os.getenv("DD_ENV", "unknown"),
-            "service": os.getenv("DD_SERVICE", "litellm"),
+            "service": os.getenv("DD_SERVICE", "remodl"),
             "version": os.getenv("DD_VERSION", "unknown"),
             "HOSTNAME": DataDogLogger._get_datadog_hostname(),
             "POD_NAME": os.getenv("POD_NAME", "unknown"),
@@ -545,11 +545,11 @@ class DataDogLogger(
 
     @staticmethod
     def _get_datadog_source():
-        return os.getenv("DD_SOURCE", "litellm")
+        return os.getenv("DD_SOURCE", "remodl")
 
     @staticmethod
     def _get_datadog_service():
-        return os.getenv("DD_SERVICE", "litellm-server")
+        return os.getenv("DD_SERVICE", "remodl-server")
 
     @staticmethod
     def _get_datadog_hostname():
@@ -567,7 +567,7 @@ class DataDogLogger(
         """
         Check if the service is healthy
         """
-        from litellm.litellm_core_utils.litellm_logging import (
+        from remodl.remodl_core_utils.remodl_logging import (
             create_dummy_standard_logging_payload,
         )
 

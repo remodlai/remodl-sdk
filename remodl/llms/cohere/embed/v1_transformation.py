@@ -6,14 +6,14 @@ from typing import Any, List, Optional, Union
 
 import httpx
 
-from litellm import COHERE_DEFAULT_EMBEDDING_INPUT_TYPE
-from litellm.litellm_core_utils.litellm_logging import Logging as LiteLLMLoggingObj
-from litellm.types.llms.bedrock import (
+from remodl import COHERE_DEFAULT_EMBEDDING_INPUT_TYPE
+from remodl.remodl_core_utils.remodl_logging import Logging as LiteLLMLoggingObj
+from remodl.types.llms.bedrock import (
     CohereEmbeddingRequest,
     CohereEmbeddingRequestWithModel,
 )
-from litellm.types.utils import EmbeddingResponse, PromptTokensDetailsWrapper, Usage
-from litellm.utils import is_base64_encoded
+from remodl.types.utils import EmbeddingResponse, PromptTokensDetailsWrapper, Usage
+from remodl.utils import is_base64_encoded
 
 
 class CohereEmbeddingConfig:

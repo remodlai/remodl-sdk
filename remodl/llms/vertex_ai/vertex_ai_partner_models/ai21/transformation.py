@@ -1,8 +1,8 @@
 import types
 from typing import Optional
 
-import litellm
-from litellm.llms.openai.chat.gpt_transformation import OpenAIGPTConfig
+import remodl
+from remodl.llms.openai.chat.gpt_transformation import OpenAIGPTConfig
 
 
 class VertexAIAi21Config(OpenAIGPTConfig):
@@ -52,7 +52,7 @@ class VertexAIAi21Config(OpenAIGPTConfig):
             non_default_params["max_tokens"] = non_default_params.pop(
                 "max_completion_tokens"
             )
-        return litellm.OpenAIConfig().map_openai_params(
+        return remodl.OpenAIConfig().map_openai_params(
             non_default_params=non_default_params,
             optional_params=optional_params,
             model=model,

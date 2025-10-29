@@ -21,14 +21,14 @@ from typing import (
 
 import httpx
 
-from litellm.llms.custom_httpx.http_handler import AsyncHTTPHandler, HTTPHandler
-from litellm.types.utils import GenericStreamingChunk
-from litellm.utils import EmbeddingResponse, ImageResponse, ModelResponse
+from remodl.llms.custom_httpx.http_handler import AsyncHTTPHandler, HTTPHandler
+from remodl.types.utils import GenericStreamingChunk
+from remodl.utils import EmbeddingResponse, ImageResponse, ModelResponse
 
 from .base import BaseLLM
 
 if TYPE_CHECKING:
-    from litellm import CustomStreamWrapper
+    from remodl import CustomStreamWrapper
 
 
 class CustomLLMError(Exception):  # use this for all your exceptions
@@ -61,7 +61,7 @@ class CustomLLM(BaseLLM):
         logging_obj,
         optional_params: dict,
         acompletion=None,
-        litellm_params=None,
+        remodl_params=None,
         logger_fn=None,
         headers={},
         timeout: Optional[Union[float, httpx.Timeout]] = None,
@@ -82,7 +82,7 @@ class CustomLLM(BaseLLM):
         logging_obj,
         optional_params: dict,
         acompletion=None,
-        litellm_params=None,
+        remodl_params=None,
         logger_fn=None,
         headers={},
         timeout: Optional[Union[float, httpx.Timeout]] = None,
@@ -103,7 +103,7 @@ class CustomLLM(BaseLLM):
         logging_obj,
         optional_params: dict,
         acompletion=None,
-        litellm_params=None,
+        remodl_params=None,
         logger_fn=None,
         headers={},
         timeout: Optional[Union[float, httpx.Timeout]] = None,
@@ -127,7 +127,7 @@ class CustomLLM(BaseLLM):
         logging_obj,
         optional_params: dict,
         acompletion=None,
-        litellm_params=None,
+        remodl_params=None,
         logger_fn=None,
         headers={},
         timeout: Optional[Union[float, httpx.Timeout]] = None,
@@ -156,10 +156,10 @@ class CustomLLM(BaseLLM):
         model_response: ImageResponse,
         api_key: Optional[
             str
-        ],  # dynamically set api_key - https://docs.litellm.ai/docs/set_keys#api_key
+        ],  # dynamically set api_key - https://docs.remodl.ai/docs/set_keys#api_key
         api_base: Optional[
             str
-        ],  # dynamically set api_base - https://docs.litellm.ai/docs/set_keys#api_base
+        ],  # dynamically set api_base - https://docs.remodl.ai/docs/set_keys#api_base
         optional_params: dict,
         logging_obj: Any,
         timeout: Optional[Union[float, httpx.Timeout]] = None,
@@ -178,7 +178,7 @@ class CustomLLM(BaseLLM):
         api_key: Optional[str] = None,
         api_base: Optional[str] = None,
         timeout: Optional[Union[float, httpx.Timeout]] = None,
-        litellm_params=None,
+        remodl_params=None,
     ) -> EmbeddingResponse:
         raise CustomLLMError(status_code=500, message="Not implemented yet!")
 
@@ -193,7 +193,7 @@ class CustomLLM(BaseLLM):
         api_key: Optional[str] = None,
         api_base: Optional[str] = None,
         timeout: Optional[Union[float, httpx.Timeout]] = None,
-        litellm_params=None,
+        remodl_params=None,
     ) -> EmbeddingResponse:
         raise CustomLLMError(status_code=500, message="Not implemented yet!")
 

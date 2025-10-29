@@ -5,7 +5,7 @@ Translate from OpenAI's `/v1/audio/transcriptions` to Groq's `/v1/audio/transcri
 import types
 from typing import List, Optional, Union
 
-import litellm
+import remodl
 
 
 class GroqSTTConfig:
@@ -86,11 +86,11 @@ class GroqSTTConfig:
                 if value in response_formats:
                     optional_params[param] = value
                 else:
-                    if litellm.drop_params is True or drop_params is True:
+                    if remodl.drop_params is True or drop_params is True:
                         pass
                     else:
-                        raise litellm.utils.UnsupportedParamsError(
-                            message="Groq doesn't support response_format={}. To drop unsupported openai params from the call, set `litellm.drop_params = True`".format(
+                        raise remodl.utils.UnsupportedParamsError(
+                            message="Groq doesn't support response_format={}. To drop unsupported openai params from the call, set `remodl.drop_params = True`".format(
                                 value
                             ),
                             status_code=400,

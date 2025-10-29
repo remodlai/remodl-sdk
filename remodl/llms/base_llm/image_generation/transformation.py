@@ -3,15 +3,15 @@ from typing import TYPE_CHECKING, Any, List, Optional, Union
 
 import httpx
 
-from litellm.llms.base_llm.chat.transformation import BaseLLMException
-from litellm.types.llms.openai import (
+from remodl.llms.base_llm.chat.transformation import BaseLLMException
+from remodl.types.llms.openai import (
     AllMessageValues,
     OpenAIImageGenerationOptionalParams,
 )
-from litellm.types.utils import ImageResponse
+from remodl.types.utils import ImageResponse
 
 if TYPE_CHECKING:
-    from litellm.litellm_core_utils.litellm_logging import Logging as _LiteLLMLoggingObj
+    from remodl.remodl_core_utils.remodl_logging import Logging as _LiteLLMLoggingObj
 
     LiteLLMLoggingObj = _LiteLLMLoggingObj
 else:
@@ -42,7 +42,7 @@ class BaseImageGenerationConfig(ABC):
         api_key: Optional[str],
         model: str,
         optional_params: dict,
-        litellm_params: dict,
+        remodl_params: dict,
         stream: Optional[bool] = None,
     ) -> str:
         """
@@ -60,7 +60,7 @@ class BaseImageGenerationConfig(ABC):
         model: str,
         messages: List[AllMessageValues],
         optional_params: dict,
-        litellm_params: dict,
+        remodl_params: dict,
         api_key: Optional[str] = None,
         api_base: Optional[str] = None,
     ) -> dict:
@@ -80,7 +80,7 @@ class BaseImageGenerationConfig(ABC):
         model: str,
         prompt: str,
         optional_params: dict,
-        litellm_params: dict,
+        remodl_params: dict,
         headers: dict,
     ) -> dict:
         raise NotImplementedError(
@@ -95,7 +95,7 @@ class BaseImageGenerationConfig(ABC):
         logging_obj: LiteLLMLoggingObj,
         request_data: dict,
         optional_params: dict,
-        litellm_params: dict,
+        remodl_params: dict,
         encoding: Any,
         api_key: Optional[str] = None,
         json_mode: Optional[bool] = None,

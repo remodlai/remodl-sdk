@@ -4,14 +4,14 @@ from typing import Any, Callable, Dict, List, Literal, Optional, Union, get_args
 
 import httpx
 
-import litellm
-from litellm.litellm_core_utils.litellm_logging import Logging as LiteLLMLoggingObj
-from litellm.llms.custom_httpx.http_handler import (
+import remodl
+from remodl.remodl_core_utils.remodl_logging import Logging as LiteLLMLoggingObj
+from remodl.llms.custom_httpx.http_handler import (
     AsyncHTTPHandler,
     HTTPHandler,
     get_async_httpx_client,
 )
-from litellm.types.utils import EmbeddingResponse
+from remodl.types.utils import EmbeddingResponse
 
 from ...base import BaseLLM
 from ..common_utils import HuggingFaceError
@@ -62,7 +62,7 @@ async def async_get_hf_task_embedding_for_model(
                 )
             )
     http_client = get_async_httpx_client(
-        llm_provider=litellm.LlmProviders.HUGGINGFACE,
+        llm_provider=remodl.LlmProviders.HUGGINGFACE,
     )
 
     model_info = await http_client.get(url=f"{api_base}/api/models/{model}")
@@ -244,7 +244,7 @@ class HuggingFaceEmbedding(BaseLLM):
         setattr(
             model_response,
             "usage",
-            litellm.Usage(
+            remodl.Usage(
                 prompt_tokens=input_tokens,
                 completion_tokens=input_tokens,
                 total_tokens=input_tokens,
@@ -258,7 +258,7 @@ class HuggingFaceEmbedding(BaseLLM):
         self,
         model: str,
         input: list,
-        model_response: litellm.utils.EmbeddingResponse,
+        model_response: remodl.utils.EmbeddingResponse,
         timeout: Union[float, httpx.Timeout],
         logging_obj: LiteLLMLoggingObj,
         optional_params: dict,
@@ -290,7 +290,7 @@ class HuggingFaceEmbedding(BaseLLM):
         ## COMPLETION CALL
         if client is None:
             client = get_async_httpx_client(
-                llm_provider=litellm.LlmProviders.HUGGINGFACE,
+                llm_provider=remodl.LlmProviders.HUGGINGFACE,
             )
 
         response = await client.post(api_base, headers=headers, data=json.dumps(data))
@@ -323,7 +323,7 @@ class HuggingFaceEmbedding(BaseLLM):
         input: list,
         model_response: EmbeddingResponse,
         optional_params: dict,
-        litellm_params: dict,
+        remodl_params: dict,
         logging_obj: LiteLLMLoggingObj,
         encoding: Callable,
         api_key: Optional[str] = None,
@@ -340,7 +340,7 @@ class HuggingFaceEmbedding(BaseLLM):
             model=model,
             optional_params=optional_params,
             messages=[],
-            litellm_params=litellm_params,
+            remodl_params=remodl_params,
         )
         task_type = optional_params.get("input_type", None)
         task = get_hf_task_embedding_for_model(

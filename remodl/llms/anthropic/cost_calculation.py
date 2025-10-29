@@ -5,10 +5,10 @@ Helper util for handling anthropic-specific cost calculation
 
 from typing import TYPE_CHECKING, Optional, Tuple
 
-from litellm.litellm_core_utils.llm_cost_calc.utils import generic_cost_per_token
+from remodl.remodl_core_utils.llm_cost_calc.utils import generic_cost_per_token
 
 if TYPE_CHECKING:
-    from litellm.types.utils import ModelInfo, Usage
+    from remodl.types.utils import ModelInfo, Usage
 
 
 def cost_per_token(model: str, usage: "Usage") -> Tuple[float, float]:
@@ -34,7 +34,7 @@ def get_cost_for_anthropic_web_search(
     """
     Get the cost of using a web search tool for Anthropic.
     """
-    from litellm.types.utils import SearchContextCostPerQuery
+    from remodl.types.utils import SearchContextCostPerQuery
 
     ## Check if web search requests are in the usage object
     if model_info is None:

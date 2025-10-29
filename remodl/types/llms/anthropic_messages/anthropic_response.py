@@ -2,7 +2,7 @@ from typing import Any, Dict, List, Literal, Optional, Union
 
 from typing_extensions import TypeAlias, TypedDict
 
-from litellm.types.llms.anthropic import (
+from remodl.types.llms.anthropic import (
     AnthropicResponseContentBlockText,
     AnthropicResponseContentBlockToolUse,
 )

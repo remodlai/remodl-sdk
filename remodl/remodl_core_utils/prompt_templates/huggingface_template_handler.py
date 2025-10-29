@@ -2,11 +2,11 @@ import json
 from datetime import datetime
 from typing import Any, Dict, Union
 
-from litellm.llms.custom_httpx.http_handler import (
+from remodl.llms.custom_httpx.http_handler import (
     _get_httpx_client,
     get_async_httpx_client,
 )
-from litellm.types.llms.custom_http import httpxSpecialProvider
+from remodl.types.llms.custom_http import httpxSpecialProvider
 
 
 def strftime_now(fmt: str) -> str:

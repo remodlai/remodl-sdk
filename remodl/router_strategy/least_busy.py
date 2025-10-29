@@ -2,15 +2,15 @@
 #   identifies least busy deployment
 #   How is this achieved?
 #   - Before each call, have the router print the state of requests {"deployment": "requests_in_flight"}
-#   - use litellm.input_callbacks to log when a request is just about to be made to a model - {"deployment-id": traffic}
-#   - use litellm.success + failure callbacks to log when a request completed
+#   - use remodl.input_callbacks to log when a request is just about to be made to a model - {"deployment-id": traffic}
+#   - use remodl.success + failure callbacks to log when a request completed
 #   - in get_available_deployment, for a given model group name -> pick based on traffic
 
 import random
 from typing import Optional
 
-from litellm.caching.caching import DualCache
-from litellm.integrations.custom_logger import CustomLogger
+from remodl.caching.caching import DualCache
+from remodl.integrations.custom_logger import CustomLogger
 
 
 class LeastBusyLoggingHandler(CustomLogger):
@@ -29,13 +29,13 @@ class LeastBusyLoggingHandler(CustomLogger):
         Caching based on model group.
         """
         try:
-            if kwargs["litellm_params"].get("metadata") is None:
+            if kwargs["remodl_params"].get("metadata") is None:
                 pass
             else:
-                model_group = kwargs["litellm_params"]["metadata"].get(
+                model_group = kwargs["remodl_params"]["metadata"].get(
                     "model_group", None
                 )
-                id = kwargs["litellm_params"].get("model_info", {}).get("id", None)
+                id = kwargs["remodl_params"].get("model_info", {}).get("id", None)
                 if model_group is None or id is None:
                     return
                 elif isinstance(id, int):
@@ -56,14 +56,14 @@ class LeastBusyLoggingHandler(CustomLogger):
 
     def log_success_event(self, kwargs, response_obj, start_time, end_time):
         try:
-            if kwargs["litellm_params"].get("metadata") is None:
+            if kwargs["remodl_params"].get("metadata") is None:
                 pass
             else:
-                model_group = kwargs["litellm_params"]["metadata"].get(
+                model_group = kwargs["remodl_params"]["metadata"].get(
                     "model_group", None
                 )
 
-                id = kwargs["litellm_params"].get("model_info", {}).get("id", None)
+                id = kwargs["remodl_params"].get("model_info", {}).get("id", None)
                 if model_group is None or id is None:
                     return
                 elif isinstance(id, int):
@@ -90,13 +90,13 @@ class LeastBusyLoggingHandler(CustomLogger):
 
     def log_failure_event(self, kwargs, response_obj, start_time, end_time):
         try:
-            if kwargs["litellm_params"].get("metadata") is None:
+            if kwargs["remodl_params"].get("metadata") is None:
                 pass
             else:
-                model_group = kwargs["litellm_params"]["metadata"].get(
+                model_group = kwargs["remodl_params"]["metadata"].get(
                     "model_group", None
                 )
-                id = kwargs["litellm_params"].get("model_info", {}).get("id", None)
+                id = kwargs["remodl_params"].get("model_info", {}).get("id", None)
                 if model_group is None or id is None:
                     return
                 elif isinstance(id, int):
@@ -123,14 +123,14 @@ class LeastBusyLoggingHandler(CustomLogger):
 
     async def async_log_success_event(self, kwargs, response_obj, start_time, end_time):
         try:
-            if kwargs["litellm_params"].get("metadata") is None:
+            if kwargs["remodl_params"].get("metadata") is None:
                 pass
             else:
-                model_group = kwargs["litellm_params"]["metadata"].get(
+                model_group = kwargs["remodl_params"]["metadata"].get(
                     "model_group", None
                 )
 
-                id = kwargs["litellm_params"].get("model_info", {}).get("id", None)
+                id = kwargs["remodl_params"].get("model_info", {}).get("id", None)
                 if model_group is None or id is None:
                     return
                 elif isinstance(id, int):
@@ -158,13 +158,13 @@ class LeastBusyLoggingHandler(CustomLogger):
 
     async def async_log_failure_event(self, kwargs, response_obj, start_time, end_time):
         try:
-            if kwargs["litellm_params"].get("metadata") is None:
+            if kwargs["remodl_params"].get("metadata") is None:
                 pass
             else:
-                model_group = kwargs["litellm_params"]["metadata"].get(
+                model_group = kwargs["remodl_params"]["metadata"].get(
                     "model_group", None
                 )
-                id = kwargs["litellm_params"].get("model_info", {}).get("id", None)
+                id = kwargs["remodl_params"].get("model_info", {}).get("id", None)
                 if model_group is None or id is None:
                     return
                 elif isinstance(id, int):

@@ -3,7 +3,7 @@ from typing import Any, Dict, List, Optional
 
 from openai.types.image import Image
 
-from litellm.types.llms.bedrock import (
+from remodl.types.llms.bedrock import (
     AmazonNovaCanvasColorGuidedGenerationParams,
     AmazonNovaCanvasColorGuidedRequest,
     AmazonNovaCanvasImageGenerationConfig,
@@ -14,7 +14,7 @@ from litellm.types.llms.bedrock import (
     AmazonNovaCanvasTextToImageRequest,
     AmazonNovaCanvasTextToImageResponse,
 )
-from litellm.types.utils import ImageResponse
+from remodl.types.utils import ImageResponse
 
 
 class AmazonNovaCanvasConfig:

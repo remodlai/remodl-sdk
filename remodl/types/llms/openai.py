@@ -61,8 +61,8 @@ from openai.types.responses.response_function_tool_call import ResponseFunctionT
 from pydantic import BaseModel, ConfigDict, Discriminator, Field, PrivateAttr
 from typing_extensions import Annotated, Dict, Required, TypedDict, override
 
-from litellm.types.llms.base import BaseLiteLLMOpenAIResponseObject
-from litellm.types.responses.main import (
+from remodl.types.llms.base import BaseLiteLLMOpenAIResponseObject
+from remodl.types.responses.main import (
     GenericResponseOutputItem,
     OutputFunctionToolCall,
 )
@@ -568,7 +568,7 @@ class OpenAIChatCompletionTextObject(TypedDict):
 
 class ChatCompletionTextObject(
     OpenAIChatCompletionTextObject, total=False
-):  # litellm wrapper on top of openai object for handling cached content
+):  # remodl wrapper on top of openai object for handling cached content
     cache_control: ChatCompletionCachedContent
 
 
@@ -804,7 +804,7 @@ class ChatCompletionRequest(TypedDict, total=False):
     function_call: Union[str, dict]
     functions: List
     user: str
-    metadata: dict  # litellm specific param
+    metadata: dict  # remodl specific param
 
 
 class ChatCompletionDeltaChunk(TypedDict, total=False):

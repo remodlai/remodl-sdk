@@ -5,14 +5,14 @@ GitLab prompt manager with configurable prompts folder.
 from typing import Any, Dict, List, Optional, Tuple, Union
 from jinja2 import DictLoader, Environment, select_autoescape
 
-from litellm.integrations.custom_prompt_management import CustomPromptManagement
-from litellm.integrations.prompt_management_base import (
+from remodl.integrations.custom_prompt_management import CustomPromptManagement
+from remodl.integrations.prompt_management_base import (
     PromptManagementBase,
     PromptManagementClient,
 )
-from litellm.types.llms.openai import AllMessageValues
-from litellm.types.utils import StandardCallbackDynamicParams
-from litellm.integrations.gitlab.gitlab_client import GitLabClient
+from remodl.types.llms.openai import AllMessageValues
+from remodl.types.utils import StandardCallbackDynamicParams
+from remodl.integrations.gitlab.gitlab_client import GitLabClient
 
 
 GITLAB_PREFIX = "gitlab::"
@@ -330,14 +330,14 @@ class GitLabPromptManager(CustomPromptManagement):
             user_id: Optional[str],
             messages: List[AllMessageValues],
             function_call: Optional[Union[Dict[str, Any], str]] = None,
-            litellm_params: Optional[Dict[str, Any]] = None,
+            remodl_params: Optional[Dict[str, Any]] = None,
             prompt_id: Optional[str] = None,
             prompt_variables: Optional[Dict[str, Any]] = None,
             prompt_version: Optional[str] = None,
             **kwargs,
     ) -> Tuple[List[AllMessageValues], Optional[Dict[str, Any]]]:
         if not prompt_id:
-            return messages, litellm_params
+            return messages, remodl_params
         try:
             # Precedence: explicit prompt_version → per-call git_ref kwarg → manager override → config default
             git_ref = prompt_version or kwargs.get("git_ref") or self._ref_override
@@ -352,21 +352,21 @@ class GitLabPromptManager(CustomPromptManagement):
             else:
                 final_messages = [{"role": "user", "content": rendered_prompt}] + messages  # type: ignore
 
-            if litellm_params is None:
-                litellm_params = {}
+            if remodl_params is None:
+                remodl_params = {}
 
             if prompt_metadata.get("model"):
-                litellm_params["model"] = prompt_metadata["model"]
+                remodl_params["model"] = prompt_metadata["model"]
 
             for param in ["temperature", "max_tokens", "top_p", "frequency_penalty", "presence_penalty"]:
                 if param in prompt_metadata:
-                    litellm_params[param] = prompt_metadata[param]
+                    remodl_params[param] = prompt_metadata[param]
 
-            return final_messages, litellm_params
+            return final_messages, remodl_params
         except Exception as e:
-            import litellm
-            litellm._logging.verbose_proxy_logger.error(f"Error in GitLab prompt pre_call_hook: {e}")
-            return messages, litellm_params
+            import remodl
+            remodl._logging.verbose_proxy_logger.error(f"Error in GitLab prompt pre_call_hook: {e}")
+            return messages, remodl_params
 
 
     def _parse_prompt_to_messages(self, prompt_content: str) -> List[AllMessageValues]:
@@ -410,7 +410,7 @@ class GitLabPromptManager(CustomPromptManagement):
             response: Any,
             input_messages: List[AllMessageValues],
             function_call: Optional[Union[Dict[str, Any], str]] = None,
-            litellm_params: Optional[Dict[str, Any]] = None,
+            remodl_params: Optional[Dict[str, Any]] = None,
             prompt_id: Optional[str] = None,
             prompt_variables: Optional[Dict[str, Any]] = None,
             **kwargs,

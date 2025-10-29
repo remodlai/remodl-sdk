@@ -7,7 +7,7 @@ import base64
 from typing import Any, Dict, List, Optional
 from urllib.parse import quote
 
-from litellm.llms.custom_httpx.http_handler import HTTPHandler
+from remodl.llms.custom_httpx.http_handler import HTTPHandler
 
 
 class GitLabClient:

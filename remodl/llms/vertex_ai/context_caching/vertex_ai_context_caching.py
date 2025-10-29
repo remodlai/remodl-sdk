@@ -2,16 +2,16 @@ from typing import List, Literal, Optional, Tuple, Union
 
 import httpx
 
-import litellm
-from litellm.caching.caching import Cache, LiteLLMCacheType
-from litellm.litellm_core_utils.litellm_logging import Logging
-from litellm.llms.custom_httpx.http_handler import (
+import remodl
+from remodl.caching.caching import Cache, LiteLLMCacheType
+from remodl.remodl_core_utils.remodl_logging import Logging
+from remodl.llms.custom_httpx.http_handler import (
     AsyncHTTPHandler,
     HTTPHandler,
     get_async_httpx_client,
 )
-from litellm.llms.openai.openai import AllMessageValues
-from litellm.types.llms.vertex_ai import (
+from remodl.llms.openai.openai import AllMessageValues
+from remodl.types.llms.vertex_ai import (
     CachedContentListAllResponseBody,
     VertexAICachedContentResponseObject,
 )
@@ -416,7 +416,7 @@ class ContextCachingEndpoints(VertexBase):
 
         if client is None or not isinstance(client, AsyncHTTPHandler):
             client = get_async_httpx_client(
-                params={"timeout": timeout}, llm_provider=litellm.LlmProviders.VERTEX_AI
+                params={"timeout": timeout}, llm_provider=remodl.LlmProviders.VERTEX_AI
             )
         else:
             client = client

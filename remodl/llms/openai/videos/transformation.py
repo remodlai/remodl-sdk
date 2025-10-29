@@ -4,15 +4,15 @@ from typing import cast
 import httpx
 from httpx._types import RequestFiles
 
-from litellm.types.videos.main import VideoCreateOptionalRequestParams
-from litellm.types.llms.openai import CreateVideoRequest
-from litellm.types.router import GenericLiteLLMParams
-from litellm.secret_managers.main import get_secret_str
-from litellm.types.videos.main import VideoObject
-import litellm
-from litellm.llms.openai.image_edit.transformation import ImageEditRequestUtils
+from remodl.types.videos.main import VideoCreateOptionalRequestParams
+from remodl.types.llms.openai import CreateVideoRequest
+from remodl.types.router import GenericLiteLLMParams
+from remodl.secret_managers.main import get_secret_str
+from remodl.types.videos.main import VideoObject
+import remodl
+from remodl.llms.openai.image_edit.transformation import ImageEditRequestUtils
 if TYPE_CHECKING:
-    from litellm.litellm_core_utils.litellm_logging import Logging as _LiteLLMLoggingObj
+    from remodl.remodl_core_utils.remodl_logging import Logging as _LiteLLMLoggingObj
 
     from ...base_llm.videos.transformation import BaseVideoConfig as _BaseVideoConfig
     from ...base_llm.chat.transformation import BaseLLMException as _BaseLLMException
@@ -65,8 +65,8 @@ class OpenAIVideoConfig(BaseVideoConfig):
     ) -> dict:
         api_key = (
             api_key
-            or litellm.api_key
-            or litellm.openai_key
+            or remodl.api_key
+            or remodl.openai_key
             or get_secret_str("OPENAI_API_KEY")
         )
         headers.update(
@@ -80,7 +80,7 @@ class OpenAIVideoConfig(BaseVideoConfig):
         self,
         model: str,
         api_base: Optional[str],
-        litellm_params: dict,
+        remodl_params: dict,
     ) -> str:
         """
         Get the complete URL for OpenAI video generation.
@@ -95,7 +95,7 @@ class OpenAIVideoConfig(BaseVideoConfig):
         model: str,
         prompt: str,
         video_create_optional_request_params: Dict,
-        litellm_params: GenericLiteLLMParams,
+        remodl_params: GenericLiteLLMParams,
         headers: dict,
     ) -> Tuple[Dict, RequestFiles]:
         """
@@ -167,7 +167,7 @@ class OpenAIVideoConfig(BaseVideoConfig):
         video_id: str,
         model: str,
         api_base: str,
-        litellm_params: GenericLiteLLMParams,
+        remodl_params: GenericLiteLLMParams,
         headers: dict,
     ) -> Tuple[str, Dict]:
         """
@@ -190,7 +190,7 @@ class OpenAIVideoConfig(BaseVideoConfig):
         prompt: str,
         model: str,
         api_base: str,
-        litellm_params: GenericLiteLLMParams,
+        remodl_params: GenericLiteLLMParams,
         headers: dict,
         extra_body: Optional[Dict[str, Any]] = None,
     ) -> Tuple[str, Dict]:
@@ -257,7 +257,7 @@ class OpenAIVideoConfig(BaseVideoConfig):
         self,
         model: str,
         api_base: str,
-        litellm_params: GenericLiteLLMParams,
+        remodl_params: GenericLiteLLMParams,
         headers: dict,
         after: Optional[str] = None,
         limit: Optional[int] = None,
@@ -301,7 +301,7 @@ class OpenAIVideoConfig(BaseVideoConfig):
         video_id: str,
         model: str,
         api_base: str,
-        litellm_params: GenericLiteLLMParams,
+        remodl_params: GenericLiteLLMParams,
         headers: dict,
     ) -> Tuple[str, Dict]:
         """
@@ -339,7 +339,7 @@ class OpenAIVideoConfig(BaseVideoConfig):
         video_id: str,
         model: str,
         api_base: str,
-        litellm_params: GenericLiteLLMParams,
+        remodl_params: GenericLiteLLMParams,
         headers: dict,
     ) -> Tuple[str, Dict]:
         """

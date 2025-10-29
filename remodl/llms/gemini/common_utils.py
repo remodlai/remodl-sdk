@@ -4,13 +4,13 @@ from typing import Any, Dict, List, Optional, Union
 
 import httpx
 
-import litellm
-from litellm.constants import DEFAULT_MAX_RECURSE_DEPTH
-from litellm.llms.base_llm.base_utils import BaseLLMModelInfo, BaseTokenCounter
-from litellm.llms.base_llm.chat.transformation import BaseLLMException
-from litellm.secret_managers.main import get_secret_str
-from litellm.types.llms.openai import AllMessageValues
-from litellm.types.utils import TokenCountResponse
+import remodl
+from remodl.constants import DEFAULT_MAX_RECURSE_DEPTH
+from remodl.llms.base_llm.base_utils import BaseLLMModelInfo, BaseTokenCounter
+from remodl.llms.base_llm.chat.transformation import BaseLLMException
+from remodl.secret_managers.main import get_secret_str
+from remodl.types.llms.openai import AllMessageValues
+from remodl.types.utils import TokenCountResponse
 
 
 class GeminiError(BaseLLMException):
@@ -24,7 +24,7 @@ class GeminiModelInfo(BaseLLMModelInfo):
         model: str,
         messages: List[AllMessageValues],
         optional_params: dict,
-        litellm_params: dict,
+        remodl_params: dict,
         api_key: Optional[str] = None,
         api_base: Optional[str] = None,
     ) -> dict:
@@ -52,12 +52,12 @@ class GeminiModelInfo(BaseLLMModelInfo):
         return model.replace("gemini/", "")
 
     def process_model_name(self, models: List[Dict[str, str]]) -> List[str]:
-        litellm_model_names = []
+        remodl_model_names = []
         for model in models:
             stripped_model_name = model["name"].replace("models/", "")
-            litellm_model_name = "gemini/" + stripped_model_name
-            litellm_model_names.append(litellm_model_name)
-        return litellm_model_names
+            remodl_model_name = "gemini/" + stripped_model_name
+            remodl_model_names.append(remodl_model_name)
+        return remodl_model_names
 
     def get_models(
         self, api_key: Optional[str] = None, api_base: Optional[str] = None
@@ -70,7 +70,7 @@ class GeminiModelInfo(BaseLLMModelInfo):
                 "GEMINI_API_BASE or GEMINI_API_KEY/GOOGLE_API_KEY is not set. Please set the environment variable, to query Gemini's `/models` endpoint."
             )
 
-        response = litellm.module_level_client.get(
+        response = remodl.module_level_client.get(
             url=f"{api_base}{endpoint}?key={api_key}",
         )
 
@@ -81,8 +81,8 @@ class GeminiModelInfo(BaseLLMModelInfo):
 
         models = response.json()["models"]
 
-        litellm_model_names = self.process_model_name(models)
-        return litellm_model_names
+        remodl_model_names = self.process_model_name(models)
+        return remodl_model_names
 
     def get_error_class(
         self, error_message: str, status_code: int, headers: Union[dict, httpx.Headers]
@@ -156,7 +156,7 @@ class GoogleAIStudioTokenCounter(BaseTokenCounter):
         self, 
         custom_llm_provider: Optional[str] = None,
     ) -> bool:
-        from litellm.types.utils import LlmProviders
+        from remodl.types.utils import LlmProviders
         return custom_llm_provider == LlmProviders.GEMINI.value
     
     async def count_tokens(
@@ -169,9 +169,9 @@ class GoogleAIStudioTokenCounter(BaseTokenCounter):
     ) -> Optional[TokenCountResponse]:
         import copy
 
-        from litellm.llms.gemini.count_tokens.handler import GoogleAIStudioTokenCounter
+        from remodl.llms.gemini.count_tokens.handler import GoogleAIStudioTokenCounter
         deployment = deployment or {}
-        count_tokens_params_request = copy.deepcopy(deployment.get("litellm_params", {}))
+        count_tokens_params_request = copy.deepcopy(deployment.get("remodl_params", {}))
         count_tokens_params = {
             "model": model_to_use,
             "contents": contents,

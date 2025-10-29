@@ -1,4 +1,4 @@
-from litellm.llms.openai.image_generation import DallE3ImageGenerationConfig
+from remodl.llms.openai.image_generation import DallE3ImageGenerationConfig
 
 
 class AzureDallE3ImageGenerationConfig(DallE3ImageGenerationConfig):

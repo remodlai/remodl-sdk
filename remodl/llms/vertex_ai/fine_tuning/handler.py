@@ -5,13 +5,13 @@ from typing import Any, Coroutine, Literal, Optional, Union
 
 import httpx
 
-import litellm
-from litellm._logging import verbose_logger
-from litellm.llms.custom_httpx.http_handler import HTTPHandler, get_async_httpx_client
-from litellm.llms.vertex_ai.gemini.vertex_and_google_ai_studio_gemini import VertexLLM
-from litellm.types.fine_tuning import OpenAIFineTuningHyperparameters
-from litellm.types.llms.openai import FineTuningJobCreate
-from litellm.types.llms.vertex_ai import (
+import remodl
+from remodl._logging import verbose_logger
+from remodl.llms.custom_httpx.http_handler import HTTPHandler, get_async_httpx_client
+from remodl.llms.vertex_ai.gemini.vertex_and_google_ai_studio_gemini import VertexLLM
+from remodl.types.fine_tuning import OpenAIFineTuningHyperparameters
+from remodl.types.llms.openai import FineTuningJobCreate
+from remodl.types.llms.vertex_ai import (
     VERTEX_CREDENTIALS_TYPES,
     FineTuneHyperparameters,
     FineTuneJobCreate,
@@ -19,7 +19,7 @@ from litellm.types.llms.vertex_ai import (
     ResponseSupervisedTuningSpec,
     ResponseTuningJob,
 )
-from litellm.types.utils import LiteLLMFineTuningJob
+from remodl.types.utils import LiteLLMFineTuningJob
 
 
 class VertexFineTuningAPI(VertexLLM):
@@ -30,7 +30,7 @@ class VertexFineTuningAPI(VertexLLM):
     def __init__(self) -> None:
         super().__init__()
         self.async_handler = get_async_httpx_client(
-            llm_provider=litellm.LlmProviders.VERTEX_AI,
+            llm_provider=remodl.LlmProviders.VERTEX_AI,
             params={"timeout": 600.0},
         )
 

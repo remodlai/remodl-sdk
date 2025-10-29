@@ -7,19 +7,19 @@ from typing import Callable, List, Optional, Union
 
 import httpx  # type: ignore
 
-import litellm
-from litellm.litellm_core_utils.litellm_logging import Logging as LiteLLMLogging
-from litellm.litellm_core_utils.logging_utils import track_llm_api_timing
-from litellm.litellm_core_utils.prompt_templates.factory import (
+import remodl
+from remodl.remodl_core_utils.remodl_logging import Logging as LiteLLMLogging
+from remodl.remodl_core_utils.logging_utils import track_llm_api_timing
+from remodl.remodl_core_utils.prompt_templates.factory import (
     custom_prompt,
     prompt_factory,
 )
-from litellm.llms.custom_httpx.http_handler import (
+from remodl.llms.custom_httpx.http_handler import (
     AsyncHTTPHandler,
     get_async_httpx_client,
 )
-from litellm.types.utils import TextChoices
-from litellm.utils import CustomStreamWrapper, TextCompletionResponse
+from remodl.types.utils import TextChoices
+from remodl.utils import CustomStreamWrapper, TextCompletionResponse
 
 
 class TextCompletionCodestralError(Exception):
@@ -103,7 +103,7 @@ class CodestralTextCompletion:
         """
         Parse the output text to remove any special characters. In our current approach we just check for ChatML tokens.
 
-        Initial issue that prompted this - https://github.com/BerriAI/litellm/issues/763
+        Initial issue that prompted this - https://github.com/BerriAI/remodl/issues/763
         """
         chat_template_tokens = [
             "<|assistant|>",
@@ -172,7 +172,7 @@ class CodestralTextCompletion:
             _logprobs = None
 
             _choice_message = choice.get("message", {})
-            _choice = litellm.utils.TextChoices(
+            _choice = remodl.utils.TextChoices(
                 finish_reason=choice.get("finish_reason"),
                 index=choice.get("index"),
                 text=_choice_message.get("content"),
@@ -181,7 +181,7 @@ class CodestralTextCompletion:
 
             _choices.append(_choice)
 
-        _response = litellm.TextCompletionResponse(
+        _response = remodl.TextCompletionResponse(
             id=completion_response.get("id"),
             choices=_choices,
             created=completion_response.get("created"),
@@ -206,7 +206,7 @@ class CodestralTextCompletion:
         optional_params: dict,
         timeout: Union[float, httpx.Timeout],
         acompletion=None,
-        litellm_params=None,
+        remodl_params=None,
         logger_fn=None,
         headers: dict = {},
     ) -> Union[TextCompletionResponse, CustomStreamWrapper]:
@@ -232,7 +232,7 @@ class CodestralTextCompletion:
             prompt = prompt_factory(model=model, messages=messages)
 
         ## Load Config
-        config = litellm.CodestralTextCompletionConfig.get_config()
+        config = remodl.CodestralTextCompletionConfig.get_config()
         for k, v in config.items():
             if (
                 k not in optional_params
@@ -273,7 +273,7 @@ class CodestralTextCompletion:
                     api_key=api_key,
                     logging_obj=logging_obj,
                     optional_params=optional_params,
-                    litellm_params=litellm_params,
+                    remodl_params=remodl_params,
                     logger_fn=logger_fn,
                     headers=headers,
                     timeout=timeout,
@@ -292,7 +292,7 @@ class CodestralTextCompletion:
                     logging_obj=logging_obj,
                     optional_params=optional_params,
                     stream=False,
-                    litellm_params=litellm_params,
+                    remodl_params=remodl_params,
                     logger_fn=logger_fn,
                     headers=headers,
                     timeout=timeout,
@@ -300,7 +300,7 @@ class CodestralTextCompletion:
 
         ### SYNC STREAMING
         if stream is True:
-            response = litellm.module_level_client.post(
+            response = remodl.module_level_client.post(
                 completion_url,
                 headers=headers,
                 data=json.dumps(data),
@@ -315,7 +315,7 @@ class CodestralTextCompletion:
             return _response
         ### SYNC COMPLETION
         else:
-            response = litellm.module_level_client.post(
+            response = remodl.module_level_client.post(
                 url=completion_url,
                 headers=headers,
                 data=json.dumps(data),
@@ -349,12 +349,12 @@ class CodestralTextCompletion:
         data: dict,
         optional_params: dict,
         timeout: Union[float, httpx.Timeout],
-        litellm_params=None,
+        remodl_params=None,
         logger_fn=None,
         headers={},
     ) -> TextCompletionResponse:
         async_handler = get_async_httpx_client(
-            llm_provider=litellm.LlmProviders.TEXT_COMPLETION_CODESTRAL,
+            llm_provider=remodl.LlmProviders.TEXT_COMPLETION_CODESTRAL,
             params={"timeout": timeout},
         )
         try:
@@ -398,7 +398,7 @@ class CodestralTextCompletion:
         data: dict,
         timeout: Union[float, httpx.Timeout],
         optional_params=None,
-        litellm_params=None,
+        remodl_params=None,
         logger_fn=None,
         headers={},
     ) -> CustomStreamWrapper:

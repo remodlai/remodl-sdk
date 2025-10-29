@@ -1,9 +1,9 @@
 """OpenAI Chat Completions message handler for Unified Guardrails."""
 
-from litellm.llms.openai.chat.guardrail_translation.handler import (
+from remodl.llms.openai.chat.guardrail_translation.handler import (
     OpenAIChatCompletionsHandler,
 )
-from litellm.types.utils import CallTypes
+from remodl.types.utils import CallTypes
 
 guardrail_translation_mappings = {
     CallTypes.completion: OpenAIChatCompletionsHandler,

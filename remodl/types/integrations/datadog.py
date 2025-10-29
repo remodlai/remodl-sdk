@@ -3,7 +3,7 @@ from typing import Optional
 
 from typing_extensions import TypedDict
 
-from litellm.types.integrations.custom_logger import StandardCustomLoggerInitParams
+from remodl.types.integrations.custom_logger import StandardCustomLoggerInitParams
 
 DD_MAX_BATCH_SIZE = 1000
 
@@ -29,7 +29,7 @@ class DD_ERRORS(Enum):
 
 class DatadogInitParams(StandardCustomLoggerInitParams):
     """
-    Params for initializing a DataDog logger on litellm
+    Params for initializing a DataDog logger on remodl
     """
 
     pass

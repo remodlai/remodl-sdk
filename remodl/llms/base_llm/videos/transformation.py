@@ -5,13 +5,13 @@ from typing import TYPE_CHECKING, Any, Dict, Optional, Tuple, Union
 import httpx
 from httpx._types import RequestFiles
 
-from litellm.types.videos.main import VideoCreateOptionalRequestParams
-from litellm.types.responses.main import *
-from litellm.types.router import GenericLiteLLMParams
+from remodl.types.videos.main import VideoCreateOptionalRequestParams
+from remodl.types.responses.main import *
+from remodl.types.router import GenericLiteLLMParams
 
 if TYPE_CHECKING:
-    from litellm.litellm_core_utils.litellm_logging import Logging as _LiteLLMLoggingObj
-    from litellm.types.videos.main import VideoObject as _VideoObject
+    from remodl.remodl_core_utils.remodl_logging import Logging as _LiteLLMLoggingObj
+    from remodl.types.videos.main import VideoObject as _VideoObject
 
     from ..chat.transformation import BaseLLMException as _BaseLLMException
 
@@ -74,7 +74,7 @@ class BaseVideoConfig(ABC):
         self,
         model: str,
         api_base: Optional[str],
-        litellm_params: dict,
+        remodl_params: dict,
     ) -> str:
         """
         OPTIONAL
@@ -93,7 +93,7 @@ class BaseVideoConfig(ABC):
         model: str,
         prompt: str,
         video_create_optional_request_params: Dict,
-        litellm_params: GenericLiteLLMParams,
+        remodl_params: GenericLiteLLMParams,
         headers: dict,
     ) -> Tuple[Dict, RequestFiles]:
         pass
@@ -113,7 +113,7 @@ class BaseVideoConfig(ABC):
         video_id: str,
         model: str,
         api_base: str,
-        litellm_params: GenericLiteLLMParams,
+        remodl_params: GenericLiteLLMParams,
         headers: dict,
     ) -> Tuple[str, Dict]:
         """
@@ -140,7 +140,7 @@ class BaseVideoConfig(ABC):
         prompt: str,
         model: str,
         api_base: str,
-        litellm_params: GenericLiteLLMParams,
+        remodl_params: GenericLiteLLMParams,
         headers: dict,
         extra_body: Optional[Dict[str, Any]] = None,
     ) -> Tuple[str, Dict]:
@@ -166,7 +166,7 @@ class BaseVideoConfig(ABC):
         self,
         model: str,
         api_base: str,
-        litellm_params: GenericLiteLLMParams,
+        remodl_params: GenericLiteLLMParams,
         headers: dict,
         after: Optional[str] = None,
         limit: Optional[int] = None,
@@ -196,7 +196,7 @@ class BaseVideoConfig(ABC):
         video_id: str,
         model: str,
         api_base: str,
-        litellm_params: GenericLiteLLMParams,
+        remodl_params: GenericLiteLLMParams,
         headers: dict,
     ) -> Tuple[str, Dict]:
         """
@@ -222,7 +222,7 @@ class BaseVideoConfig(ABC):
         video_id: str,
         model: str,
         api_base: str,
-        litellm_params: GenericLiteLLMParams,
+        remodl_params: GenericLiteLLMParams,
         headers: dict,
     ) -> Tuple[str, Dict]:
         """

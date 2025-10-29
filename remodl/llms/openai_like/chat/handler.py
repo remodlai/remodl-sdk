@@ -9,15 +9,15 @@ from typing import Any, Callable, Optional, Union
 
 import httpx
 
-import litellm
-from litellm import LlmProviders
-from litellm.llms.bedrock.chat.invoke_handler import MockResponseIterator
-from litellm.llms.custom_httpx.http_handler import AsyncHTTPHandler, HTTPHandler
-from litellm.llms.databricks.streaming_utils import ModelResponseIterator
-from litellm.llms.openai.chat.gpt_transformation import OpenAIGPTConfig
-from litellm.llms.openai.openai import OpenAIConfig
-from litellm.types.utils import CustomStreamingDecoder, ModelResponse
-from litellm.utils import CustomStreamWrapper, ProviderConfigManager
+import remodl
+from remodl import LlmProviders
+from remodl.llms.bedrock.chat.invoke_handler import MockResponseIterator
+from remodl.llms.custom_httpx.http_handler import AsyncHTTPHandler, HTTPHandler
+from remodl.llms.databricks.streaming_utils import ModelResponseIterator
+from remodl.llms.openai.chat.gpt_transformation import OpenAIGPTConfig
+from remodl.llms.openai.openai import OpenAIConfig
+from remodl.types.utils import CustomStreamingDecoder, ModelResponse
+from remodl.utils import CustomStreamWrapper, ProviderConfigManager
 
 from ..common_utils import OpenAILikeBase, OpenAILikeError
 from .transformation import OpenAILikeChatConfig
@@ -35,7 +35,7 @@ async def make_call(
     fake_stream: bool = False,
 ):
     if client is None:
-        client = litellm.module_level_aclient
+        client = remodl.module_level_aclient
 
     response = await client.post(
         api_base, headers=headers, data=data, stream=not fake_stream
@@ -76,7 +76,7 @@ def make_sync_call(
     timeout: Optional[Union[float, httpx.Timeout]] = None,
 ):
     if client is None:
-        client = litellm.module_level_client  # Create a new client if none provided
+        client = remodl.module_level_client  # Create a new client if none provided
 
     response = client.post(
         api_base, headers=headers, data=data, stream=not fake_stream, timeout=timeout
@@ -127,7 +127,7 @@ class OpenAILikeChatHandler(OpenAILikeBase):
         stream,
         data: dict,
         optional_params=None,
-        litellm_params=None,
+        remodl_params=None,
         logger_fn=None,
         headers={},
         client: Optional[AsyncHTTPHandler] = None,
@@ -171,7 +171,7 @@ class OpenAILikeChatHandler(OpenAILikeBase):
         data: dict,
         base_model: Optional[str],
         optional_params: dict,
-        litellm_params=None,
+        remodl_params=None,
         logger_fn=None,
         headers={},
         timeout: Optional[Union[float, httpx.Timeout]] = None,
@@ -181,7 +181,7 @@ class OpenAILikeChatHandler(OpenAILikeBase):
             timeout = httpx.Timeout(timeout=600.0, connect=5.0)
 
         if client is None:
-            client = litellm.module_level_aclient
+            client = remodl.module_level_aclient
 
         try:
             response = await client.post(
@@ -230,7 +230,7 @@ class OpenAILikeChatHandler(OpenAILikeBase):
         logging_obj,
         optional_params: dict,
         acompletion=None,
-        litellm_params: dict = {},
+        remodl_params: dict = {},
         logger_fn=None,
         headers: Optional[dict] = None,
         timeout: Optional[Union[float, httpx.Timeout]] = None,
@@ -308,7 +308,7 @@ class OpenAILikeChatHandler(OpenAILikeBase):
                     logging_obj=logging_obj,
                     optional_params=optional_params,
                     stream=stream,
-                    litellm_params=litellm_params,
+                    remodl_params=remodl_params,
                     logger_fn=logger_fn,
                     headers=headers,
                     client=client,
@@ -331,7 +331,7 @@ class OpenAILikeChatHandler(OpenAILikeBase):
                     logging_obj=logging_obj,
                     optional_params=optional_params,
                     stream=stream,
-                    litellm_params=litellm_params,
+                    remodl_params=remodl_params,
                     logger_fn=logger_fn,
                     headers=headers,
                     timeout=timeout,

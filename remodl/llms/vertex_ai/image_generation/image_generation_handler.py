@@ -4,15 +4,15 @@ from typing import Any, Dict, List, Optional
 import httpx
 from openai.types.image import Image
 
-import litellm
-from litellm.llms.custom_httpx.http_handler import (
+import remodl
+from remodl.llms.custom_httpx.http_handler import (
     AsyncHTTPHandler,
     HTTPHandler,
     get_async_httpx_client,
 )
-from litellm.llms.vertex_ai.gemini.vertex_and_google_ai_studio_gemini import VertexLLM
-from litellm.types.llms.vertex_ai import VERTEX_CREDENTIALS_TYPES
-from litellm.types.utils import ImageResponse
+from remodl.llms.vertex_ai.gemini.vertex_and_google_ai_studio_gemini import VertexLLM
+from remodl.types.llms.vertex_ai import VERTEX_CREDENTIALS_TYPES
+from remodl.types.utils import ImageResponse
 
 
 class VertexImageGeneration(VertexLLM):
@@ -23,7 +23,7 @@ class VertexImageGeneration(VertexLLM):
         model: Optional[str] = None,
     ) -> ImageResponse:
         if "predictions" not in json_response:
-            raise litellm.InternalServerError(
+            raise remodl.InternalServerError(
                 message=f"image generation response does not contain 'predictions', got {json_response}",
                 llm_provider="vertex_ai",
                 model=model,
@@ -175,7 +175,7 @@ class VertexImageGeneration(VertexLLM):
         vertex_project: Optional[str],
         vertex_location: Optional[str],
         vertex_credentials: Optional[VERTEX_CREDENTIALS_TYPES],
-        model_response: litellm.ImageResponse,
+        model_response: remodl.ImageResponse,
         logging_obj: Any,
         model: str = "imagegeneration",  # vertex ai uses imagegeneration as the default model
         client: Optional[AsyncHTTPHandler] = None,
@@ -194,7 +194,7 @@ class VertexImageGeneration(VertexLLM):
                 _params["timeout"] = httpx.Timeout(timeout=600.0, connect=5.0)
 
             self.async_handler = get_async_httpx_client(
-                llm_provider=litellm.LlmProviders.VERTEX_AI,
+                llm_provider=remodl.LlmProviders.VERTEX_AI,
                 params={"timeout": timeout},
             )
         else:

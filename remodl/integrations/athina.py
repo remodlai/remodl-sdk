@@ -1,6 +1,6 @@
 import datetime
 
-import litellm
+import remodl
 
 
 class AthinaLogger:
@@ -82,12 +82,12 @@ class AthinaLogger:
             )
 
             # Add additional metadata keys
-            metadata = kwargs.get("litellm_params", {}).get("metadata", {})
+            metadata = kwargs.get("remodl_params", {}).get("metadata", {})
             if metadata:
                 for key in self.additional_keys:
                     if key in metadata:
                         data[key] = metadata[key]
-            response = litellm.module_level_client.post(
+            response = remodl.module_level_client.post(
                 self.athina_logging_url,
                 headers=self.headers,
                 data=json.dumps(data, default=str),

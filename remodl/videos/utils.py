@@ -1,8 +1,8 @@
 from typing import Any, Dict, cast, get_type_hints
 
-import litellm
-from litellm.llms.base_llm.videos.transformation import BaseVideoConfig
-from litellm.types.videos.main import VideoCreateOptionalRequestParams
+import remodl
+from remodl.llms.base_llm.videos.transformation import BaseVideoConfig
+from remodl.types.videos.main import VideoCreateOptionalRequestParams
 
 
 class VideoGenerationRequestUtils:
@@ -36,7 +36,7 @@ class VideoGenerationRequestUtils:
         ]
 
         if unsupported_params:
-            raise litellm.UnsupportedParamsError(
+            raise remodl.UnsupportedParamsError(
                 model=model,
                 message=(
                     f"The following parameters are not supported for model {model}: "
@@ -48,7 +48,7 @@ class VideoGenerationRequestUtils:
         mapped_params = video_generation_provider_config.map_openai_params(
             video_create_optional_params=video_generation_optional_params,
             model=model,
-            drop_params=litellm.drop_params,
+            drop_params=remodl.drop_params,
         )
 
         return mapped_params

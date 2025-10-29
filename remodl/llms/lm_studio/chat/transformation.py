@@ -4,7 +4,7 @@ Translate from OpenAI's `/v1/chat/completions` to LM Studio's `/chat/completions
 
 from typing import Optional, Tuple
 
-from litellm.secret_managers.main import get_secret_str
+from remodl.secret_managers.main import get_secret_str
 
 from ...openai.chat.gpt_transformation import OpenAIGPTConfig
 

@@ -8,20 +8,20 @@ from typing import TYPE_CHECKING, Any, List, Optional, Union
 
 from typing_extensions import TypedDict
 
-from litellm.caching.caching import DualCache
-from litellm.caching.in_memory_cache import InMemoryCache
-from litellm.types.llms.openai import AllMessageValues, ChatCompletionToolParam
+from remodl.caching.caching import DualCache
+from remodl.caching.in_memory_cache import InMemoryCache
+from remodl.types.llms.openai import AllMessageValues, ChatCompletionToolParam
 
 if TYPE_CHECKING:
     from opentelemetry.trace import Span as _Span
 
-    from litellm.router import Router
+    from remodl.router import Router
 
-    litellm_router = Router
+    remodl_router = Router
     Span = Union[_Span, Any]
 else:
     Span = Any
-    litellm_router = Any
+    remodl_router = Any
 
 
 class PromptCachingCacheValue(TypedDict):

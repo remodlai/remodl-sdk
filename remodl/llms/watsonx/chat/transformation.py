@@ -6,8 +6,8 @@ Docs: https://cloud.ibm.com/apidocs/watsonx-ai#text-chat
 
 from typing import Dict, List, Optional, Tuple, Union
 
-from litellm.secret_managers.main import get_secret_str
-from litellm.types.llms.watsonx import (
+from remodl.secret_managers.main import get_secret_str
+from remodl.types.llms.watsonx import (
     WatsonXAIEndpoint,
     WatsonXAPIParams,
     WatsonXModelPattern,
@@ -87,7 +87,7 @@ class IBMWatsonXChatConfig(IBMWatsonXMixin, OpenAIGPTConfig):
         api_key: Optional[str],
         model: str,
         optional_params: dict,
-        litellm_params: dict,
+        remodl_params: dict,
         stream: Optional[bool] = None,
     ) -> str:
         url = self._get_base_url(api_base=api_base)
@@ -128,7 +128,7 @@ class IBMWatsonXChatConfig(IBMWatsonXMixin, OpenAIGPTConfig):
     @staticmethod
     def _apply_prompt_template_core(model: str, messages: List[Dict[str, str]], hf_template_fn) -> Optional[str]:
         """Core logic for applying prompt templates"""
-        from litellm.litellm_core_utils.prompt_templates.factory import (
+        from remodl.remodl_core_utils.prompt_templates.factory import (
             custom_prompt,
             ibm_granite_pt,
             mistral_instruct_pt,
@@ -160,8 +160,8 @@ class IBMWatsonXChatConfig(IBMWatsonXMixin, OpenAIGPTConfig):
     @staticmethod
     async def aapply_prompt_template(model: str, messages: List[Dict[str, str]]) -> Optional[str]:
         """Apply prompt template (async version)"""
-        import litellm
-        from litellm.litellm_core_utils.prompt_templates.factory import (
+        import remodl
+        from remodl.remodl_core_utils.prompt_templates.factory import (
             ahf_chat_template,
             custom_prompt,
             hf_chat_template,
@@ -177,7 +177,7 @@ class IBMWatsonXChatConfig(IBMWatsonXMixin, OpenAIGPTConfig):
             hf_model = model.split("watsonx/")[-1] if "watsonx/" in model else model
             try:
                 # Use sync if cached, async if not
-                if hf_model in litellm.known_tokenizer_config:
+                if hf_model in remodl.known_tokenizer_config:
                     return hf_chat_template(model=hf_model, messages=messages)
                 else:
                     return await ahf_chat_template(model=hf_model, messages=messages)
@@ -208,7 +208,7 @@ class IBMWatsonXChatConfig(IBMWatsonXMixin, OpenAIGPTConfig):
     @staticmethod
     def apply_prompt_template(model: str, messages: List[Dict[str, str]]) -> Optional[str]:
         """Apply prompt template (sync version)"""
-        from litellm.litellm_core_utils.prompt_templates.factory import (
+        from remodl.remodl_core_utils.prompt_templates.factory import (
             hf_chat_template,
         )
 

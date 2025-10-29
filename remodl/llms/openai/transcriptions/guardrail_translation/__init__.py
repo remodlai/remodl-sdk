@@ -1,9 +1,9 @@
 """OpenAI Audio Transcription handler for Unified Guardrails."""
 
-from litellm.llms.openai.transcriptions.guardrail_translation.handler import (
+from remodl.llms.openai.transcriptions.guardrail_translation.handler import (
     OpenAIAudioTranscriptionHandler,
 )
-from litellm.types.utils import CallTypes
+from remodl.types.utils import CallTypes
 
 guardrail_translation_mappings = {
     CallTypes.transcription: OpenAIAudioTranscriptionHandler,

@@ -1,10 +1,10 @@
 import json
 from typing import List, Optional, Literal, Tuple
 
-from litellm.llms.base_llm.base_utils import BaseLLMModelInfo
-from litellm.llms.base_llm.chat.transformation import BaseLLMException
-from litellm.types.llms.openai import AllMessageValues
-from litellm.types.utils import (
+from remodl.llms.base_llm.base_utils import BaseLLMModelInfo
+from remodl.llms.base_llm.chat.transformation import BaseLLMException
+from remodl.types.llms.openai import AllMessageValues
+from remodl.types.utils import (
     ChatCompletionToolCallChunk,
     ChatCompletionUsageBlock,
     GenericStreamingChunk,
@@ -51,7 +51,7 @@ class CohereModelInfo(BaseLLMModelInfo):
         model: str,
         messages: List[AllMessageValues],
         optional_params: dict,
-        litellm_params: dict,
+        remodl_params: dict,
         api_key: Optional[str] = None,
         api_base: Optional[str] = None,
     ) -> dict:
@@ -98,7 +98,7 @@ def validate_environment(
     Cohere API Ref: https://docs.cohere.com/reference/chat
     Expected headers:
     {
-        "Request-Source": "unspecified:litellm",
+        "Request-Source": "unspecified:remodl",
         "accept": "application/json",
         "content-type": "application/json",
         "Authorization": "Bearer $CO_API_KEY"
@@ -106,7 +106,7 @@ def validate_environment(
     """
     headers.update(
         {
-            "Request-Source": "unspecified:litellm",
+            "Request-Source": "unspecified:remodl",
             "accept": "application/json",
             "content-type": "application/json",
         }

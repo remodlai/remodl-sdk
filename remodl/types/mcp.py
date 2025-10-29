@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING, Any, Dict, List, Literal, Optional, Union
 from pydantic import BaseModel
 from typing_extensions import TypedDict
 
-from litellm.types.llms.base import HiddenParams
+from remodl.types.llms.base import HiddenParams
 
 if TYPE_CHECKING:
     from mcp.types import EmbeddedResource as MCPEmbeddedResource

@@ -11,14 +11,14 @@ from typing import List, Optional, Tuple, Union, cast
 
 import httpx
 
-from litellm import LlmProviders
-from litellm.secret_managers.main import get_secret_str
-from litellm.llms.base_llm.chat.transformation import BaseLLMException
-from litellm.llms.base_llm import BaseEmbeddingConfig
-from litellm.litellm_core_utils.litellm_logging import Logging as LiteLLMLoggingObj
-from litellm.types.llms.openai import AllEmbeddingInputValues, AllMessageValues
-from litellm.types.utils import EmbeddingResponse
-from litellm.utils import is_base64_encoded
+from remodl import LlmProviders
+from remodl.secret_managers.main import get_secret_str
+from remodl.llms.base_llm.chat.transformation import BaseLLMException
+from remodl.llms.base_llm import BaseEmbeddingConfig
+from remodl.remodl_core_utils.remodl_logging import Logging as LiteLLMLoggingObj
+from remodl.types.llms.openai import AllEmbeddingInputValues, AllMessageValues
+from remodl.types.utils import EmbeddingResponse
+from remodl.utils import is_base64_encoded
 
 from ..common_utils import JinaAIError
 
@@ -95,7 +95,7 @@ class JinaAIEmbeddingConfig(BaseEmbeddingConfig):
         api_key: Optional[str],
         model: str,
         optional_params: dict,
-        litellm_params: dict,
+        remodl_params: dict,
         stream: Optional[bool] = None,
     ) -> str:
         return f"{api_base}/embeddings" if api_base else "https://api.jina.ai/v1/embeddings"
@@ -132,7 +132,7 @@ class JinaAIEmbeddingConfig(BaseEmbeddingConfig):
         api_key: Optional[str],
         request_data: dict,
         optional_params: dict,
-        litellm_params: dict,
+        remodl_params: dict,
     ) -> EmbeddingResponse:
         response_json = raw_response.json()
         ## LOGGING
@@ -150,7 +150,7 @@ class JinaAIEmbeddingConfig(BaseEmbeddingConfig):
         model: str,
         messages: List[AllMessageValues],
         optional_params: dict,
-        litellm_params: dict,
+        remodl_params: dict,
         api_key: Optional[str] = None,
         api_base: Optional[str] = None,
     ) -> dict:

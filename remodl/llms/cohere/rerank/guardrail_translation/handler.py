@@ -7,12 +7,12 @@ The handler processes only the 'query' parameter for guardrails.
 
 from typing import TYPE_CHECKING, Any
 
-from litellm._logging import verbose_proxy_logger
-from litellm.llms.base_llm.guardrail_translation.base_translation import BaseTranslation
+from remodl._logging import verbose_proxy_logger
+from remodl.llms.base_llm.guardrail_translation.base_translation import BaseTranslation
 
 if TYPE_CHECKING:
-    from litellm.integrations.custom_guardrail import CustomGuardrail
-    from litellm.types.rerank import RerankResponse
+    from remodl.integrations.custom_guardrail import CustomGuardrail
+    from remodl.types.rerank import RerankResponse
 
 
 class CohereRerankHandler(BaseTranslation):

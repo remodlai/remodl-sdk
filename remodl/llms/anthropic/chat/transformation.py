@@ -5,8 +5,8 @@ from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple, Union, cast
 
 import httpx
 
-import litellm
-from litellm.constants import (
+import remodl
+from remodl.constants import (
     ANTHROPIC_WEB_SEARCH_TOOL_MAX_USES,
     DEFAULT_ANTHROPIC_CHAT_MAX_TOKENS,
     DEFAULT_REASONING_EFFORT_HIGH_THINKING_BUDGET,
@@ -14,10 +14,10 @@ from litellm.constants import (
     DEFAULT_REASONING_EFFORT_MEDIUM_THINKING_BUDGET,
     RESPONSE_FORMAT_TOOL_NAME,
 )
-from litellm.litellm_core_utils.core_helpers import map_finish_reason
-from litellm.llms.base_llm.base_utils import type_to_response_format_param
-from litellm.llms.base_llm.chat.transformation import BaseConfig, BaseLLMException
-from litellm.types.llms.anthropic import (
+from remodl.remodl_core_utils.core_helpers import map_finish_reason
+from remodl.llms.base_llm.base_utils import type_to_response_format_param
+from remodl.llms.base_llm.chat.transformation import BaseConfig, BaseLLMException
+from remodl.types.llms.anthropic import (
     ANTHROPIC_BETA_HEADER_VALUES,
     ANTHROPIC_HOSTED_TOOLS,
     AllAnthropicMessageValues,
@@ -34,7 +34,7 @@ from litellm.types.llms.anthropic import (
     AnthropicWebSearchTool,
     AnthropicWebSearchUserLocation,
 )
-from litellm.types.llms.openai import (
+from remodl.types.llms.openai import (
     REASONING_EFFORT,
     AllMessageValues,
     ChatCompletionCachedContent,
@@ -47,16 +47,16 @@ from litellm.types.llms.openai import (
     OpenAIMcpServerTool,
     OpenAIWebSearchOptions,
 )
-from litellm.types.utils import (
+from remodl.types.utils import (
     CacheCreationTokenDetails,
     CompletionTokensDetailsWrapper,
 )
-from litellm.types.utils import Message as LitellmMessage
-from litellm.types.utils import (
+from remodl.types.utils import Message as LitellmMessage
+from remodl.types.utils import (
     PromptTokensDetailsWrapper,
     ServerToolUse,
 )
-from litellm.utils import (
+from remodl.utils import (
     ModelResponse,
     Usage,
     add_dummy_tool,
@@ -68,7 +68,7 @@ from litellm.utils import (
 from ..common_utils import AnthropicError, AnthropicModelInfo, process_anthropic_headers
 
 if TYPE_CHECKING:
-    from litellm.litellm_core_utils.litellm_logging import Logging as LiteLLMLoggingObj
+    from remodl.remodl_core_utils.remodl_logging import Logging as LiteLLMLoggingObj
 
     LoggingClass = LiteLLMLoggingObj
 else:
@@ -149,7 +149,7 @@ class AnthropicConfig(AnthropicModelInfo, BaseConfig):
     ) -> Optional[dict]:
         return type_to_response_format_param(
             response_format, ref_template="/$defs/{model}"
-        )  # Relevant issue: https://github.com/BerriAI/litellm/issues/7755
+        )  # Relevant issue: https://github.com/BerriAI/remodl/issues/7755
 
     def get_cache_control_headers(self) -> dict:
         return {
@@ -291,7 +291,7 @@ class AnthropicConfig(AnthropicModelInfo, BaseConfig):
     def _map_openai_mcp_server_tool(
         self, tool: OpenAIMcpServerTool
     ) -> AnthropicMcpServerTool:
-        from litellm.types.llms.anthropic import AnthropicMcpServerToolConfiguration
+        from remodl.types.llms.anthropic import AnthropicMcpServerToolConfiguration
 
         allowed_tools = tool.get("allowed_tools", None)
         tool_configuration: Optional[AnthropicMcpServerToolConfiguration] = None
@@ -342,7 +342,7 @@ class AnthropicConfig(AnthropicModelInfo, BaseConfig):
         new_stop: Optional[List[str]] = None
         if isinstance(stop, str):
             if (
-                stop.isspace() and litellm.drop_params is True
+                stop.isspace() and remodl.drop_params is True
             ):  # anthropic doesn't allow whitespace characters as stop-sequences
                 return new_stop
             new_stop = [stop]
@@ -350,7 +350,7 @@ class AnthropicConfig(AnthropicModelInfo, BaseConfig):
             new_v = []
             for v in stop:
                 if (
-                    v.isspace() and litellm.drop_params is True
+                    v.isspace() and remodl.drop_params is True
                 ):  # anthropic doesn't allow whitespace characters as stop-sequences
                     continue
                 new_v.append(v)
@@ -655,7 +655,7 @@ class AnthropicConfig(AnthropicModelInfo, BaseConfig):
         model: str,
         messages: List[AllMessageValues],
         optional_params: dict,
-        litellm_params: dict,
+        remodl_params: dict,
         headers: dict,
     ) -> dict:
         """
@@ -665,7 +665,7 @@ class AnthropicConfig(AnthropicModelInfo, BaseConfig):
         """
         Anthropic doesn't support tool calling without `tools=` param specified.
         """
-        from litellm.litellm_core_utils.prompt_templates.factory import (
+        from remodl.remodl_core_utils.prompt_templates.factory import (
             anthropic_messages_pt,
         )
 
@@ -674,13 +674,13 @@ class AnthropicConfig(AnthropicModelInfo, BaseConfig):
             and messages is not None
             and has_tool_call_blocks(messages)
         ):
-            if litellm.modify_params:
+            if remodl.modify_params:
                 optional_params["tools"], _ = self._map_tools(
                     add_dummy_tool(custom_llm_provider="anthropic")
                 )
             else:
-                raise litellm.UnsupportedParamsError(
-                    message="Anthropic doesn't support tool calling without `tools=` param specified. Pass `tools=` param OR set `litellm.modify_params = True` // `litellm_settings::modify_params: True` to add dummy tool to the request.",
+                raise remodl.UnsupportedParamsError(
+                    message="Anthropic doesn't support tool calling without `tools=` param specified. Pass `tools=` param OR set `remodl.modify_params = True` // `remodl_settings::modify_params: True` to add dummy tool to the request.",
                     model="",
                     llm_provider="anthropic",
                 )
@@ -718,7 +718,7 @@ class AnthropicConfig(AnthropicModelInfo, BaseConfig):
             optional_params["tools"] = tools
 
         ## Load Config
-        config = litellm.AnthropicConfig.get_config()
+        config = remodl.AnthropicConfig.get_config()
         for k, v in config.items():
             if (
                 k not in optional_params
@@ -726,15 +726,15 @@ class AnthropicConfig(AnthropicModelInfo, BaseConfig):
                 optional_params[k] = v
 
         ## Handle user_id in metadata
-        _litellm_metadata = litellm_params.get("metadata", None)
+        _remodl_metadata = remodl_params.get("metadata", None)
         if (
-            _litellm_metadata
-            and isinstance(_litellm_metadata, dict)
-            and "user_id" in _litellm_metadata
-            and _litellm_metadata["user_id"] is not None
-            and _valid_user_id(_litellm_metadata["user_id"])
+            _remodl_metadata
+            and isinstance(_remodl_metadata, dict)
+            and "user_id" in _remodl_metadata
+            and _remodl_metadata["user_id"] is not None
+            and _valid_user_id(_remodl_metadata["user_id"])
         ):
-            optional_params["metadata"] = {"user_id": _litellm_metadata["user_id"]}
+            optional_params["metadata"] = {"user_id": _remodl_metadata["user_id"]}
 
         data = {
             "model": model,
@@ -951,11 +951,11 @@ class AnthropicConfig(AnthropicModelInfo, BaseConfig):
             if (
                 prefix_prompt is not None
                 and not text_content.startswith(prefix_prompt)
-                and not litellm.disable_add_prefix_to_prompt
+                and not remodl.disable_add_prefix_to_prompt
             ):
                 text_content = prefix_prompt + text_content
 
-            _message = litellm.Message(
+            _message = remodl.Message(
                 tool_calls=tool_calls,
                 content=text_content or None,
                 provider_specific_fields={
@@ -1030,7 +1030,7 @@ class AnthropicConfig(AnthropicModelInfo, BaseConfig):
         request_data: Dict,
         messages: List[AllMessageValues],
         optional_params: Dict,
-        litellm_params: dict,
+        remodl_params: dict,
         encoding: Any,
         api_key: Optional[str] = None,
         json_mode: Optional[bool] = None,
@@ -1086,16 +1086,16 @@ class AnthropicConfig(AnthropicModelInfo, BaseConfig):
                     isinstance(args, dict)
                     and (values := args.get("values")) is not None
                 ):
-                    _message = litellm.Message(content=json.dumps(values))
+                    _message = remodl.Message(content=json.dumps(values))
                     return _message
                 else:
                     # a lot of the times the `values` key is not present in the tool response
-                    # relevant issue: https://github.com/BerriAI/litellm/issues/6741
-                    _message = litellm.Message(content=json.dumps(args))
+                    # relevant issue: https://github.com/BerriAI/remodl/issues/6741
+                    _message = remodl.Message(content=json.dumps(args))
                     return _message
         except json.JSONDecodeError:
             # json decode error does occur, return the original tool response str
-            return litellm.Message(content=json_mode_content_str)
+            return remodl.Message(content=json_mode_content_str)
         return None
 
     def get_error_class(

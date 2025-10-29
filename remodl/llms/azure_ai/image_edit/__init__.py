@@ -1,4 +1,4 @@
-from litellm.llms.base_llm.image_edit.transformation import BaseImageEditConfig
+from remodl.llms.base_llm.image_edit.transformation import BaseImageEditConfig
 
 from .transformation import AzureFoundryFluxImageEditConfig
 

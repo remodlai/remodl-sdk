@@ -4,9 +4,9 @@ Support for gpt model family
 
 from typing import List, Optional, Union
 
-from litellm.llms.base_llm.completion.transformation import BaseTextCompletionConfig
-from litellm.types.llms.openai import AllMessageValues, OpenAITextCompletionUserMessage
-from litellm.types.utils import Choices, Message, ModelResponse, TextCompletionResponse
+from remodl.llms.base_llm.completion.transformation import BaseTextCompletionConfig
+from remodl.types.llms.openai import AllMessageValues, OpenAITextCompletionUserMessage
+from remodl.types.utils import Choices, Message, ModelResponse, TextCompletionResponse
 
 from ..chat.gpt_transformation import OpenAIGPTConfig
 from .utils import _transform_prompt
@@ -112,7 +112,7 @@ class OpenAITextCompletionConfig(BaseTextCompletionConfig, OpenAIGPTConfig):
                 model_response_object.model = response_object["model"]
 
             model_response_object._hidden_params["original_response"] = (
-                response_object  # track original response, if users make a litellm.text_completion() request, we can return the original response
+                response_object  # track original response, if users make a remodl.text_completion() request, we can return the original response
             )
             return model_response_object
         except Exception as e:

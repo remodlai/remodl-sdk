@@ -1,6 +1,6 @@
 from typing import Dict, Optional
 
-import litellm
+import remodl
 
 
 def _ensure_extra_body_is_safe(extra_body: Optional[Dict]) -> Optional[Dict]:
@@ -10,7 +10,7 @@ def _ensure_extra_body_is_safe(extra_body: Optional[Dict]) -> Optional[Dict]:
     "Object of type TextPromptClient is not JSON serializable
 
 
-    Relevant Issue: https://github.com/BerriAI/litellm/issues/4140
+    Relevant Issue: https://github.com/BerriAI/remodl/issues/4140
     """
     if extra_body is None:
         return None
@@ -41,15 +41,15 @@ def pick_cheapest_chat_models_from_llm_provider(custom_llm_provider: str, n=1):
     Returns:
         list[str]: A list of the n cheapest chat models.
     """
-    if custom_llm_provider not in litellm.models_by_provider:
+    if custom_llm_provider not in remodl.models_by_provider:
         return []
 
-    known_models = litellm.models_by_provider.get(custom_llm_provider, [])
+    known_models = remodl.models_by_provider.get(custom_llm_provider, [])
     model_costs = []
 
     for model in known_models:
         try:
-            model_info = litellm.get_model_info(
+            model_info = remodl.get_model_info(
                 model=model, custom_llm_provider=custom_llm_provider
             )
         except Exception:
@@ -67,17 +67,17 @@ def pick_cheapest_chat_models_from_llm_provider(custom_llm_provider: str, n=1):
     # Return the top n cheapest models
     return [model for model, _ in model_costs[:n]]
 
-def get_proxy_server_request_headers(litellm_params: Optional[dict]) -> dict:
+def get_proxy_server_request_headers(remodl_params: Optional[dict]) -> dict:
     """
-    Get the `proxy_server_request` headers from the litellm_params.\
+    Get the `proxy_server_request` headers from the remodl_params.\
 
     Use this if you want to access the request headers made to LiteLLM proxy server.
     """
-    if litellm_params is None:
+    if remodl_params is None:
         return {}
 
     proxy_request_headers = (
-        litellm_params.get("proxy_server_request", {}).get("headers", {}) or {}
+        remodl_params.get("proxy_server_request", {}).get("headers", {}) or {}
     )
 
     return proxy_request_headers

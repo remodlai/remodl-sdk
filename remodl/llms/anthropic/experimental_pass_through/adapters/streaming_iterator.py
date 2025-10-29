@@ -2,16 +2,16 @@
 ## Translates OpenAI call to Anthropic `/v1/messages` format
 import json
 import traceback
-from litellm._uuid import uuid
+from remodl._uuid import uuid
 from collections import deque
 from typing import TYPE_CHECKING, Any, AsyncIterator, Iterator, Literal, Optional
 
-from litellm import verbose_logger
-from litellm.types.llms.anthropic import UsageDelta
-from litellm.types.utils import AdapterCompletionStreamWrapper
+from remodl import verbose_logger
+from remodl.types.llms.anthropic import UsageDelta
+from remodl.types.utils import AdapterCompletionStreamWrapper
 
 if TYPE_CHECKING:
-    from litellm.types.utils import ModelResponseStream
+    from remodl.types.utils import ModelResponseStream
 
 
 class AnthropicStreamWrapper(AdapterCompletionStreamWrapper):
@@ -21,7 +21,7 @@ class AnthropicStreamWrapper(AdapterCompletionStreamWrapper):
     - finish_reason must map exactly to anthropic reason, else anthropic client won't be able to parse it.
     """
 
-    from litellm.types.llms.anthropic import (
+    from remodl.types.llms.anthropic import (
         ContentBlockContentBlockDict,
         ContentBlockStart,
         ContentBlockStartText,

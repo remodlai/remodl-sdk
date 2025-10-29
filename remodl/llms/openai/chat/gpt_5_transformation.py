@@ -2,7 +2,7 @@
 
 from typing import Optional
 
-import litellm
+import remodl
 
 from .gpt_transformation import OpenAIGPTConfig
 
@@ -27,7 +27,7 @@ class OpenAIGPT5Config(OpenAIGPTConfig):
         return "gpt-5-codex" in model
 
     def get_supported_openai_params(self, model: str) -> list:
-        from litellm.utils import supports_tool_choice
+        from remodl.utils import supports_tool_choice
 
         base_gpt_series_params = super().get_supported_openai_params(model=model)
         gpt_5_only_params = ["reasoning_effort"]
@@ -59,7 +59,7 @@ class OpenAIGPT5Config(OpenAIGPTConfig):
     ) -> dict:
         ################################################################
         # max_tokens is not supported for gpt-5 models on OpenAI API
-        # Relevant issue: https://github.com/BerriAI/litellm/issues/13381
+        # Relevant issue: https://github.com/BerriAI/remodl/issues/13381
         ################################################################
         if "max_tokens" in non_default_params:
             optional_params["max_completion_tokens"] = non_default_params.pop(
@@ -71,12 +71,12 @@ class OpenAIGPT5Config(OpenAIGPTConfig):
             if temperature_value is not None:
                 if temperature_value == 1:
                     optional_params["temperature"] = temperature_value
-                elif litellm.drop_params or drop_params:
+                elif remodl.drop_params or drop_params:
                     pass
                 else:
-                    raise litellm.utils.UnsupportedParamsError(
+                    raise remodl.utils.UnsupportedParamsError(
                         message=(
-                            "gpt-5 models (including gpt-5-codex) don't support temperature={}. Only temperature=1 is supported. To drop unsupported params set `litellm.drop_params = True`"
+                            "gpt-5 models (including gpt-5-codex) don't support temperature={}. Only temperature=1 is supported. To drop unsupported params set `remodl.drop_params = True`"
                         ).format(temperature_value),
                         status_code=400,
                     )

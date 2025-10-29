@@ -8,7 +8,7 @@ A powerful prompt management system for LiteLLM that supports [Google's Dotpromp
 - **🎯 YAML frontmatter**: Define model, parameters, and schemas in file headers
 - **🔧 Handlebars templating**: Use `{{variable}}` syntax with Jinja2 backend
 - **✅ Input validation**: Automatic validation against defined schemas
-- **🔗 LiteLLM integration**: Works seamlessly with `litellm.completion()`
+- **🔗 LiteLLM integration**: Works seamlessly with `remodl.completion()`
 - **💬 Smart message parsing**: Converts prompts to proper chat messages
 - **⚙️ Parameter extraction**: Automatically applies model settings from prompts
 
@@ -37,12 +37,12 @@ input:
 ### 2. Use with LiteLLM
 
 ```python
-import litellm
+import remodl
 
-litellm.set_global_prompt_directory("path/to/your/prompts")
+remodl.set_global_prompt_directory("path/to/your/prompts")
 
 # Use with completion - the model prefix 'dotprompt/' tells LiteLLM to use prompt management
-response = litellm.completion(
+response = remodl.completion(
     model="dotprompt/gpt-4",  # The actual model comes from the .prompt file
     prompt_id="chat_assistant",
     prompt_variables={
@@ -275,7 +275,7 @@ Represents a single prompt with metadata.
 **Prompt not found**: Ensure the `.prompt` file exists and has correct extension
 ```python
 # Check available prompts
-from litellm.integrations.dotprompt import get_dotprompt_manager
+from remodl.integrations.dotprompt import get_dotprompt_manager
 manager = get_dotprompt_manager()
 print(manager.prompt_manager.list_prompts())
 ```

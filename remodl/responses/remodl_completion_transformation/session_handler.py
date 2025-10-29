@@ -1,21 +1,21 @@
 import json
 from typing import TYPE_CHECKING, Any, List, Optional, Union, cast
 
-import litellm
-from litellm._logging import verbose_proxy_logger
-from litellm.proxy._types import SpendLogsPayload
-from litellm.proxy.spend_tracking.cold_storage_handler import ColdStorageHandler
-from litellm.responses.utils import ResponsesAPIRequestUtils
-from litellm.types.llms.openai import (
+import remodl
+from remodl._logging import verbose_proxy_logger
+from remodl.proxy._types import SpendLogsPayload
+from remodl.proxy.spend_tracking.cold_storage_handler import ColdStorageHandler
+from remodl.responses.utils import ResponsesAPIRequestUtils
+from remodl.types.llms.openai import (
     AllMessageValues,
     ChatCompletionResponseMessage,
     GenericChatCompletionMessage,
     ResponseInputParam,
 )
-from litellm.types.utils import ChatCompletionMessageToolCall, Message, ModelResponse
+from remodl.types.utils import ChatCompletionMessageToolCall, Message, ModelResponse
 
 if TYPE_CHECKING:
-    from litellm.responses.litellm_completion_transformation.transformation import (
+    from remodl.responses.remodl_completion_transformation.transformation import (
         ChatCompletionSession,
     )
 else:
@@ -35,7 +35,7 @@ class ResponsesSessionHandler:
         """
         Return the chat completion message history for a previous response id
         """
-        from litellm.responses.litellm_completion_transformation.transformation import (
+        from remodl.responses.remodl_completion_transformation.transformation import (
             ChatCompletionSession,
         )
 
@@ -51,9 +51,9 @@ class ResponsesSessionHandler:
             "found %s spend logs for this response id", len(all_spend_logs)
         )
 
-        litellm_session_id: Optional[str] = None
+        remodl_session_id: Optional[str] = None
         if len(all_spend_logs) > 0:
-            litellm_session_id = all_spend_logs[0].get("session_id")
+            remodl_session_id = all_spend_logs[0].get("session_id")
 
         chat_completion_message_history: List[
             Union[
@@ -76,7 +76,7 @@ class ResponsesSessionHandler:
         )
         return ChatCompletionSession(
             messages=chat_completion_message_history,
-            litellm_session_id=litellm_session_id,
+            remodl_session_id=remodl_session_id,
         )
     
     @staticmethod
@@ -95,7 +95,7 @@ class ResponsesSessionHandler:
         """
         Extend the chat completion message history with the spend log payload
         """
-        from litellm.responses.litellm_completion_transformation.transformation import (
+        from remodl.responses.remodl_completion_transformation.transformation import (
             LiteLLMCompletionResponsesConfig,
         )
 
@@ -236,10 +236,10 @@ class ResponsesSessionHandler:
         """
         Only check cold storage when both are true 
         1. `LITELLM_TRUNCATED_PAYLOAD_FIELD` is in the proxy server request dict
-        2. `litellm.cold_storage_custom_logger` is not None
+        2. `remodl.cold_storage_custom_logger` is not None
         """
-        from litellm.constants import LITELLM_TRUNCATED_PAYLOAD_FIELD
-        configured_cold_storage_custom_logger = litellm.cold_storage_custom_logger
+        from remodl.constants import LITELLM_TRUNCATED_PAYLOAD_FIELD
+        configured_cold_storage_custom_logger = remodl.cold_storage_custom_logger
         if configured_cold_storage_custom_logger is None:
             return False
         if proxy_server_request_dict is None:
@@ -264,7 +264,7 @@ class ResponsesSessionHandler:
 
         SELECT session_id FROM spend_logs WHERE response_id = previous_response_id, SELECT * FROM spend_logs WHERE session_id = session_id
         """
-        from litellm.proxy.proxy_server import prisma_client
+        from remodl.proxy.proxy_server import prisma_client
 
         verbose_proxy_logger.debug("decoding response id=%s", previous_response_id)
 

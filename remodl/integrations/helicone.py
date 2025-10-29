@@ -3,7 +3,7 @@
 import os
 import traceback
 
-import litellm
+import remodl
 
 
 class HeliconeLogger:
@@ -76,25 +76,25 @@ class HeliconeLogger:
         return claude_response_obj
 
     @staticmethod
-    def add_metadata_from_header(litellm_params: dict, metadata: dict) -> dict:
+    def add_metadata_from_header(remodl_params: dict, metadata: dict) -> dict:
         """
         Adds metadata from proxy request headers to Helicone logging if keys start with "helicone_"
-        and overwrites litellm_params.metadata if already included.
+        and overwrites remodl_params.metadata if already included.
 
         For example if you want to add custom property to your request, send
         `headers: { ..., helicone-property-something: 1234 }` via proxy request.
         """
-        if litellm_params is None:
+        if remodl_params is None:
             return metadata
 
-        if litellm_params.get("proxy_server_request") is None:
+        if remodl_params.get("proxy_server_request") is None:
             return metadata
 
         if metadata is None:
             metadata = {}
 
         proxy_headers = (
-            litellm_params.get("proxy_server_request", {}).get("headers", {}) or {}
+            remodl_params.get("proxy_server_request", {}).get("headers", {}) or {}
         )
 
         for header_key in proxy_headers:
@@ -103,8 +103,8 @@ class HeliconeLogger:
         
         # Remove OpenTelemetry span from metadata as it's not JSON serializable
         # The span is used internally for tracing but shouldn't be logged to external services
-        if "litellm_parent_otel_span" in metadata:
-            metadata.pop("litellm_parent_otel_span")
+        if "remodl_parent_otel_span" in metadata:
+            metadata.pop("remodl_parent_otel_span")
 
         return metadata
 
@@ -116,10 +116,10 @@ class HeliconeLogger:
             print_verbose(
                 f"Helicone Logging - Enters logging function for model {model}"
             )
-            litellm_params = kwargs.get("litellm_params", {})
-            kwargs.get("litellm_call_id", None)
-            metadata = litellm_params.get("metadata", {}) or {}
-            metadata = self.add_metadata_from_header(litellm_params, metadata)
+            remodl_params = kwargs.get("remodl_params", {})
+            kwargs.get("remodl_call_id", None)
+            metadata = remodl_params.get("metadata", {}) or {}
+            metadata = self.add_metadata_from_header(remodl_params, metadata)
             model = (
                 model
                 if any(
@@ -129,8 +129,8 @@ class HeliconeLogger:
                 else "gpt-3.5-turbo"
             )
             provider_request = {"model": model, "messages": messages}
-            if isinstance(response_obj, litellm.EmbeddingResponse) or isinstance(
-                response_obj, litellm.ModelResponse
+            if isinstance(response_obj, remodl.EmbeddingResponse) or isinstance(
+                response_obj, remodl.ModelResponse
             ):
                 response_obj = response_obj.json()
 
@@ -183,7 +183,7 @@ class HeliconeLogger:
                     },
                 },  # {"seconds": .., "milliseconds": ..}
             }
-            response = litellm.module_level_client.post(url, headers=headers, json=data)
+            response = remodl.module_level_client.post(url, headers=headers, json=data)
             if response.status_code == 200:
                 print_verbose("Helicone Logging - Success!")
             else:

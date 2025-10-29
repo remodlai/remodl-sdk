@@ -1,9 +1,9 @@
 """OpenAI Text-to-Speech handler for Unified Guardrails."""
 
-from litellm.llms.openai.speech.guardrail_translation.handler import (
+from remodl.llms.openai.speech.guardrail_translation.handler import (
     OpenAITextToSpeechHandler,
 )
-from litellm.types.utils import CallTypes
+from remodl.types.utils import CallTypes
 
 guardrail_translation_mappings = {
     CallTypes.speech: OpenAITextToSpeechHandler,

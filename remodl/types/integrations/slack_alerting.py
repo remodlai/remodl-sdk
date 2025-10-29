@@ -6,7 +6,7 @@ from typing import Any, Dict, List, Literal, Optional, Set
 from pydantic import BaseModel, Field
 from typing_extensions import TypedDict
 
-from litellm.types.utils import LiteLLMPydanticObjectBase
+from remodl.types.utils import LiteLLMPydanticObjectBase
 
 SLACK_ALERTING_THRESHOLD_5_PERCENT = 0.05
 SLACK_ALERTING_THRESHOLD_15_PERCENT = 0.15
@@ -31,7 +31,7 @@ class ProviderRegionOutageModel(BaseOutageModel):
 
 
 # we use this for the email header, please send a test email if you change this. verify it looks good on email
-LITELLM_LOGO_URL = "https://litellm-listing.s3.amazonaws.com/litellm_logo.png"
+LITELLM_LOGO_URL = "https://remodl-listing.s3.amazonaws.com/remodl_logo.png"
 LITELLM_SUPPORT_CONTACT = "support@berri.ai"
 
 

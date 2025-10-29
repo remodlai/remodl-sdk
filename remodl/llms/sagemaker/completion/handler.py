@@ -4,16 +4,16 @@ from typing import Any, Callable, List, Optional, Union, cast
 
 import httpx
 
-import litellm
-from litellm._logging import verbose_logger
-from litellm.litellm_core_utils.asyncify import asyncify
-from litellm.llms.bedrock.base_aws_llm import BaseAWSLLM
-from litellm.llms.custom_httpx.http_handler import (
+import remodl
+from remodl._logging import verbose_logger
+from remodl.remodl_core_utils.asyncify import asyncify
+from remodl.llms.bedrock.base_aws_llm import BaseAWSLLM
+from remodl.llms.custom_httpx.http_handler import (
     _get_httpx_client,
     get_async_httpx_client,
 )
-from litellm.types.llms.openai import AllMessageValues
-from litellm.utils import (
+from remodl.types.llms.openai import AllMessageValues
+from remodl.utils import (
     CustomStreamWrapper,
     EmbeddingResponse,
     ModelResponse,
@@ -61,12 +61,12 @@ class SagemakerLLM(BaseAWSLLM):
         ### SET REGION NAME ###
         if aws_region_name is None:
             # check env #
-            litellm_aws_region_name = get_secret("AWS_REGION_NAME", None)
+            remodl_aws_region_name = get_secret("AWS_REGION_NAME", None)
 
-            if litellm_aws_region_name is not None and isinstance(
-                litellm_aws_region_name, str
+            if remodl_aws_region_name is not None and isinstance(
+                remodl_aws_region_name, str
             ):
-                aws_region_name = litellm_aws_region_name
+                aws_region_name = remodl_aws_region_name
 
             standard_aws_region_name = get_secret("AWS_REGION", None)
             if standard_aws_region_name is not None and isinstance(
@@ -96,7 +96,7 @@ class SagemakerLLM(BaseAWSLLM):
         model: str,
         data: dict,
         messages: List[AllMessageValues],
-        litellm_params: dict,
+        remodl_params: dict,
         optional_params: dict,
         aws_region_name: str,
         extra_headers: Optional[dict] = None,
@@ -123,7 +123,7 @@ class SagemakerLLM(BaseAWSLLM):
             model=model,
             messages=messages,
             optional_params=optional_params,
-            litellm_params=litellm_params,
+            remodl_params=remodl_params,
         )
         request = AWSRequest(
             method="POST", url=api_base, data=encoded_data, headers=headers
@@ -147,7 +147,7 @@ class SagemakerLLM(BaseAWSLLM):
         encoding,
         logging_obj,
         optional_params: dict,
-        litellm_params: dict,
+        remodl_params: dict,
         timeout: Optional[Union[float, httpx.Timeout]] = None,
         custom_prompt_dict={},
         hf_model_name=None,
@@ -162,7 +162,7 @@ class SagemakerLLM(BaseAWSLLM):
         model_id = optional_params.get("model_id", None)
 
         ## Load Config
-        config = litellm.SagemakerConfig.get_config()
+        config = remodl.SagemakerConfig.get_config()
         for k, v in config.items():
             if (
                 k not in inference_params
@@ -184,7 +184,7 @@ class SagemakerLLM(BaseAWSLLM):
                     aws_region_name=aws_region_name,
                     credentials=credentials,
                     headers=headers,
-                    litellm_params=litellm_params,
+                    remodl_params=remodl_params,
                 )
                 return response
             else:
@@ -192,7 +192,7 @@ class SagemakerLLM(BaseAWSLLM):
                     model=model,
                     messages=messages,
                     optional_params=optional_params,
-                    litellm_params=litellm_params,
+                    remodl_params=remodl_params,
                     headers=headers,
                 )
                 prepared_request = self._prepare_request(
@@ -200,7 +200,7 @@ class SagemakerLLM(BaseAWSLLM):
                     data=data,
                     messages=messages,
                     optional_params=optional_params,
-                    litellm_params=litellm_params,
+                    remodl_params=remodl_params,
                     credentials=credentials,
                     aws_region_name=aws_region_name,
                 )
@@ -262,7 +262,7 @@ class SagemakerLLM(BaseAWSLLM):
                 credentials=credentials,
                 aws_region_name=aws_region_name,
                 headers=headers,
-                litellm_params=litellm_params,
+                remodl_params=remodl_params,
             )
 
         ## Non-Streaming completion CALL
@@ -270,14 +270,14 @@ class SagemakerLLM(BaseAWSLLM):
             model=model,
             messages=messages,
             optional_params=optional_params,
-            litellm_params=litellm_params,
+            remodl_params=remodl_params,
             headers=headers,
         )
         prepared_request_args = {
             "model": model,
             "data": _data,
             "optional_params": optional_params,
-            "litellm_params": litellm_params,
+            "remodl_params": remodl_params,
             "credentials": credentials,
             "aws_region_name": aws_region_name,
             "messages": messages,
@@ -339,7 +339,7 @@ class SagemakerLLM(BaseAWSLLM):
                 getattr(e, "response", {}).get("Error", {}).get("Message", str(e))
             )
             if "Inference Component Name header is required" in error_message:
-                error_message += "\n pass in via `litellm.completion(..., model_id={InferenceComponentName})`"
+                error_message += "\n pass in via `remodl.completion(..., model_id={InferenceComponentName})`"
             raise SagemakerError(status_code=status_code, message=error_message)
 
         return sagemaker_config.transform_response(
@@ -351,7 +351,7 @@ class SagemakerLLM(BaseAWSLLM):
             messages=messages,
             optional_params=optional_params,
             encoding=encoding,
-            litellm_params=litellm_params,
+            remodl_params=remodl_params,
         )
 
     async def make_async_call(
@@ -365,7 +365,7 @@ class SagemakerLLM(BaseAWSLLM):
         try:
             if client is None:
                 client = get_async_httpx_client(
-                    llm_provider=litellm.LlmProviders.SAGEMAKER
+                    llm_provider=remodl.LlmProviders.SAGEMAKER
                 )  # Create a new client if none provided
             response = await client.post(
                 api_base,
@@ -415,14 +415,14 @@ class SagemakerLLM(BaseAWSLLM):
         model_response: ModelResponse,
         model_id: Optional[str],
         logging_obj: Any,
-        litellm_params: dict,
+        remodl_params: dict,
         headers: dict,
     ):
         data = await sagemaker_config.async_transform_request(
             model=model,
             messages=messages,
             optional_params={**optional_params, "stream": True},
-            litellm_params=litellm_params,
+            remodl_params=remodl_params,
             headers=headers,
         )
         asyncified_prepare_request = asyncify(self._prepare_request)
@@ -430,13 +430,13 @@ class SagemakerLLM(BaseAWSLLM):
             "model": model,
             "data": data,
             "optional_params": optional_params,
-            "litellm_params": litellm_params,
+            "remodl_params": remodl_params,
             "credentials": credentials,
             "aws_region_name": aws_region_name,
             "messages": messages,
         }
         prepared_request = await asyncified_prepare_request(**prepared_request_args)
-        if model_id is not None:  # Fixes https://github.com/BerriAI/litellm/issues/8889
+        if model_id is not None:  # Fixes https://github.com/BerriAI/remodl/issues/8889
             prepared_request.headers.update(
                 {"X-Amzn-SageMaker-Inference-Component": model_id}
             )
@@ -481,18 +481,18 @@ class SagemakerLLM(BaseAWSLLM):
         logging_obj: Any,
         model_id: Optional[str],
         headers: dict,
-        litellm_params: dict,
+        remodl_params: dict,
     ):
         timeout = 300.0
         async_handler = get_async_httpx_client(
-            llm_provider=litellm.LlmProviders.SAGEMAKER
+            llm_provider=remodl.LlmProviders.SAGEMAKER
         )
 
         data = await sagemaker_config.async_transform_request(
             model=model,
             messages=messages,
             optional_params=optional_params,
-            litellm_params=litellm_params,
+            remodl_params=remodl_params,
             headers=headers,
         )
 
@@ -501,7 +501,7 @@ class SagemakerLLM(BaseAWSLLM):
             "model": model,
             "data": data,
             "optional_params": optional_params,
-            "litellm_params": litellm_params,
+            "remodl_params": remodl_params,
             "credentials": credentials,
             "aws_region_name": aws_region_name,
             "messages": messages,
@@ -550,7 +550,7 @@ class SagemakerLLM(BaseAWSLLM):
         except Exception as e:
             error_message = f"{str(e)}"
             if "Inference Component Name header is required" in error_message:
-                error_message += "\n pass in via `litellm.completion(..., model_id={InferenceComponentName})`"
+                error_message += "\n pass in via `remodl.completion(..., model_id={InferenceComponentName})`"
             raise SagemakerError(status_code=500, message=error_message)
         return sagemaker_config.transform_response(
             model=model,
@@ -561,7 +561,7 @@ class SagemakerLLM(BaseAWSLLM):
             messages=messages,
             optional_params=optional_params,
             encoding=encoding,
-            litellm_params=litellm_params,
+            remodl_params=remodl_params,
         )
 
     def embedding(
@@ -574,7 +574,7 @@ class SagemakerLLM(BaseAWSLLM):
         logging_obj,
         optional_params: dict,
         custom_prompt_dict={},
-        litellm_params=None,
+        remodl_params=None,
         logger_fn=None,
     ):
         """
@@ -590,7 +590,7 @@ class SagemakerLLM(BaseAWSLLM):
 
         if aws_access_key_id is not None:
             # uses auth params passed to completion
-            # aws_access_key_id is not None, assume user is trying to auth using litellm.completion
+            # aws_access_key_id is not None, assume user is trying to auth using remodl.completion
             client = boto3.client(
                 service_name="sagemaker-runtime",
                 aws_access_key_id=aws_access_key_id,
@@ -618,7 +618,7 @@ class SagemakerLLM(BaseAWSLLM):
         inference_params.pop("stream", None)
 
         ## Load Config
-        config = litellm.SagemakerConfig.get_config()
+        config = remodl.SagemakerConfig.get_config()
         for k, v in config.items():
             if (
                 k not in inference_params
@@ -695,5 +695,5 @@ class SagemakerLLM(BaseAWSLLM):
             api_key=None,
             request_data=request_data,
             optional_params=optional_params,
-            litellm_params=litellm_params or {}
+            remodl_params=remodl_params or {}
         )

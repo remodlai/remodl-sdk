@@ -7,13 +7,13 @@ from typing import Any, Dict, List, Literal, Optional
 
 from typing_extensions import TypedDict
 
-from litellm.types.integrations.custom_logger import StandardCustomLoggerInitParams
+from remodl.types.integrations.custom_logger import StandardCustomLoggerInitParams
 
 
 class InputMeta(TypedDict):
     messages: List[
         Dict[str, Any]  # changed to fit with tool calls
-    ]  # Relevant Issue: https://github.com/BerriAI/litellm/issues/9494
+    ]  # Relevant Issue: https://github.com/BerriAI/remodl/issues/9494
 
 
 class OutputMeta(TypedDict):
@@ -73,7 +73,7 @@ class DDIntakePayload(TypedDict):
 
 class DatadogLLMObsInitParams(StandardCustomLoggerInitParams):
     """
-    Params for initializing a DatadogLLMObs logger on litellm
+    Params for initializing a DatadogLLMObs logger on remodl
     """
 
     pass
@@ -81,7 +81,7 @@ class DatadogLLMObsInitParams(StandardCustomLoggerInitParams):
 
 class DDLLMObsLatencyMetrics(TypedDict, total=False):
     time_to_first_token_ms: float
-    litellm_overhead_time_ms: float
+    remodl_overhead_time_ms: float
     guardrail_overhead_time_ms: float
 
 

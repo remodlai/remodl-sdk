@@ -268,8 +268,8 @@ class AnthropicMessagesRequestOptionalParams(TypedDict, total=False):
 class AnthropicMessagesRequest(AnthropicMessagesRequestOptionalParams, total=False):
     model: Required[str]
     messages: Required[Union[List[AllAnthropicMessageValues], List[Dict]]]
-    # litellm param - used for tracking litellm proxy metadata in the request
-    litellm_metadata: dict
+    # remodl param - used for tracking remodl proxy metadata in the request
+    remodl_metadata: dict
 
 
 class ContentTextBlockDelta(TypedDict):

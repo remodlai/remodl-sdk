@@ -6,26 +6,26 @@ from typing import TYPE_CHECKING, Any, Optional, Union
 import httpx
 from pydantic import BaseModel
 
-import litellm
-from litellm import BEDROCK_INVOKE_PROVIDERS_LITERAL
-from litellm._logging import verbose_logger
-from litellm.litellm_core_utils.litellm_logging import Logging as LitellmLogging
-from litellm.llms.bedrock.image.amazon_nova_canvas_transformation import (
+import remodl
+from remodl import BEDROCK_INVOKE_PROVIDERS_LITERAL
+from remodl._logging import verbose_logger
+from remodl.remodl_core_utils.remodl_logging import Logging as LitellmLogging
+from remodl.llms.bedrock.image.amazon_nova_canvas_transformation import (
     AmazonNovaCanvasConfig,
 )
-from litellm.llms.bedrock.image.amazon_stability3_transformation import (
+from remodl.llms.bedrock.image.amazon_stability3_transformation import (
     AmazonStability3Config,
 )
-from litellm.llms.bedrock.image.amazon_titan_transformation import (
+from remodl.llms.bedrock.image.amazon_titan_transformation import (
     AmazonTitanImageGenerationConfig,
 )
-from litellm.llms.custom_httpx.http_handler import (
+from remodl.llms.custom_httpx.http_handler import (
     AsyncHTTPHandler,
     HTTPHandler,
     _get_httpx_client,
     get_async_httpx_client,
 )
-from litellm.types.utils import ImageResponse
+from remodl.types.utils import ImageResponse
 
 from ..base_aws_llm import BaseAWSLLM
 from ..common_utils import BedrockError
@@ -128,7 +128,7 @@ class BedrockImageGeneration(BaseAWSLLM):
         Awaits the response from the bedrock image generation endpoint
         """
         async_client = client or get_async_httpx_client(
-            llm_provider=litellm.LlmProviders.BEDROCK,
+            llm_provider=remodl.LlmProviders.BEDROCK,
             params={"timeout": timeout},
         )
 
@@ -267,15 +267,15 @@ class BedrockImageGeneration(BaseAWSLLM):
         )  # make sure user is not passed in for bedrock call
         data = {}
         if provider == "stability":
-            if litellm.AmazonStability3Config._is_stability_3_model(model):
-                request_body = litellm.AmazonStability3Config.transform_request_body(
+            if remodl.AmazonStability3Config._is_stability_3_model(model):
+                request_body = remodl.AmazonStability3Config.transform_request_body(
                     prompt=prompt, optional_params=optional_params
                 )
                 return dict(request_body)
             else:
                 prompt = prompt.replace(os.linesep, " ")
                 ## LOAD CONFIG
-                config = litellm.AmazonStabilityConfig.get_config()
+                config = remodl.AmazonStabilityConfig.get_config()
                 for k, v in config.items():
                     if (
                         k not in inference_params
@@ -287,7 +287,7 @@ class BedrockImageGeneration(BaseAWSLLM):
                 }
         elif provider == "amazon":
             return dict(
-                litellm.AmazonNovaCanvasConfig.transform_request_body(
+                remodl.AmazonNovaCanvasConfig.transform_request_body(
                     text=prompt, optional_params=optional_params
                 )
             )
@@ -327,7 +327,7 @@ class BedrockImageGeneration(BaseAWSLLM):
             type[AmazonTitanImageGenerationConfig],
             type[AmazonNovaCanvasConfig],
             type[AmazonStability3Config],
-            type[litellm.AmazonStabilityConfig],
+            type[remodl.AmazonStabilityConfig],
         ]
         if AmazonTitanImageGenerationConfig._is_titan_model(model=model):
             config_class = AmazonTitanImageGenerationConfig
@@ -336,7 +336,7 @@ class BedrockImageGeneration(BaseAWSLLM):
         elif AmazonStability3Config._is_stability_3_model(model=model):
             config_class = AmazonStability3Config
         else:
-            config_class = litellm.AmazonStabilityConfig
+            config_class = remodl.AmazonStabilityConfig
 
         config_class.transform_response_dict_to_openai_response(
             model_response=model_response,

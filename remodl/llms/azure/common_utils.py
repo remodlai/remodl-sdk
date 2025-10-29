@@ -5,17 +5,17 @@ from typing import Any, Callable, Dict, Literal, Optional, Union, cast
 import httpx
 from openai import AsyncAzureOpenAI, AzureOpenAI
 
-import litellm
-from litellm._logging import verbose_logger
-from litellm.caching.caching import DualCache
-from litellm.llms.base_llm.chat.transformation import BaseLLMException
-from litellm.llms.openai.common_utils import BaseOpenAILLM
-from litellm.secret_managers.get_azure_ad_token_provider import (
+import remodl
+from remodl._logging import verbose_logger
+from remodl.caching.caching import DualCache
+from remodl.llms.base_llm.chat.transformation import BaseLLMException
+from remodl.llms.openai.common_utils import BaseOpenAILLM
+from remodl.secret_managers.get_azure_ad_token_provider import (
     get_azure_ad_token_provider,
 )
-from litellm.secret_managers.main import get_secret_str
-from litellm.types.router import GenericLiteLLMParams
-from litellm.utils import _add_path_to_api_base
+from remodl.secret_managers.main import get_secret_str
+from remodl.types.router import GenericLiteLLMParams
+from remodl.utils import _add_path_to_api_base
 
 azure_ad_cache = DualCache()
 
@@ -212,7 +212,7 @@ def get_azure_ad_token_from_oidc(
     if azure_ad_token_access_token is not None:
         return azure_ad_token_access_token
 
-    client = litellm.module_level_client
+    client = remodl.module_level_client
 
     req_token = client.post(
         f"{azure_authority_host}/{azure_tenant_id}/oauth2/v2.0/token",
@@ -267,7 +267,7 @@ def select_azure_base_url_or_endpoint(azure_client_params: dict):
 
 
 def get_azure_ad_token(
-    litellm_params: GenericLiteLLMParams,
+    remodl_params: GenericLiteLLMParams,
 ) -> Optional[str]:
     """
     Get Azure AD token from various authentication methods.
@@ -281,7 +281,7 @@ def get_azure_ad_token(
     6. From DefaultAzureCredential
 
     Args:
-        litellm_params: Dictionary containing authentication parameters
+        remodl_params: Dictionary containing authentication parameters
             - azure_ad_token_provider: Optional callable that returns a token
             - azure_ad_token: Optional existing token
             - tenant_id: Optional Azure tenant ID
@@ -294,18 +294,18 @@ def get_azure_ad_token(
         Azure AD token as string if successful, None otherwise
     """
     # Extract parameters
-    azure_ad_token_provider = litellm_params.get("azure_ad_token_provider")
-    azure_ad_token = litellm_params.get("azure_ad_token", None) or get_secret_str(
+    azure_ad_token_provider = remodl_params.get("azure_ad_token_provider")
+    azure_ad_token = remodl_params.get("azure_ad_token", None) or get_secret_str(
         "AZURE_AD_TOKEN"
     )
-    tenant_id = litellm_params.get("tenant_id", os.getenv("AZURE_TENANT_ID"))
-    client_id = litellm_params.get("client_id", os.getenv("AZURE_CLIENT_ID"))
-    client_secret = litellm_params.get(
+    tenant_id = remodl_params.get("tenant_id", os.getenv("AZURE_TENANT_ID"))
+    client_id = remodl_params.get("client_id", os.getenv("AZURE_CLIENT_ID"))
+    client_secret = remodl_params.get(
         "client_secret", os.getenv("AZURE_CLIENT_SECRET")
     )
-    azure_username = litellm_params.get("azure_username", os.getenv("AZURE_USERNAME"))
-    azure_password = litellm_params.get("azure_password", os.getenv("AZURE_PASSWORD"))
-    scope = litellm_params.get(
+    azure_username = remodl_params.get("azure_username", os.getenv("AZURE_USERNAME"))
+    azure_password = remodl_params.get("azure_password", os.getenv("AZURE_PASSWORD"))
+    scope = remodl_params.get(
         "azure_scope",
         os.getenv("AZURE_SCOPE", "https://cognitiveservices.azure.com/.default"),
     )
@@ -356,7 +356,7 @@ def get_azure_ad_token(
     # Try to get token provider from service principal or DefaultAzureCredential
     elif (
         azure_ad_token_provider is None
-        and litellm.enable_azure_ad_token_refresh is True
+        and remodl.enable_azure_ad_token_refresh is True
     ):
         verbose_logger.debug(
             "Using Azure AD token provider based on Service Principal with Secret workflow or DefaultAzureCredential for Azure Auth"
@@ -367,12 +367,12 @@ def get_azure_ad_token(
             verbose_logger.debug("Azure AD Token Provider could not be used.")
         except Exception as e:
             verbose_logger.error(
-                f"Error calling Azure AD token provider: {str(e)}. Follow docs - https://docs.litellm.ai/docs/providers/azure/#azure-ad-token-refresh---defaultazurecredential"
+                f"Error calling Azure AD token provider: {str(e)}. Follow docs - https://docs.remodl.ai/docs/providers/azure/#azure-ad-token-refresh---defaultazurecredential"
             )
             raise e
 
         #########################################################
-        # If litellm.enable_azure_ad_token_refresh is True and no other token provider is available,
+        # If remodl.enable_azure_ad_token_refresh is True and no other token provider is available,
         # try to get DefaultAzureCredential provider
         #########################################################
         if azure_ad_token_provider is None and azure_ad_token is None:
@@ -417,7 +417,7 @@ class BaseAzureLLM(BaseOpenAILLM):
         Returns:
             Token provider callable if DefaultAzureCredential is enabled and available, None otherwise
         """
-        from litellm.types.secret_managers.get_azure_ad_token_provider import (
+        from remodl.types.secret_managers.get_azure_ad_token_provider import (
             AzureCredentialType,
         )
 
@@ -442,7 +442,7 @@ class BaseAzureLLM(BaseOpenAILLM):
         api_base: Optional[str],
         api_version: Optional[str] = None,
         client: Optional[Union[AzureOpenAI, AsyncAzureOpenAI]] = None,
-        litellm_params: Optional[dict] = None,
+        remodl_params: Optional[dict] = None,
         _is_async: bool = False,
         model: Optional[str] = None,
     ) -> Optional[Union[AzureOpenAI, AsyncAzureOpenAI]]:
@@ -461,7 +461,7 @@ class BaseAzureLLM(BaseOpenAILLM):
                     return cached_client
 
             azure_client_params = self.initialize_azure_sdk_client(
-                litellm_params=litellm_params or {},
+                remodl_params=remodl_params or {},
                 api_key=api_key,
                 api_base=api_base,
                 model_name=model,
@@ -490,35 +490,35 @@ class BaseAzureLLM(BaseOpenAILLM):
 
     def initialize_azure_sdk_client(
         self,
-        litellm_params: dict,
+        remodl_params: dict,
         api_key: Optional[str],
         api_base: Optional[str],
         model_name: Optional[str],
         api_version: Optional[str],
         is_async: bool,
     ) -> dict:
-        azure_ad_token_provider = litellm_params.get("azure_ad_token_provider")
+        azure_ad_token_provider = remodl_params.get("azure_ad_token_provider")
         # If we have api_key, then we have higher priority
-        azure_ad_token = litellm_params.get("azure_ad_token")
-        tenant_id = litellm_params.get("tenant_id", os.getenv("AZURE_TENANT_ID"))
-        client_id = litellm_params.get("client_id", os.getenv("AZURE_CLIENT_ID"))
-        client_secret = litellm_params.get(
+        azure_ad_token = remodl_params.get("azure_ad_token")
+        tenant_id = remodl_params.get("tenant_id", os.getenv("AZURE_TENANT_ID"))
+        client_id = remodl_params.get("client_id", os.getenv("AZURE_CLIENT_ID"))
+        client_secret = remodl_params.get(
             "client_secret", os.getenv("AZURE_CLIENT_SECRET")
         )
-        azure_username = litellm_params.get(
+        azure_username = remodl_params.get(
             "azure_username", os.getenv("AZURE_USERNAME")
         )
-        azure_password = litellm_params.get(
+        azure_password = remodl_params.get(
             "azure_password", os.getenv("AZURE_PASSWORD")
         )
-        scope = litellm_params.get(
+        scope = remodl_params.get(
             "azure_scope",
             os.getenv("AZURE_SCOPE", "https://cognitiveservices.azure.com/.default"),
         )
         if scope is None:
             scope = "https://cognitiveservices.azure.com/.default"
-        max_retries = litellm_params.get("max_retries")
-        timeout = litellm_params.get("timeout")
+        max_retries = remodl_params.get("max_retries")
+        timeout = remodl_params.get("timeout")
         if (
             not api_key
             and azure_ad_token_provider is None
@@ -560,7 +560,7 @@ class BaseAzureLLM(BaseOpenAILLM):
         elif (
             not api_key
             and azure_ad_token_provider is None
-            and litellm.enable_azure_ad_token_refresh is True
+            and remodl.enable_azure_ad_token_refresh is True
         ):
             verbose_logger.debug(
                 "Using Azure AD token provider based on Service Principal with Secret workflow for Azure Auth"
@@ -573,7 +573,7 @@ class BaseAzureLLM(BaseOpenAILLM):
                 verbose_logger.debug("Azure AD Token Provider could not be used.")
         if api_version is None:
             api_version = os.getenv(
-                "AZURE_API_VERSION", litellm.AZURE_DEFAULT_API_VERSION
+                "AZURE_API_VERSION", remodl.AZURE_DEFAULT_API_VERSION
             )
 
         _api_key = api_key
@@ -619,7 +619,7 @@ class BaseAzureLLM(BaseOpenAILLM):
         api_version: str,
         max_retries: int,
         timeout: Union[float, httpx.Timeout],
-        litellm_params: dict,
+        remodl_params: dict,
         api_key: Optional[str],
         azure_ad_token: Optional[str],
         azure_ad_token_provider: Optional[Callable[[], str]],
@@ -627,9 +627,9 @@ class BaseAzureLLM(BaseOpenAILLM):
         client: Optional[Union[AzureOpenAI, AsyncAzureOpenAI]] = None,
     ) -> Union[AzureOpenAI, AsyncAzureOpenAI]:
         ## build base url - assume api base includes resource name
-        tenant_id = litellm_params.get("tenant_id", os.getenv("AZURE_TENANT_ID"))
-        client_id = litellm_params.get("client_id", os.getenv("AZURE_CLIENT_ID"))
-        scope = litellm_params.get(
+        tenant_id = remodl_params.get("tenant_id", os.getenv("AZURE_TENANT_ID"))
+        client_id = remodl_params.get("client_id", os.getenv("AZURE_CLIENT_ID"))
+        scope = remodl_params.get(
             "azure_scope",
             os.getenv("AZURE_SCOPE", "https://cognitiveservices.azure.com/.default"),
         )
@@ -641,7 +641,7 @@ class BaseAzureLLM(BaseOpenAILLM):
             azure_client_params: Dict[str, Any] = {
                 "api_version": api_version,
                 "base_url": f"{api_base}",
-                "http_client": litellm.client_session,
+                "http_client": remodl.client_session,
                 "max_retries": max_retries,
                 "timeout": timeout,
             }
@@ -668,18 +668,18 @@ class BaseAzureLLM(BaseOpenAILLM):
 
     @staticmethod
     def _base_validate_azure_environment(
-        headers: dict, litellm_params: Optional[GenericLiteLLMParams]
+        headers: dict, remodl_params: Optional[GenericLiteLLMParams]
     ) -> dict:
-        litellm_params = litellm_params or GenericLiteLLMParams()
+        remodl_params = remodl_params or GenericLiteLLMParams()
 
         # Check if api-key is already in headers; if so, use it
         if "api-key" in headers:
             return headers
 
         api_key = (
-            litellm_params.api_key
-            or litellm.api_key
-            or litellm.azure_key
+            remodl_params.api_key
+            or remodl.api_key
+            or remodl.azure_key
             or get_secret_str("AZURE_OPENAI_API_KEY")
             or get_secret_str("AZURE_API_KEY")
         )
@@ -690,7 +690,7 @@ class BaseAzureLLM(BaseOpenAILLM):
 
         ### Fallback to Azure AD token-based authentication if no API key is available
         ### Retrieves Azure AD token and adds it to the Authorization header
-        azure_ad_token = get_azure_ad_token(litellm_params)
+        azure_ad_token = get_azure_ad_token(remodl_params)
         if azure_ad_token:
             headers["Authorization"] = f"Bearer {azure_ad_token}"
 
@@ -699,7 +699,7 @@ class BaseAzureLLM(BaseOpenAILLM):
     @staticmethod
     def _get_base_azure_url(
         api_base: Optional[str],
-        litellm_params: Optional[Union[GenericLiteLLMParams, Dict[str, Any]]],
+        remodl_params: Optional[Union[GenericLiteLLMParams, Dict[str, Any]]],
         route: Union[Literal["/openai/responses", "/openai/vector_stores"], str],
         default_api_version: Optional[Union[str, Literal["latest", "preview"]]] = None,
     ) -> str:
@@ -708,12 +708,12 @@ class BaseAzureLLM(BaseOpenAILLM):
 
         Args:
             api_base: The base URL of the Azure API.
-            litellm_params: The litellm parameters.
+            remodl_params: The remodl parameters.
             route: The route to the API.
             default_api_version: The default API version to use if no api_version is provided. If 'latest', it will use `openai/v1/...` route.
         """
 
-        api_base = api_base or litellm.api_base or get_secret_str("AZURE_API_BASE")
+        api_base = api_base or remodl.api_base or get_secret_str("AZURE_API_BASE")
         if api_base is None:
             raise ValueError(
                 f"api_base is required for Azure AI Studio. Please set the api_base parameter. Passed `api_base={api_base}`"
@@ -721,9 +721,9 @@ class BaseAzureLLM(BaseOpenAILLM):
         original_url = httpx.URL(api_base)
 
         # Extract api_version or use default
-        litellm_params = litellm_params or {}
+        remodl_params = remodl_params or {}
         api_version = (
-            cast(Optional[str], litellm_params.get("api_version"))
+            cast(Optional[str], remodl_params.get("api_version"))
             or default_api_version
         )
 

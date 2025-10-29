@@ -1,10 +1,10 @@
 from typing import List
 
-from litellm.llms.base_llm.audio_transcription.transformation import (
+from remodl.llms.base_llm.audio_transcription.transformation import (
     AudioTranscriptionRequestData,
 )
-from litellm.types.llms.openai import OpenAIAudioTranscriptionOptionalParams
-from litellm.types.utils import FileTypes
+from remodl.types.llms.openai import OpenAIAudioTranscriptionOptionalParams
+from remodl.types.utils import FileTypes
 
 from .whisper_transformation import OpenAIWhisperAudioTranscriptionConfig
 
@@ -29,7 +29,7 @@ class OpenAIGPTAudioTranscriptionConfig(OpenAIWhisperAudioTranscriptionConfig):
         model: str,
         audio_file: FileTypes,
         optional_params: dict,
-        litellm_params: dict,
+        remodl_params: dict,
     ) -> AudioTranscriptionRequestData:
         """
         Transform the audio transcription request

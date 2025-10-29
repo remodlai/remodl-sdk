@@ -5,7 +5,7 @@ import traceback
 
 from pydantic import BaseModel
 
-import litellm
+import remodl
 
 
 class PromptLayerLogger:
@@ -28,14 +28,14 @@ class PromptLayerLogger:
             # Extract PromptLayer tags from metadata, if such exists
             tags = []
             metadata = {}
-            if "metadata" in kwargs["litellm_params"]:
-                if "pl_tags" in kwargs["litellm_params"]["metadata"]:
-                    tags = kwargs["litellm_params"]["metadata"]["pl_tags"]
+            if "metadata" in kwargs["remodl_params"]:
+                if "pl_tags" in kwargs["remodl_params"]["metadata"]:
+                    tags = kwargs["remodl_params"]["metadata"]["pl_tags"]
 
                 # Remove "pl_tags" from metadata
                 metadata = {
                     k: v
-                    for k, v in kwargs["litellm_params"]["metadata"].items()
+                    for k, v in kwargs["remodl_params"]["metadata"].items()
                     if k != "pl_tags"
                 }
 
@@ -47,7 +47,7 @@ class PromptLayerLogger:
             if isinstance(response_obj, BaseModel):
                 response_obj = response_obj.model_dump()
 
-            request_response = litellm.module_level_client.post(
+            request_response = remodl.module_level_client.post(
                 "https://api.promptlayer.com/rest/track-request",
                 json={
                     "function_name": "openai.ChatCompletion.create",
@@ -74,7 +74,7 @@ class PromptLayerLogger:
 
             if "request_id" in response_json:
                 if metadata:
-                    response = litellm.module_level_client.post(
+                    response = remodl.module_level_client.post(
                         "https://api.promptlayer.com/rest/track-metadata",
                         json={
                             "request_id": response_json["request_id"],

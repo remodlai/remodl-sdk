@@ -3,17 +3,17 @@ from typing import TYPE_CHECKING, Any, Dict, List, Optional, Union, cast
 
 import httpx
 
-import litellm
-from litellm.litellm_core_utils.litellm_logging import Logging as LitellmLogging
-from litellm.llms.custom_httpx.http_handler import (
+import remodl
+from remodl.remodl_core_utils.remodl_logging import Logging as LitellmLogging
+from remodl.llms.custom_httpx.http_handler import (
     AsyncHTTPHandler,
     HTTPHandler,
     _get_httpx_client,
     get_async_httpx_client,
 )
-from litellm.types.llms.bedrock import BedrockPreparedRequest
-from litellm.types.rerank import RerankRequest
-from litellm.types.utils import RerankResponse
+from remodl.types.llms.bedrock import BedrockPreparedRequest
+from remodl.types.rerank import RerankRequest
+from remodl.types.utils import RerankResponse
 
 from ..base_aws_llm import BaseAWSLLM
 from ..common_utils import BedrockError
@@ -32,7 +32,7 @@ class BedrockRerankHandler(BaseAWSLLM):
         client: Optional[AsyncHTTPHandler] = None,
     ):
         if client is None:
-            client = get_async_httpx_client(llm_provider=litellm.LlmProviders.BEDROCK)
+            client = get_async_httpx_client(llm_provider=remodl.LlmProviders.BEDROCK)
         try:
             response = await client.post(url=prepared_request["endpoint_url"], headers=prepared_request["prepped"].headers, data=prepared_request["body"])  # type: ignore
             response.raise_for_status()

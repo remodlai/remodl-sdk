@@ -1,10 +1,10 @@
 import json
 from typing import Any, AsyncIterator, Dict, Iterator, List, Optional, Union, cast
 
-from litellm import verbose_logger
+from remodl import verbose_logger
 
-from litellm.litellm_core_utils.json_validation_rule import normalize_tool_schema
-from litellm.types.llms.openai import (
+from remodl.remodl_core_utils.json_validation_rule import normalize_tool_schema
+from remodl.types.llms.openai import (
     AllMessageValues,
     ChatCompletionAssistantMessage,
     ChatCompletionAssistantToolCall,
@@ -16,8 +16,8 @@ from litellm.types.llms.openai import (
     ChatCompletionToolParam,
     ChatCompletionUserMessage,
 )
-from litellm.types.router import GenericLiteLLMParams
-from litellm.types.utils import (
+from remodl.types.router import GenericLiteLLMParams
+from remodl.types.utils import (
     AdapterCompletionStreamWrapper,
     Choices,
     ModelResponse,
@@ -154,7 +154,7 @@ class GoogleGenAIStreamWrapper(AdapterCompletionStreamWrapper):
         """
         Async version of google_genai_sse_wrapper.
         """
-        from litellm.types.utils import ModelResponseStream
+        from remodl.types.utils import ModelResponseStream
 
         async for chunk in self.completion_stream:
             if isinstance(chunk, dict):
@@ -181,7 +181,7 @@ class GoogleGenAIStreamWrapper(AdapterCompletionStreamWrapper):
 
 
 class GoogleGenAIAdapter:
-    """Adapter for transforming Google GenAI generate_content requests to/from litellm.completion format"""
+    """Adapter for transforming Google GenAI generate_content requests to/from remodl.completion format"""
 
     def __init__(self) -> None:
         pass
@@ -191,11 +191,11 @@ class GoogleGenAIAdapter:
         model: str,
         contents: Union[List[Dict[str, Any]], Dict[str, Any]],
         config: Optional[Dict[str, Any]] = None,
-        litellm_params: Optional[GenericLiteLLMParams] = None,
+        remodl_params: Optional[GenericLiteLLMParams] = None,
         **kwargs,
     ) -> Dict[str, Any]:
         """
-        Transform generate_content request to litellm completion format
+        Transform generate_content request to remodl completion format
 
         Args:
             model: The model name
@@ -277,35 +277,35 @@ class GoogleGenAIAdapter:
                 completion_request["tool_choice"] = tool_choice
 
         #########################################################
-        # forward any litellm specific params
+        # forward any remodl specific params
         #########################################################
         completion_request_dict = dict(completion_request)
-        if litellm_params:
-            completion_request_dict = self._add_generic_litellm_params_to_request(
+        if remodl_params:
+            completion_request_dict = self._add_generic_remodl_params_to_request(
                 completion_request_dict=completion_request_dict,
-                litellm_params=litellm_params,
+                remodl_params=remodl_params,
             )
 
         return completion_request_dict
 
-    def _add_generic_litellm_params_to_request(
+    def _add_generic_remodl_params_to_request(
         self,
         completion_request_dict: Dict[str, Any],
-        litellm_params: Optional[GenericLiteLLMParams] = None,
+        remodl_params: Optional[GenericLiteLLMParams] = None,
     ) -> dict:
-        """Add generic litellm params to request. e.g add api_base, api_key, api_version, etc.
+        """Add generic remodl params to request. e.g add api_base, api_key, api_version, etc.
 
         Args:
             completion_request_dict: Dict[str, Any]
-            litellm_params: GenericLiteLLMParams
+            remodl_params: GenericLiteLLMParams
 
         Returns:
             Dict[str, Any]
         """
         allowed_fields = GenericLiteLLMParams.model_fields.keys()
-        if litellm_params:
-            litellm_dict = litellm_params.model_dump(exclude_none=True)
-            for key, value in litellm_dict.items():
+        if remodl_params:
+            remodl_dict = remodl_params.model_dump(exclude_none=True)
+            for key, value in remodl_dict.items():
                 if key in allowed_fields:
                     completion_request_dict[key] = value
         return completion_request_dict
@@ -459,10 +459,10 @@ class GoogleGenAIAdapter:
         response: ModelResponse,
     ) -> Dict[str, Any]:
         """
-        Transform litellm completion response to Google GenAI generate_content format
+        Transform remodl completion response to Google GenAI generate_content format
 
         Args:
-            response: ModelResponse from litellm.completion
+            response: ModelResponse from remodl.completion
 
         Returns:
             Dict in Google GenAI generate_content response format
@@ -527,10 +527,10 @@ class GoogleGenAIAdapter:
         wrapper: GoogleGenAIStreamWrapper,
     ) -> Optional[Dict[str, Any]]:
         """
-        Transform streaming litellm completion chunk to Google GenAI generate_content format
+        Transform streaming remodl completion chunk to Google GenAI generate_content format
 
         Args:
-            response: Streaming ModelResponse chunk from litellm.completion
+            response: Streaming ModelResponse chunk from remodl.completion
             wrapper: GoogleGenAIStreamWrapper instance
 
         Returns:

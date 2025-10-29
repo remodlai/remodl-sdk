@@ -10,10 +10,10 @@ from typing import List, Optional, Tuple, Union
 
 import httpx
 
-from litellm.llms.base_llm.chat.transformation import BaseLLMException
-from litellm.types.llms.openai import AllMessageValues
-from litellm.secret_managers.main import get_secret_str
-import litellm
+from remodl.llms.base_llm.chat.transformation import BaseLLMException
+from remodl.types.llms.openai import AllMessageValues
+from remodl.secret_managers.main import get_secret_str
+import remodl
 
 from ...openai.chat.gpt_transformation import OpenAIGPTConfig
 from ..common_utils import VercelAIGatewayException
@@ -72,7 +72,7 @@ class VercelAIGatewayConfig(OpenAIGPTConfig):
         model: str,
         messages: List[AllMessageValues],
         optional_params: dict,
-        litellm_params: dict,
+        remodl_params: dict,
         headers: dict,
     ) -> dict:
         """
@@ -82,7 +82,7 @@ class VercelAIGatewayConfig(OpenAIGPTConfig):
             dict: The transformed request. Sent as the body of the API call.
         """
         return super().transform_request(
-            model, messages, optional_params, litellm_params, headers
+            model, messages, optional_params, remodl_params, headers
         )
 
     def get_error_class(
@@ -103,7 +103,7 @@ class VercelAIGatewayConfig(OpenAIGPTConfig):
             api_base = "https://ai-gateway.vercel.sh/v1"
             
         models_url = f"{api_base}/models"
-        response = litellm.module_level_client.get(url=models_url)
+        response = remodl.module_level_client.get(url=models_url)
 
         if response.status_code != 200:
             raise Exception(f"Failed to get models: {response.text}")

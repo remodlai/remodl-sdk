@@ -6,7 +6,7 @@ from annotated_types import Ge
 from pydantic import BaseModel
 from typing_extensions import TypedDict
 
-from litellm.types.router import CredentialLiteLLMParams, GenericLiteLLMParams
+from remodl.types.router import CredentialLiteLLMParams, GenericLiteLLMParams
 
 
 class SupportedVectorStoreIntegrations(str, Enum):
@@ -19,7 +19,7 @@ class LiteLLM_VectorStoreConfig(TypedDict, total=False):
     """Parameters for initializing a vector store on Litellm proxy config.yaml"""
 
     vector_store_name: str
-    litellm_params: Optional[Dict[str, Any]]
+    remodl_params: Optional[Dict[str, Any]]
 
 
 class LiteLLM_ManagedVectorStore(TypedDict, total=False):
@@ -35,10 +35,10 @@ class LiteLLM_ManagedVectorStore(TypedDict, total=False):
     updated_at: Optional[datetime]
 
     # credential fields
-    litellm_credential_name: Optional[str]
+    remodl_credential_name: Optional[str]
 
-    # litellm_params
-    litellm_params: Optional[Dict[str, Any]]
+    # remodl_params
+    remodl_params: Optional[Dict[str, Any]]
 
 
 class LiteLLM_ManagedVectorStoreListResponse(TypedDict, total=False):

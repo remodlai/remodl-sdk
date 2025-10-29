@@ -20,21 +20,21 @@ from typing import (
     get_args,
     TYPE_CHECKING,
 )
-from litellm.types.integrations.datadog_llm_obs import DatadogLLMObsInitParams
-from litellm.types.integrations.datadog import DatadogInitParams
-from litellm.llms.custom_httpx.http_handler import AsyncHTTPHandler, HTTPHandler
-from litellm.caching.caching import Cache, DualCache, RedisCache, InMemoryCache
-from litellm.caching.llm_caching_handler import LLMClientCache
-from litellm.types.llms.bedrock import COHERE_EMBEDDING_INPUT_TYPES
-from litellm.types.utils import (
+from remodl.types.integrations.datadog_llm_obs import DatadogLLMObsInitParams
+from remodl.types.integrations.datadog import DatadogInitParams
+from remodl.llms.custom_httpx.http_handler import AsyncHTTPHandler, HTTPHandler
+from remodl.caching.caching import Cache, DualCache, RedisCache, InMemoryCache
+from remodl.caching.llm_caching_handler import LLMClientCache
+from remodl.types.llms.bedrock import COHERE_EMBEDDING_INPUT_TYPES
+from remodl.types.utils import (
     ImageObject,
     BudgetConfig,
-    all_litellm_params,
-    all_litellm_params as _litellm_completion_params,
+    all_remodl_params,
+    all_remodl_params as _remodl_completion_params,
     CredentialItem,
     PriorityReservationDict,
 )  # maintain backwards compatibility for root param
-from litellm._logging import (
+from remodl._logging import (
     set_verbose,
     _turn_on_debug,
     verbose_logger,
@@ -43,7 +43,7 @@ from litellm._logging import (
     log_level,
 )
 import re
-from litellm.constants import (
+from remodl.constants import (
     DEFAULT_BATCH_SIZE,
     DEFAULT_FLUSH_INTERVAL_SECONDS,
     ROUTER_MAX_FALLBACKS,
@@ -80,30 +80,30 @@ from litellm.constants import (
     DEFAULT_SOFT_BUDGET,
     DEFAULT_ALLOWED_FAILS,
 )
-from litellm.integrations.dotprompt import (
+from remodl.integrations.dotprompt import (
     global_prompt_manager,
     global_prompt_directory,
     set_global_prompt_directory,
 )
-from litellm.types.guardrails import GuardrailItem
-from litellm.types.secret_managers.main import (
+from remodl.types.guardrails import GuardrailItem
+from remodl.types.secret_managers.main import (
     KeyManagementSystem,
     KeyManagementSettings,
 )
-from litellm.types.proxy.management_endpoints.ui_sso import (
+from remodl.types.proxy.management_endpoints.ui_sso import (
     DefaultTeamSSOParams,
     LiteLLM_UpperboundKeyGenerateParams,
 )
-from litellm.types.utils import StandardKeyGenerationConfig, LlmProviders, SearchProviders
-from litellm.types.utils import PriorityReservationSettings
-from litellm.integrations.custom_logger import CustomLogger
-from litellm.litellm_core_utils.logging_callback_manager import LoggingCallbackManager
+from remodl.types.utils import StandardKeyGenerationConfig, LlmProviders, SearchProviders
+from remodl.types.utils import PriorityReservationSettings
+from remodl.integrations.custom_logger import CustomLogger
+from remodl.remodl_core_utils.logging_callback_manager import LoggingCallbackManager
 import httpx
 import dotenv
-from litellm.llms.custom_httpx.async_client_cleanup import register_async_client_cleanup
+from remodl.llms.custom_httpx.async_client_cleanup import register_async_client_cleanup
 
-litellm_mode = os.getenv("LITELLM_MODE", "DEV")  # "PRODUCTION", "DEV"
-if litellm_mode == "DEV":
+remodl_mode = os.getenv("LITELLM_MODE", "DEV")  # "PRODUCTION", "DEV"
+if remodl_mode == "DEV":
     dotenv.load_dotenv()
 
 # Register async client cleanup to prevent resource leaks
@@ -210,17 +210,18 @@ store_audit_logs = False  # Enterprise feature, allow users to see audit logs
 
 email: Optional[
     str
-] = None  # Not used anymore, will be removed in next MAJOR release - https://github.com/BerriAI/litellm/discussions/648
+] = None  # Not used anymore, will be removed in next MAJOR release - https://github.com/BerriAI/remodl/discussions/648
 token: Optional[
     str
-] = None  # Not used anymore, will be removed in next MAJOR release - https://github.com/BerriAI/litellm/discussions/648
+] = None  # Not used anymore, will be removed in next MAJOR release - https://github.com/BerriAI/remodl/discussions/648
 telemetry = True
 max_tokens: int = DEFAULT_MAX_TOKENS  # OpenAI Defaults
 drop_params = bool(os.getenv("LITELLM_DROP_PARAMS", False))
 modify_params = bool(os.getenv("LITELLM_MODIFY_PARAMS", False))
 retry = True
 ### AUTH ###
-api_key: Optional[str] = None
+# RemodlAI: Default to REMODL_API_KEY environment variable
+api_key: Optional[str] = os.getenv("REMODL_API_KEY", None)
 openai_key: Optional[str] = None
 groq_key: Optional[str] = None
 databricks_key: Optional[str] = None
@@ -263,8 +264,8 @@ common_cloud_provider_auth_params: dict = {
     "params": ["project", "region_name", "token"],
     "providers": ["vertex_ai", "bedrock", "watsonx", "azure", "vertex_ai_beta"],
 }
-use_litellm_proxy: bool = (
-    False  # when True, requests will be sent to the specified litellm proxy endpoint
+use_remodl_proxy: bool = (
+    False  # when True, requests will be sent to the specified remodl proxy endpoint
 )
 use_client: bool = False
 ssl_verify: Union[str, bool] = True
@@ -299,7 +300,7 @@ llm_guard_mode: Literal["all", "key-specific", "request-specific"] = "all"
 guardrail_name_config_map: Dict[str, GuardrailItem] = {}
 include_cost_in_streaming_usage: bool = False
 ### PROMPTS ####
-from litellm.types.prompts.init_prompts import PromptSpec
+from remodl.types.prompts.init_prompts import PromptSpec
 
 prompt_name_config_map: Dict[str, PromptSpec] = {}
 
@@ -316,11 +317,11 @@ enable_loadbalancing_on_batch_endpoints: Optional[bool] = None
 enable_caching_on_provider_specific_optional_params: bool = (
     False  # feature-flag for caching on optional params - e.g. 'top_k'
 )
-caching: bool = False  # Not used anymore, will be removed in next MAJOR release - https://github.com/BerriAI/litellm/discussions/648
-caching_with_models: bool = False  # # Not used anymore, will be removed in next MAJOR release - https://github.com/BerriAI/litellm/discussions/648
+caching: bool = False  # Not used anymore, will be removed in next MAJOR release - https://github.com/BerriAI/remodl/discussions/648
+caching_with_models: bool = False  # # Not used anymore, will be removed in next MAJOR release - https://github.com/BerriAI/remodl/discussions/648
 cache: Optional[
     Cache
-] = None  # cache object <- use this - https://docs.litellm.ai/docs/caching
+] = None  # cache object <- use this - https://docs.remodl.ai/docs/caching
 default_in_memory_ttl: Optional[float] = None
 default_redis_ttl: Optional[float] = None
 default_redis_batch_cache_expiry: Optional[float] = None
@@ -331,7 +332,7 @@ budget_duration: Optional[
     str
 ] = None  # proxy only - resets budget after fixed duration. You can set duration as seconds ("30s"), minutes ("30m"), hours ("30h"), days ("30d").
 default_soft_budget: float = (
-    DEFAULT_SOFT_BUDGET  # by default all litellm proxy keys have a soft budget of 50.0
+    DEFAULT_SOFT_BUDGET  # by default all remodl proxy keys have a soft budget of 50.0
 )
 forward_traceparent_to_llm_provider: bool = False
 
@@ -341,9 +342,9 @@ error_logs: Dict = {}
 add_function_to_prompt: bool = False  # if function calling not supported by api, append function call details to system prompt
 client_session: Optional[httpx.Client] = None
 aclient_session: Optional[httpx.AsyncClient] = None
-model_fallbacks: Optional[List] = None  # Deprecated for 'litellm.fallbacks'
-#model_cost_map_url: str = "https://raw.githubusercontent.com/BerriAI/litellm/main/model_prices_and_context_window.json"
-model_cost_map_url: str = "https://raw.githubusercontent.com/remodlai/litellm-nova/refs/heads/nova-embeddings/model_prices_and_context_window.json"
+model_fallbacks: Optional[List] = None  # Deprecated for 'remodl.fallbacks'
+#model_cost_map_url: str = "https://raw.githubusercontent.com/BerriAI/remodl/main/model_prices_and_context_window.json"
+model_cost_map_url: str = "https://raw.githubusercontent.com/remodlai/remodl-nova/refs/heads/nova-embeddings/model_prices_and_context_window.json"
 suppress_debug_info = False
 dynamodb_table_name: Optional[str] = None
 s3_callback_params: Optional[Dict] = None
@@ -390,7 +391,7 @@ disable_aiohttp_transport: bool = False  # Set this to true to use httpx instead
 disable_aiohttp_trust_env: bool = (
     False  # When False, aiohttp will respect HTTP(S)_PROXY env vars
 )
-force_ipv4: bool = False  # when True, litellm will force ipv4 for all LLM requests. Some users have seen httpx ConnectionError when using ipv6.
+force_ipv4: bool = False  # when True, remodl will force ipv4 for all LLM requests. Some users have seen httpx ConnectionError when using ipv6.
 module_level_aclient = AsyncHTTPHandler(
     timeout=request_timeout, client_alias="module level aclient"
 )
@@ -417,7 +418,7 @@ _key_management_settings: KeyManagementSettings = KeyManagementSettings()
 #### PII MASKING ####
 output_parse_pii: bool = False
 #############################################
-from litellm.litellm_core_utils.get_model_cost_map import get_model_cost_map
+from remodl.remodl_core_utils.get_model_cost_map import get_model_cost_map
 
 model_cost = get_model_cost_map(url=model_cost_map_url)
 cost_discount_config: Dict[str, float] = {}  # Provider-specific cost discounts {"vertex_ai": 0.05} = 5% discount
@@ -441,7 +442,8 @@ def identify(event_details):
 
 
 ####### ADDITIONAL PARAMS ################### configurable params if you use proxy models like Helicone, map spend to org id, etc.
-api_base: Optional[str] = None
+# RemodlAI: Default to RemodlAI proxy (can be overridden with REMODL_API_BASE env var)
+api_base: Optional[str] = os.getenv("REMODL_API_BASE", None)
 headers = None
 api_version: Optional[str] = None
 organization = None
@@ -575,196 +577,196 @@ def is_openai_finetune_model(key: str) -> bool:
 
 def add_known_models():
     for key, value in model_cost.items():
-        if value.get("litellm_provider") == "openai" and not is_openai_finetune_model(
+        if value.get("remodl_provider") == "openai" and not is_openai_finetune_model(
             key
         ):
             open_ai_chat_completion_models.add(key)
-        elif value.get("litellm_provider") == "text-completion-openai":
+        elif value.get("remodl_provider") == "text-completion-openai":
             open_ai_text_completion_models.add(key)
-        elif value.get("litellm_provider") == "azure_text":
+        elif value.get("remodl_provider") == "azure_text":
             azure_text_models.add(key)
-        elif value.get("litellm_provider") == "cohere":
+        elif value.get("remodl_provider") == "cohere":
             cohere_models.add(key)
-        elif value.get("litellm_provider") == "cohere_chat":
+        elif value.get("remodl_provider") == "cohere_chat":
             cohere_chat_models.add(key)
-        elif value.get("litellm_provider") == "mistral":
+        elif value.get("remodl_provider") == "mistral":
             mistral_chat_models.add(key)
-        elif value.get("litellm_provider") == "anthropic":
+        elif value.get("remodl_provider") == "anthropic":
             anthropic_models.add(key)
-        elif value.get("litellm_provider") == "empower":
+        elif value.get("remodl_provider") == "empower":
             empower_models.add(key)
-        elif value.get("litellm_provider") == "openrouter":
+        elif value.get("remodl_provider") == "openrouter":
             openrouter_models.add(key)
-        elif value.get("litellm_provider") == "vercel_ai_gateway":
+        elif value.get("remodl_provider") == "vercel_ai_gateway":
             vercel_ai_gateway_models.add(key)
-        elif value.get("litellm_provider") == "datarobot":
+        elif value.get("remodl_provider") == "datarobot":
             datarobot_models.add(key)
-        elif value.get("litellm_provider") == "vertex_ai-text-models":
+        elif value.get("remodl_provider") == "vertex_ai-text-models":
             vertex_text_models.add(key)
-        elif value.get("litellm_provider") == "vertex_ai-code-text-models":
+        elif value.get("remodl_provider") == "vertex_ai-code-text-models":
             vertex_code_text_models.add(key)
-        elif value.get("litellm_provider") == "vertex_ai-language-models":
+        elif value.get("remodl_provider") == "vertex_ai-language-models":
             vertex_language_models.add(key)
-        elif value.get("litellm_provider") == "vertex_ai-vision-models":
+        elif value.get("remodl_provider") == "vertex_ai-vision-models":
             vertex_vision_models.add(key)
-        elif value.get("litellm_provider") == "vertex_ai-chat-models":
+        elif value.get("remodl_provider") == "vertex_ai-chat-models":
             vertex_chat_models.add(key)
-        elif value.get("litellm_provider") == "vertex_ai-code-chat-models":
+        elif value.get("remodl_provider") == "vertex_ai-code-chat-models":
             vertex_code_chat_models.add(key)
-        elif value.get("litellm_provider") == "vertex_ai-embedding-models":
+        elif value.get("remodl_provider") == "vertex_ai-embedding-models":
             vertex_embedding_models.add(key)
-        elif value.get("litellm_provider") == "vertex_ai-anthropic_models":
+        elif value.get("remodl_provider") == "vertex_ai-anthropic_models":
             key = key.replace("vertex_ai/", "")
             vertex_anthropic_models.add(key)
-        elif value.get("litellm_provider") == "vertex_ai-llama_models":
+        elif value.get("remodl_provider") == "vertex_ai-llama_models":
             key = key.replace("vertex_ai/", "")
             vertex_llama3_models.add(key)
-        elif value.get("litellm_provider") == "vertex_ai-deepseek_models":
+        elif value.get("remodl_provider") == "vertex_ai-deepseek_models":
             key = key.replace("vertex_ai/", "")
             vertex_deepseek_models.add(key)
-        elif value.get("litellm_provider") == "vertex_ai-mistral_models":
+        elif value.get("remodl_provider") == "vertex_ai-mistral_models":
             key = key.replace("vertex_ai/", "")
             vertex_mistral_models.add(key)
-        elif value.get("litellm_provider") == "vertex_ai-ai21_models":
+        elif value.get("remodl_provider") == "vertex_ai-ai21_models":
             key = key.replace("vertex_ai/", "")
             vertex_ai_ai21_models.add(key)
-        elif value.get("litellm_provider") == "vertex_ai-image-models":
+        elif value.get("remodl_provider") == "vertex_ai-image-models":
             key = key.replace("vertex_ai/", "")
             vertex_ai_image_models.add(key)
-        elif value.get("litellm_provider") == "vertex_ai-video-models":
+        elif value.get("remodl_provider") == "vertex_ai-video-models":
             key = key.replace("vertex_ai/", "")
             vertex_ai_video_models.add(key)
-        elif value.get("litellm_provider") == "vertex_ai-openai_models":
+        elif value.get("remodl_provider") == "vertex_ai-openai_models":
             key = key.replace("vertex_ai/", "")
             vertex_openai_models.add(key)
-        elif value.get("litellm_provider") == "ai21":
+        elif value.get("remodl_provider") == "ai21":
             if value.get("mode") == "chat":
                 ai21_chat_models.add(key)
             else:
                 ai21_models.add(key)
-        elif value.get("litellm_provider") == "nlp_cloud":
+        elif value.get("remodl_provider") == "nlp_cloud":
             nlp_cloud_models.add(key)
-        elif value.get("litellm_provider") == "aleph_alpha":
+        elif value.get("remodl_provider") == "aleph_alpha":
             aleph_alpha_models.add(key)
         elif value.get(
-            "litellm_provider"
+            "remodl_provider"
         ) == "bedrock" and not is_bedrock_pricing_only_model(key):
             bedrock_models.add(key)
-        elif value.get("litellm_provider") == "bedrock_converse":
+        elif value.get("remodl_provider") == "bedrock_converse":
             bedrock_converse_models.add(key)
-        elif value.get("litellm_provider") == "deepinfra":
+        elif value.get("remodl_provider") == "deepinfra":
             deepinfra_models.add(key)
-        elif value.get("litellm_provider") == "perplexity":
+        elif value.get("remodl_provider") == "perplexity":
             perplexity_models.add(key)
-        elif value.get("litellm_provider") == "watsonx":
+        elif value.get("remodl_provider") == "watsonx":
             watsonx_models.add(key)
-        elif value.get("litellm_provider") == "gemini":
+        elif value.get("remodl_provider") == "gemini":
             gemini_models.add(key)
-        elif value.get("litellm_provider") == "fireworks_ai":
+        elif value.get("remodl_provider") == "fireworks_ai":
             # ignore the 'up-to', '-to-' model names -> not real models. just for cost tracking based on model params.
             if "-to-" not in key and "fireworks-ai-default" not in key:
                 fireworks_ai_models.add(key)
-        elif value.get("litellm_provider") == "fireworks_ai-embedding-models":
+        elif value.get("remodl_provider") == "fireworks_ai-embedding-models":
             # ignore the 'up-to', '-to-' model names -> not real models. just for cost tracking based on model params.
             if "-to-" not in key:
                 fireworks_ai_embedding_models.add(key)
-        elif value.get("litellm_provider") == "text-completion-codestral":
+        elif value.get("remodl_provider") == "text-completion-codestral":
             text_completion_codestral_models.add(key)
-        elif value.get("litellm_provider") == "xai":
+        elif value.get("remodl_provider") == "xai":
             xai_models.add(key)
-        elif value.get("litellm_provider") == "deepseek":
+        elif value.get("remodl_provider") == "deepseek":
             deepseek_models.add(key)
-        elif value.get("litellm_provider") == "meta_llama":
+        elif value.get("remodl_provider") == "meta_llama":
             llama_models.add(key)
-        elif value.get("litellm_provider") == "nscale":
+        elif value.get("remodl_provider") == "nscale":
             nscale_models.add(key)
-        elif value.get("litellm_provider") == "azure_ai":
+        elif value.get("remodl_provider") == "azure_ai":
             azure_ai_models.add(key)
-        elif value.get("litellm_provider") == "voyage":
+        elif value.get("remodl_provider") == "voyage":
             voyage_models.add(key)
-        elif value.get("litellm_provider") == "infinity":
+        elif value.get("remodl_provider") == "infinity":
             infinity_models.add(key)
-        elif value.get("litellm_provider") == "databricks":
+        elif value.get("remodl_provider") == "databricks":
             databricks_models.add(key)
-        elif value.get("litellm_provider") == "cloudflare":
+        elif value.get("remodl_provider") == "cloudflare":
             cloudflare_models.add(key)
-        elif value.get("litellm_provider") == "codestral":
+        elif value.get("remodl_provider") == "codestral":
             codestral_models.add(key)
-        elif value.get("litellm_provider") == "friendliai":
+        elif value.get("remodl_provider") == "friendliai":
             friendliai_models.add(key)
-        elif value.get("litellm_provider") == "palm":
+        elif value.get("remodl_provider") == "palm":
             palm_models.add(key)
-        elif value.get("litellm_provider") == "groq":
+        elif value.get("remodl_provider") == "groq":
             groq_models.add(key)
-        elif value.get("litellm_provider") == "azure":
+        elif value.get("remodl_provider") == "azure":
             azure_models.add(key)
-        elif value.get("litellm_provider") == "anyscale":
+        elif value.get("remodl_provider") == "anyscale":
             anyscale_models.add(key)
-        elif value.get("litellm_provider") == "cerebras":
+        elif value.get("remodl_provider") == "cerebras":
             cerebras_models.add(key)
-        elif value.get("litellm_provider") == "galadriel":
+        elif value.get("remodl_provider") == "galadriel":
             galadriel_models.add(key)
-        elif value.get("litellm_provider") == "nvidia_nim":
+        elif value.get("remodl_provider") == "nvidia_nim":
             nvidia_nim_models.add(key)
-        elif value.get("litellm_provider") == "sambanova":
+        elif value.get("remodl_provider") == "sambanova":
             sambanova_models.add(key)
-        elif value.get("litellm_provider") == "sambanova-embedding-models":
+        elif value.get("remodl_provider") == "sambanova-embedding-models":
             sambanova_embedding_models.add(key)
-        elif value.get("litellm_provider") == "remodlai":
+        elif value.get("remodl_provider") == "remodlai":
             remodlai_models.add(key)
-        elif value.get("litellm_provider") == "remodlai-embedding-models":
+        elif value.get("remodl_provider") == "remodlai-embedding-models":
             remodlai_embedding_models.add(key)
-        elif value.get("litellm_provider") == "novita":
+        elif value.get("remodl_provider") == "novita":
             novita_models.add(key)
-        elif value.get("litellm_provider") == "nebius-chat-models":
+        elif value.get("remodl_provider") == "nebius-chat-models":
             nebius_models.add(key)
-        elif value.get("litellm_provider") == "nebius-embedding-models":
+        elif value.get("remodl_provider") == "nebius-embedding-models":
             nebius_embedding_models.add(key)
-        elif value.get("litellm_provider") == "aiml":
+        elif value.get("remodl_provider") == "aiml":
             aiml_models.add(key)
-        elif value.get("litellm_provider") == "assemblyai":
+        elif value.get("remodl_provider") == "assemblyai":
             assemblyai_models.add(key)
-        elif value.get("litellm_provider") == "jina_ai":
+        elif value.get("remodl_provider") == "jina_ai":
             jina_ai_models.add(key)
-        elif value.get("litellm_provider") == "snowflake":
+        elif value.get("remodl_provider") == "snowflake":
             snowflake_models.add(key)
-        elif value.get("litellm_provider") == "gradient_ai":
+        elif value.get("remodl_provider") == "gradient_ai":
             gradient_ai_models.add(key)
-        elif value.get("litellm_provider") == "featherless_ai":
+        elif value.get("remodl_provider") == "featherless_ai":
             featherless_ai_models.add(key)
-        elif value.get("litellm_provider") == "deepgram":
+        elif value.get("remodl_provider") == "deepgram":
             deepgram_models.add(key)
-        elif value.get("litellm_provider") == "elevenlabs":
+        elif value.get("remodl_provider") == "elevenlabs":
             elevenlabs_models.add(key)
-        elif value.get("litellm_provider") == "heroku":
+        elif value.get("remodl_provider") == "heroku":
             heroku_models.add(key)
-        elif value.get("litellm_provider") == "dashscope":
+        elif value.get("remodl_provider") == "dashscope":
             dashscope_models.add(key)
-        elif value.get("litellm_provider") == "moonshot":
+        elif value.get("remodl_provider") == "moonshot":
             moonshot_models.add(key)
-        elif value.get("litellm_provider") == "v0":
+        elif value.get("remodl_provider") == "v0":
             v0_models.add(key)
-        elif value.get("litellm_provider") == "morph":
+        elif value.get("remodl_provider") == "morph":
             morph_models.add(key)
-        elif value.get("litellm_provider") == "lambda_ai":
+        elif value.get("remodl_provider") == "lambda_ai":
             lambda_ai_models.add(key)
-        elif value.get("litellm_provider") == "hyperbolic":
+        elif value.get("remodl_provider") == "hyperbolic":
             hyperbolic_models.add(key)
-        elif value.get("litellm_provider") == "recraft":
+        elif value.get("remodl_provider") == "recraft":
             recraft_models.add(key)
-        elif value.get("litellm_provider") == "cometapi":
+        elif value.get("remodl_provider") == "cometapi":
             cometapi_models.add(key)
-        elif value.get("litellm_provider") == "oci":
+        elif value.get("remodl_provider") == "oci":
             oci_models.add(key)
-        elif value.get("litellm_provider") == "volcengine":
+        elif value.get("remodl_provider") == "volcengine":
             volcengine_models.add(key)
-        elif value.get("litellm_provider") == "wandb":
+        elif value.get("remodl_provider") == "wandb":
             wandb_models.add(key)
-        elif value.get("litellm_provider") == "ovhcloud":
+        elif value.get("remodl_provider") == "ovhcloud":
             ovhcloud_models.add(key)
-        elif value.get("litellm_provider") == "ovhcloud-embedding-models":
+        elif value.get("remodl_provider") == "ovhcloud-embedding-models":
             ovhcloud_embedding_models.add(key)
-        elif value.get("litellm_provider") == "lemonade":
+        elif value.get("remodl_provider") == "lemonade":
             lemonade_models.add(key)
 
 
@@ -1003,10 +1005,10 @@ openai_video_generation_models = ["sora-2"]
 
 from .timeout import timeout
 from .cost_calculator import completion_cost
-from litellm.litellm_core_utils.litellm_logging import Logging, modify_integration
-from litellm.litellm_core_utils.get_llm_provider_logic import get_llm_provider
-from litellm.litellm_core_utils.core_helpers import remove_index_from_tool_calls
-from litellm.litellm_core_utils.token_counter import get_modified_max_tokens
+from remodl.remodl_core_utils.remodl_logging import Logging, modify_integration
+from remodl.remodl_core_utils.get_llm_provider_logic import get_llm_provider
+from remodl.remodl_core_utils.core_helpers import remove_index_from_tool_calls
+from remodl.remodl_core_utils.token_counter import get_modified_max_tokens
 from .utils import (
     client,
     exception_type,
@@ -1025,7 +1027,7 @@ from .utils import (
     supports_audio_output,
     supports_system_messages,
     supports_reasoning,
-    get_litellm_params,
+    get_remodl_params,
     acreate,
     get_max_tokens,
     get_model_info,
@@ -1209,7 +1211,7 @@ from .llms.deepgram.audio_transcription.transformation import (
 )
 from .llms.topaz.common_utils import TopazModelInfo
 from .llms.topaz.image_variations.transformation import TopazImageVariationConfig
-from litellm.llms.openai.completion.transformation import OpenAITextCompletionConfig
+from remodl.llms.openai.completion.transformation import OpenAITextCompletionConfig
 from .llms.groq.chat.transformation import GroqChatConfig
 from .llms.voyage.embedding.transformation import VoyageEmbeddingConfig
 from .llms.voyage.embedding.transformation_contextual import (
@@ -1223,7 +1225,7 @@ from .llms.azure.responses.transformation import AzureOpenAIResponsesAPIConfig
 from .llms.azure.responses.o_series_transformation import (
     AzureOpenAIOSeriesResponsesAPIConfig,
 )
-from .llms.litellm_proxy.responses.transformation import (
+from .llms.remodl_proxy.responses.transformation import (
     LiteLLMProxyResponsesAPIConfig,
 )
 from .llms.openai.chat.o_series_transformation import (
@@ -1296,7 +1298,7 @@ from .llms.hosted_vllm.chat.transformation import HostedVLLMChatConfig
 from .llms.remodlai.chat.transformation import RemodlAIChatConfig
 from .llms.remodlai.embedding.transformation import RemodlAIEmbeddingConfig
 from .llms.llamafile.chat.transformation import LlamafileChatConfig
-from .llms.litellm_proxy.chat.transformation import LiteLLMProxyChatConfig
+from .llms.remodl_proxy.chat.transformation import LiteLLMProxyChatConfig
 from .llms.vllm.completion.transformation import VLLMConfig
 from .llms.deepseek.chat.transformation import DeepSeekChatConfig
 from .llms.lm_studio.chat.transformation import LMStudioChatConfig
@@ -1324,7 +1326,7 @@ from .llms.cometapi.embed.transformation import CometAPIEmbeddingConfig
 from .llms.lemonade.chat.transformation import LemonadeChatConfig
 from .main import *  # type: ignore
 from .integrations import *
-from .llms.custom_httpx.async_client_cleanup import close_litellm_async_clients
+from .llms.custom_httpx.async_client_cleanup import close_remodl_async_clients
 from .exceptions import (
     AuthenticationError,
     InvalidRequestError,
@@ -1369,7 +1371,7 @@ from .cost_calculator import response_cost_calculator, cost_per_token
 
 ### ADAPTERS ###
 from .types.adapter import AdapterItem
-import litellm.anthropic_interface as anthropic
+import remodl.anthropic_interface as anthropic
 
 adapters: List[AdapterItem] = []
 
@@ -1392,7 +1394,7 @@ disable_hf_tokenizer_download: Optional[
 global_disable_no_log_param: bool = False
 
 ### CLI UTILITIES ###
-from litellm.litellm_core_utils.cli_token_utils import get_litellm_gateway_api_key
+from remodl.remodl_core_utils.cli_token_utils import get_remodl_gateway_api_key
 
 ### PASSTHROUGH ###
 from .passthrough import allm_passthrough_route, llm_passthrough_route

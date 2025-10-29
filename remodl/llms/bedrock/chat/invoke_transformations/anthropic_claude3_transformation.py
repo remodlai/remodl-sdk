@@ -2,16 +2,16 @@ from typing import TYPE_CHECKING, Any, List, Optional
 
 import httpx
 
-from litellm.llms.anthropic.chat.transformation import AnthropicConfig
-from litellm.llms.bedrock.chat.invoke_transformations.base_invoke_transformation import (
+from remodl.llms.anthropic.chat.transformation import AnthropicConfig
+from remodl.llms.bedrock.chat.invoke_transformations.base_invoke_transformation import (
     AmazonInvokeConfig,
 )
-from litellm.llms.bedrock.common_utils import get_anthropic_beta_from_headers
-from litellm.types.llms.openai import AllMessageValues
-from litellm.types.utils import ModelResponse
+from remodl.llms.bedrock.common_utils import get_anthropic_beta_from_headers
+from remodl.types.llms.openai import AllMessageValues
+from remodl.types.utils import ModelResponse
 
 if TYPE_CHECKING:
-    from litellm.litellm_core_utils.litellm_logging import Logging as _LiteLLMLoggingObj
+    from remodl.remodl_core_utils.remodl_logging import Logging as _LiteLLMLoggingObj
 
     LiteLLMLoggingObj = _LiteLLMLoggingObj
 else:
@@ -66,7 +66,7 @@ class AmazonAnthropicClaudeConfig(AmazonInvokeConfig, AnthropicConfig):
         model: str,
         messages: List[AllMessageValues],
         optional_params: dict,
-        litellm_params: dict,
+        remodl_params: dict,
         headers: dict,
     ) -> dict:
         _anthropic_request = AnthropicConfig.transform_request(
@@ -74,7 +74,7 @@ class AmazonAnthropicClaudeConfig(AmazonInvokeConfig, AnthropicConfig):
             model=model,
             messages=messages,
             optional_params=optional_params,
-            litellm_params=litellm_params,
+            remodl_params=remodl_params,
             headers=headers,
         )
 
@@ -99,7 +99,7 @@ class AmazonAnthropicClaudeConfig(AmazonInvokeConfig, AnthropicConfig):
         request_data: dict,
         messages: List[AllMessageValues],
         optional_params: dict,
-        litellm_params: dict,
+        remodl_params: dict,
         encoding: Any,
         api_key: Optional[str] = None,
         json_mode: Optional[bool] = None,
@@ -113,7 +113,7 @@ class AmazonAnthropicClaudeConfig(AmazonInvokeConfig, AnthropicConfig):
             request_data=request_data,
             messages=messages,
             optional_params=optional_params,
-            litellm_params=litellm_params,
+            remodl_params=remodl_params,
             encoding=encoding,
             api_key=api_key,
             json_mode=json_mode,

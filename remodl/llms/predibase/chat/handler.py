@@ -9,20 +9,20 @@ from typing import Callable, Optional, Union
 
 import httpx  # type: ignore
 
-import litellm
-import litellm.litellm_core_utils
-import litellm.litellm_core_utils.litellm_logging
-from litellm.litellm_core_utils.core_helpers import map_finish_reason
-from litellm.litellm_core_utils.prompt_templates.factory import (
+import remodl
+import remodl.remodl_core_utils
+import remodl.remodl_core_utils.remodl_logging
+from remodl.remodl_core_utils.core_helpers import map_finish_reason
+from remodl.remodl_core_utils.prompt_templates.factory import (
     custom_prompt,
     prompt_factory,
 )
-from litellm.llms.custom_httpx.http_handler import (
+from remodl.llms.custom_httpx.http_handler import (
     AsyncHTTPHandler,
     get_async_httpx_client,
 )
-from litellm.types.utils import LiteLLMLoggingBaseClass
-from litellm.utils import Choices, CustomStreamWrapper, Message, ModelResponse, Usage
+from remodl.types.utils import LiteLLMLoggingBaseClass
+from remodl.utils import Choices, CustomStreamWrapper, Message, ModelResponse, Usage
 
 from ..common_utils import PredibaseError
 
@@ -64,7 +64,7 @@ class PredibaseChatCompletion:
         """
         Parse the output text to remove any special characters. In our current approach we just check for ChatML tokens.
 
-        Initial issue that prompted this - https://github.com/BerriAI/litellm/issues/763
+        Initial issue that prompted this - https://github.com/BerriAI/remodl/issues/763
         """
         chat_template_tokens = [
             "<|assistant|>",
@@ -175,7 +175,7 @@ class PredibaseChatCompletion:
         ## CALCULATING USAGE
         prompt_tokens = 0
         try:
-            prompt_tokens = litellm.token_counter(messages=messages)
+            prompt_tokens = remodl.token_counter(messages=messages)
         except Exception:
             # this should remain non blocking we should not block a response returning if calculating usage fails
             pass
@@ -228,20 +228,20 @@ class PredibaseChatCompletion:
         api_key: str,
         logging_obj,
         optional_params: dict,
-        litellm_params: dict,
+        remodl_params: dict,
         tenant_id: str,
         timeout: Union[float, httpx.Timeout],
         acompletion=None,
         logger_fn=None,
         headers: dict = {},
     ) -> Union[ModelResponse, CustomStreamWrapper]:
-        headers = litellm.PredibaseConfig().validate_environment(
+        headers = remodl.PredibaseConfig().validate_environment(
             api_key=api_key,
             headers=headers,
             messages=messages,
             optional_params=optional_params,
             model=model,
-            litellm_params=litellm_params,
+            remodl_params=remodl_params,
         )
         completion_url = ""
         input_text = ""
@@ -274,7 +274,7 @@ class PredibaseChatCompletion:
             prompt = prompt_factory(model=model, messages=messages)
 
         ## Load Config
-        config = litellm.PredibaseConfig.get_config()
+        config = remodl.PredibaseConfig.get_config()
         for k, v in config.items():
             if (
                 k not in optional_params
@@ -314,7 +314,7 @@ class PredibaseChatCompletion:
                     api_key=api_key,
                     logging_obj=logging_obj,
                     optional_params=optional_params,
-                    litellm_params=litellm_params,
+                    remodl_params=remodl_params,
                     logger_fn=logger_fn,
                     headers=headers,
                     timeout=timeout,
@@ -333,7 +333,7 @@ class PredibaseChatCompletion:
                     logging_obj=logging_obj,
                     optional_params=optional_params,
                     stream=False,
-                    litellm_params=litellm_params,
+                    remodl_params=remodl_params,
                     logger_fn=logger_fn,
                     headers=headers,
                     timeout=timeout,
@@ -341,7 +341,7 @@ class PredibaseChatCompletion:
 
         ### SYNC STREAMING
         if stream is True:
-            response = litellm.module_level_client.post(
+            response = remodl.module_level_client.post(
                 completion_url,
                 headers=headers,
                 data=json.dumps(data),
@@ -357,7 +357,7 @@ class PredibaseChatCompletion:
             return _response
         ### SYNC COMPLETION
         else:
-            response = litellm.module_level_client.post(
+            response = remodl.module_level_client.post(
                 url=completion_url,
                 headers=headers,
                 data=json.dumps(data),
@@ -391,12 +391,12 @@ class PredibaseChatCompletion:
         data: dict,
         optional_params: dict,
         timeout: Union[float, httpx.Timeout],
-        litellm_params=None,
+        remodl_params=None,
         logger_fn=None,
         headers={},
     ) -> ModelResponse:
         async_handler = get_async_httpx_client(
-            llm_provider=litellm.LlmProviders.PREDIBASE,
+            llm_provider=remodl.LlmProviders.PREDIBASE,
             params={"timeout": timeout},
         )
         try:
@@ -411,7 +411,7 @@ class PredibaseChatCompletion:
                 ),
             )
         except Exception as e:
-            for exception in litellm.LITELLM_EXCEPTION_TYPES:
+            for exception in remodl.LITELLM_EXCEPTION_TYPES:
                 if isinstance(e, exception):
                     raise e
             raise PredibaseError(
@@ -444,7 +444,7 @@ class PredibaseChatCompletion:
         data: dict,
         timeout: Union[float, httpx.Timeout],
         optional_params=None,
-        litellm_params=None,
+        remodl_params=None,
         logger_fn=None,
         headers={},
     ) -> CustomStreamWrapper:

@@ -4,9 +4,9 @@ from typing import Callable, Optional, Union
 
 import httpx
 
-from litellm.llms.bedrock.base_aws_llm import BaseAWSLLM
-from litellm.llms.custom_httpx.http_handler import AsyncHTTPHandler, HTTPHandler
-from litellm.utils import ModelResponse, get_secret
+from remodl.llms.bedrock.base_aws_llm import BaseAWSLLM
+from remodl.llms.custom_httpx.http_handler import AsyncHTTPHandler, HTTPHandler
+from remodl.utils import ModelResponse, get_secret
 
 from ..common_utils import AWSEventStreamDecoder
 from .transformation import SagemakerChatConfig
@@ -39,12 +39,12 @@ class SagemakerChatHandler(BaseAWSLLM):
         ### SET REGION NAME ###
         if aws_region_name is None:
             # check env #
-            litellm_aws_region_name = get_secret("AWS_REGION_NAME", None)
+            remodl_aws_region_name = get_secret("AWS_REGION_NAME", None)
 
-            if litellm_aws_region_name is not None and isinstance(
-                litellm_aws_region_name, str
+            if remodl_aws_region_name is not None and isinstance(
+                remodl_aws_region_name, str
             ):
-                aws_region_name = litellm_aws_region_name
+                aws_region_name = remodl_aws_region_name
 
             standard_aws_region_name = get_secret("AWS_REGION", None)
             if standard_aws_region_name is not None and isinstance(
@@ -119,7 +119,7 @@ class SagemakerChatHandler(BaseAWSLLM):
         encoding,
         logging_obj,
         optional_params: dict,
-        litellm_params: dict,
+        remodl_params: dict,
         timeout: Optional[Union[float, httpx.Timeout]] = None,
         custom_prompt_dict={},
         logger_fn=None,
@@ -132,7 +132,7 @@ class SagemakerChatHandler(BaseAWSLLM):
         inference_params = deepcopy(optional_params)
         stream = inference_params.pop("stream", None)
 
-        from litellm.llms.openai_like.chat.handler import OpenAILikeChatHandler
+        from remodl.llms.openai_like.chat.handler import OpenAILikeChatHandler
 
         openai_like_chat_completions = OpenAILikeChatHandler()
         inference_params["stream"] = True if stream is True else False
@@ -140,7 +140,7 @@ class SagemakerChatHandler(BaseAWSLLM):
             model=model,
             messages=messages,
             optional_params=inference_params,
-            litellm_params=litellm_params,
+            remodl_params=remodl_params,
             headers=headers,
         )
 
@@ -165,7 +165,7 @@ class SagemakerChatHandler(BaseAWSLLM):
             logging_obj=logging_obj,
             optional_params=inference_params,
             acompletion=acompletion,
-            litellm_params=litellm_params,
+            remodl_params=remodl_params,
             logger_fn=logger_fn,
             timeout=timeout,
             encoding=encoding,

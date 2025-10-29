@@ -5,20 +5,20 @@ from urllib.parse import urlparse
 import httpx
 from httpx import Response
 
-import litellm
-from litellm._logging import verbose_logger
-from litellm.litellm_core_utils.prompt_templates.common_utils import (
+import remodl
+from remodl._logging import verbose_logger
+from remodl.remodl_core_utils.prompt_templates.common_utils import (
     _audio_or_image_in_message_content,
     convert_content_list_to_str,
 )
-from litellm.llms.base_llm.chat.transformation import LiteLLMLoggingObj
-from litellm.llms.openai.common_utils import drop_params_from_unprocessable_entity_error
-from litellm.llms.openai.openai import OpenAIConfig
-from litellm.llms.xai.chat.transformation import XAIChatConfig
-from litellm.secret_managers.main import get_secret_str
-from litellm.types.llms.openai import AllMessageValues
-from litellm.types.utils import ModelResponse, ProviderField
-from litellm.utils import _add_path_to_api_base, supports_tool_choice
+from remodl.llms.base_llm.chat.transformation import LiteLLMLoggingObj
+from remodl.llms.openai.common_utils import drop_params_from_unprocessable_entity_error
+from remodl.llms.openai.openai import OpenAIConfig
+from remodl.llms.xai.chat.transformation import XAIChatConfig
+from remodl.secret_managers.main import get_secret_str
+from remodl.types.llms.openai import AllMessageValues
+from remodl.types.utils import ModelResponse, ProviderField
+from remodl.utils import _add_path_to_api_base, supports_tool_choice
 
 
 class AzureFoundryErrorStrings(str, enum.Enum):
@@ -60,7 +60,7 @@ class AzureAIStudioConfig(OpenAIConfig):
         model: str,
         messages: List[AllMessageValues],
         optional_params: dict,
-        litellm_params: dict,
+        remodl_params: dict,
         api_key: Optional[str] = None,
         api_base: Optional[str] = None,
     ) -> dict:
@@ -89,7 +89,7 @@ class AzureAIStudioConfig(OpenAIConfig):
         api_key: Optional[str],
         model: str,
         optional_params: dict,
-        litellm_params: dict,
+        remodl_params: dict,
         stream: Optional[bool] = None,
     ) -> str:
         """
@@ -97,16 +97,16 @@ class AzureAIStudioConfig(OpenAIConfig):
 
         Args:
         - api_base: Base URL, e.g.,
-            "https://litellm8397336933.services.ai.azure.com"
+            "https://remodl8397336933.services.ai.azure.com"
             OR
-            "https://litellm8397336933.services.ai.azure.com/models/chat/completions?api-version=2024-05-01-preview"
+            "https://remodl8397336933.services.ai.azure.com/models/chat/completions?api-version=2024-05-01-preview"
         - model: Model name.
         - optional_params: Additional query parameters, including "api_version".
         - stream: If streaming is required (optional).
 
         Returns:
         - A complete URL string, e.g.,
-        "https://litellm8397336933.services.ai.azure.com/models/chat/completions?api-version=2024-05-01-preview"
+        "https://remodl8397336933.services.ai.azure.com/models/chat/completions?api-version=2024-05-01-preview"
         """
         if api_base is None:
             raise ValueError(
@@ -115,7 +115,7 @@ class AzureAIStudioConfig(OpenAIConfig):
         original_url = httpx.URL(api_base)
 
         # Extract api_version or use default
-        api_version = cast(Optional[str], litellm_params.get("api_version"))
+        api_version = cast(Optional[str], remodl_params.get("api_version"))
 
         # Create a new dictionary with existing params
         query_params = dict(original_url.params)
@@ -177,9 +177,9 @@ class AzureAIStudioConfig(OpenAIConfig):
             if "/" in model:
                 model = model.split("/", 1)[1]
             if (
-                model in litellm.open_ai_chat_completion_models
-                or model in litellm.open_ai_text_completion_models
-                or model in litellm.open_ai_embedding_models
+                model in remodl.open_ai_chat_completion_models
+                or model in remodl.open_ai_text_completion_models
+                or model in remodl.open_ai_embedding_models
             ):
                 return True
 
@@ -207,14 +207,14 @@ class AzureAIStudioConfig(OpenAIConfig):
         model: str,
         messages: List[AllMessageValues],
         optional_params: dict,
-        litellm_params: dict,
+        remodl_params: dict,
         headers: dict,
     ) -> dict:
         extra_body = optional_params.pop("extra_body", {})
         if extra_body and isinstance(extra_body, dict):
             optional_params.update(extra_body)
         optional_params.pop("max_retries", None)
-        return super().transform_request(model, messages, optional_params, litellm_params, headers)
+        return super().transform_request(model, messages, optional_params, remodl_params, headers)
 
     def transform_response(
         self,
@@ -225,7 +225,7 @@ class AzureAIStudioConfig(OpenAIConfig):
         request_data: dict,
         messages: List[AllMessageValues],
         optional_params: dict,
-        litellm_params: dict,
+        remodl_params: dict,
         encoding: Any,
         api_key: Optional[str] = None,
         json_mode: Optional[bool] = None,
@@ -239,16 +239,16 @@ class AzureAIStudioConfig(OpenAIConfig):
             request_data=request_data,
             messages=messages,
             optional_params=optional_params,
-            litellm_params=litellm_params,
+            remodl_params=remodl_params,
             encoding=encoding,
             api_key=api_key,
             json_mode=json_mode,
         )
 
     def should_retry_llm_api_inside_llm_translation_on_http_error(
-        self, e: httpx.HTTPStatusError, litellm_params: dict
+        self, e: httpx.HTTPStatusError, remodl_params: dict
     ) -> bool:
-        should_drop_params = litellm_params.get("drop_params") or litellm.drop_params
+        should_drop_params = remodl_params.get("drop_params") or remodl.drop_params
         error_text = e.response.text
 
         if should_drop_params and "Extra inputs are not permitted" in error_text:
@@ -259,7 +259,7 @@ class AzureAIStudioConfig(OpenAIConfig):
             AzureFoundryErrorStrings.SET_EXTRA_PARAMETERS_TO_PASS_THROUGH.value in error_text
         ):  # remove extra-parameters from tool calls
             return True
-        return super().should_retry_llm_api_inside_llm_translation_on_http_error(e=e, litellm_params=litellm_params)
+        return super().should_retry_llm_api_inside_llm_translation_on_http_error(e=e, remodl_params=remodl_params)
 
     @property
     def max_retry_on_unprocessable_entity_error(self) -> int:
@@ -268,7 +268,7 @@ class AzureAIStudioConfig(OpenAIConfig):
     def transform_request_on_unprocessable_entity_error(self, e: httpx.HTTPStatusError, request_data: dict) -> dict:
         _messages = cast(Optional[List[AllMessageValues]], request_data.get("messages"))
         if "unknown field: parameter index is not a valid field" in e.response.text and _messages is not None:
-            litellm.remove_index_from_tool_calls(
+            remodl.remove_index_from_tool_calls(
                 messages=_messages,
             )
         elif AzureFoundryErrorStrings.SET_EXTRA_PARAMETERS_TO_PASS_THROUGH.value in e.response.text:

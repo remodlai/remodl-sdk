@@ -3,10 +3,10 @@ from typing import Any, List, Optional, Union
 from aiohttp import ClientResponse
 from httpx import Headers, Response
 
-from litellm.llms.base_llm.chat.transformation import BaseLLMException
-from litellm.llms.base_llm.image_variations.transformation import LiteLLMLoggingObj
-from litellm.types.llms.openai import OpenAIImageVariationOptionalParams
-from litellm.types.utils import FileTypes, HttpHandlerRequestFields, ImageResponse
+from remodl.llms.base_llm.chat.transformation import BaseLLMException
+from remodl.llms.base_llm.image_variations.transformation import LiteLLMLoggingObj
+from remodl.types.llms.openai import OpenAIImageVariationOptionalParams
+from remodl.types.utils import FileTypes, HttpHandlerRequestFields, ImageResponse
 
 from ...base_llm.image_variations.transformation import BaseImageVariationConfig
 from ..common_utils import OpenAIError
@@ -51,7 +51,7 @@ class OpenAIImageVariationConfig(BaseImageVariationConfig):
         request_data: dict,
         image: FileTypes,
         optional_params: dict,
-        litellm_params: dict,
+        remodl_params: dict,
         encoding: Any,
         api_key: Optional[str] = None,
     ) -> ImageResponse:
@@ -66,7 +66,7 @@ class OpenAIImageVariationConfig(BaseImageVariationConfig):
         request_data: dict,
         image: FileTypes,
         optional_params: dict,
-        litellm_params: dict,
+        remodl_params: dict,
         encoding: Any,
         api_key: Optional[str] = None,
     ) -> ImageResponse:

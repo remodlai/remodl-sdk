@@ -11,8 +11,8 @@ import hashlib
 import json
 from typing import Any, Optional
 
-import litellm
-from litellm.constants import _DEFAULT_TTL_FOR_HTTPX_CLIENTS
+import remodl
+from remodl.constants import _DEFAULT_TTL_FOR_HTTPX_CLIENTS
 
 from ...caching import InMemoryCache
 
@@ -32,16 +32,16 @@ class LangfuseInMemoryCache(InMemoryCache):
 
         LangfuseLoggers consume threads when initalized, this shuts them down when they are expired
 
-        Relevant Issue: https://github.com/BerriAI/litellm/issues/11169
+        Relevant Issue: https://github.com/BerriAI/remodl/issues/11169
         """
-        from litellm.integrations.langfuse.langfuse import LangFuseLogger
+        from remodl.integrations.langfuse.langfuse import LangFuseLogger
 
         if isinstance(self.cache_dict[key], LangFuseLogger):
             _created_langfuse_logger: LangFuseLogger = self.cache_dict[key]
             #########################################################
             # Clean up Langfuse initialized clients
             #########################################################
-            litellm.initialized_langfuse_clients -= 1
+            remodl.initialized_langfuse_clients -= 1
             _created_langfuse_logger.Langfuse.flush()
             _created_langfuse_logger.Langfuse.shutdown()
 
@@ -55,7 +55,7 @@ class DynamicLoggingCache:
     """
     Prevent memory leaks caused by initializing new logging clients on each request.
 
-    Relevant Issue: https://github.com/BerriAI/litellm/issues/5695
+    Relevant Issue: https://github.com/BerriAI/remodl/issues/5695
     """
 
     def __init__(self) -> None:

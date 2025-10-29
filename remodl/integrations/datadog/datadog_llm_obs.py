@@ -9,26 +9,26 @@ API Reference: https://docs.datadoghq.com/llm_observability/setup/api/?tab=examp
 import asyncio
 import json
 import os
-from litellm._uuid import uuid
+from remodl._uuid import uuid
 from datetime import datetime
 from typing import Any, Dict, List, Literal, Optional, Union
 
 import httpx
 
-import litellm
-from litellm._logging import verbose_logger
-from litellm.integrations.custom_batch_logger import CustomBatchLogger
-from litellm.integrations.datadog.datadog import DataDogLogger
-from litellm.litellm_core_utils.dd_tracing import tracer
-from litellm.litellm_core_utils.prompt_templates.common_utils import (
+import remodl
+from remodl._logging import verbose_logger
+from remodl.integrations.custom_batch_logger import CustomBatchLogger
+from remodl.integrations.datadog.datadog import DataDogLogger
+from remodl.remodl_core_utils.dd_tracing import tracer
+from remodl.remodl_core_utils.prompt_templates.common_utils import (
     handle_any_messages_to_chat_completion_str_messages_conversion,
 )
-from litellm.llms.custom_httpx.http_handler import (
+from remodl.llms.custom_httpx.http_handler import (
     get_async_httpx_client,
     httpxSpecialProvider,
 )
-from litellm.types.integrations.datadog_llm_obs import *
-from litellm.types.utils import (
+from remodl.types.integrations.datadog_llm_obs import *
+from remodl.types.utils import (
     CallTypes,
     StandardLoggingGuardrailInformation,
     StandardLoggingPayload,
@@ -66,7 +66,7 @@ class DataDogLLMObsLogger(DataDogLogger, CustomBatchLogger):
             self.log_queue: List[LLMObsPayload] = []
 
             #########################################################
-            # Handle datadog_llm_observability_params set as litellm.datadog_llm_observability_params
+            # Handle datadog_llm_observability_params set as remodl.datadog_llm_observability_params
             #########################################################
             dict_datadog_llm_obs_params = self._get_datadog_llm_obs_params()
             kwargs.update(dict_datadog_llm_obs_params)
@@ -77,22 +77,22 @@ class DataDogLLMObsLogger(DataDogLogger, CustomBatchLogger):
 
     def _get_datadog_llm_obs_params(self) -> Dict:
         """
-        Get the datadog_llm_observability_params from litellm.datadog_llm_observability_params
+        Get the datadog_llm_observability_params from remodl.datadog_llm_observability_params
 
         These are params specific to initializing the DataDogLLMObsLogger e.g. turn_off_message_logging
         """
         dict_datadog_llm_obs_params: Dict = {}
-        if litellm.datadog_llm_observability_params is not None:
+        if remodl.datadog_llm_observability_params is not None:
             if isinstance(
-                litellm.datadog_llm_observability_params, DatadogLLMObsInitParams
+                remodl.datadog_llm_observability_params, DatadogLLMObsInitParams
             ):
                 dict_datadog_llm_obs_params = (
-                    litellm.datadog_llm_observability_params.model_dump()
+                    remodl.datadog_llm_observability_params.model_dump()
                 )
-            elif isinstance(litellm.datadog_llm_observability_params, Dict):
+            elif isinstance(remodl.datadog_llm_observability_params, Dict):
                 # only allow params that are of DatadogLLMObsInitParams
                 dict_datadog_llm_obs_params = DatadogLLMObsInitParams(
-                    **litellm.datadog_llm_observability_params
+                    **remodl.datadog_llm_observability_params
                 ).model_dump()
         return dict_datadog_llm_obs_params
 
@@ -150,7 +150,7 @@ class DataDogLLMObsLogger(DataDogLogger, CustomBatchLogger):
             }
 
             # serialize datetime objects - for budget reset time in spend metrics
-            from litellm.litellm_core_utils.safe_json_dumps import safe_dumps
+            from remodl.remodl_core_utils.safe_json_dumps import safe_dumps
 
             try:
                 verbose_logger.debug("payload %s", safe_dumps(payload))
@@ -198,7 +198,7 @@ class DataDogLLMObsLogger(DataDogLogger, CustomBatchLogger):
         messages = standard_logging_payload["messages"]
         messages = self._ensure_string_content(messages=messages)
 
-        metadata = kwargs.get("litellm_params", {}).get("metadata", {})
+        metadata = kwargs.get("remodl_params", {}).get("metadata", {})
 
         input_meta = InputMeta(
             messages=handle_any_messages_to_chat_completion_str_messages_conversion(
@@ -237,7 +237,7 @@ class DataDogLLMObsLogger(DataDogLogger, CustomBatchLogger):
             parent_id=metadata.get("parent_id", "undefined"),
             trace_id=standard_logging_payload.get("trace_id", str(uuid.uuid4())),
             span_id=metadata.get("span_id", str(uuid.uuid4())),
-            name=metadata.get("name", "litellm_llm_call"),
+            name=metadata.get("name", "remodl_llm_call"),
             meta=meta,
             start_ns=int(start_time.timestamp() * 1e9),
             duration=int((end_time - start_time).total_seconds() * 1e9),
@@ -483,7 +483,7 @@ class DataDogLLMObsLogger(DataDogLogger, CustomBatchLogger):
         self, standard_logging_payload: StandardLoggingPayload
     ) -> Dict[str, Any]:
         """
-        Fields to track in DD LLM Observability metadata from litellm standard logging payload
+        Fields to track in DD LLM Observability metadata from remodl standard logging payload
         """
         _metadata: Dict[str, Any] = {
             "model_name": standard_logging_payload.get("model", "unknown"),
@@ -542,9 +542,9 @@ class DataDogLLMObsLogger(DataDogLogger, CustomBatchLogger):
 
         # LiteLLM overhead time
         hidden_params = standard_logging_payload.get("hidden_params", {})
-        litellm_overhead_ms = hidden_params.get("litellm_overhead_time_ms")
-        if litellm_overhead_ms is not None:
-            latency_metrics["litellm_overhead_time_ms"] = litellm_overhead_ms
+        remodl_overhead_ms = hidden_params.get("remodl_overhead_time_ms")
+        if remodl_overhead_ms is not None:
+            latency_metrics["remodl_overhead_time_ms"] = remodl_overhead_ms
 
         # Guardrail overhead latency
         guardrail_info: Optional[

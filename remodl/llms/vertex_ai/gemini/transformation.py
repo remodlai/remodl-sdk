@@ -10,26 +10,26 @@ from typing import TYPE_CHECKING, List, Literal, Optional, Tuple, Union, cast
 import httpx
 from pydantic import BaseModel
 
-import litellm
-from litellm._logging import verbose_logger
-from litellm.litellm_core_utils.prompt_templates.common_utils import (
+import remodl
+from remodl._logging import verbose_logger
+from remodl.remodl_core_utils.prompt_templates.common_utils import (
     _get_image_mime_type_from_url,
 )
-from litellm.litellm_core_utils.prompt_templates.factory import (
+from remodl.remodl_core_utils.prompt_templates.factory import (
     convert_generic_image_chunk_to_openai_image_obj,
     convert_to_anthropic_image_obj,
     convert_to_gemini_tool_call_invoke,
     convert_to_gemini_tool_call_result,
     response_schema_prompt,
 )
-from litellm.llms.custom_httpx.http_handler import AsyncHTTPHandler, HTTPHandler
-from litellm.types.files import (
+from remodl.llms.custom_httpx.http_handler import AsyncHTTPHandler, HTTPHandler
+from remodl.types.files import (
     get_file_mime_type_for_file_type,
     get_file_type_from_extension,
     is_gemini_1_5_accepted_file_type,
 )
-from litellm.types.utils import LlmProviders
-from litellm.types.llms.openai import (
+from remodl.types.utils import LlmProviders
+from remodl.types.llms.openai import (
     AllMessageValues,
     ChatCompletionAssistantMessage,
     ChatCompletionAudioObject,
@@ -38,8 +38,8 @@ from litellm.types.llms.openai import (
     ChatCompletionTextObject,
     ChatCompletionUserMessage,
 )
-from litellm.types.llms.vertex_ai import *
-from litellm.types.llms.vertex_ai import (
+from remodl.types.llms.vertex_ai import *
+from remodl.types.llms.vertex_ai import (
     GenerationConfig,
     PartType,
     RequestBody,
@@ -48,7 +48,7 @@ from litellm.types.llms.vertex_ai import (
     ToolConfig,
     Tools,
 )
-from litellm.types.utils import GenericImageParsingChunk
+from remodl.types.utils import GenericImageParsingChunk
 
 from ..common_utils import (
     _check_text_in_content,
@@ -57,7 +57,7 @@ from ..common_utils import (
 )
 
 if TYPE_CHECKING:
-    from litellm.litellm_core_utils.litellm_logging import Logging as _LiteLLMLoggingObj
+    from remodl.remodl_core_utils.remodl_logging import Logging as _LiteLLMLoggingObj
 
     LiteLLMLoggingObj = _LiteLLMLoggingObj
 else:
@@ -273,12 +273,12 @@ def _gemini_convert_messages_with_history(  # noqa: PLR0915
                 """
                 check that user_content has 'text' parameter.
                     - Known Vertex Error: Unable to submit request because it must have a text parameter.
-                    - Relevant Issue: https://github.com/BerriAI/litellm/issues/5515
+                    - Relevant Issue: https://github.com/BerriAI/remodl/issues/5515
                 """
                 has_text_in_content = _check_text_in_content(user_content)
                 if has_text_in_content is False:
                     verbose_logger.warning(
-                        "No text in user content. Adding a blank text to user content, to ensure Gemini doesn't fail the request. Relevant Issue - https://github.com/BerriAI/litellm/issues/5515"
+                        "No text in user content. Adding a blank text to user content, to ensure Gemini doesn't fail the request. Relevant Issue - https://github.com/BerriAI/remodl/issues/5515"
                     )
                     user_content.append(
                         PartType(text=" ")
@@ -381,7 +381,7 @@ def _gemini_convert_messages_with_history(  # noqa: PLR0915
 
             if msg_i == init_msg_i:  # prevent infinite loops
                 raise Exception(
-                    "Invalid Message passed in - {}. File an issue https://github.com/BerriAI/litellm/issues".format(
+                    "Invalid Message passed in - {}. File an issue https://github.com/BerriAI/remodl/issues".format(
                         messages[msg_i]
                     )
                 )
@@ -396,7 +396,7 @@ def _gemini_convert_messages_with_history(  # noqa: PLR0915
                 If the original request did not comply to OpenAI API requirements it should have failed by now,
                 but LiteLLM does not check for missing messages.
                 Setting an empty content to prevent an 400 error.
-                Relevant Issue - https://github.com/BerriAI/litellm/issues/9733
+                Relevant Issue - https://github.com/BerriAI/remodl/issues/9733
                 """
             )
             contents.append(ContentType(role="user", parts=[PartType(text=" ")]))
@@ -410,7 +410,7 @@ def _transform_request_body(
     model: str,
     optional_params: dict,
     custom_llm_provider: Literal["vertex_ai", "vertex_ai_beta", "gemini"],
-    litellm_params: dict,
+    remodl_params: dict,
     cached_content: Optional[str],
 ) -> RequestBody:
     """
@@ -435,23 +435,23 @@ def _transform_request_body(
             messages.append({"role": "user", "content": user_response_schema_message})
             optional_params.pop("response_schema")
 
-    # Check for any 'litellm_param_*' set during optional param mapping
+    # Check for any 'remodl_param_*' set during optional param mapping
 
     remove_keys = []
     for k, v in optional_params.items():
-        if k.startswith("litellm_param_"):
-            litellm_params.update({k: v})
+        if k.startswith("remodl_param_"):
+            remodl_params.update({k: v})
             remove_keys.append(k)
 
     optional_params = {k: v for k, v in optional_params.items() if k not in remove_keys}
 
     try:
         if custom_llm_provider == "gemini":
-            content = litellm.GoogleAIStudioGeminiConfig()._transform_messages(
+            content = remodl.GoogleAIStudioGeminiConfig()._transform_messages(
                 messages=messages
             )
         else:
-            content = litellm.VertexGeminiConfig()._transform_messages(
+            content = remodl.VertexGeminiConfig()._transform_messages(
                 messages=messages
             )
         tools: Optional[Tools] = optional_params.pop("tools", None)
@@ -466,8 +466,8 @@ def _transform_request_body(
         labels: Optional[dict[str, str]] = optional_params.pop("labels", None)
         # If the LiteLLM client sends OpenAI-supported parameter "metadata", add it
         # as "labels" field to the request sent to the Gemini backend.
-        if labels is None and "metadata" in litellm_params:
-            metadata = litellm_params["metadata"]
+        if labels is None and "metadata" in remodl_params:
+            metadata = remodl_params["metadata"]
             if metadata is not None and "requester_metadata" in metadata:
                 rm = metadata["requester_metadata"]
                 labels = {k: v for k, v in rm.items() if isinstance(v, str)}
@@ -512,7 +512,7 @@ def sync_transform_request_body(
     optional_params: dict,
     logging_obj: LiteLLMLoggingObj,
     custom_llm_provider: Literal["vertex_ai", "vertex_ai_beta", "gemini"],
-    litellm_params: dict,
+    remodl_params: dict,
     vertex_project: Optional[str],
     vertex_location: Optional[str],
     vertex_auth_header: Optional[str],
@@ -547,7 +547,7 @@ def sync_transform_request_body(
         messages=messages,
         model=model,
         custom_llm_provider=custom_llm_provider,
-        litellm_params=litellm_params,
+        remodl_params=remodl_params,
         cached_content=cached_content,
         optional_params=optional_params,
     )
@@ -562,9 +562,9 @@ async def async_transform_request_body(
     timeout: Optional[Union[float, httpx.Timeout]],
     extra_headers: Optional[dict],
     optional_params: dict,
-    logging_obj: litellm.litellm_core_utils.litellm_logging.Logging,  # type: ignore
+    logging_obj: remodl.remodl_core_utils.remodl_logging.Logging,  # type: ignore
     custom_llm_provider: Literal["vertex_ai", "vertex_ai_beta", "gemini"],
-    litellm_params: dict,
+    remodl_params: dict,
     vertex_project: Optional[str],
     vertex_location: Optional[str],
     vertex_auth_header: Optional[str],
@@ -598,7 +598,7 @@ async def async_transform_request_body(
         messages=messages,
         model=model,
         custom_llm_provider=custom_llm_provider,
-        litellm_params=litellm_params,
+        remodl_params=remodl_params,
         cached_content=cached_content,
         optional_params=optional_params,
     )
@@ -649,7 +649,7 @@ def _transform_system_message(
     if len(system_content_blocks) > 0:
         #########################################################
         # If no messages are passed in, add a blank user message
-        # Relevant Issue - https://github.com/BerriAI/litellm/issues/13769
+        # Relevant Issue - https://github.com/BerriAI/remodl/issues/13769
         #########################################################
         if len(messages) == 0:
             messages.append(_default_user_message_when_system_message_passed())

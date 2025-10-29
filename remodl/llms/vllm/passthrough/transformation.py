@@ -1,6 +1,6 @@
 from typing import TYPE_CHECKING, Optional, Tuple
 
-from litellm.llms.base_llm.passthrough.transformation import BasePassthroughConfig
+from remodl.llms.base_llm.passthrough.transformation import BasePassthroughConfig
 
 from ..common_utils import VLLMModelInfo
 
@@ -19,7 +19,7 @@ class VLLMPassthroughConfig(VLLMModelInfo, BasePassthroughConfig):
         model: str,
         endpoint: str,
         request_query_params: Optional[dict],
-        litellm_params: dict,
+        remodl_params: dict,
     ) -> Tuple["URL", str]:
         base_target_url = self.get_api_base(api_base)
 

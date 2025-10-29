@@ -5,22 +5,22 @@ from typing import Any, Dict, List, Literal, Optional, Union
 from pydantic import BaseModel, ConfigDict, Field
 from typing_extensions import Required, TypedDict
 
-from litellm.types.proxy.guardrails.guardrail_hooks.enkryptai import (
+from remodl.types.proxy.guardrails.guardrail_hooks.enkryptai import (
     EnkryptAIGuardrailConfigs,
 )
-from litellm.types.proxy.guardrails.guardrail_hooks.grayswan import (
+from remodl.types.proxy.guardrails.guardrail_hooks.grayswan import (
     GraySwanGuardrailConfigModel,
 )
-from litellm.types.proxy.guardrails.guardrail_hooks.ibm import (
+from remodl.types.proxy.guardrails.guardrail_hooks.ibm import (
     IBMGuardrailsBaseConfigModel,
 )
 
 """
-Pydantic object defining how to set guardrails on litellm proxy
+Pydantic object defining how to set guardrails on remodl proxy
 
 guardrails:
   - guardrail_name: "bedrock-pre-guard"
-    litellm_params:
+    remodl_params:
       guardrail: bedrock  # supported values: "aporia", "bedrock", "lakera"
       mode: "during_call"
       guardrailIdentifier: ff6ujrregl1q
@@ -395,7 +395,7 @@ class NomaGuardrailConfigModel(BaseModel):
 
     application_id: Optional[str] = Field(
         default=None,
-        description="Application ID for Noma Security. Defaults to 'litellm' if not provided",
+        description="Application ID for Noma Security. Defaults to 'remodl' if not provided",
     )
     monitor_mode: Optional[bool] = Field(
         default=None,
@@ -567,7 +567,7 @@ class LitellmParams(
 class Guardrail(TypedDict, total=False):
     guardrail_id: Optional[str]
     guardrail_name: Required[str]
-    litellm_params: Required[LitellmParams]
+    remodl_params: Required[LitellmParams]
     guardrail_info: Optional[Dict]
     created_at: Optional[datetime]
     updated_at: Optional[datetime]
@@ -593,7 +593,7 @@ class DynamicGuardrailParams(TypedDict):
 class GuardrailInfoResponse(BaseModel):
     guardrail_id: Optional[str] = None
     guardrail_name: str
-    litellm_params: Optional[BaseLitellmParams] = None
+    remodl_params: Optional[BaseLitellmParams] = None
     guardrail_info: Optional[Dict] = None
     created_at: Optional[datetime] = None
     updated_at: Optional[datetime] = None
@@ -636,5 +636,5 @@ class ApplyGuardrailResponse(BaseModel):
 
 class PatchGuardrailRequest(BaseModel):
     guardrail_name: Optional[str] = None
-    litellm_params: Optional[BaseLitellmParams] = None
+    remodl_params: Optional[BaseLitellmParams] = None
     guardrail_info: Optional[Dict[str, Any]] = None

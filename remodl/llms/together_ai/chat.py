@@ -8,7 +8,7 @@ Docs: https://docs.together.ai/reference/completions-1
 
 from typing import Optional
 
-from litellm import get_model_info, verbose_logger
+from remodl import get_model_info, verbose_logger
 
 from ..openai.chat.gpt_transformation import OpenAIGPTConfig
 

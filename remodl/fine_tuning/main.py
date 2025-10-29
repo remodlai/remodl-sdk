@@ -16,16 +16,16 @@ from typing import Any, Coroutine, Dict, Literal, Optional, Union
 
 import httpx
 
-import litellm
-from litellm._logging import verbose_logger
-from litellm.llms.azure.fine_tuning.handler import AzureOpenAIFineTuningAPI
-from litellm.llms.openai.fine_tuning.handler import OpenAIFineTuningAPI
-from litellm.llms.vertex_ai.fine_tuning.handler import VertexFineTuningAPI
-from litellm.secret_managers.main import get_secret_str
-from litellm.types.llms.openai import FineTuningJobCreate, Hyperparameters
-from litellm.types.router import *
-from litellm.types.utils import LiteLLMFineTuningJob
-from litellm.utils import client, supports_httpx_timeout
+import remodl
+from remodl._logging import verbose_logger
+from remodl.llms.azure.fine_tuning.handler import AzureOpenAIFineTuningAPI
+from remodl.llms.openai.fine_tuning.handler import OpenAIFineTuningAPI
+from remodl.llms.vertex_ai.fine_tuning.handler import VertexFineTuningAPI
+from remodl.secret_managers.main import get_secret_str
+from remodl.types.llms.openai import FineTuningJobCreate, Hyperparameters
+from remodl.types.router import *
+from remodl.types.utils import LiteLLMFineTuningJob
+from remodl.utils import client, supports_httpx_timeout
 
 ####### ENVIRONMENT VARIABLES ###################
 openai_fine_tuning_apis_instance = OpenAIFineTuningAPI()
@@ -138,22 +138,22 @@ def create_fine_tuning_job(
             # for deepinfra/perplexity/anyscale/groq we check in get_llm_provider and pass in the api base from there
             api_base = (
                 optional_params.api_base
-                or litellm.api_base
+                or remodl.api_base
                 or os.getenv("OPENAI_BASE_URL")
                 or os.getenv("OPENAI_API_BASE")
                 or "https://api.openai.com/v1"
             )
             organization = (
                 optional_params.organization
-                or litellm.organization
+                or remodl.organization
                 or os.getenv("OPENAI_ORGANIZATION", None)
                 or None  # default - https://github.com/openai/openai-python/blob/284c1799070c723c6a553337134148a7ab088dd8/openai/util.py#L105
             )
             # set API KEY
             api_key = (
                 optional_params.api_key
-                or litellm.api_key  # for deepinfra/perplexity/anyscale we check in get_llm_provider and pass in the api key from there
-                or litellm.openai_key
+                or remodl.api_key  # for deepinfra/perplexity/anyscale we check in get_llm_provider and pass in the api key from there
+                or remodl.openai_key
                 or os.getenv("OPENAI_API_KEY")
             )
 
@@ -186,18 +186,18 @@ def create_fine_tuning_job(
             )
         # Azure OpenAI
         elif custom_llm_provider == "azure":
-            api_base = optional_params.api_base or litellm.api_base or get_secret_str("AZURE_API_BASE")  # type: ignore
+            api_base = optional_params.api_base or remodl.api_base or get_secret_str("AZURE_API_BASE")  # type: ignore
 
             api_version = (
                 optional_params.api_version
-                or litellm.api_version
+                or remodl.api_version
                 or get_secret_str("AZURE_API_VERSION")
             )  # type: ignore
 
             api_key = (
                 optional_params.api_key
-                or litellm.api_key
-                or litellm.azure_key
+                or remodl.api_key
+                or remodl.azure_key
                 or get_secret_str("AZURE_OPENAI_API_KEY")
                 or get_secret_str("AZURE_API_KEY")
             )  # type: ignore
@@ -235,12 +235,12 @@ def create_fine_tuning_job(
             api_base = optional_params.api_base or ""
             vertex_ai_project = (
                 optional_params.vertex_project
-                or litellm.vertex_project
+                or remodl.vertex_project
                 or get_secret_str("VERTEXAI_PROJECT")
             )
             vertex_ai_location = (
                 optional_params.vertex_location
-                or litellm.vertex_location
+                or remodl.vertex_location
                 or get_secret_str("VERTEXAI_LOCATION")
             )
             vertex_credentials = optional_params.vertex_credentials or get_secret_str(
@@ -267,7 +267,7 @@ def create_fine_tuning_job(
                 original_hyperparameters=hyperparameters,
             )
         else:
-            raise litellm.exceptions.BadRequestError(
+            raise remodl.exceptions.BadRequestError(
                 message="LiteLLM doesn't support {} for 'create_batch'. Only 'openai' is supported.".format(
                     custom_llm_provider
                 ),
@@ -276,7 +276,7 @@ def create_fine_tuning_job(
                 response=httpx.Response(
                     status_code=400,
                     content="Unsupported provider",
-                    request=httpx.Request(method="create_thread", url="https://github.com/BerriAI/litellm"),  # type: ignore
+                    request=httpx.Request(method="create_thread", url="https://github.com/BerriAI/remodl"),  # type: ignore
                 ),
             )
         return response
@@ -362,22 +362,22 @@ def cancel_fine_tuning_job(
             # for deepinfra/perplexity/anyscale/groq we check in get_llm_provider and pass in the api base from there
             api_base = (
                 optional_params.api_base
-                or litellm.api_base
+                or remodl.api_base
                 or os.getenv("OPENAI_BASE_URL")
                 or os.getenv("OPENAI_API_BASE")
                 or "https://api.openai.com/v1"
             )
             organization = (
                 optional_params.organization
-                or litellm.organization
+                or remodl.organization
                 or os.getenv("OPENAI_ORGANIZATION", None)
                 or None  # default - https://github.com/openai/openai-python/blob/284c1799070c723c6a553337134148a7ab088dd8/openai/util.py#L105
             )
             # set API KEY
             api_key = (
                 optional_params.api_key
-                or litellm.api_key  # for deepinfra/perplexity/anyscale we check in get_llm_provider and pass in the api key from there
-                or litellm.openai_key
+                or remodl.api_key  # for deepinfra/perplexity/anyscale we check in get_llm_provider and pass in the api key from there
+                or remodl.openai_key
                 or os.getenv("OPENAI_API_KEY")
             )
 
@@ -394,18 +394,18 @@ def cancel_fine_tuning_job(
             )
         # Azure OpenAI
         elif custom_llm_provider == "azure":
-            api_base = optional_params.api_base or litellm.api_base or get_secret("AZURE_API_BASE")  # type: ignore
+            api_base = optional_params.api_base or remodl.api_base or get_secret("AZURE_API_BASE")  # type: ignore
 
             api_version = (
                 optional_params.api_version
-                or litellm.api_version
+                or remodl.api_version
                 or get_secret_str("AZURE_API_VERSION")
             )  # type: ignore
 
             api_key = (
                 optional_params.api_key
-                or litellm.api_key
-                or litellm.azure_key
+                or remodl.api_key
+                or remodl.azure_key
                 or get_secret_str("AZURE_OPENAI_API_KEY")
                 or get_secret_str("AZURE_API_KEY")
             )  # type: ignore
@@ -427,7 +427,7 @@ def cancel_fine_tuning_job(
                 organization=optional_params.organization,
             )
         else:
-            raise litellm.exceptions.BadRequestError(
+            raise remodl.exceptions.BadRequestError(
                 message="LiteLLM doesn't support {} for 'create_batch'. Only 'openai' is supported.".format(
                     custom_llm_provider
                 ),
@@ -436,7 +436,7 @@ def cancel_fine_tuning_job(
                 response=httpx.Response(
                     status_code=400,
                     content="Unsupported provider",
-                    request=httpx.Request(method="create_thread", url="https://github.com/BerriAI/litellm"),  # type: ignore
+                    request=httpx.Request(method="create_thread", url="https://github.com/BerriAI/remodl"),  # type: ignore
                 ),
             )
         return response
@@ -524,22 +524,22 @@ def list_fine_tuning_jobs(
             # for deepinfra/perplexity/anyscale/groq we check in get_llm_provider and pass in the api base from there
             api_base = (
                 optional_params.api_base
-                or litellm.api_base
+                or remodl.api_base
                 or os.getenv("OPENAI_BASE_URL")
                 or os.getenv("OPENAI_API_BASE")
                 or "https://api.openai.com/v1"
             )
             organization = (
                 optional_params.organization
-                or litellm.organization
+                or remodl.organization
                 or os.getenv("OPENAI_ORGANIZATION", None)
                 or None  # default - https://github.com/openai/openai-python/blob/284c1799070c723c6a553337134148a7ab088dd8/openai/util.py#L105
             )
             # set API KEY
             api_key = (
                 optional_params.api_key
-                or litellm.api_key  # for deepinfra/perplexity/anyscale we check in get_llm_provider and pass in the api key from there
-                or litellm.openai_key
+                or remodl.api_key  # for deepinfra/perplexity/anyscale we check in get_llm_provider and pass in the api key from there
+                or remodl.openai_key
                 or os.getenv("OPENAI_API_KEY")
             )
 
@@ -557,18 +557,18 @@ def list_fine_tuning_jobs(
             )
         # Azure OpenAI
         elif custom_llm_provider == "azure":
-            api_base = optional_params.api_base or litellm.api_base or get_secret_str("AZURE_API_BASE")  # type: ignore
+            api_base = optional_params.api_base or remodl.api_base or get_secret_str("AZURE_API_BASE")  # type: ignore
 
             api_version = (
                 optional_params.api_version
-                or litellm.api_version
+                or remodl.api_version
                 or get_secret_str("AZURE_API_VERSION")
             )  # type: ignore
 
             api_key = (
                 optional_params.api_key
-                or litellm.api_key
-                or litellm.azure_key
+                or remodl.api_key
+                or remodl.azure_key
                 or get_secret_str("AZURE_OPENAI_API_KEY")
                 or get_secret_str("AZURE_API_KEY")
             )  # type: ignore
@@ -591,7 +591,7 @@ def list_fine_tuning_jobs(
                 organization=optional_params.organization,
             )
         else:
-            raise litellm.exceptions.BadRequestError(
+            raise remodl.exceptions.BadRequestError(
                 message="LiteLLM doesn't support {} for 'create_batch'. Only 'openai' is supported.".format(
                     custom_llm_provider
                 ),
@@ -600,7 +600,7 @@ def list_fine_tuning_jobs(
                 response=httpx.Response(
                     status_code=400,
                     content="Unsupported provider",
-                    request=httpx.Request(method="create_thread", url="https://github.com/BerriAI/litellm"),  # type: ignore
+                    request=httpx.Request(method="create_thread", url="https://github.com/BerriAI/remodl"),  # type: ignore
                 ),
             )
         return response
@@ -681,21 +681,21 @@ def retrieve_fine_tuning_job(
         if custom_llm_provider == "openai":
             api_base = (
                 optional_params.api_base
-                or litellm.api_base
+                or remodl.api_base
                 or os.getenv("OPENAI_BASE_URL")
                 or os.getenv("OPENAI_API_BASE")
                 or "https://api.openai.com/v1"
             )
             organization = (
                 optional_params.organization
-                or litellm.organization
+                or remodl.organization
                 or os.getenv("OPENAI_ORGANIZATION", None)
                 or None
             )
             api_key = (
                 optional_params.api_key
-                or litellm.api_key
-                or litellm.openai_key
+                or remodl.api_key
+                or remodl.openai_key
                 or os.getenv("OPENAI_API_KEY")
             )
 
@@ -712,18 +712,18 @@ def retrieve_fine_tuning_job(
             )
         # Azure OpenAI
         elif custom_llm_provider == "azure":
-            api_base = optional_params.api_base or litellm.api_base or get_secret_str("AZURE_API_BASE")  # type: ignore
+            api_base = optional_params.api_base or remodl.api_base or get_secret_str("AZURE_API_BASE")  # type: ignore
 
             api_version = (
                 optional_params.api_version
-                or litellm.api_version
+                or remodl.api_version
                 or get_secret_str("AZURE_API_VERSION")
             )  # type: ignore
 
             api_key = (
                 optional_params.api_key
-                or litellm.api_key
-                or litellm.azure_key
+                or remodl.api_key
+                or remodl.azure_key
                 or get_secret_str("AZURE_OPENAI_API_KEY")
                 or get_secret_str("AZURE_API_KEY")
             )  # type: ignore
@@ -745,7 +745,7 @@ def retrieve_fine_tuning_job(
                 organization=optional_params.organization,
             )
         else:
-            raise litellm.exceptions.BadRequestError(
+            raise remodl.exceptions.BadRequestError(
                 message="LiteLLM doesn't support {} for 'retrieve_fine_tuning_job'. Only 'openai' and 'azure' are supported.".format(
                     custom_llm_provider
                 ),
@@ -754,7 +754,7 @@ def retrieve_fine_tuning_job(
                 response=httpx.Response(
                     status_code=400,
                     content="Unsupported provider",
-                    request=httpx.Request(method="retrieve_fine_tuning_job", url="https://github.com/BerriAI/litellm"),  # type: ignore
+                    request=httpx.Request(method="retrieve_fine_tuning_job", url="https://github.com/BerriAI/remodl"),  # type: ignore
                 ),
             )
         return response

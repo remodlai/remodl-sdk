@@ -10,13 +10,13 @@ from typing import Any, List, Optional
 
 import httpx
 
-from litellm.llms.base_llm.chat.transformation import BaseConfig
-from litellm.llms.bedrock.chat.invoke_transformations.base_invoke_transformation import (
+from remodl.llms.base_llm.chat.transformation import BaseConfig
+from remodl.llms.bedrock.chat.invoke_transformations.base_invoke_transformation import (
     AmazonInvokeConfig,
     LiteLLMLoggingObj,
 )
-from litellm.types.llms.openai import AllMessageValues
-from litellm.types.utils import ModelResponse
+from remodl.types.llms.openai import AllMessageValues
+from remodl.types.utils import ModelResponse
 
 
 class AmazonQwen3Config(AmazonInvokeConfig, BaseConfig):
@@ -83,7 +83,7 @@ class AmazonQwen3Config(AmazonInvokeConfig, BaseConfig):
         model: str,
         messages: List[AllMessageValues],
         optional_params: dict,
-        litellm_params: dict,
+        remodl_params: dict,
         headers: dict,
     ) -> dict:
         """
@@ -164,7 +164,7 @@ class AmazonQwen3Config(AmazonInvokeConfig, BaseConfig):
         request_data: dict,
         messages: List[AllMessageValues],
         optional_params: dict,
-        litellm_params: dict,
+        remodl_params: dict,
         encoding: Any,
         api_key: Optional[str] = None,
         json_mode: Optional[bool] = None,

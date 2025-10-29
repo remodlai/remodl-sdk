@@ -8,10 +8,10 @@ from typing import Any, Dict
 
 from fastapi import HTTPException
 
-import litellm
-from litellm._logging import verbose_logger
-from litellm.llms.bedrock.count_tokens.transformation import BedrockCountTokensConfig
-from litellm.llms.custom_httpx.http_handler import get_async_httpx_client
+import remodl
+from remodl._logging import verbose_logger
+from remodl.llms.bedrock.count_tokens.transformation import BedrockCountTokensConfig
+from remodl.llms.custom_httpx.http_handler import get_async_httpx_client
 
 
 class BedrockCountTokensHandler(BedrockCountTokensConfig):
@@ -24,7 +24,7 @@ class BedrockCountTokensHandler(BedrockCountTokensConfig):
     async def handle_count_tokens_request(
         self,
         request_data: Dict[str, Any],
-        litellm_params: Dict[str, Any],
+        remodl_params: Dict[str, Any],
         resolved_model: str,
     ) -> Dict[str, Any]:
         """
@@ -32,7 +32,7 @@ class BedrockCountTokensHandler(BedrockCountTokensConfig):
 
         Args:
             request_data: The incoming request payload
-            litellm_params: LiteLLM configuration parameters
+            remodl_params: LiteLLM configuration parameters
             resolved_model: The actual model ID resolved from router
 
         Returns:
@@ -48,7 +48,7 @@ class BedrockCountTokensHandler(BedrockCountTokensConfig):
 
             # Get AWS region using existing LiteLLM function
             aws_region_name = self._get_aws_region_name(
-                optional_params=litellm_params,
+                optional_params=remodl_params,
                 model=resolved_model,
                 model_id=None,
             )
@@ -74,13 +74,13 @@ class BedrockCountTokensHandler(BedrockCountTokensConfig):
             signed_headers, signed_body = self._sign_request(
                 service_name="bedrock",
                 headers=headers,
-                optional_params=litellm_params,
+                optional_params=remodl_params,
                 request_data=bedrock_request,
                 api_base=endpoint_url,
                 model=resolved_model,
             )
 
-            async_client = get_async_httpx_client(llm_provider=litellm.LlmProviders.BEDROCK)
+            async_client = get_async_httpx_client(llm_provider=remodl.LlmProviders.BEDROCK)
 
             response = await async_client.post(
                     endpoint_url,

@@ -3,10 +3,10 @@ from typing import Any, Dict, List, Optional
 
 from pydantic import BaseModel, Field
 
-import litellm
-from litellm._logging import verbose_logger
-from litellm.integrations.custom_logger import CustomLogger
-from litellm.llms.custom_httpx.http_handler import (
+import remodl
+from remodl._logging import verbose_logger
+from remodl.integrations.custom_logger import CustomLogger
+from remodl.llms.custom_httpx.http_handler import (
     get_async_httpx_client,
     httpxSpecialProvider,
 )
@@ -52,7 +52,7 @@ class GalileoObserve(CustomLogger):
             "accept": "application/json",
             "Content-Type": "application/x-www-form-urlencoded",
         }
-        galileo_login_response = litellm.module_level_client.post(
+        galileo_login_response = remodl.module_level_client.post(
             url=f"{self.base_url}/login",
             headers=headers,
             data={
@@ -73,19 +73,19 @@ class GalileoObserve(CustomLogger):
         output = None
         if response_obj is not None and (
             kwargs.get("call_type", None) == "embedding"
-            or isinstance(response_obj, litellm.EmbeddingResponse)
+            or isinstance(response_obj, remodl.EmbeddingResponse)
         ):
             output = None
         elif response_obj is not None and isinstance(
-            response_obj, litellm.ModelResponse
+            response_obj, remodl.ModelResponse
         ):
             output = response_obj["choices"][0]["message"].json()
         elif response_obj is not None and isinstance(
-            response_obj, litellm.TextCompletionResponse
+            response_obj, remodl.TextCompletionResponse
         ):
             output = response_obj.choices[0].text
         elif response_obj is not None and isinstance(
-            response_obj, litellm.ImageResponse
+            response_obj, remodl.ImageResponse
         ):
             output = response_obj["data"]
 
@@ -97,8 +97,8 @@ class GalileoObserve(CustomLogger):
         verbose_logger.debug("On Async Success")
 
         _latency_ms = int((end_time - start_time).total_seconds() * 1000)
-        _call_type = kwargs.get("call_type", "litellm")
-        input_text = litellm.utils.get_formatted_prompt(
+        _call_type = kwargs.get("call_type", "remodl")
+        input_text = remodl.utils.get_formatted_prompt(
             data=kwargs, call_type=_call_type
         )
 

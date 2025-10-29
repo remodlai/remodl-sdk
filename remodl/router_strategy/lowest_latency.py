@@ -4,13 +4,13 @@ import random
 from datetime import datetime, timedelta
 from typing import TYPE_CHECKING, Any, Dict, List, Optional, Union
 
-import litellm
-from litellm import ModelResponse, token_counter, verbose_logger
-from litellm.caching.caching import DualCache
-from litellm.integrations.custom_logger import CustomLogger
-from litellm.litellm_core_utils.core_helpers import safe_divide_seconds
-from litellm.litellm_core_utils.core_helpers import _get_parent_otel_span_from_kwargs
-from litellm.types.utils import LiteLLMPydanticObjectBase
+import remodl
+from remodl import ModelResponse, token_counter, verbose_logger
+from remodl.caching.caching import DualCache
+from remodl.integrations.custom_logger import CustomLogger
+from remodl.remodl_core_utils.core_helpers import safe_divide_seconds
+from remodl.remodl_core_utils.core_helpers import _get_parent_otel_span_from_kwargs
+from remodl.types.utils import LiteLLMPydanticObjectBase
 
 if TYPE_CHECKING:
     from opentelemetry.trace import Span as _Span
@@ -45,14 +45,14 @@ class LowestLatencyLoggingHandler(CustomLogger):
             Update latency usage on success
             """
             metadata_field = self._select_metadata_field(kwargs)
-            if kwargs["litellm_params"].get(metadata_field) is None:
+            if kwargs["remodl_params"].get(metadata_field) is None:
                 pass
             else:
-                model_group = kwargs["litellm_params"][metadata_field].get(
+                model_group = kwargs["remodl_params"][metadata_field].get(
                     "model_group", None
                 )
 
-                id = kwargs["litellm_params"].get("model_info", {}).get("id", None)
+                id = kwargs["remodl_params"].get("model_info", {}).get("id", None)
                 if model_group is None or id is None:
                     return
                 elif isinstance(id, int):
@@ -183,7 +183,7 @@ class LowestLatencyLoggingHandler(CustomLogger):
                     self.logged_success += 1
         except Exception as e:
             verbose_logger.exception(
-                "litellm.proxy.hooks.prompt_injection_detection.py::async_pre_call_hook(): Exception occured - {}".format(
+                "remodl.proxy.hooks.prompt_injection_detection.py::async_pre_call_hook(): Exception occured - {}".format(
                     str(e)
                 )
             )
@@ -196,15 +196,15 @@ class LowestLatencyLoggingHandler(CustomLogger):
         try:
             metadata_field = self._select_metadata_field(kwargs)
             _exception = kwargs.get("exception", None)
-            if isinstance(_exception, litellm.Timeout):
-                if kwargs["litellm_params"].get(metadata_field) is None:
+            if isinstance(_exception, remodl.Timeout):
+                if kwargs["remodl_params"].get(metadata_field) is None:
                     pass
                 else:
-                    model_group = kwargs["litellm_params"][metadata_field].get(
+                    model_group = kwargs["remodl_params"][metadata_field].get(
                         "model_group", None
                     )
 
-                    id = kwargs["litellm_params"].get("model_info", {}).get("id", None)
+                    id = kwargs["remodl_params"].get("model_info", {}).get("id", None)
                     if model_group is None or id is None:
                         return
                     elif isinstance(id, int):
@@ -252,7 +252,7 @@ class LowestLatencyLoggingHandler(CustomLogger):
                 return
         except Exception as e:
             verbose_logger.exception(
-                "litellm.proxy.hooks.prompt_injection_detection.py::async_pre_call_hook(): Exception occured - {}".format(
+                "remodl.proxy.hooks.prompt_injection_detection.py::async_pre_call_hook(): Exception occured - {}".format(
                     str(e)
                 )
             )
@@ -266,14 +266,14 @@ class LowestLatencyLoggingHandler(CustomLogger):
             Update latency usage on success
             """
             metadata_field = self._select_metadata_field(kwargs)
-            if kwargs["litellm_params"].get(metadata_field) is None:
+            if kwargs["remodl_params"].get(metadata_field) is None:
                 pass
             else:
-                model_group = kwargs["litellm_params"][metadata_field].get(
+                model_group = kwargs["remodl_params"][metadata_field].get(
                     "model_group", None
                 )
 
-                id = kwargs["litellm_params"].get("model_info", {}).get("id", None)
+                id = kwargs["remodl_params"].get("model_info", {}).get("id", None)
                 if model_group is None or id is None:
                     return
                 elif isinstance(id, int):
@@ -405,7 +405,7 @@ class LowestLatencyLoggingHandler(CustomLogger):
                     self.logged_success += 1
         except Exception as e:
             verbose_logger.exception(
-                "litellm.router_strategy.lowest_latency.py::async_log_success_event(): Exception occured - {}".format(
+                "remodl.router_strategy.lowest_latency.py::async_log_success_event(): Exception occured - {}".format(
                     str(e)
                 )
             )
@@ -472,14 +472,14 @@ class LowestLatencyLoggingHandler(CustomLogger):
 
             _deployment_tpm = (
                 _deployment.get("tpm", None)
-                or _deployment.get("litellm_params", {}).get("tpm", None)
+                or _deployment.get("remodl_params", {}).get("tpm", None)
                 or _deployment.get("model_info", {}).get("tpm", None)
                 or float("inf")
             )
 
             _deployment_rpm = (
                 _deployment.get("rpm", None)
-                or _deployment.get("litellm_params", {}).get("rpm", None)
+                or _deployment.get("remodl_params", {}).get("rpm", None)
                 or _deployment.get("model_info", {}).get("rpm", None)
                 or float("inf")
             )
@@ -510,7 +510,7 @@ class LowestLatencyLoggingHandler(CustomLogger):
             # -------------- #
             # We use _latency_per_deployment to log to langfuse, slack - this is not used to make a decision on routing
             # this helps a user to debug why the router picked a specfic deployment      #
-            _deployment_api_base = _deployment.get("litellm_params", {}).get(
+            _deployment_api_base = _deployment.get("remodl_params", {}).get(
                 "api_base", ""
             )
             if _deployment_api_base is not None:

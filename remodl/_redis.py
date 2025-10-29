@@ -1,7 +1,7 @@
 # +-----------------------------------------------+
 # |                                               |
 # |           Give Feedback / Get Help            |
-# | https://github.com/BerriAI/litellm/issues/new |
+# | https://github.com/BerriAI/remodl/issues/new |
 # |                                               |
 # +-----------------------------------------------+
 #
@@ -17,9 +17,9 @@ from typing import Callable, List, Optional, Union
 import redis  # type: ignore
 import redis.asyncio as async_redis  # type: ignore
 
-from litellm import get_secret, get_secret_str
-from litellm.constants import REDIS_CONNECTION_POOL_TIMEOUT, REDIS_SOCKET_TIMEOUT
-from litellm.litellm_core_utils.sensitive_data_masker import SensitiveDataMasker
+from remodl import get_secret, get_secret_str
+from remodl.constants import REDIS_CONNECTION_POOL_TIMEOUT, REDIS_SOCKET_TIMEOUT
+from remodl.remodl_core_utils.sensitive_data_masker import SensitiveDataMasker
 
 from ._logging import verbose_logger
 
@@ -275,7 +275,7 @@ def _get_redis_client_logic(**env_overrides):
     elif "host" not in redis_kwargs or redis_kwargs["host"] is None:
         raise ValueError("Either 'host' or 'url' must be specified for redis.")
 
-    # litellm.print_verbose(f"redis_kwargs: {redis_kwargs}")
+    # remodl.print_verbose(f"redis_kwargs: {redis_kwargs}")
     return redis_kwargs
 
 
@@ -405,7 +405,7 @@ def get_redis_async_client(
 
         # Handle GCP IAM authentication for async clusters
         redis_connect_func = cluster_kwargs.pop("redis_connect_func", None)
-        from litellm import get_secret_str
+        from remodl import get_secret_str
 
         # Get GCP service account - first try from redis_connect_func, then from environment
         gcp_service_account = None

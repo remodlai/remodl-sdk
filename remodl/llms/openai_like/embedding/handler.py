@@ -7,13 +7,13 @@ from typing import Optional
 
 import httpx
 
-import litellm
-from litellm.llms.custom_httpx.http_handler import (
+import remodl
+from remodl.llms.custom_httpx.http_handler import (
     AsyncHTTPHandler,
     HTTPHandler,
     get_async_httpx_client,
 )
-from litellm.types.utils import EmbeddingResponse
+from remodl.types.utils import EmbeddingResponse
 
 from ..common_utils import OpenAILikeBase, OpenAILikeError
 
@@ -38,7 +38,7 @@ class OpenAILikeEmbeddingHandler(OpenAILikeBase):
         try:
             if client is None or not isinstance(client, AsyncHTTPHandler):
                 async_client = get_async_httpx_client(
-                    llm_provider=litellm.LlmProviders.OPENAI,
+                    llm_provider=remodl.LlmProviders.OPENAI,
                     params={"timeout": timeout},
                 )
             else:
@@ -150,4 +150,4 @@ class OpenAILikeEmbeddingHandler(OpenAILikeBase):
             original_response=response_json,
         )
 
-        return litellm.EmbeddingResponse(**response_json)
+        return remodl.EmbeddingResponse(**response_json)

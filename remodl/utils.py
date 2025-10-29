@@ -1,7 +1,7 @@
 # +-----------------------------------------------+
 # |                                               |
 # |           Give Feedback / Get Help            |
-# | https://github.com/BerriAI/litellm/issues/new |
+# | https://github.com/BerriAI/remodl/issues/new |
 # |                                               |
 # +-----------------------------------------------+
 #
@@ -27,7 +27,7 @@ import struct
 import subprocess
 
 # What is this?
-## Generic utils.py file. Problem-specific utils (e.g. 'cost calculation), should all be in `litellm_core_utils/`.
+## Generic utils.py file. Problem-specific utils (e.g. 'cost calculation), should all be in `remodl_core_utils/`.
 import sys
 import textwrap
 import threading
@@ -54,18 +54,18 @@ from pydantic import BaseModel
 from tiktoken import Encoding
 from tokenizers import Tokenizer
 
-import litellm
-import litellm._service_logger  # for storing API inputs, outputs, and metadata
-import litellm.litellm_core_utils
-import litellm.litellm_core_utils.audio_utils.utils
-import litellm.litellm_core_utils.json_validation_rule
-import litellm.llms
-import litellm.llms.gemini
-from litellm._uuid import uuid
-from litellm.caching._internal_lru_cache import lru_cache_wrapper
-from litellm.caching.caching import DualCache
-from litellm.caching.caching_handler import CachingHandlerResponse, LLMCachingHandler
-from litellm.constants import (
+import remodl
+import remodl._service_logger  # for storing API inputs, outputs, and metadata
+import remodl.remodl_core_utils
+import remodl.remodl_core_utils.audio_utils.utils
+import remodl.remodl_core_utils.json_validation_rule
+import remodl.llms
+import remodl.llms.gemini
+from remodl._uuid import uuid
+from remodl.caching._internal_lru_cache import lru_cache_wrapper
+from remodl.caching.caching import DualCache
+from remodl.caching.caching_handler import CachingHandlerResponse, LLMCachingHandler
+from remodl.constants import (
     DEFAULT_CHAT_COMPLETION_PARAM_VALUES,
     DEFAULT_EMBEDDING_PARAM_VALUES,
     DEFAULT_MAX_LRU_CACHE_SIZE,
@@ -79,89 +79,89 @@ from litellm.constants import (
     OPENAI_EMBEDDING_PARAMS,
     TOOL_CHOICE_OBJECT_TOKEN_COUNT,
 )
-from litellm.integrations.custom_guardrail import CustomGuardrail
-from litellm.integrations.custom_logger import CustomLogger
-from litellm.integrations.vector_store_integrations.base_vector_store import (
+from remodl.integrations.custom_guardrail import CustomGuardrail
+from remodl.integrations.custom_logger import CustomLogger
+from remodl.integrations.vector_store_integrations.base_vector_store import (
     BaseVectorStore,
 )
 
 # Import cached imports utilities
-from litellm.litellm_core_utils.cached_imports import (
+from remodl.remodl_core_utils.cached_imports import (
     get_coroutine_checker,
-    get_litellm_logging_class,
+    get_remodl_logging_class,
     get_set_callbacks,
 )
-from litellm.litellm_core_utils.core_helpers import (
-    get_litellm_metadata_from_kwargs,
+from remodl.remodl_core_utils.core_helpers import (
+    get_remodl_metadata_from_kwargs,
     map_finish_reason,
     process_response_headers,
 )
-from litellm.litellm_core_utils.credential_accessor import CredentialAccessor
-from litellm.litellm_core_utils.default_encoding import encoding
-from litellm.litellm_core_utils.exception_mapping_utils import (
+from remodl.remodl_core_utils.credential_accessor import CredentialAccessor
+from remodl.remodl_core_utils.default_encoding import encoding
+from remodl.remodl_core_utils.exception_mapping_utils import (
     _get_response_headers,
     exception_type,
     get_error_message,
 )
-from litellm.litellm_core_utils.get_litellm_params import (
-    _get_base_model_from_litellm_call_metadata,
-    get_litellm_params,
+from remodl.remodl_core_utils.get_remodl_params import (
+    _get_base_model_from_remodl_call_metadata,
+    get_remodl_params,
 )
-from litellm.litellm_core_utils.get_llm_provider_logic import (
+from remodl.remodl_core_utils.get_llm_provider_logic import (
     _is_non_openai_azure_model,
     get_llm_provider,
 )
-from litellm.litellm_core_utils.get_supported_openai_params import (
+from remodl.remodl_core_utils.get_supported_openai_params import (
     get_supported_openai_params,
 )
-from litellm.litellm_core_utils.llm_request_utils import _ensure_extra_body_is_safe
-from litellm.litellm_core_utils.llm_response_utils.convert_dict_to_response import (
+from remodl.remodl_core_utils.llm_request_utils import _ensure_extra_body_is_safe
+from remodl.remodl_core_utils.llm_response_utils.convert_dict_to_response import (
     LiteLLMResponseObjectHandler,
     _handle_invalid_parallel_tool_calls,
     convert_to_model_response_object,
     convert_to_streaming_response,
     convert_to_streaming_response_async,
 )
-from litellm.litellm_core_utils.llm_response_utils.get_api_base import get_api_base
-from litellm.litellm_core_utils.llm_response_utils.get_formatted_prompt import (
+from remodl.remodl_core_utils.llm_response_utils.get_api_base import get_api_base
+from remodl.remodl_core_utils.llm_response_utils.get_formatted_prompt import (
     get_formatted_prompt,
 )
-from litellm.litellm_core_utils.llm_response_utils.get_headers import (
+from remodl.remodl_core_utils.llm_response_utils.get_headers import (
     get_response_headers,
 )
-from litellm.litellm_core_utils.llm_response_utils.response_metadata import (
+from remodl.remodl_core_utils.llm_response_utils.response_metadata import (
     ResponseMetadata,
 )
-from litellm.litellm_core_utils.prompt_templates.common_utils import (
+from remodl.remodl_core_utils.prompt_templates.common_utils import (
     _parse_content_for_reasoning,
 )
-from litellm.litellm_core_utils.redact_messages import (
+from remodl.remodl_core_utils.redact_messages import (
     LiteLLMLoggingObject,
     redact_message_input_output_from_logging,
 )
-from litellm.litellm_core_utils.rules import Rules
-from litellm.litellm_core_utils.streaming_handler import CustomStreamWrapper
-from litellm.litellm_core_utils.token_counter import get_modified_max_tokens
-from litellm.llms.base_llm.google_genai.transformation import (
+from remodl.remodl_core_utils.rules import Rules
+from remodl.remodl_core_utils.streaming_handler import CustomStreamWrapper
+from remodl.remodl_core_utils.token_counter import get_modified_max_tokens
+from remodl.llms.base_llm.google_genai.transformation import (
     BaseGoogleGenAIGenerateContentConfig,
 )
-from litellm.llms.base_llm.ocr.transformation import BaseOCRConfig
-from litellm.llms.base_llm.search.transformation import BaseSearchConfig
-from litellm.llms.base_llm.text_to_speech.transformation import BaseTextToSpeechConfig
-from litellm.llms.bedrock.common_utils import BedrockModelInfo
-from litellm.llms.cohere.common_utils import CohereModelInfo
-from litellm.llms.custom_httpx.http_handler import AsyncHTTPHandler, HTTPHandler
-from litellm.llms.mistral.ocr.transformation import MistralOCRConfig
-from litellm.router_utils.get_retry_from_policy import (
+from remodl.llms.base_llm.ocr.transformation import BaseOCRConfig
+from remodl.llms.base_llm.search.transformation import BaseSearchConfig
+from remodl.llms.base_llm.text_to_speech.transformation import BaseTextToSpeechConfig
+from remodl.llms.bedrock.common_utils import BedrockModelInfo
+from remodl.llms.cohere.common_utils import CohereModelInfo
+from remodl.llms.custom_httpx.http_handler import AsyncHTTPHandler, HTTPHandler
+from remodl.llms.mistral.ocr.transformation import MistralOCRConfig
+from remodl.router_utils.get_retry_from_policy import (
     get_num_retries_from_retry_policy,
     reset_retry_policy,
 )
-from litellm.secret_managers.main import get_secret
-from litellm.types.llms.anthropic import (
+from remodl.secret_managers.main import get_secret
+from remodl.types.llms.anthropic import (
     ANTHROPIC_API_ONLY_HEADERS,
     AnthropicThinkingParam,
 )
-from litellm.types.llms.openai import (
+from remodl.types.llms.openai import (
     AllMessageValues,
     AllPromptValues,
     ChatCompletionAssistantToolCall,
@@ -171,9 +171,9 @@ from litellm.types.llms.openai import (
     OpenAITextCompletionUserMessage,
     OpenAIWebSearchOptions,
 )
-from litellm.types.rerank import RerankResponse
-from litellm.types.utils import FileTypes  # type: ignore
-from litellm.types.utils import (
+from remodl.types.rerank import RerankResponse
+from remodl.types.utils import FileTypes  # type: ignore
+from remodl.types.utils import (
     OPENAI_RESPONSE_HEADERS,
     CallTypes,
     ChatCompletionDeltaToolCall,
@@ -205,18 +205,18 @@ from litellm.types.utils import (
     TextCompletionResponse,
     TranscriptionResponse,
     Usage,
-    all_litellm_params,
+    all_remodl_params,
 )
 
 try:
     # Python 3.9+
-    with resources.files("litellm.litellm_core_utils.tokenizers").joinpath(
+    with resources.files("remodl.remodl_core_utils.tokenizers").joinpath(
         "anthropic_tokenizer.json"
     ).open("r", encoding="utf-8") as f:
         json_data = json.load(f)
 except (ImportError, AttributeError, TypeError):
     with resources.open_text(
-        "litellm.litellm_core_utils.tokenizers", "anthropic_tokenizer.json"
+        "remodl.remodl_core_utils.tokenizers", "anthropic_tokenizer.json"
     ) as f:
         json_data = json.load(f)
 
@@ -241,39 +241,39 @@ from typing import (
 
 from openai import OpenAIError as OriginalError
 
-from litellm.litellm_core_utils.llm_response_utils.response_metadata import (
+from remodl.remodl_core_utils.llm_response_utils.response_metadata import (
     update_response_metadata,
 )
-from litellm.litellm_core_utils.thread_pool_executor import executor
-from litellm.litellm_core_utils.token_counter import token_counter as token_counter_new
-from litellm.llms.base_llm.anthropic_messages.transformation import (
+from remodl.remodl_core_utils.thread_pool_executor import executor
+from remodl.remodl_core_utils.token_counter import token_counter as token_counter_new
+from remodl.llms.base_llm.anthropic_messages.transformation import (
     BaseAnthropicMessagesConfig,
 )
-from litellm.llms.base_llm.audio_transcription.transformation import (
+from remodl.llms.base_llm.audio_transcription.transformation import (
     BaseAudioTranscriptionConfig,
 )
-from litellm.llms.base_llm.base_utils import (
+from remodl.llms.base_llm.base_utils import (
     BaseLLMModelInfo,
     type_to_response_format_param,
 )
-from litellm.llms.base_llm.batches.transformation import BaseBatchesConfig
-from litellm.llms.base_llm.chat.transformation import BaseConfig
-from litellm.llms.base_llm.completion.transformation import BaseTextCompletionConfig
-from litellm.llms.base_llm.embedding.transformation import BaseEmbeddingConfig
-from litellm.llms.base_llm.files.transformation import BaseFilesConfig
-from litellm.llms.base_llm.image_edit.transformation import BaseImageEditConfig
-from litellm.llms.base_llm.image_generation.transformation import (
+from remodl.llms.base_llm.batches.transformation import BaseBatchesConfig
+from remodl.llms.base_llm.chat.transformation import BaseConfig
+from remodl.llms.base_llm.completion.transformation import BaseTextCompletionConfig
+from remodl.llms.base_llm.embedding.transformation import BaseEmbeddingConfig
+from remodl.llms.base_llm.files.transformation import BaseFilesConfig
+from remodl.llms.base_llm.image_edit.transformation import BaseImageEditConfig
+from remodl.llms.base_llm.image_generation.transformation import (
     BaseImageGenerationConfig,
 )
-from litellm.llms.base_llm.image_variations.transformation import (
+from remodl.llms.base_llm.image_variations.transformation import (
     BaseImageVariationConfig,
 )
-from litellm.llms.base_llm.passthrough.transformation import BasePassthroughConfig
-from litellm.llms.base_llm.realtime.transformation import BaseRealtimeConfig
-from litellm.llms.base_llm.rerank.transformation import BaseRerankConfig
-from litellm.llms.base_llm.responses.transformation import BaseResponsesAPIConfig
-from litellm.llms.base_llm.vector_store.transformation import BaseVectorStoreConfig
-from litellm.llms.base_llm.videos.transformation import BaseVideoConfig
+from remodl.llms.base_llm.passthrough.transformation import BasePassthroughConfig
+from remodl.llms.base_llm.realtime.transformation import BaseRealtimeConfig
+from remodl.llms.base_llm.rerank.transformation import BaseRerankConfig
+from remodl.llms.base_llm.responses.transformation import BaseResponsesAPIConfig
+from remodl.llms.base_llm.vector_store.transformation import BaseVectorStoreConfig
+from remodl.llms.base_llm.videos.transformation import BaseVideoConfig
 
 from ._logging import _is_debugging_on, verbose_logger
 from .caching.caching import (
@@ -310,7 +310,7 @@ from .types.llms.openai import (
 from .types.router import LiteLLM_Params
 
 if TYPE_CHECKING:
-    from litellm import MockException
+    from remodl import MockException
 
 ####### ENVIRONMENT VARIABLES ####################
 # Adjust to your specific application needs / system capabilities.
@@ -347,7 +347,7 @@ last_fetched_at_keys = None
 ######## Model Response #########################
 
 # All liteLLM Model responses will be in this format, Follows the OpenAI Format
-# https://docs.litellm.ai/docs/completion/output
+# https://docs.remodl.ai/docs/completion/output
 # {
 #   'choices': [
 #      {
@@ -378,7 +378,7 @@ def print_verbose(
             verbose_logger.info(print_statement)
         elif log_level == "ERROR":
             verbose_logger.error(print_statement)
-        if litellm.set_verbose is True and logger_only is False:
+        if remodl.set_verbose is True and logger_only is False:
             print(print_statement)  # noqa
     except Exception:
         pass
@@ -387,13 +387,13 @@ def print_verbose(
 ####### CLIENT ###################
 # make it easy to log if completion/embedding runs succeeded or failed + see what happened | Non-Blocking
 def load_custom_provider_entrypoints():
-    found_entry_points = tuple(entry_points().select(group="litellm"))  # type: ignore
+    found_entry_points = tuple(entry_points().select(group="remodl"))  # type: ignore
     for entry_point in found_entry_points:
         # types are ignored because of circular dependency issues importing CustomLLM and CustomLLMItem
         HandlerClass = entry_point.load()
         handler = HandlerClass()
         provider = {"provider": entry_point.name, "custom_handler": handler}
-        litellm.custom_provider_map.append(provider)  # type: ignore
+        remodl.custom_provider_map.append(provider)  # type: ignore
 
 
 def custom_llm_setup():
@@ -402,12 +402,12 @@ def custom_llm_setup():
     """
     load_custom_provider_entrypoints()
 
-    for custom_llm in litellm.custom_provider_map:
-        if custom_llm["provider"] not in litellm.provider_list:
-            litellm.provider_list.append(custom_llm["provider"])
+    for custom_llm in remodl.custom_provider_map:
+        if custom_llm["provider"] not in remodl.provider_list:
+            remodl.provider_list.append(custom_llm["provider"])
 
-        if custom_llm["provider"] not in litellm._custom_providers:
-            litellm._custom_providers.append(custom_llm["provider"])
+        if custom_llm["provider"] not in remodl._custom_providers:
+            remodl._custom_providers.append(custom_llm["provider"])
 
 
 def _add_custom_logger_callback_to_specific_event(
@@ -416,14 +416,14 @@ def _add_custom_logger_callback_to_specific_event(
     """
     Add a custom logger callback to the specific event
     """
-    from litellm import _custom_logger_compatible_callbacks_literal
-    from litellm.litellm_core_utils.litellm_logging import (
+    from remodl import _custom_logger_compatible_callbacks_literal
+    from remodl.remodl_core_utils.remodl_logging import (
         _init_custom_logger_compatible_class,
     )
 
-    if callback not in litellm._known_custom_logger_compatible_callbacks:
+    if callback not in remodl._known_custom_logger_compatible_callbacks:
         verbose_logger.debug(
-            f"Callback {callback} is not a valid custom logger compatible callback. Known list - {litellm._known_custom_logger_compatible_callbacks}"
+            f"Callback {callback} is not a valid custom logger compatible callback. Known list - {remodl._known_custom_logger_compatible_callbacks}"
         )
         return
 
@@ -439,18 +439,18 @@ def _add_custom_logger_callback_to_specific_event(
             and _custom_logger_class_exists_in_success_callbacks(callback_class)
             is False
         ):
-            litellm.logging_callback_manager.add_litellm_success_callback(
+            remodl.logging_callback_manager.add_remodl_success_callback(
                 callback_class
             )
-            litellm.logging_callback_manager.add_litellm_async_success_callback(
+            remodl.logging_callback_manager.add_remodl_async_success_callback(
                 callback_class
             )
-            if callback in litellm.success_callback:
-                litellm.success_callback.remove(
+            if callback in remodl.success_callback:
+                remodl.success_callback.remove(
                     callback
                 )  # remove the string from the callback list
-            if callback in litellm._async_success_callback:
-                litellm._async_success_callback.remove(
+            if callback in remodl._async_success_callback:
+                remodl._async_success_callback.remove(
                     callback
                 )  # remove the string from the callback list
         elif (
@@ -458,18 +458,18 @@ def _add_custom_logger_callback_to_specific_event(
             and _custom_logger_class_exists_in_failure_callbacks(callback_class)
             is False
         ):
-            litellm.logging_callback_manager.add_litellm_failure_callback(
+            remodl.logging_callback_manager.add_remodl_failure_callback(
                 callback_class
             )
-            litellm.logging_callback_manager.add_litellm_async_failure_callback(
+            remodl.logging_callback_manager.add_remodl_async_failure_callback(
                 callback_class
             )
-            if callback in litellm.failure_callback:
-                litellm.failure_callback.remove(
+            if callback in remodl.failure_callback:
+                remodl.failure_callback.remove(
                     callback
                 )  # remove the string from the callback list
-            if callback in litellm._async_failure_callback:
-                litellm._async_failure_callback.remove(
+            if callback in remodl._async_failure_callback:
+                remodl._async_failure_callback.remove(
                     callback
                 )  # remove the string from the callback list
 
@@ -478,15 +478,15 @@ def _custom_logger_class_exists_in_success_callbacks(
     callback_class: CustomLogger,
 ) -> bool:
     """
-    Returns True if an instance of the custom logger exists in litellm.success_callback or litellm._async_success_callback
+    Returns True if an instance of the custom logger exists in remodl.success_callback or remodl._async_success_callback
 
-    e.g if `LangfusePromptManagement` is passed in, it will return True if an instance of `LangfusePromptManagement` exists in litellm.success_callback or litellm._async_success_callback
+    e.g if `LangfusePromptManagement` is passed in, it will return True if an instance of `LangfusePromptManagement` exists in remodl.success_callback or remodl._async_success_callback
 
-    Prevents double adding a custom logger callback to the litellm callbacks
+    Prevents double adding a custom logger callback to the remodl callbacks
     """
     return any(
         isinstance(cb, type(callback_class))
-        for cb in litellm.success_callback + litellm._async_success_callback
+        for cb in remodl.success_callback + remodl._async_success_callback
     )
 
 
@@ -494,15 +494,15 @@ def _custom_logger_class_exists_in_failure_callbacks(
     callback_class: CustomLogger,
 ) -> bool:
     """
-    Returns True if an instance of the custom logger exists in litellm.failure_callback or litellm._async_failure_callback
+    Returns True if an instance of the custom logger exists in remodl.failure_callback or remodl._async_failure_callback
 
-    e.g if `LangfusePromptManagement` is passed in, it will return True if an instance of `LangfusePromptManagement` exists in litellm.failure_callback or litellm._async_failure_callback
+    e.g if `LangfusePromptManagement` is passed in, it will return True if an instance of `LangfusePromptManagement` exists in remodl.failure_callback or remodl._async_failure_callback
 
-    Prevents double adding a custom logger callback to the litellm callbacks
+    Prevents double adding a custom logger callback to the remodl callbacks
     """
     return any(
         isinstance(cb, type(callback_class))
-        for cb in litellm.failure_callback + litellm._async_failure_callback
+        for cb in remodl.failure_callback + remodl._async_failure_callback
     )
 
 
@@ -524,7 +524,7 @@ def get_applied_guardrails(kwargs: Dict[str, Any]) -> List[str]:
 
     request_guardrails = get_request_guardrails(kwargs)
     applied_guardrails = []
-    for callback in litellm.callbacks:
+    for callback in remodl.callbacks:
         if callback is not None and isinstance(callback, CustomGuardrail):
             if callback.guardrail_name is not None:
                 if callback.default_on is True:
@@ -539,8 +539,8 @@ def load_credentials_from_list(kwargs: dict):
     """
     Updates kwargs with the credentials if credential_name in kwarg
     """
-    credential_name = kwargs.get("litellm_credential_name")
-    if credential_name and litellm.credential_list:
+    credential_name = kwargs.get("remodl_credential_name")
+    if credential_name and remodl.credential_list:
         credential_accessor = CredentialAccessor.get_credential_values(credential_name)
         for key, value in credential_accessor.items():
             if key not in kwargs:
@@ -550,7 +550,7 @@ def load_credentials_from_list(kwargs: dict):
 def get_dynamic_callbacks(
     dynamic_callbacks: Optional[List[Union[str, Callable, CustomLogger]]],
 ) -> List:
-    returned_callbacks = litellm.callbacks.copy()
+    returned_callbacks = remodl.callbacks.copy()
     if dynamic_callbacks:
         returned_callbacks.extend(dynamic_callbacks)  # type: ignore
     return returned_callbacks
@@ -560,9 +560,9 @@ def function_setup(  # noqa: PLR0915
     original_function: str, rules_obj, start_time, *args, **kwargs
 ):  # just run once to check if user wants to send their data anywhere - PostHog/Sentry/Slack/etc.
     ### NOTICES ###
-    if litellm.set_verbose is True:
+    if remodl.set_verbose is True:
         verbose_logger.warning(
-            "`litellm.set_verbose` is deprecated. Please set `os.environ['LITELLM_LOG'] = 'DEBUG'` for debug logs."
+            "`remodl.set_verbose` is deprecated. Please set `os.environ['LITELLM_LOG'] = 'DEBUG'` for debug logs."
         )
     try:
         global callback_list, add_breadcrumb, user_logger_fn, Logging
@@ -586,96 +586,96 @@ def function_setup(  # noqa: PLR0915
             for callback in all_callbacks:
                 # check if callback is a string - e.g. "lago", "openmeter"
                 if isinstance(callback, str):
-                    callback = litellm.litellm_core_utils.litellm_logging._init_custom_logger_compatible_class(  # type: ignore
+                    callback = remodl.remodl_core_utils.remodl_logging._init_custom_logger_compatible_class(  # type: ignore
                         callback, internal_usage_cache=None, llm_router=None  # type: ignore
                     )
                     if callback is None or any(
                         isinstance(cb, type(callback))
-                        for cb in litellm._async_success_callback
+                        for cb in remodl._async_success_callback
                     ):  # don't double add a callback
                         continue
-                if callback not in litellm.input_callback:
-                    litellm.input_callback.append(callback)  # type: ignore
-                if callback not in litellm.success_callback:
-                    litellm.logging_callback_manager.add_litellm_success_callback(callback)  # type: ignore
-                if callback not in litellm.failure_callback:
-                    litellm.logging_callback_manager.add_litellm_failure_callback(callback)  # type: ignore
-                if callback not in litellm._async_success_callback:
-                    litellm.logging_callback_manager.add_litellm_async_success_callback(callback)  # type: ignore
-                if callback not in litellm._async_failure_callback:
-                    litellm.logging_callback_manager.add_litellm_async_failure_callback(callback)  # type: ignore
+                if callback not in remodl.input_callback:
+                    remodl.input_callback.append(callback)  # type: ignore
+                if callback not in remodl.success_callback:
+                    remodl.logging_callback_manager.add_remodl_success_callback(callback)  # type: ignore
+                if callback not in remodl.failure_callback:
+                    remodl.logging_callback_manager.add_remodl_failure_callback(callback)  # type: ignore
+                if callback not in remodl._async_success_callback:
+                    remodl.logging_callback_manager.add_remodl_async_success_callback(callback)  # type: ignore
+                if callback not in remodl._async_failure_callback:
+                    remodl.logging_callback_manager.add_remodl_async_failure_callback(callback)  # type: ignore
             print_verbose(
-                f"Initialized litellm callbacks, Async Success Callbacks: {litellm._async_success_callback}"
+                f"Initialized remodl callbacks, Async Success Callbacks: {remodl._async_success_callback}"
             )
 
         if (
-            len(litellm.input_callback) > 0
-            or len(litellm.success_callback) > 0
-            or len(litellm.failure_callback) > 0
+            len(remodl.input_callback) > 0
+            or len(remodl.success_callback) > 0
+            or len(remodl.failure_callback) > 0
         ) and len(
             callback_list  # type: ignore
         ) == 0:  # type: ignore
             callback_list = list(
                 set(
-                    litellm.input_callback  # type: ignore
-                    + litellm.success_callback
-                    + litellm.failure_callback
+                    remodl.input_callback  # type: ignore
+                    + remodl.success_callback
+                    + remodl.failure_callback
                 )
             )
             get_set_callbacks()(callback_list=callback_list, function_id=function_id)
         ## ASYNC CALLBACKS
-        if len(litellm.input_callback) > 0:
+        if len(remodl.input_callback) > 0:
             removed_async_items = []
-            for index, callback in enumerate(litellm.input_callback):  # type: ignore
+            for index, callback in enumerate(remodl.input_callback):  # type: ignore
                 if get_coroutine_checker().is_async_callable(callback):
-                    litellm._async_input_callback.append(callback)
+                    remodl._async_input_callback.append(callback)
                     removed_async_items.append(index)
 
             # Pop the async items from input_callback in reverse order to avoid index issues
             for index in reversed(removed_async_items):
-                litellm.input_callback.pop(index)
-        if len(litellm.success_callback) > 0:
+                remodl.input_callback.pop(index)
+        if len(remodl.success_callback) > 0:
             removed_async_items = []
-            for index, callback in enumerate(litellm.success_callback):  # type: ignore
+            for index, callback in enumerate(remodl.success_callback):  # type: ignore
                 if get_coroutine_checker().is_async_callable(callback):
-                    litellm.logging_callback_manager.add_litellm_async_success_callback(
+                    remodl.logging_callback_manager.add_remodl_async_success_callback(
                         callback
                     )
                     removed_async_items.append(index)
                 elif callback == "dynamodb" or callback == "openmeter":
                     # dynamo is an async callback, it's used for the proxy and needs to be async
                     # we only support async dynamo db logging for acompletion/aembedding since that's used on proxy
-                    litellm.logging_callback_manager.add_litellm_async_success_callback(
+                    remodl.logging_callback_manager.add_remodl_async_success_callback(
                         callback
                     )
                     removed_async_items.append(index)
                 elif (
-                    callback in litellm._known_custom_logger_compatible_callbacks
+                    callback in remodl._known_custom_logger_compatible_callbacks
                     and isinstance(callback, str)
                 ):
                     _add_custom_logger_callback_to_specific_event(callback, "success")
 
             # Pop the async items from success_callback in reverse order to avoid index issues
             for index in reversed(removed_async_items):
-                litellm.success_callback.pop(index)
+                remodl.success_callback.pop(index)
 
-        if len(litellm.failure_callback) > 0:
+        if len(remodl.failure_callback) > 0:
             removed_async_items = []
-            for index, callback in enumerate(litellm.failure_callback):  # type: ignore
+            for index, callback in enumerate(remodl.failure_callback):  # type: ignore
                 if get_coroutine_checker().is_async_callable(callback):
-                    litellm.logging_callback_manager.add_litellm_async_failure_callback(
+                    remodl.logging_callback_manager.add_remodl_async_failure_callback(
                         callback
                     )
                     removed_async_items.append(index)
                 elif (
-                    callback in litellm._known_custom_logger_compatible_callbacks
+                    callback in remodl._known_custom_logger_compatible_callbacks
                     and isinstance(callback, str)
                 ):
                     _add_custom_logger_callback_to_specific_event(callback, "failure")
 
             # Pop the async items from failure_callback in reverse order to avoid index issues
             for index in reversed(removed_async_items):
-                litellm.failure_callback.pop(index)
+                remodl.failure_callback.pop(index)
         ### DYNAMIC CALLBACKS ###
         dynamic_success_callbacks: Optional[
             List[Union[str, Callable, CustomLogger]]
@@ -717,19 +717,19 @@ def function_setup(  # noqa: PLR0915
 
         if add_breadcrumb:
             try:
-                from litellm.litellm_core_utils.core_helpers import safe_deep_copy
+                from remodl.remodl_core_utils.core_helpers import safe_deep_copy
 
                 details_to_log = safe_deep_copy(kwargs)
             except Exception:
                 details_to_log = kwargs
 
-            if litellm.turn_off_message_logging:
+            if remodl.turn_off_message_logging:
                 # make a copy of the _model_Call_details and log it
                 details_to_log.pop("messages", None)
                 details_to_log.pop("input", None)
                 details_to_log.pop("prompt", None)
             add_breadcrumb(
-                category="litellm.llm_call",
+                category="remodl.llm_call",
                 message=f"Keyword Args: {details_to_log}",
                 level="info",
             )
@@ -797,7 +797,7 @@ def function_setup(  # noqa: PLR0915
         ):
             _file_obj: FileTypes = args[1] if len(args) > 1 else kwargs["file"]
             file_checksum = (
-                litellm.litellm_core_utils.audio_utils.utils.get_audio_file_name(
+                remodl.remodl_core_utils.audio_utils.utils.get_audio_file_name(
                     file_obj=_file_obj
                 )
             )
@@ -823,12 +823,12 @@ def function_setup(  # noqa: PLR0915
             call_type=call_type,
         ):
             stream = True
-        logging_obj = get_litellm_logging_class()(  # Victim for object pool
+        logging_obj = get_remodl_logging_class()(  # Victim for object pool
             model=model,  # type: ignore
             messages=messages,
             stream=stream,
-            litellm_call_id=kwargs["litellm_call_id"],
-            litellm_trace_id=kwargs.get("litellm_trace_id"),
+            remodl_call_id=kwargs["remodl_call_id"],
+            remodl_trace_id=kwargs.get("remodl_trace_id"),
             function_id=function_id or "",
             call_type=call_type,
             start_time=start_time,
@@ -841,21 +841,21 @@ def function_setup(  # noqa: PLR0915
         )
 
         ## check if metadata is passed in
-        litellm_params: Dict[str, Any] = {"api_base": ""}
+        remodl_params: Dict[str, Any] = {"api_base": ""}
         if "metadata" in kwargs:
-            litellm_params["metadata"] = kwargs["metadata"]
+            remodl_params["metadata"] = kwargs["metadata"]
 
         logging_obj.update_environment_variables(
             model=model,
             user="",
             optional_params={},
-            litellm_params=litellm_params,
+            remodl_params=remodl_params,
             stream_options=kwargs.get("stream_options", None),
         )
         return logging_obj, kwargs
     except Exception as e:
         verbose_logger.exception(
-            "litellm.utils.py::function_setup() - [Non-Blocking] Error in function_setup"
+            "remodl.utils.py::function_setup() - [Non-Blocking] Error in function_setup"
         )
         raise e
 
@@ -869,14 +869,14 @@ async def _client_async_logging_helper(
 ):
     if (
         is_completion_with_fallbacks is False
-    ):  # don't log the parent event litellm.completion_with_fallbacks as a 'log_success_event', this will lead to double logging the same call - https://github.com/BerriAI/litellm/issues/7477
+    ):  # don't log the parent event remodl.completion_with_fallbacks as a 'log_success_event', this will lead to double logging the same call - https://github.com/BerriAI/remodl/issues/7477
         print_verbose(
             f"Async Wrapper: Completed Call, calling async_success_handler: {logging_obj.async_success_handler}"
         )
         ################################################
         # Async Logging Worker
         ################################################
-        from litellm.litellm_core_utils.logging_worker import GLOBAL_LOGGING_WORKER
+        from remodl.remodl_core_utils.logging_worker import GLOBAL_LOGGING_WORKER
 
         GLOBAL_LOGGING_WORKER.ensure_initialized_and_enqueue(
             async_coroutine=logging_obj.async_success_handler(
@@ -904,7 +904,7 @@ def _get_wrapper_num_retries(
 
     num_retries = kwargs.get("num_retries", None)
     if num_retries is None:
-        num_retries = litellm.num_retries
+        num_retries = remodl.num_retries
     if kwargs.get("retry_policy", None):
         retry_policy_num_retries = get_num_retries_from_retry_policy(
             exception=exception,
@@ -949,7 +949,7 @@ async def async_pre_call_deployment_hook(kwargs: Dict[str, Any], call_type: str)
 
     modified_kwargs = kwargs.copy()
 
-    for callback in litellm.callbacks:
+    for callback in remodl.callbacks:
         if isinstance(callback, CustomLogger):
             result = await callback.async_pre_call_deployment_hook(
                 modified_kwargs, typed_call_type
@@ -971,7 +971,7 @@ async def async_post_call_success_deployment_hook(
     except ValueError:
         typed_call_type = None  # unknown call type
 
-    for callback in litellm.callbacks:
+    for callback in remodl.callbacks:
         if isinstance(callback, CustomLogger):
             result = await callback.async_post_call_success_deployment_hook(
                 request_data, cast(LLMResponseTypes, response), typed_call_type
@@ -1013,7 +1013,7 @@ def post_call_processing(
                             ### POST-CALL RULES ###
                             rules_obj.post_call_rules(input=model_response, model=model)
                             ### JSON SCHEMA VALIDATION ###
-                            if litellm.enable_json_schema_validation is True:
+                            if remodl.enable_json_schema_validation is True:
                                 try:
                                     if (
                                         optional_params is not None
@@ -1046,7 +1046,7 @@ def post_call_processing(
                                                 )
                                             )
                                         if json_response_format is not None:
-                                            litellm.litellm_core_utils.json_validation_rule.validate_schema(
+                                            remodl.remodl_core_utils.json_validation_rule.validate_schema(
                                                 schema=json_response_format[
                                                     "json_schema"
                                                 ]["schema"],
@@ -1077,7 +1077,7 @@ def post_call_processing(
                                 is True
                             ):
                                 # schema given, json response expected, and validation enforced
-                                litellm.litellm_core_utils.json_validation_rule.validate_schema(
+                                remodl.remodl_core_utils.json_validation_rule.validate_schema(
                                     schema=optional_params["response_format"][
                                         "response_schema"
                                     ],
@@ -1098,13 +1098,13 @@ def client(original_function):  # noqa: PLR0915
         call_type = original_function.__name__
         if _is_async_request(kwargs):
             # [OPTIONAL] CHECK MAX RETRIES / REQUEST
-            if litellm.num_retries_per_request is not None:
-                # check if previous_models passed in as ['litellm_params']['metadata]['previous_models']
+            if remodl.num_retries_per_request is not None:
+                # check if previous_models passed in as ['remodl_params']['metadata]['previous_models']
                 previous_models = kwargs.get("metadata", {}).get(
                     "previous_models", None
                 )
                 if previous_models is not None:
-                    if litellm.num_retries_per_request <= len(previous_models):
+                    if remodl.num_retries_per_request <= len(previous_models):
                         raise Exception("Max retries per request hit!")
 
             # MODEL CALL
@@ -1120,7 +1120,7 @@ def client(original_function):  # noqa: PLR0915
                     chunks = []
                     for idx, chunk in enumerate(result):
                         chunks.append(chunk)
-                    return litellm.stream_chunk_builder(
+                    return remodl.stream_chunk_builder(
                         chunks, messages=kwargs.get("messages", None)
                     )
                 else:
@@ -1128,17 +1128,17 @@ def client(original_function):  # noqa: PLR0915
 
             return result
 
-        # Prints Exactly what was passed to litellm function - don't execute any logic here - it should just print
-        print_args_passed_to_litellm(original_function, args, kwargs)
+        # Prints Exactly what was passed to remodl function - don't execute any logic here - it should just print
+        print_args_passed_to_remodl(original_function, args, kwargs)
         start_time = datetime.datetime.now()
         result = None
         logging_obj: Optional[LiteLLMLoggingObject] = kwargs.get(
-            "litellm_logging_obj", None
+            "remodl_logging_obj", None
         )
 
-        # only set litellm_call_id if its not in kwargs
-        if "litellm_call_id" not in kwargs:
-            kwargs["litellm_call_id"] = str(uuid.uuid4())
+        # only set remodl_call_id if its not in kwargs
+        if "remodl_call_id" not in kwargs:
+            kwargs["remodl_call_id"] = str(uuid.uuid4())
 
         model: Optional[str] = args[0] if len(args) > 0 else kwargs.get("model", None)
 
@@ -1149,7 +1149,7 @@ def client(original_function):  # noqa: PLR0915
                 )
             ## LOAD CREDENTIALS
             load_credentials_from_list(kwargs)
-            kwargs["litellm_logging_obj"] = logging_obj
+            kwargs["remodl_logging_obj"] = logging_obj
             _llm_caching_handler: LLMCachingHandler = LLMCachingHandler(
                 original_function=original_function,
                 request_kwargs=kwargs,
@@ -1160,28 +1160,28 @@ def client(original_function):  # noqa: PLR0915
             # CHECK FOR 'os.environ/' in kwargs
             for k, v in kwargs.items():
                 if v is not None and isinstance(v, str) and v.startswith("os.environ/"):
-                    kwargs[k] = litellm.get_secret(v)
+                    kwargs[k] = remodl.get_secret(v)
             # [OPTIONAL] CHECK BUDGET
-            if litellm.max_budget:
-                if litellm._current_cost > litellm.max_budget:
+            if remodl.max_budget:
+                if remodl._current_cost > remodl.max_budget:
                     raise BudgetExceededError(
-                        current_cost=litellm._current_cost,
-                        max_budget=litellm.max_budget,
+                        current_cost=remodl._current_cost,
+                        max_budget=remodl.max_budget,
                     )
 
             # [OPTIONAL] CHECK MAX RETRIES / REQUEST
-            if litellm.num_retries_per_request is not None:
-                # check if previous_models passed in as ['litellm_params']['metadata]['previous_models']
+            if remodl.num_retries_per_request is not None:
+                # check if previous_models passed in as ['remodl_params']['metadata]['previous_models']
                 previous_models = kwargs.get("metadata", {}).get(
                     "previous_models", None
                 )
                 if previous_models is not None:
-                    if litellm.num_retries_per_request <= len(previous_models):
+                    if remodl.num_retries_per_request <= len(previous_models):
                         raise Exception("Max retries per request hit!")
 
             # [OPTIONAL] CHECK CACHE
             print_verbose(
-                f"SYNC kwargs[caching]: {kwargs.get('caching', False)}; litellm.cache: {litellm.cache}; kwargs.get('cache')['no-cache']: {kwargs.get('cache', {}).get('no-cache', False)}"
+                f"SYNC kwargs[caching]: {kwargs.get('caching', False)}; remodl.cache: {remodl.cache}; kwargs.get('cache')['no-cache']: {kwargs.get('cache', {}).get('no-cache', False)}"
             )
             # if caching is false or cache["no-cache"]==True, don't run this
             if (
@@ -1189,7 +1189,7 @@ def client(original_function):  # noqa: PLR0915
                     (
                         (
                             kwargs.get("caching", None) is None
-                            and litellm.cache is not None
+                            and remodl.cache is not None
                         )
                         or kwargs.get("caching", False) is True
                     )
@@ -1225,7 +1225,7 @@ def client(original_function):  # noqa: PLR0915
             if (
                 kwargs.get("max_tokens", None) is not None
                 and model is not None
-                and litellm.modify_params
+                and remodl.modify_params
                 is True  # user is okay with params being modified
                 and (
                     call_type == CallTypes.acompletion.value
@@ -1268,7 +1268,7 @@ def client(original_function):  # noqa: PLR0915
                     chunks = []
                     for idx, chunk in enumerate(result):
                         chunks.append(chunk)
-                    return litellm.stream_chunk_builder(
+                    return remodl.stream_chunk_builder(
                         chunks, messages=kwargs.get("messages", None)
                     )
                 else:
@@ -1337,7 +1337,7 @@ def client(original_function):  # noqa: PLR0915
             call_type = original_function.__name__
             if call_type == CallTypes.completion.value:
                 num_retries = (
-                    kwargs.get("num_retries", None) or litellm.num_retries or None
+                    kwargs.get("num_retries", None) or remodl.num_retries or None
                 )
                 if kwargs.get("retry_policy", None):
                     num_retries = get_num_retries_from_retry_policy(
@@ -1347,31 +1347,31 @@ def client(original_function):  # noqa: PLR0915
                     kwargs["retry_policy"] = (
                         reset_retry_policy()
                     )  # prevent infinite loops
-                litellm.num_retries = (
+                remodl.num_retries = (
                     None  # set retries to None to prevent infinite loops
                 )
                 context_window_fallback_dict = kwargs.get(
                     "context_window_fallback_dict", {}
                 )
 
-                _is_litellm_router_call = "model_group" in kwargs.get(
+                _is_remodl_router_call = "model_group" in kwargs.get(
                     "metadata", {}
-                )  # check if call from litellm.router/proxy
+                )  # check if call from remodl.router/proxy
                 if (
-                    num_retries and not _is_litellm_router_call
-                ):  # only enter this if call is not from litellm router/proxy. router has it's own logic for retrying
+                    num_retries and not _is_remodl_router_call
+                ):  # only enter this if call is not from remodl router/proxy. router has it's own logic for retrying
                     if (
                         isinstance(e, openai.APIError)
                         or isinstance(e, openai.Timeout)
                         or isinstance(e, openai.APIConnectionError)
                     ):
                         kwargs["num_retries"] = num_retries
-                        return litellm.completion_with_retries(*args, **kwargs)
+                        return remodl.completion_with_retries(*args, **kwargs)
                 elif (
-                    isinstance(e, litellm.exceptions.ContextWindowExceededError)
+                    isinstance(e, remodl.exceptions.ContextWindowExceededError)
                     and context_window_fallback_dict
                     and model in context_window_fallback_dict
-                    and not _is_litellm_router_call
+                    and not _is_remodl_router_call
                 ):
                     if len(args) > 0:
                         args[0] = context_window_fallback_dict[model]  # type: ignore
@@ -1390,21 +1390,21 @@ def client(original_function):  # noqa: PLR0915
 
     @wraps(original_function)
     async def wrapper_async(*args, **kwargs):  # noqa: PLR0915
-        print_args_passed_to_litellm(original_function, args, kwargs)
+        print_args_passed_to_remodl(original_function, args, kwargs)
         start_time = datetime.datetime.now()
         result = None
         logging_obj: Optional[LiteLLMLoggingObject] = kwargs.get(
-            "litellm_logging_obj", None
+            "remodl_logging_obj", None
         )
         _llm_caching_handler: LLMCachingHandler = LLMCachingHandler(
             original_function=original_function,
             request_kwargs=kwargs,
             start_time=start_time,
         )
-        # only set litellm_call_id if its not in kwargs
+        # only set remodl_call_id if its not in kwargs
         call_type = original_function.__name__
-        if "litellm_call_id" not in kwargs:
-            kwargs["litellm_call_id"] = str(uuid.uuid4())
+        if "remodl_call_id" not in kwargs:
+            kwargs["remodl_call_id"] = str(uuid.uuid4())
 
         model: Optional[str] = args[0] if len(args) > 0 else kwargs.get("model", None)
         is_completion_with_fallbacks = kwargs.get("fallbacks") is not None
@@ -1419,21 +1419,21 @@ def client(original_function):  # noqa: PLR0915
             if modified_kwargs is not None:
                 kwargs = modified_kwargs
 
-            kwargs["litellm_logging_obj"] = logging_obj
+            kwargs["remodl_logging_obj"] = logging_obj
             ## LOAD CREDENTIALS
             load_credentials_from_list(kwargs)
             logging_obj._llm_caching_handler = _llm_caching_handler
             # [OPTIONAL] CHECK BUDGET
-            if litellm.max_budget:
-                if litellm._current_cost > litellm.max_budget:
+            if remodl.max_budget:
+                if remodl._current_cost > remodl.max_budget:
                     raise BudgetExceededError(
-                        current_cost=litellm._current_cost,
-                        max_budget=litellm.max_budget,
+                        current_cost=remodl._current_cost,
+                        max_budget=remodl.max_budget,
                     )
 
             # [OPTIONAL] CHECK CACHE
             print_verbose(
-                f"ASYNC kwargs[caching]: {kwargs.get('caching', False)}; litellm.cache: {litellm.cache}; kwargs.get('cache'): {kwargs.get('cache', None)}"
+                f"ASYNC kwargs[caching]: {kwargs.get('caching', False)}; remodl.cache: {remodl.cache}; kwargs.get('cache'): {kwargs.get('cache', None)}"
             )
             _caching_handler_response: Optional[CachingHandlerResponse] = (
                 await _llm_caching_handler._async_get_cache(
@@ -1462,7 +1462,7 @@ def client(original_function):  # noqa: PLR0915
             if (
                 kwargs.get("max_tokens", None) is not None
                 and model is not None
-                and litellm.modify_params
+                and remodl.modify_params
                 is True  # user is okay with params being modified
                 and (
                     call_type == CallTypes.acompletion.value
@@ -1506,7 +1506,7 @@ def client(original_function):  # noqa: PLR0915
                     chunks = []
                     for idx, chunk in enumerate(result):
                         chunks.append(chunk)
-                    return litellm.stream_chunk_builder(
+                    return remodl.stream_chunk_builder(
                         chunks, messages=kwargs.get("messages", None)
                     )
                 else:
@@ -1608,15 +1608,15 @@ def client(original_function):  # noqa: PLR0915
                     "context_window_fallback_dict", {}
                 )
 
-                _is_litellm_router_call = "model_group" in kwargs.get(
+                _is_remodl_router_call = "model_group" in kwargs.get(
                     "metadata", {}
-                )  # check if call from litellm.router/proxy
+                )  # check if call from remodl.router/proxy
 
                 if (
-                    num_retries and not _is_litellm_router_call
-                ):  # only enter this if call is not from litellm router/proxy. router has it's own logic for retrying
+                    num_retries and not _is_remodl_router_call
+                ):  # only enter this if call is not from remodl router/proxy. router has it's own logic for retrying
                     try:
-                        litellm.num_retries = (
+                        remodl.num_retries = (
                             None  # set retries to None to prevent infinite loops
                         )
                         kwargs["num_retries"] = num_retries
@@ -1627,11 +1627,11 @@ def client(original_function):  # noqa: PLR0915
                             kwargs["retry_strategy"] = "exponential_backoff_retry"
                         elif isinstance(e, openai.APIError):  # generic api error
                             kwargs["retry_strategy"] = "constant_retry"
-                        return await litellm.acompletion_with_retries(*args, **kwargs)
+                        return await remodl.acompletion_with_retries(*args, **kwargs)
                     except Exception:
                         pass
                 elif (
-                    isinstance(e, litellm.exceptions.ContextWindowExceededError)
+                    isinstance(e, remodl.exceptions.ContextWindowExceededError)
                     and context_window_fallback_dict
                     and model in context_window_fallback_dict
                 ):
@@ -1665,10 +1665,10 @@ def _is_async_request(
     """
     Returns True if the call type is an internal async request.
 
-    eg. litellm.acompletion, litellm.aimage_generation, litellm.acreate_batch, litellm._arealtime
+    eg. remodl.acompletion, remodl.aimage_generation, remodl.acreate_batch, remodl._arealtime
 
     Args:
-        kwargs (dict): The kwargs passed to the litellm function
+        kwargs (dict): The kwargs passed to the remodl function
         is_pass_through (bool): Whether the call is a pass-through call. By default all pass through calls are async.
     """
     if kwargs is None:
@@ -1697,8 +1697,8 @@ def _is_streaming_request(
     """
     Returns True if the call type is a streaming request.
     Returns True if:
-        - if "stream=True" in kwargs  (litellm chat completion, litellm text completion, litellm messages)
-        - if call_type is generate_content_stream or agenerate_content_stream (litellm google genai)
+        - if "stream=True" in kwargs  (remodl chat completion, remodl text completion, remodl messages)
+        - if call_type is generate_content_stream or agenerate_content_stream (remodl google genai)
     """
     if "stream" in kwargs and kwargs["stream"] is True:
         return True
@@ -1736,7 +1736,7 @@ def _select_tokenizer(
 
 @lru_cache(maxsize=DEFAULT_MAX_LRU_CACHE_SIZE)
 def _select_tokenizer_helper(model: str) -> SelectTokenizerResponse:
-    if litellm.disable_hf_tokenizer_download is True:
+    if remodl.disable_hf_tokenizer_download is True:
         return _return_openai_tokenizer(model)
 
     try:
@@ -1755,14 +1755,14 @@ def _return_openai_tokenizer(model: str) -> SelectTokenizerResponse:
 
 
 def _return_huggingface_tokenizer(model: str) -> Optional[SelectTokenizerResponse]:
-    if model in litellm.cohere_models and "command-r" in model:
+    if model in remodl.cohere_models and "command-r" in model:
         # cohere
         cohere_tokenizer = Tokenizer.from_pretrained(
             "Xenova/c4ai-command-r-v01-tokenizer"
         )
         return {"type": "huggingface_tokenizer", "tokenizer": cohere_tokenizer}
     # anthropic
-    elif model in litellm.anthropic_models and "claude-3" not in model:
+    elif model in remodl.anthropic_models and "claude-3" not in model:
         claude_tokenizer = Tokenizer.from_str(claude_json_str)
         return {"type": "huggingface_tokenizer", "tokenizer": claude_tokenizer}
     # llama2
@@ -1857,7 +1857,7 @@ def token_counter(
     default_token_count: Optional[int] = None,
 ) -> int:
     """
-    The same as `litellm.litellm_core_utils.token_counter`.
+    The same as `remodl.remodl_core_utils.token_counter`.
 
     Kept for backwards compatibility.
     """
@@ -1868,7 +1868,7 @@ def token_counter(
     # exposing this flag to allow users to disable
     # it to confirm if this is indeed the issue
     #########################################################
-    if litellm.disable_token_counter is True:
+    if remodl.disable_token_counter is True:
         return 0
 
     return token_counter_new(
@@ -1974,7 +1974,7 @@ def supports_native_streaming(model: str, custom_llm_provider: Optional[str]) ->
     Exception: If the given model is not found in model_prices_and_context_window.json.
     """
     try:
-        model, custom_llm_provider, _, _ = litellm.get_llm_provider(
+        model, custom_llm_provider, _, _ = remodl.get_llm_provider(
             model=model, custom_llm_provider=custom_llm_provider
         )
 
@@ -2020,10 +2020,10 @@ def supports_response_schema(
 
     # providers that globally support response schema
     PROVIDERS_GLOBALLY_SUPPORT_RESPONSE_SCHEMA = [
-        litellm.LlmProviders.PREDIBASE,
-        litellm.LlmProviders.FIREWORKS_AI,
-        litellm.LlmProviders.LM_STUDIO,
-        litellm.LlmProviders.NEBIUS,
+        remodl.LlmProviders.PREDIBASE,
+        remodl.LlmProviders.FIREWORKS_AI,
+        remodl.LlmProviders.LM_STUDIO,
+        remodl.LlmProviders.NEBIUS,
     ]
 
     if custom_llm_provider in PROVIDERS_GLOBALLY_SUPPORT_RESPONSE_SCHEMA:
@@ -2111,7 +2111,7 @@ def _supports_factory(model: str, custom_llm_provider: Optional[str], key: str) 
     Exception: If the given model is not found or there's an error in retrieval.
     """
     try:
-        model, custom_llm_provider, _, _ = litellm.get_llm_provider(
+        model, custom_llm_provider, _, _ = remodl.get_llm_provider(
             model=model, custom_llm_provider=custom_llm_provider
         )
 
@@ -2250,7 +2250,7 @@ def get_supported_regions(
     custom_llm_provider (Optional[str]): The provider to be checked.
     """
     try:
-        model, custom_llm_provider, _, _ = litellm.get_llm_provider(
+        model, custom_llm_provider, _, _ = remodl.get_llm_provider(
             model=model, custom_llm_provider=custom_llm_provider
         )
 
@@ -2335,7 +2335,7 @@ def register_model(model_cost: Union[str, dict]):  # noqa: PLR0915
             "max_tokens": 8192,
             "input_cost_per_token": 0.00003,
             "output_cost_per_token": 0.00006,
-            "litellm_provider": "openai",
+            "remodl_provider": "openai",
             "mode": "chat"
         },
     }
@@ -2346,7 +2346,7 @@ def register_model(model_cost: Union[str, dict]):  # noqa: PLR0915
         # Convert stringified numbers to appropriate numeric types
         loaded_model_cost = model_cost
     elif isinstance(model_cost, str):
-        loaded_model_cost = litellm.get_model_cost_map(url=model_cost)
+        loaded_model_cost = remodl.get_model_cost_map(url=model_cost)
 
     for key, value in loaded_model_cost.items():
         ## get model info ##
@@ -2358,57 +2358,57 @@ def register_model(model_cost: Union[str, dict]):  # noqa: PLR0915
             model_cost_key = key
         ## override / add new keys to the existing model cost dictionary
         updated_dictionary = _update_dictionary(existing_model, value)
-        litellm.model_cost.setdefault(model_cost_key, {}).update(updated_dictionary)
+        remodl.model_cost.setdefault(model_cost_key, {}).update(updated_dictionary)
         verbose_logger.debug(
-            f"added/updated model={model_cost_key} in litellm.model_cost: {model_cost_key}"
+            f"added/updated model={model_cost_key} in remodl.model_cost: {model_cost_key}"
         )
         # add new model names to provider lists
-        if value.get("litellm_provider") == "openai":
-            if key not in litellm.open_ai_chat_completion_models:
-                litellm.open_ai_chat_completion_models.add(key)
-        elif value.get("litellm_provider") == "text-completion-openai":
-            if key not in litellm.open_ai_text_completion_models:
-                litellm.open_ai_text_completion_models.add(key)
-        elif value.get("litellm_provider") == "cohere":
-            if key not in litellm.cohere_models:
-                litellm.cohere_models.add(key)
-        elif value.get("litellm_provider") == "anthropic":
-            if key not in litellm.anthropic_models:
-                litellm.anthropic_models.add(key)
-        elif value.get("litellm_provider") == "openrouter":
+        if value.get("remodl_provider") == "openai":
+            if key not in remodl.open_ai_chat_completion_models:
+                remodl.open_ai_chat_completion_models.add(key)
+        elif value.get("remodl_provider") == "text-completion-openai":
+            if key not in remodl.open_ai_text_completion_models:
+                remodl.open_ai_text_completion_models.add(key)
+        elif value.get("remodl_provider") == "cohere":
+            if key not in remodl.cohere_models:
+                remodl.cohere_models.add(key)
+        elif value.get("remodl_provider") == "anthropic":
+            if key not in remodl.anthropic_models:
+                remodl.anthropic_models.add(key)
+        elif value.get("remodl_provider") == "openrouter":
             split_string = key.split("/", 1)
-            if key not in litellm.openrouter_models:
-                litellm.openrouter_models.add(split_string[1])
-        elif value.get("litellm_provider") == "vercel_ai_gateway":
-            if key not in litellm.vercel_ai_gateway_models:
-                litellm.vercel_ai_gateway_models.add(key)
-        elif value.get("litellm_provider") == "vertex_ai-text-models":
-            if key not in litellm.vertex_text_models:
-                litellm.vertex_text_models.add(key)
-        elif value.get("litellm_provider") == "vertex_ai-code-text-models":
-            if key not in litellm.vertex_code_text_models:
-                litellm.vertex_code_text_models.add(key)
-        elif value.get("litellm_provider") == "vertex_ai-chat-models":
-            if key not in litellm.vertex_chat_models:
-                litellm.vertex_chat_models.add(key)
-        elif value.get("litellm_provider") == "vertex_ai-code-chat-models":
-            if key not in litellm.vertex_code_chat_models:
-                litellm.vertex_code_chat_models.add(key)
-        elif value.get("litellm_provider") == "ai21":
-            if key not in litellm.ai21_models:
-                litellm.ai21_models.add(key)
-        elif value.get("litellm_provider") == "nlp_cloud":
-            if key not in litellm.nlp_cloud_models:
-                litellm.nlp_cloud_models.add(key)
-        elif value.get("litellm_provider") == "aleph_alpha":
-            if key not in litellm.aleph_alpha_models:
-                litellm.aleph_alpha_models.add(key)
-        elif value.get("litellm_provider") == "bedrock":
-            if key not in litellm.bedrock_models:
-                litellm.bedrock_models.add(key)
-        elif value.get("litellm_provider") == "novita":
-            if key not in litellm.novita_models:
-                litellm.novita_models.add(key)
+            if key not in remodl.openrouter_models:
+                remodl.openrouter_models.add(split_string[1])
+        elif value.get("remodl_provider") == "vercel_ai_gateway":
+            if key not in remodl.vercel_ai_gateway_models:
+                remodl.vercel_ai_gateway_models.add(key)
+        elif value.get("remodl_provider") == "vertex_ai-text-models":
+            if key not in remodl.vertex_text_models:
+                remodl.vertex_text_models.add(key)
+        elif value.get("remodl_provider") == "vertex_ai-code-text-models":
+            if key not in remodl.vertex_code_text_models:
+                remodl.vertex_code_text_models.add(key)
+        elif value.get("remodl_provider") == "vertex_ai-chat-models":
+            if key not in remodl.vertex_chat_models:
+                remodl.vertex_chat_models.add(key)
+        elif value.get("remodl_provider") == "vertex_ai-code-chat-models":
+            if key not in remodl.vertex_code_chat_models:
+                remodl.vertex_code_chat_models.add(key)
+        elif value.get("remodl_provider") == "ai21":
+            if key not in remodl.ai21_models:
+                remodl.ai21_models.add(key)
+        elif value.get("remodl_provider") == "nlp_cloud":
+            if key not in remodl.nlp_cloud_models:
+                remodl.nlp_cloud_models.add(key)
+        elif value.get("remodl_provider") == "aleph_alpha":
+            if key not in remodl.aleph_alpha_models:
+                remodl.aleph_alpha_models.add(key)
+        elif value.get("remodl_provider") == "bedrock":
+            if key not in remodl.bedrock_models:
+                remodl.bedrock_models.add(key)
+        elif value.get("remodl_provider") == "novita":
+            if key not in remodl.novita_models:
+                remodl.novita_models.add(key)
     return model_cost
 
 
@@ -2450,7 +2450,7 @@ def get_optional_params_transcription(
     drop_params: Optional[bool] = None,
     **kwargs,
 ):
-    from litellm.constants import OPENAI_TRANSCRIPTION_PARAMS
+    from remodl.constants import OPENAI_TRANSCRIPTION_PARAMS
 
     # retrieve all parameters passed to the function
     passed_params = locals()
@@ -2483,13 +2483,13 @@ def get_optional_params_transcription(
             keys = list(non_default_params.keys())
             for k in keys:
                 if (
-                    drop_params is True or litellm.drop_params is True
+                    drop_params is True or remodl.drop_params is True
                 ) and k not in supported_params:  # drop the unsupported non-default values
                     non_default_params.pop(k, None)
                 elif k not in supported_params:
                     raise UnsupportedParamsError(
                         status_code=500,
-                        message=f"Setting user/encoding format is not supported by {custom_llm_provider}. To drop it from the call, set `litellm.drop_params = True`.",
+                        message=f"Setting user/encoding format is not supported by {custom_llm_provider}. To drop it from the call, set `remodl.drop_params = True`.",
                     )
             return non_default_params
 
@@ -2503,9 +2503,9 @@ def get_optional_params_transcription(
     if custom_llm_provider == "openai" or custom_llm_provider == "azure":
         optional_params = non_default_params
     elif custom_llm_provider == "groq":
-        supported_params = litellm.GroqSTTConfig().get_supported_openai_params_stt()
+        supported_params = remodl.GroqSTTConfig().get_supported_openai_params_stt()
         _check_valid_arg(supported_params=supported_params)
-        optional_params = litellm.GroqSTTConfig().map_openai_params_stt(
+        optional_params = remodl.GroqSTTConfig().map_openai_params_stt(
             non_default_params=non_default_params,
             optional_params=optional_params,
             model=model,
@@ -2610,13 +2610,13 @@ def get_optional_params_image_gen(
             keys = list(non_default_params.keys())
             for k in keys:
                 if (
-                    litellm.drop_params is True or drop_params is True
+                    remodl.drop_params is True or drop_params is True
                 ) and k not in supported_params:  # drop the unsupported non-default values
                     non_default_params.pop(k, None)
                 elif k not in supported_params:
                     raise UnsupportedParamsError(
                         status_code=500,
-                        message=f"Setting `{k}` is not supported by {custom_llm_provider}, {model}. To drop it from the call, set `litellm.drop_params = True`.",
+                        message=f"Setting `{k}` is not supported by {custom_llm_provider}, {model}. To drop it from the call, set `remodl.drop_params = True`.",
                     )
             return non_default_params
 
@@ -2634,18 +2634,18 @@ def get_optional_params_image_gen(
     elif (
         custom_llm_provider == "openai"
         or custom_llm_provider == "azure"
-        or custom_llm_provider in litellm.openai_compatible_providers
+        or custom_llm_provider in remodl.openai_compatible_providers
     ):
         optional_params = non_default_params
     elif custom_llm_provider == "bedrock":
         # use stability3 config class if model is a stability3 model
         config_class = (
-            litellm.AmazonStability3Config
-            if litellm.AmazonStability3Config._is_stability_3_model(model=model)
+            remodl.AmazonStability3Config
+            if remodl.AmazonStability3Config._is_stability_3_model(model=model)
             else (
-                litellm.AmazonNovaCanvasConfig
-                if litellm.AmazonNovaCanvasConfig._is_nova_model(model=model)
-                else litellm.AmazonStabilityConfig
+                remodl.AmazonNovaCanvasConfig
+                if remodl.AmazonNovaCanvasConfig._is_nova_model(model=model)
+                else remodl.AmazonStabilityConfig
             )
         )
         supported_params = config_class.get_supported_openai_params(model=model)
@@ -2718,14 +2718,14 @@ def get_optional_params_embeddings(  # noqa: PLR0915
             if k not in supported_params:
                 unsupported_params[k] = non_default_params[k]
         if unsupported_params:
-            if litellm.drop_params is True or (
+            if remodl.drop_params is True or (
                 drop_params is not None and drop_params is True
             ):
                 pass
             else:
                 raise UnsupportedParamsError(
                     status_code=500,
-                    message=f"{custom_llm_provider} does not support parameters: {unsupported_params}, for model={model}. To drop these, set `litellm.drop_params=True` or for proxy:\n\n`litellm_settings:\n drop_params: true`\n",
+                    message=f"{custom_llm_provider} does not support parameters: {unsupported_params}, for model={model}. To drop these, set `remodl.drop_params=True` or for proxy:\n\n`remodl_settings:\n drop_params: true`\n",
                 )
 
     non_default_params = (
@@ -2772,7 +2772,7 @@ def get_optional_params_embeddings(  # noqa: PLR0915
         ):
             raise UnsupportedParamsError(
                 status_code=500,
-                message="Setting dimensions is not supported for OpenAI `text-embedding-3` and later models. To drop it from the call, set `litellm.drop_params = True`.",
+                message="Setting dimensions is not supported for OpenAI `text-embedding-3` and later models. To drop it from the call, set `remodl.drop_params = True`.",
             )
         else:
             optional_params = non_default_params
@@ -2783,7 +2783,7 @@ def get_optional_params_embeddings(  # noqa: PLR0915
             request_type="embeddings",
         )
         _check_valid_arg(supported_params=supported_params)
-        optional_params = litellm.TritonEmbeddingConfig().map_openai_params(
+        optional_params = remodl.TritonEmbeddingConfig().map_openai_params(
             non_default_params=non_default_params,
             optional_params={},
             model=model,
@@ -2796,7 +2796,7 @@ def get_optional_params_embeddings(  # noqa: PLR0915
             request_type="embeddings",
         )
         _check_valid_arg(supported_params=supported_params)
-        optional_params = litellm.DatabricksEmbeddingConfig().map_openai_params(
+        optional_params = remodl.DatabricksEmbeddingConfig().map_openai_params(
             non_default_params=non_default_params, optional_params={}
         )
 
@@ -2807,7 +2807,7 @@ def get_optional_params_embeddings(  # noqa: PLR0915
             request_type="embeddings",
         )
         _check_valid_arg(supported_params=supported_params)
-        optional_params = litellm.nvidiaNimEmbeddingConfig.map_openai_params(
+        optional_params = remodl.nvidiaNimEmbeddingConfig.map_openai_params(
             non_default_params=non_default_params, optional_params={}, kwargs=kwargs
         )
     elif custom_llm_provider == "vertex_ai" or custom_llm_provider == "gemini":
@@ -2820,29 +2820,29 @@ def get_optional_params_embeddings(  # noqa: PLR0915
         (
             optional_params,
             kwargs,
-        ) = litellm.VertexAITextEmbeddingConfig().map_openai_params(
+        ) = remodl.VertexAITextEmbeddingConfig().map_openai_params(
             non_default_params=non_default_params, optional_params={}, kwargs=kwargs
         )
     elif custom_llm_provider == "lm_studio":
         supported_params = (
-            litellm.LmStudioEmbeddingConfig().get_supported_openai_params()
+            remodl.LmStudioEmbeddingConfig().get_supported_openai_params()
         )
         _check_valid_arg(supported_params=supported_params)
-        optional_params = litellm.LmStudioEmbeddingConfig().map_openai_params(
+        optional_params = remodl.LmStudioEmbeddingConfig().map_openai_params(
             non_default_params=non_default_params, optional_params={}
         )
     elif custom_llm_provider == "bedrock":
         # if dimensions is in non_default_params -> pass it for model=bedrock/amazon.titan-embed-text-v2
         if "amazon.titan-embed-text-v1" in model:
-            object: Any = litellm.AmazonTitanG1Config()
+            object: Any = remodl.AmazonTitanG1Config()
         elif "amazon.titan-embed-image-v1" in model:
-            object = litellm.AmazonTitanMultimodalEmbeddingG1Config()
+            object = remodl.AmazonTitanMultimodalEmbeddingG1Config()
         elif "amazon.titan-embed-text-v2:0" in model:
-            object = litellm.AmazonTitanV2Config()
+            object = remodl.AmazonTitanV2Config()
         elif "cohere.embed-multilingual-v3" in model:
-            object = litellm.BedrockCohereEmbeddingConfig()
+            object = remodl.BedrockCohereEmbeddingConfig()
         elif "twelvelabs" in model or "marengo" in model:
-            object = litellm.TwelveLabsMarengoEmbeddingConfig()
+            object = remodl.TwelveLabsMarengoEmbeddingConfig()
         else:  # unmapped model
             supported_params = []
             _check_valid_arg(supported_params=supported_params)
@@ -2861,7 +2861,7 @@ def get_optional_params_embeddings(  # noqa: PLR0915
             request_type="embeddings",
         )
         _check_valid_arg(supported_params=supported_params)
-        optional_params = litellm.MistralEmbeddingConfig().map_openai_params(
+        optional_params = remodl.MistralEmbeddingConfig().map_openai_params(
             non_default_params=non_default_params, optional_params={}
         )
     elif custom_llm_provider == "jina_ai":
@@ -2871,7 +2871,7 @@ def get_optional_params_embeddings(  # noqa: PLR0915
             request_type="embeddings",
         )
         _check_valid_arg(supported_params=supported_params)
-        optional_params = litellm.JinaAIEmbeddingConfig().map_openai_params(
+        optional_params = remodl.JinaAIEmbeddingConfig().map_openai_params(
             non_default_params=non_default_params,
             optional_params={},
             model=model,
@@ -2884,9 +2884,9 @@ def get_optional_params_embeddings(  # noqa: PLR0915
             request_type="embeddings",
         )
         _check_valid_arg(supported_params=supported_params)
-        if litellm.VoyageContextualEmbeddingConfig.is_contextualized_embeddings(model):
+        if remodl.VoyageContextualEmbeddingConfig.is_contextualized_embeddings(model):
             optional_params = (
-                litellm.VoyageContextualEmbeddingConfig().map_openai_params(
+                remodl.VoyageContextualEmbeddingConfig().map_openai_params(
                     non_default_params=non_default_params,
                     optional_params={},
                     model=model,
@@ -2894,7 +2894,7 @@ def get_optional_params_embeddings(  # noqa: PLR0915
                 )
             )
         else:
-            optional_params = litellm.VoyageEmbeddingConfig().map_openai_params(
+            optional_params = remodl.VoyageEmbeddingConfig().map_openai_params(
                 non_default_params=non_default_params,
                 optional_params={},
                 model=model,
@@ -2907,7 +2907,7 @@ def get_optional_params_embeddings(  # noqa: PLR0915
             request_type="embeddings",
         )
         _check_valid_arg(supported_params=supported_params)
-        optional_params = litellm.InfinityEmbeddingConfig().map_openai_params(
+        optional_params = remodl.InfinityEmbeddingConfig().map_openai_params(
             non_default_params=non_default_params,
             optional_params={},
             model=model,
@@ -2920,7 +2920,7 @@ def get_optional_params_embeddings(  # noqa: PLR0915
             request_type="embeddings",
         )
         _check_valid_arg(supported_params=supported_params)
-        optional_params = litellm.FireworksAIEmbeddingConfig().map_openai_params(
+        optional_params = remodl.FireworksAIEmbeddingConfig().map_openai_params(
             non_default_params=non_default_params, optional_params={}, model=model
         )
     elif custom_llm_provider == "sambanova":
@@ -2930,7 +2930,7 @@ def get_optional_params_embeddings(  # noqa: PLR0915
             request_type="embeddings",
         )
         _check_valid_arg(supported_params=supported_params)
-        optional_params = litellm.SambaNovaEmbeddingConfig().map_openai_params(
+        optional_params = remodl.SambaNovaEmbeddingConfig().map_openai_params(
             non_default_params=non_default_params,
             optional_params={},
             model=model,
@@ -2943,7 +2943,7 @@ def get_optional_params_embeddings(  # noqa: PLR0915
             request_type="embeddings",
         )
         _check_valid_arg(supported_params=supported_params)
-        optional_params = litellm.OVHCloudEmbeddingConfig().map_openai_params(
+        optional_params = remodl.OVHCloudEmbeddingConfig().map_openai_params(
             non_default_params=non_default_params,
             optional_params={},
             model=model,
@@ -2953,11 +2953,11 @@ def get_optional_params_embeddings(  # noqa: PLR0915
     elif (
         custom_llm_provider != "openai"
         and custom_llm_provider != "azure"
-        and custom_llm_provider not in litellm.openai_compatible_providers
+        and custom_llm_provider not in remodl.openai_compatible_providers
     ):
         if len(non_default_params.keys()) > 0:
             if (
-                litellm.drop_params is True or drop_params is True
+                remodl.drop_params is True or drop_params is True
             ):  # drop the unsupported non-default values
                 keys = list(non_default_params.keys())
                 for k in keys:
@@ -2965,7 +2965,7 @@ def get_optional_params_embeddings(  # noqa: PLR0915
             else:
                 raise UnsupportedParamsError(
                     status_code=500,
-                    message=f"Setting {non_default_params} is not supported by {custom_llm_provider}. To drop it from the call, set `litellm.drop_params = True`.",
+                    message=f"Setting {non_default_params} is not supported by {custom_llm_provider}. To drop it from the call, set `remodl.drop_params = True`.",
                 )
         else:
             optional_params = non_default_params
@@ -2990,7 +2990,7 @@ def _remove_additional_properties(schema):
     """
     clean out 'additionalProperties = False'. Causes vertexai/gemini OpenAI API Schema errors - https://github.com/langchain-ai/langchainjs/issues/5240
 
-    Relevant Issues: https://github.com/BerriAI/litellm/issues/6136, https://github.com/BerriAI/litellm/issues/6088
+    Relevant Issues: https://github.com/BerriAI/remodl/issues/6136, https://github.com/BerriAI/remodl/issues/6088
     """
     if isinstance(schema, dict):
         # Remove the 'additionalProperties' key if it exists and is set to False
@@ -3011,7 +3011,7 @@ def _remove_additional_properties(schema):
 
 def _remove_strict_from_schema(schema):
     """
-    Relevant Issues: https://github.com/BerriAI/litellm/issues/6136, https://github.com/BerriAI/litellm/issues/6088
+    Relevant Issues: https://github.com/BerriAI/remodl/issues/6136, https://github.com/BerriAI/remodl/issues/6088
     """
     if isinstance(schema, dict):
         # Remove the 'additionalProperties' key if it exists and is set to False
@@ -3080,7 +3080,7 @@ def _remove_unsupported_params(
     return non_default_params
 
 
-def filter_out_litellm_params(kwargs: dict) -> dict:
+def filter_out_remodl_params(kwargs: dict) -> dict:
     """
     Filter out LiteLLM internal parameters from kwargs dict.
 
@@ -3095,12 +3095,12 @@ def filter_out_litellm_params(kwargs: dict) -> dict:
 
     Example:
         >>> kwargs = {"query": "test", "shared_session": session_obj, "metadata": {}}
-        >>> filtered = filter_out_litellm_params(kwargs)
+        >>> filtered = filter_out_remodl_params(kwargs)
         >>> # filtered = {"query": "test"}
     """
 
     return {
-        key: value for key, value in kwargs.items() if key not in all_litellm_params
+        key: value for key, value in kwargs.items() if key not in all_remodl_params
     }
 
 
@@ -3215,7 +3215,7 @@ def pre_process_non_default_params(
 
     if "tools" in non_default_params and isinstance(
         non_default_params, list
-    ):  # fixes https://github.com/BerriAI/litellm/issues/4933
+    ):  # fixes https://github.com/BerriAI/remodl/issues/4933
         tools = non_default_params["tools"]
         for (
             tool
@@ -3267,19 +3267,19 @@ def pre_process_optional_params(
     """For .completion(), preprocess optional params"""
     optional_params: Dict = {}
 
-    common_auth_dict = litellm.common_cloud_provider_auth_params
+    common_auth_dict = remodl.common_cloud_provider_auth_params
     if custom_llm_provider in common_auth_dict["providers"]:
         """
         Check if params = ["project", "region_name", "token"]
         and correctly translate for = ["azure", "vertex_ai", "watsonx", "aws"]
         """
         if custom_llm_provider == "azure":
-            optional_params = litellm.AzureOpenAIConfig().map_special_auth_params(
+            optional_params = remodl.AzureOpenAIConfig().map_special_auth_params(
                 non_default_params=passed_params, optional_params=optional_params
             )
         elif custom_llm_provider == "bedrock":
             optional_params = (
-                litellm.AmazonBedrockGlobalConfig().map_special_auth_params(
+                remodl.AmazonBedrockGlobalConfig().map_special_auth_params(
                     non_default_params=passed_params, optional_params=optional_params
                 )
             )
@@ -3287,11 +3287,11 @@ def pre_process_optional_params(
             custom_llm_provider == "vertex_ai"
             or custom_llm_provider == "vertex_ai_beta"
         ):
-            optional_params = litellm.VertexAIConfig().map_special_auth_params(
+            optional_params = remodl.VertexAIConfig().map_special_auth_params(
                 non_default_params=passed_params, optional_params=optional_params
             )
         elif custom_llm_provider == "watsonx":
-            optional_params = litellm.IBMWatsonXAIConfig().map_special_auth_params(
+            optional_params = remodl.IBMWatsonXAIConfig().map_special_auth_params(
                 non_default_params=passed_params, optional_params=optional_params
             )
 
@@ -3326,12 +3326,12 @@ def pre_process_optional_params(
             and custom_llm_provider != "vercel_ai_gateway"
             and custom_llm_provider != "nebius"
             and custom_llm_provider != "wandb"
-            and custom_llm_provider not in litellm.openai_compatible_providers
+            and custom_llm_provider not in remodl.openai_compatible_providers
         ):
             if custom_llm_provider == "ollama":
                 # ollama actually supports json output
                 optional_params["format"] = "json"
-                litellm.add_function_to_prompt = (
+                remodl.add_function_to_prompt = (
                     True  # so that main.py adds the function call to the prompt
                 )
                 if "tools" in non_default_params:
@@ -3346,7 +3346,7 @@ def pre_process_optional_params(
                         non_default_params.pop("functions")
                     )
             elif (
-                litellm.add_function_to_prompt
+                remodl.add_function_to_prompt
             ):  # if user opts to add it to prompt instead
                 optional_params["functions_unsupported_model"] = non_default_params.pop(
                     "tools", non_default_params.pop("functions", None)
@@ -3429,7 +3429,7 @@ def get_optional_params(  # noqa: PLR0915
         Check if the params passed to completion() are supported by the provider
 
         Args:
-            supported_params: List[str] - supported params from the litellm config
+            supported_params: List[str] - supported params from the remodl config
         """
         verbose_logger.info(
             f"\nLiteLLM completion() model= {model}; provider = {custom_llm_provider}"
@@ -3456,7 +3456,7 @@ def get_optional_params(  # noqa: PLR0915
                     unsupported_params[k] = non_default_params[k]
 
         if unsupported_params:
-            if litellm.drop_params is True or (
+            if remodl.drop_params is True or (
                 drop_params is not None and drop_params is True
             ):
                 for k in unsupported_params.keys():
@@ -3464,7 +3464,7 @@ def get_optional_params(  # noqa: PLR0915
             else:
                 raise UnsupportedParamsError(
                     status_code=500,
-                    message=f"{custom_llm_provider} does not support parameters: {list(unsupported_params.keys())}, for model={model}. To drop these, set `litellm.drop_params=True` or for proxy:\n\n`litellm_settings:\n drop_params: true`\n. \n If you want to use these params dynamically send allowed_openai_params={list(unsupported_params.keys())} in your request.",
+                    message=f"{custom_llm_provider} does not support parameters: {list(unsupported_params.keys())}, for model={model}. To drop these, set `remodl.drop_params=True` or for proxy:\n\n`remodl_settings:\n drop_params: true`\n. \n If you want to use these params dynamically send allowed_openai_params={list(unsupported_params.keys())} in your request.",
                 )
 
     supported_params = get_supported_openai_params(
@@ -3485,7 +3485,7 @@ def get_optional_params(  # noqa: PLR0915
     ## raise exception if provider doesn't support passed in param
     if custom_llm_provider == "anthropic":
         ## check if unsupported param passed in
-        optional_params = litellm.AnthropicConfig().map_openai_params(
+        optional_params = remodl.AnthropicConfig().map_openai_params(
             model=model,
             non_default_params=non_default_params,
             optional_params=optional_params,
@@ -3496,7 +3496,7 @@ def get_optional_params(  # noqa: PLR0915
             ),
         )
     elif custom_llm_provider == "anthropic_text":
-        optional_params = litellm.AnthropicTextConfig().map_openai_params(
+        optional_params = remodl.AnthropicTextConfig().map_openai_params(
             model=model,
             non_default_params=non_default_params,
             optional_params=optional_params,
@@ -3506,7 +3506,7 @@ def get_optional_params(  # noqa: PLR0915
                 else False
             ),
         )
-        optional_params = litellm.AnthropicTextConfig().map_openai_params(
+        optional_params = remodl.AnthropicTextConfig().map_openai_params(
             model=model,
             non_default_params=non_default_params,
             optional_params=optional_params,
@@ -3519,7 +3519,7 @@ def get_optional_params(  # noqa: PLR0915
 
     elif custom_llm_provider == "cohere_chat" or custom_llm_provider == "cohere":
         # handle cohere params
-        optional_params = litellm.CohereChatConfig().map_openai_params(
+        optional_params = remodl.CohereChatConfig().map_openai_params(
             non_default_params=non_default_params,
             optional_params=optional_params,
             model=model,
@@ -3530,7 +3530,7 @@ def get_optional_params(  # noqa: PLR0915
             ),
         )
     elif custom_llm_provider == "triton":
-        optional_params = litellm.TritonConfig().map_openai_params(
+        optional_params = remodl.TritonConfig().map_openai_params(
             non_default_params=non_default_params,
             optional_params=optional_params,
             model=model,
@@ -3538,7 +3538,7 @@ def get_optional_params(  # noqa: PLR0915
         )
 
     elif custom_llm_provider == "maritalk":
-        optional_params = litellm.MaritalkConfig().map_openai_params(
+        optional_params = remodl.MaritalkConfig().map_openai_params(
             non_default_params=non_default_params,
             optional_params=optional_params,
             model=model,
@@ -3549,7 +3549,7 @@ def get_optional_params(  # noqa: PLR0915
             ),
         )
     elif custom_llm_provider == "replicate":
-        optional_params = litellm.ReplicateConfig().map_openai_params(
+        optional_params = remodl.ReplicateConfig().map_openai_params(
             non_default_params=non_default_params,
             optional_params=optional_params,
             model=model,
@@ -3560,7 +3560,7 @@ def get_optional_params(  # noqa: PLR0915
             ),
         )
     elif custom_llm_provider == "predibase":
-        optional_params = litellm.PredibaseConfig().map_openai_params(
+        optional_params = remodl.PredibaseConfig().map_openai_params(
             non_default_params=non_default_params,
             optional_params=optional_params,
             model=model,
@@ -3571,7 +3571,7 @@ def get_optional_params(  # noqa: PLR0915
             ),
         )
     elif custom_llm_provider == "huggingface":
-        optional_params = litellm.HuggingFaceChatConfig().map_openai_params(
+        optional_params = remodl.HuggingFaceChatConfig().map_openai_params(
             non_default_params=non_default_params,
             optional_params=optional_params,
             model=model,
@@ -3582,7 +3582,7 @@ def get_optional_params(  # noqa: PLR0915
             ),
         )
     elif custom_llm_provider == "together_ai":
-        optional_params = litellm.TogetherAIConfig().map_openai_params(
+        optional_params = remodl.TogetherAIConfig().map_openai_params(
             non_default_params=non_default_params,
             optional_params=optional_params,
             model=model,
@@ -3593,14 +3593,14 @@ def get_optional_params(  # noqa: PLR0915
             ),
         )
     elif custom_llm_provider == "vertex_ai" and (
-        model in litellm.vertex_chat_models
-        or model in litellm.vertex_code_chat_models
-        or model in litellm.vertex_text_models
-        or model in litellm.vertex_code_text_models
-        or model in litellm.vertex_language_models
-        or model in litellm.vertex_vision_models
+        model in remodl.vertex_chat_models
+        or model in remodl.vertex_code_chat_models
+        or model in remodl.vertex_text_models
+        or model in remodl.vertex_code_text_models
+        or model in remodl.vertex_language_models
+        or model in remodl.vertex_vision_models
     ):
-        optional_params = litellm.VertexGeminiConfig().map_openai_params(
+        optional_params = remodl.VertexGeminiConfig().map_openai_params(
             non_default_params=non_default_params,
             optional_params=optional_params,
             model=model,
@@ -3612,7 +3612,7 @@ def get_optional_params(  # noqa: PLR0915
         )
 
     elif custom_llm_provider == "gemini":
-        optional_params = litellm.GoogleAIStudioGeminiConfig().map_openai_params(
+        optional_params = remodl.GoogleAIStudioGeminiConfig().map_openai_params(
             non_default_params=non_default_params,
             optional_params=optional_params,
             model=model,
@@ -3625,7 +3625,7 @@ def get_optional_params(  # noqa: PLR0915
     elif custom_llm_provider == "vertex_ai_beta" or (
         custom_llm_provider == "vertex_ai" and "gemini" in model
     ):
-        optional_params = litellm.VertexGeminiConfig().map_openai_params(
+        optional_params = remodl.VertexGeminiConfig().map_openai_params(
             non_default_params=non_default_params,
             optional_params=optional_params,
             model=model,
@@ -3635,10 +3635,10 @@ def get_optional_params(  # noqa: PLR0915
                 else False
             ),
         )
-    elif litellm.VertexAIAnthropicConfig.is_supported_model(
+    elif remodl.VertexAIAnthropicConfig.is_supported_model(
         model=model, custom_llm_provider=custom_llm_provider
     ):
-        optional_params = litellm.VertexAIAnthropicConfig().map_openai_params(
+        optional_params = remodl.VertexAIAnthropicConfig().map_openai_params(
             model=model,
             non_default_params=non_default_params,
             optional_params=optional_params,
@@ -3649,10 +3649,10 @@ def get_optional_params(  # noqa: PLR0915
             ),
         )
     elif custom_llm_provider == "vertex_ai":
-        if model in litellm.vertex_mistral_models:
+        if model in remodl.vertex_mistral_models:
             if "codestral" in model:
                 optional_params = (
-                    litellm.CodestralTextCompletionConfig().map_openai_params(
+                    remodl.CodestralTextCompletionConfig().map_openai_params(
                         model=model,
                         non_default_params=non_default_params,
                         optional_params=optional_params,
@@ -3664,7 +3664,7 @@ def get_optional_params(  # noqa: PLR0915
                     )
                 )
             else:
-                optional_params = litellm.MistralConfig().map_openai_params(
+                optional_params = remodl.MistralConfig().map_openai_params(
                     model=model,
                     non_default_params=non_default_params,
                     optional_params=optional_params,
@@ -3674,8 +3674,8 @@ def get_optional_params(  # noqa: PLR0915
                         else False
                     ),
                 )
-        elif model in litellm.vertex_ai_ai21_models:
-            optional_params = litellm.VertexAIAi21Config().map_openai_params(
+        elif model in remodl.vertex_ai_ai21_models:
+            optional_params = remodl.VertexAIAi21Config().map_openai_params(
                 non_default_params=non_default_params,
                 optional_params=optional_params,
                 model=model,
@@ -3697,7 +3697,7 @@ def get_optional_params(  # noqa: PLR0915
                 ),
             )
         else:  # use generic openai-like param mapping
-            optional_params = litellm.VertexAILlama3Config().map_openai_params(
+            optional_params = remodl.VertexAILlama3Config().map_openai_params(
                 non_default_params=non_default_params,
                 optional_params=optional_params,
                 model=model,
@@ -3710,7 +3710,7 @@ def get_optional_params(  # noqa: PLR0915
 
     elif custom_llm_provider == "sagemaker":
         # temperature, top_p, n, stream, stop, max_tokens, n, presence_penalty default to None
-        optional_params = litellm.SagemakerConfig().map_openai_params(
+        optional_params = remodl.SagemakerConfig().map_openai_params(
             non_default_params=non_default_params,
             optional_params=optional_params,
             model=model,
@@ -3724,7 +3724,7 @@ def get_optional_params(  # noqa: PLR0915
         bedrock_route = BedrockModelInfo.get_bedrock_route(model)
         bedrock_base_model = BedrockModelInfo.get_base_model(model)
         if bedrock_route == "converse" or bedrock_route == "converse_like":
-            optional_params = litellm.AmazonConverseConfig().map_openai_params(
+            optional_params = remodl.AmazonConverseConfig().map_openai_params(
                 model=model,
                 non_default_params=non_default_params,
                 optional_params=optional_params,
@@ -3738,7 +3738,7 @@ def get_optional_params(  # noqa: PLR0915
         elif "anthropic" in bedrock_base_model and bedrock_route == "invoke":
             if bedrock_base_model.startswith("anthropic.claude-3"):
                 optional_params = (
-                    litellm.AmazonAnthropicClaudeConfig().map_openai_params(
+                    remodl.AmazonAnthropicClaudeConfig().map_openai_params(
                         non_default_params=non_default_params,
                         optional_params=optional_params,
                         model=model,
@@ -3751,7 +3751,7 @@ def get_optional_params(  # noqa: PLR0915
                 )
 
             else:
-                optional_params = litellm.AmazonAnthropicConfig().map_openai_params(
+                optional_params = remodl.AmazonAnthropicConfig().map_openai_params(
                     non_default_params=non_default_params,
                     optional_params=optional_params,
                     model=model,
@@ -3773,7 +3773,7 @@ def get_optional_params(  # noqa: PLR0915
                 ),
             )
     elif custom_llm_provider == "cloudflare":
-        optional_params = litellm.CloudflareChatConfig().map_openai_params(
+        optional_params = remodl.CloudflareChatConfig().map_openai_params(
             model=model,
             non_default_params=non_default_params,
             optional_params=optional_params,
@@ -3784,7 +3784,7 @@ def get_optional_params(  # noqa: PLR0915
             ),
         )
     elif custom_llm_provider == "ollama":
-        optional_params = litellm.OllamaConfig().map_openai_params(
+        optional_params = remodl.OllamaConfig().map_openai_params(
             non_default_params=non_default_params,
             optional_params=optional_params,
             model=model,
@@ -3795,7 +3795,7 @@ def get_optional_params(  # noqa: PLR0915
             ),
         )
     elif custom_llm_provider == "ollama_chat":
-        optional_params = litellm.OllamaChatConfig().map_openai_params(
+        optional_params = remodl.OllamaChatConfig().map_openai_params(
             model=model,
             non_default_params=non_default_params,
             optional_params=optional_params,
@@ -3806,7 +3806,7 @@ def get_optional_params(  # noqa: PLR0915
             ),
         )
     elif custom_llm_provider == "nlp_cloud":
-        optional_params = litellm.NLPCloudConfig().map_openai_params(
+        optional_params = remodl.NLPCloudConfig().map_openai_params(
             non_default_params=non_default_params,
             optional_params=optional_params,
             model=model,
@@ -3818,7 +3818,7 @@ def get_optional_params(  # noqa: PLR0915
         )
 
     elif custom_llm_provider == "petals":
-        optional_params = litellm.PetalsConfig().map_openai_params(
+        optional_params = remodl.PetalsConfig().map_openai_params(
             non_default_params=non_default_params,
             optional_params=optional_params,
             model=model,
@@ -3829,7 +3829,7 @@ def get_optional_params(  # noqa: PLR0915
             ),
         )
     elif custom_llm_provider == "deepinfra":
-        optional_params = litellm.DeepInfraConfig().map_openai_params(
+        optional_params = remodl.DeepInfraConfig().map_openai_params(
             non_default_params=non_default_params,
             optional_params=optional_params,
             model=model,
@@ -3851,7 +3851,7 @@ def get_optional_params(  # noqa: PLR0915
             ),
         )
     elif custom_llm_provider == "mistral" or custom_llm_provider == "codestral":
-        optional_params = litellm.MistralConfig().map_openai_params(
+        optional_params = remodl.MistralConfig().map_openai_params(
             non_default_params=non_default_params,
             optional_params=optional_params,
             model=model,
@@ -3862,7 +3862,7 @@ def get_optional_params(  # noqa: PLR0915
             ),
         )
     elif custom_llm_provider == "text-completion-codestral":
-        optional_params = litellm.CodestralTextCompletionConfig().map_openai_params(
+        optional_params = remodl.CodestralTextCompletionConfig().map_openai_params(
             non_default_params=non_default_params,
             optional_params=optional_params,
             model=model,
@@ -3874,7 +3874,7 @@ def get_optional_params(  # noqa: PLR0915
         )
 
     elif custom_llm_provider == "databricks":
-        optional_params = litellm.DatabricksConfig().map_openai_params(
+        optional_params = remodl.DatabricksConfig().map_openai_params(
             non_default_params=non_default_params,
             optional_params=optional_params,
             model=model,
@@ -3885,7 +3885,7 @@ def get_optional_params(  # noqa: PLR0915
             ),
         )
     elif custom_llm_provider == "nvidia_nim":
-        optional_params = litellm.NvidiaNimConfig().map_openai_params(
+        optional_params = remodl.NvidiaNimConfig().map_openai_params(
             model=model,
             non_default_params=non_default_params,
             optional_params=optional_params,
@@ -3896,7 +3896,7 @@ def get_optional_params(  # noqa: PLR0915
             ),
         )
     elif custom_llm_provider == "cerebras":
-        optional_params = litellm.CerebrasConfig().map_openai_params(
+        optional_params = remodl.CerebrasConfig().map_openai_params(
             non_default_params=non_default_params,
             optional_params=optional_params,
             model=model,
@@ -3907,13 +3907,13 @@ def get_optional_params(  # noqa: PLR0915
             ),
         )
     elif custom_llm_provider == "xai":
-        optional_params = litellm.XAIChatConfig().map_openai_params(
+        optional_params = remodl.XAIChatConfig().map_openai_params(
             model=model,
             non_default_params=non_default_params,
             optional_params=optional_params,
         )
     elif custom_llm_provider == "ai21_chat" or custom_llm_provider == "ai21":
-        optional_params = litellm.AI21ChatConfig().map_openai_params(
+        optional_params = remodl.AI21ChatConfig().map_openai_params(
             non_default_params=non_default_params,
             optional_params=optional_params,
             model=model,
@@ -3924,7 +3924,7 @@ def get_optional_params(  # noqa: PLR0915
             ),
         )
     elif custom_llm_provider == "fireworks_ai":
-        optional_params = litellm.FireworksAIConfig().map_openai_params(
+        optional_params = remodl.FireworksAIConfig().map_openai_params(
             non_default_params=non_default_params,
             optional_params=optional_params,
             model=model,
@@ -3935,7 +3935,7 @@ def get_optional_params(  # noqa: PLR0915
             ),
         )
     elif custom_llm_provider == "volcengine":
-        optional_params = litellm.VolcEngineConfig().map_openai_params(
+        optional_params = remodl.VolcEngineConfig().map_openai_params(
             non_default_params=non_default_params,
             optional_params=optional_params,
             model=model,
@@ -3946,7 +3946,7 @@ def get_optional_params(  # noqa: PLR0915
             ),
         )
     elif custom_llm_provider == "hosted_vllm":
-        optional_params = litellm.HostedVLLMChatConfig().map_openai_params(
+        optional_params = remodl.HostedVLLMChatConfig().map_openai_params(
             non_default_params=non_default_params,
             optional_params=optional_params,
             model=model,
@@ -3957,7 +3957,7 @@ def get_optional_params(  # noqa: PLR0915
             ),
         )
     elif custom_llm_provider == "vllm":
-        optional_params = litellm.VLLMConfig().map_openai_params(
+        optional_params = remodl.VLLMConfig().map_openai_params(
             non_default_params=non_default_params,
             optional_params=optional_params,
             model=model,
@@ -3968,7 +3968,7 @@ def get_optional_params(  # noqa: PLR0915
             ),
         )
     elif custom_llm_provider == "groq":
-        optional_params = litellm.GroqChatConfig().map_openai_params(
+        optional_params = remodl.GroqChatConfig().map_openai_params(
             non_default_params=non_default_params,
             optional_params=optional_params,
             model=model,
@@ -3979,7 +3979,7 @@ def get_optional_params(  # noqa: PLR0915
             ),
         )
     elif custom_llm_provider == "deepseek":
-        optional_params = litellm.OpenAIConfig().map_openai_params(
+        optional_params = remodl.OpenAIConfig().map_openai_params(
             non_default_params=non_default_params,
             optional_params=optional_params,
             model=model,
@@ -3990,7 +3990,7 @@ def get_optional_params(  # noqa: PLR0915
             ),
         )
     elif custom_llm_provider == "openrouter":
-        optional_params = litellm.OpenrouterConfig().map_openai_params(
+        optional_params = remodl.OpenrouterConfig().map_openai_params(
             non_default_params=non_default_params,
             optional_params=optional_params,
             model=model,
@@ -4001,7 +4001,7 @@ def get_optional_params(  # noqa: PLR0915
             ),
         )
     elif custom_llm_provider == "watsonx":
-        optional_params = litellm.IBMWatsonXChatConfig().map_openai_params(
+        optional_params = remodl.IBMWatsonXChatConfig().map_openai_params(
             non_default_params=non_default_params,
             optional_params=optional_params,
             model=model,
@@ -4013,12 +4013,12 @@ def get_optional_params(  # noqa: PLR0915
         )
         # WatsonX-text param check
         for param in passed_params.keys():
-            if litellm.IBMWatsonXAIConfig().is_watsonx_text_param(param):
+            if remodl.IBMWatsonXAIConfig().is_watsonx_text_param(param):
                 raise ValueError(
                     f"LiteLLM now defaults to Watsonx's `/text/chat` endpoint. Please use the `watsonx_text` provider instead, to call the `/text/generation` endpoint. Param: {param}"
                 )
     elif custom_llm_provider == "watsonx_text":
-        optional_params = litellm.IBMWatsonXAIConfig().map_openai_params(
+        optional_params = remodl.IBMWatsonXAIConfig().map_openai_params(
             non_default_params=non_default_params,
             optional_params=optional_params,
             model=model,
@@ -4029,7 +4029,7 @@ def get_optional_params(  # noqa: PLR0915
             ),
         )
     elif custom_llm_provider == "openai":
-        optional_params = litellm.OpenAIConfig().map_openai_params(
+        optional_params = remodl.OpenAIConfig().map_openai_params(
             non_default_params=non_default_params,
             optional_params=optional_params,
             model=model,
@@ -4040,7 +4040,7 @@ def get_optional_params(  # noqa: PLR0915
             ),
         )
     elif custom_llm_provider == "nebius":
-        optional_params = litellm.NebiusConfig().map_openai_params(
+        optional_params = remodl.NebiusConfig().map_openai_params(
             non_default_params=non_default_params,
             optional_params=optional_params,
             model=model,
@@ -4051,8 +4051,8 @@ def get_optional_params(  # noqa: PLR0915
             ),
         )
     elif custom_llm_provider == "azure":
-        if litellm.AzureOpenAIO1Config().is_o_series_model(model=model):
-            optional_params = litellm.AzureOpenAIO1Config().map_openai_params(
+        if remodl.AzureOpenAIO1Config().is_o_series_model(model=model):
+            optional_params = remodl.AzureOpenAIO1Config().map_openai_params(
                 non_default_params=non_default_params,
                 optional_params=optional_params,
                 model=model,
@@ -4062,8 +4062,8 @@ def get_optional_params(  # noqa: PLR0915
                     else False
                 ),
             )
-        elif litellm.AzureOpenAIGPT5Config.is_model_gpt_5_model(model=model):
-            optional_params = litellm.AzureOpenAIGPT5Config().map_openai_params(
+        elif remodl.AzureOpenAIGPT5Config.is_model_gpt_5_model(model=model):
+            optional_params = remodl.AzureOpenAIGPT5Config().map_openai_params(
                 non_default_params=non_default_params,
                 optional_params=optional_params,
                 model=model,
@@ -4075,17 +4075,17 @@ def get_optional_params(  # noqa: PLR0915
             )
         else:
             verbose_logger.debug(
-                "Azure optional params - api_version: api_version={}, litellm.api_version={}, os.environ['AZURE_API_VERSION']={}".format(
-                    api_version, litellm.api_version, get_secret("AZURE_API_VERSION")
+                "Azure optional params - api_version: api_version={}, remodl.api_version={}, os.environ['AZURE_API_VERSION']={}".format(
+                    api_version, remodl.api_version, get_secret("AZURE_API_VERSION")
                 )
             )
             api_version = (
                 api_version
-                or litellm.api_version
+                or remodl.api_version
                 or get_secret("AZURE_API_VERSION")
-                or litellm.AZURE_DEFAULT_API_VERSION
+                or remodl.AZURE_DEFAULT_API_VERSION
             )
-            optional_params = litellm.AzureOpenAIConfig().map_openai_params(
+            optional_params = remodl.AzureOpenAIConfig().map_openai_params(
                 non_default_params=non_default_params,
                 optional_params=optional_params,
                 model=model,
@@ -4108,7 +4108,7 @@ def get_optional_params(  # noqa: PLR0915
             ),
         )
     else:  # assume passing in params for openai-like api
-        optional_params = litellm.OpenAILikeChatConfig().map_openai_params(
+        optional_params = remodl.OpenAILikeChatConfig().map_openai_params(
             non_default_params=non_default_params,
             optional_params=optional_params,
             model=model,
@@ -4149,7 +4149,7 @@ def add_provider_specific_params_to_optional_params(
     if (
         custom_llm_provider
         in ["openai", "azure", "text-completion-openai"]
-        + litellm.openai_compatible_providers
+        + remodl.openai_compatible_providers
     ):
         # for openai, azure we should pass the extra/passed params within `extra_body` https://github.com/openai/openai-python/blob/ac33853ba10d13ac149b1fa3ca6dba7d613065c9/src/openai/resources/models.py#L46
         if (
@@ -4264,9 +4264,9 @@ def calculate_max_parallel_requests(
 def _get_order_filtered_deployments(healthy_deployments: List[Dict]) -> List:
     min_order = min(
         (
-            deployment["litellm_params"]["order"]
+            deployment["remodl_params"]["order"]
             for deployment in healthy_deployments
-            if "order" in deployment["litellm_params"]
+            if "order" in deployment["remodl_params"]
         ),
         default=None,
     )
@@ -4275,7 +4275,7 @@ def _get_order_filtered_deployments(healthy_deployments: List[Dict]) -> List:
         filtered_deployments = [
             deployment
             for deployment in healthy_deployments
-            if deployment["litellm_params"].get("order") == min_order
+            if deployment["remodl_params"].get("order") == min_order
         ]
 
         return filtered_deployments
@@ -4283,7 +4283,7 @@ def _get_order_filtered_deployments(healthy_deployments: List[Dict]) -> List:
 
 
 def _get_model_region(
-    custom_llm_provider: str, litellm_params: LiteLLM_Params
+    custom_llm_provider: str, remodl_params: LiteLLM_Params
 ) -> Optional[str]:
     """
     Return the region for a model, for a given provider
@@ -4291,25 +4291,25 @@ def _get_model_region(
     if custom_llm_provider == "vertex_ai":
         # check 'vertex_location'
         vertex_ai_location = (
-            litellm_params.vertex_location
-            or litellm.vertex_location
+            remodl_params.vertex_location
+            or remodl.vertex_location
             or get_secret("VERTEXAI_LOCATION")
             or get_secret("VERTEX_LOCATION")
         )
         if vertex_ai_location is not None and isinstance(vertex_ai_location, str):
             return vertex_ai_location
     elif custom_llm_provider == "bedrock":
-        aws_region_name = litellm_params.aws_region_name
+        aws_region_name = remodl_params.aws_region_name
         if aws_region_name is not None:
             return aws_region_name
     elif custom_llm_provider == "watsonx":
-        watsonx_region_name = litellm_params.watsonx_region_name
+        watsonx_region_name = remodl_params.watsonx_region_name
         if watsonx_region_name is not None:
             return watsonx_region_name
-    return litellm_params.region_name
+    return remodl_params.region_name
 
 
-def _infer_model_region(litellm_params: LiteLLM_Params) -> Optional[AllowedModelRegion]:
+def _infer_model_region(remodl_params: LiteLLM_Params) -> Optional[AllowedModelRegion]:
     """
     Infer if a model is in the EU or US region
 
@@ -4317,32 +4317,32 @@ def _infer_model_region(litellm_params: LiteLLM_Params) -> Optional[AllowedModel
     - str (region) - "eu" or "us"
     - None (if region not found)
     """
-    model, custom_llm_provider, _, _ = litellm.get_llm_provider(
-        model=litellm_params.model, litellm_params=litellm_params
+    model, custom_llm_provider, _, _ = remodl.get_llm_provider(
+        model=remodl_params.model, remodl_params=remodl_params
     )
 
     model_region = _get_model_region(
-        custom_llm_provider=custom_llm_provider, litellm_params=litellm_params
+        custom_llm_provider=custom_llm_provider, remodl_params=remodl_params
     )
 
     if model_region is None:
         verbose_logger.debug(
-            "Cannot infer model region for model: {}".format(litellm_params.model)
+            "Cannot infer model region for model: {}".format(remodl_params.model)
         )
         return None
 
     if custom_llm_provider == "azure":
-        eu_regions = litellm.AzureOpenAIConfig().get_eu_regions()
-        us_regions = litellm.AzureOpenAIConfig().get_us_regions()
+        eu_regions = remodl.AzureOpenAIConfig().get_eu_regions()
+        us_regions = remodl.AzureOpenAIConfig().get_us_regions()
     elif custom_llm_provider == "vertex_ai":
-        eu_regions = litellm.VertexAIConfig().get_eu_regions()
-        us_regions = litellm.VertexAIConfig().get_us_regions()
+        eu_regions = remodl.VertexAIConfig().get_eu_regions()
+        us_regions = remodl.VertexAIConfig().get_us_regions()
     elif custom_llm_provider == "bedrock":
-        eu_regions = litellm.AmazonBedrockGlobalConfig().get_eu_regions()
-        us_regions = litellm.AmazonBedrockGlobalConfig().get_us_regions()
+        eu_regions = remodl.AmazonBedrockGlobalConfig().get_eu_regions()
+        us_regions = remodl.AmazonBedrockGlobalConfig().get_us_regions()
     elif custom_llm_provider == "watsonx":
-        eu_regions = litellm.IBMWatsonXAIConfig().get_eu_regions()
-        us_regions = litellm.IBMWatsonXAIConfig().get_us_regions()
+        eu_regions = remodl.IBMWatsonXAIConfig().get_eu_regions()
+        us_regions = remodl.IBMWatsonXAIConfig().get_us_regions()
     else:
         eu_regions = []
         us_regions = []
@@ -4356,62 +4356,62 @@ def _infer_model_region(litellm_params: LiteLLM_Params) -> Optional[AllowedModel
     return None
 
 
-def _is_region_eu(litellm_params: LiteLLM_Params) -> bool:
+def _is_region_eu(remodl_params: LiteLLM_Params) -> bool:
     """
     Return true/false if a deployment is in the EU
     """
-    if litellm_params.region_name == "eu":
+    if remodl_params.region_name == "eu":
         return True
 
     ## Else - try and infer from model region
-    model_region = _infer_model_region(litellm_params=litellm_params)
+    model_region = _infer_model_region(remodl_params=remodl_params)
     if model_region is not None and model_region == "eu":
         return True
     return False
 
 
-def _is_region_us(litellm_params: LiteLLM_Params) -> bool:
+def _is_region_us(remodl_params: LiteLLM_Params) -> bool:
     """
     Return true/false if a deployment is in the US
     """
-    if litellm_params.region_name == "us":
+    if remodl_params.region_name == "us":
         return True
 
     ## Else - try and infer from model region
-    model_region = _infer_model_region(litellm_params=litellm_params)
+    model_region = _infer_model_region(remodl_params=remodl_params)
     if model_region is not None and model_region == "us":
         return True
     return False
 
 
 def is_region_allowed(
-    litellm_params: LiteLLM_Params, allowed_model_region: str
+    remodl_params: LiteLLM_Params, allowed_model_region: str
 ) -> bool:
     """
     Return true/false if a deployment is in the EU
     """
-    if litellm_params.region_name == allowed_model_region:
+    if remodl_params.region_name == allowed_model_region:
         return True
     return False
 
 
 def get_model_region(
-    litellm_params: LiteLLM_Params, mode: Optional[str]
+    remodl_params: LiteLLM_Params, mode: Optional[str]
 ) -> Optional[str]:
     """
-    Pass the litellm params for an azure model, and get back the region
+    Pass the remodl params for an azure model, and get back the region
     """
     if (
-        "azure" in litellm_params.model
-        and isinstance(litellm_params.api_key, str)
-        and isinstance(litellm_params.api_base, str)
+        "azure" in remodl_params.model
+        and isinstance(remodl_params.api_key, str)
+        and isinstance(remodl_params.api_base, str)
     ):
-        _model = litellm_params.model.replace("azure/", "")
-        response: dict = litellm.AzureChatCompletion().get_headers(
+        _model = remodl_params.model.replace("azure/", "")
+        response: dict = remodl.AzureChatCompletion().get_headers(
             model=_model,
-            api_key=litellm_params.api_key,
-            api_base=litellm_params.api_base,
-            api_version=litellm_params.api_version or litellm.AZURE_DEFAULT_API_VERSION,
+            api_key=remodl_params.api_key,
+            api_base=remodl_params.api_base,
+            api_version=remodl_params.api_version or remodl.AZURE_DEFAULT_API_VERSION,
             timeout=10,
             mode=mode or "chat",
         )
@@ -4481,52 +4481,52 @@ def get_response_string(response_obj: Union[ModelResponse, ModelResponseStream])
 
 
 def get_api_key(llm_provider: str, dynamic_api_key: Optional[str]):
-    api_key = dynamic_api_key or litellm.api_key
+    api_key = dynamic_api_key or remodl.api_key
     # openai
     if llm_provider == "openai" or llm_provider == "text-completion-openai":
-        api_key = api_key or litellm.openai_key or get_secret("OPENAI_API_KEY")
+        api_key = api_key or remodl.openai_key or get_secret("OPENAI_API_KEY")
     # anthropic
     elif llm_provider == "anthropic" or llm_provider == "anthropic_text":
-        api_key = api_key or litellm.anthropic_key or get_secret("ANTHROPIC_API_KEY")
+        api_key = api_key or remodl.anthropic_key or get_secret("ANTHROPIC_API_KEY")
     # ai21
     elif llm_provider == "ai21":
-        api_key = api_key or litellm.ai21_key or get_secret("AI211_API_KEY")
+        api_key = api_key or remodl.ai21_key or get_secret("AI211_API_KEY")
     # aleph_alpha
     elif llm_provider == "aleph_alpha":
         api_key = (
-            api_key or litellm.aleph_alpha_key or get_secret("ALEPH_ALPHA_API_KEY")
+            api_key or remodl.aleph_alpha_key or get_secret("ALEPH_ALPHA_API_KEY")
         )
     # baseten
     elif llm_provider == "baseten":
-        api_key = api_key or litellm.baseten_key or get_secret("BASETEN_API_KEY")
+        api_key = api_key or remodl.baseten_key or get_secret("BASETEN_API_KEY")
     # cohere
     elif llm_provider == "cohere" or llm_provider == "cohere_chat":
-        api_key = api_key or litellm.cohere_key or get_secret("COHERE_API_KEY")
+        api_key = api_key or remodl.cohere_key or get_secret("COHERE_API_KEY")
     # huggingface
     elif llm_provider == "huggingface":
         api_key = (
-            api_key or litellm.huggingface_key or get_secret("HUGGINGFACE_API_KEY")
+            api_key or remodl.huggingface_key or get_secret("HUGGINGFACE_API_KEY")
         )
     # nlp_cloud
     elif llm_provider == "nlp_cloud":
-        api_key = api_key or litellm.nlp_cloud_key or get_secret("NLP_CLOUD_API_KEY")
+        api_key = api_key or remodl.nlp_cloud_key or get_secret("NLP_CLOUD_API_KEY")
     # replicate
     elif llm_provider == "replicate":
-        api_key = api_key or litellm.replicate_key or get_secret("REPLICATE_API_KEY")
+        api_key = api_key or remodl.replicate_key or get_secret("REPLICATE_API_KEY")
     # together_ai
     elif llm_provider == "together_ai":
         api_key = (
             api_key
-            or litellm.togetherai_api_key
+            or remodl.togetherai_api_key
             or get_secret("TOGETHERAI_API_KEY")
             or get_secret("TOGETHER_AI_TOKEN")
         )
     # nebius
     elif llm_provider == "nebius":
-        api_key = api_key or litellm.nebius_key or get_secret("NEBIUS_API_KEY")
+        api_key = api_key or remodl.nebius_key or get_secret("NEBIUS_API_KEY")
     # wandb
     elif llm_provider == "wandb":
-        api_key = api_key or litellm.wandb_key or get_secret("WANDB_API_KEY")
+        api_key = api_key or remodl.wandb_key or get_secret("WANDB_API_KEY")
     return api_key
 
 
@@ -4563,7 +4563,7 @@ def get_max_tokens(model: str) -> Optional[int]:
         config_url = f"https://huggingface.co/{model_name}/raw/main/config.json"
         try:
             # Make the HTTP request to get the raw JSON file
-            response = litellm.module_level_client.get(config_url)
+            response = remodl.module_level_client.get(config_url)
             response.raise_for_status()  # Raise an exception for bad responses (4xx or 5xx)
 
             # Parse the JSON response
@@ -4578,26 +4578,26 @@ def get_max_tokens(model: str) -> Optional[int]:
             return None
 
     try:
-        if model in litellm.model_cost:
-            if "max_output_tokens" in litellm.model_cost[model]:
-                return litellm.model_cost[model]["max_output_tokens"]
-            elif "max_tokens" in litellm.model_cost[model]:
-                return litellm.model_cost[model]["max_tokens"]
+        if model in remodl.model_cost:
+            if "max_output_tokens" in remodl.model_cost[model]:
+                return remodl.model_cost[model]["max_output_tokens"]
+            elif "max_tokens" in remodl.model_cost[model]:
+                return remodl.model_cost[model]["max_tokens"]
         model, custom_llm_provider, _, _ = get_llm_provider(model=model)
         if custom_llm_provider == "huggingface":
             max_tokens = _get_max_position_embeddings(model_name=model)
             return max_tokens
-        if model in litellm.model_cost:  # check if extracted model is in model_list
-            if "max_output_tokens" in litellm.model_cost[model]:
-                return litellm.model_cost[model]["max_output_tokens"]
-            elif "max_tokens" in litellm.model_cost[model]:
-                return litellm.model_cost[model]["max_tokens"]
+        if model in remodl.model_cost:  # check if extracted model is in model_list
+            if "max_output_tokens" in remodl.model_cost[model]:
+                return remodl.model_cost[model]["max_output_tokens"]
+            elif "max_tokens" in remodl.model_cost[model]:
+                return remodl.model_cost[model]["max_tokens"]
         else:
             raise Exception()
         return None
     except Exception:
         raise Exception(
-            f"Model {model} isn't mapped yet. Add it here - https://github.com/BerriAI/litellm/blob/main/model_prices_and_context_window.json"
+            f"Model {model} isn't mapped yet. Add it here - https://github.com/BerriAI/remodl/blob/main/model_prices_and_context_window.json"
         )
 
 
@@ -4612,7 +4612,7 @@ def _get_base_bedrock_model(model_name) -> str:
     Handle model names like - "us.meta.llama3-2-11b-instruct-v1:0" -> "meta.llama3-2-11b-instruct-v1"
     AND "meta.llama3-2-11b-instruct-v1:0" -> "meta.llama3-2-11b-instruct-v1"
     """
-    from litellm.llms.bedrock.common_utils import BedrockModelInfo
+    from remodl.llms.bedrock.common_utils import BedrockModelInfo
 
     return BedrockModelInfo.get_base_model(model_name)
 
@@ -4653,7 +4653,7 @@ def _strip_model_name(model: str, custom_llm_provider: Optional[str]) -> str:
 
 
 def _get_model_info_from_model_cost(key: str) -> dict:
-    return litellm.model_cost[key]
+    return remodl.model_cost[key]
 
 
 def _check_provider_match(model_info: dict, custom_llm_provider: Optional[str]) -> bool:
@@ -4661,24 +4661,24 @@ def _check_provider_match(model_info: dict, custom_llm_provider: Optional[str]) 
     Check if the model info provider matches the custom provider.
     """
     if custom_llm_provider and (
-        "litellm_provider" in model_info
-        and model_info["litellm_provider"] != custom_llm_provider
+        "remodl_provider" in model_info
+        and model_info["remodl_provider"] != custom_llm_provider
     ):
         if custom_llm_provider == "vertex_ai" and model_info[
-            "litellm_provider"
+            "remodl_provider"
         ].startswith("vertex_ai"):
             return True
         elif custom_llm_provider == "fireworks_ai" and model_info[
-            "litellm_provider"
+            "remodl_provider"
         ].startswith("fireworks_ai"):
             return True
         elif custom_llm_provider.startswith("bedrock") and model_info[
-            "litellm_provider"
+            "remodl_provider"
         ].startswith("bedrock"):
             return True
         elif (
-            custom_llm_provider == "litellm_proxy"
-        ):  # litellm_proxy is a special case, it's not a provider, it's a proxy for the provider
+            custom_llm_provider == "remodl_proxy"
+        ):  # remodl_proxy is a special case, it's not a provider, it's a proxy for the provider
             return True
         else:
             return False
@@ -4748,7 +4748,7 @@ def _get_max_position_embeddings(model_name: str) -> Optional[int]:
 
     try:
         # Make the HTTP request to get the raw JSON file
-        response = litellm.module_level_client.get(config_url)
+        response = remodl.module_level_client.get(config_url)
         response.raise_for_status()  # Raise an exception for bad responses (4xx or 5xx)
 
         # Parse the JSON response
@@ -4803,7 +4803,7 @@ def _is_potential_model_name_in_model_cost(
     Check if the potential model name is in the model cost.
     """
     return any(
-        potential_model_name in litellm.model_cost
+        potential_model_name in remodl.model_cost
         for potential_model_name in potential_model_names.values()
     )
 
@@ -4815,17 +4815,17 @@ def _get_model_info_helper(  # noqa: PLR0915
     Helper for 'get_model_info'. Separated out to avoid infinite loop caused by returning 'supported_openai_param's
     """
     try:
-        azure_llms = {**litellm.azure_llms, **litellm.azure_embedding_models}
+        azure_llms = {**remodl.azure_llms, **remodl.azure_embedding_models}
         if model in azure_llms:
             model = azure_llms[model]
         if custom_llm_provider is not None and custom_llm_provider == "vertex_ai_beta":
             custom_llm_provider = "vertex_ai"
         if custom_llm_provider is not None and custom_llm_provider == "vertex_ai":
-            if "meta/" + model in litellm.vertex_llama3_models:
+            if "meta/" + model in remodl.vertex_llama3_models:
                 model = "meta/" + model
-            elif model + "@latest" in litellm.vertex_mistral_models:
+            elif model + "@latest" in remodl.vertex_mistral_models:
                 model = model + "@latest"
-            elif model + "@latest" in litellm.vertex_ai_ai21_models:
+            elif model + "@latest" in remodl.vertex_ai_ai21_models:
                 model = model + "@latest"
         ##########################
         potential_model_names = _get_potential_model_names(
@@ -4833,7 +4833,7 @@ def _get_model_info_helper(  # noqa: PLR0915
         )
 
         verbose_logger.debug(
-            f"checking potential_model_names in litellm.model_cost: {potential_model_names}"
+            f"checking potential_model_names in remodl.model_cost: {potential_model_names}"
         )
 
         combined_model_name = potential_model_names["combined_model_name"]
@@ -4853,7 +4853,7 @@ def _get_model_info_helper(  # noqa: PLR0915
                 max_output_tokens=None,
                 input_cost_per_token=0,
                 output_cost_per_token=0,
-                litellm_provider="huggingface",
+                remodl_provider="huggingface",
                 mode="chat",
                 supports_system_messages=None,
                 supports_response_schema=None,
@@ -4867,28 +4867,28 @@ def _get_model_info_helper(  # noqa: PLR0915
         elif (
             custom_llm_provider == "ollama" or custom_llm_provider == "ollama_chat"
         ) and not _is_potential_model_name_in_model_cost(potential_model_names):
-            return litellm.OllamaConfig().get_model_info(model)
+            return remodl.OllamaConfig().get_model_info(model)
         else:
             """
             Check if: (in order of specificity)
-            1. 'custom_llm_provider/model' in litellm.model_cost. Checks "groq/llama3-8b-8192" if model="llama3-8b-8192" and custom_llm_provider="groq"
-            2. 'model' in litellm.model_cost. Checks "gemini-1.5-pro-002" in  litellm.model_cost if model="gemini-1.5-pro-002" and custom_llm_provider=None
-            3. 'combined_stripped_model_name' in litellm.model_cost. Checks if 'gemini/gemini-1.5-flash' in model map, if 'gemini/gemini-1.5-flash-001' given.
-            4. 'stripped_model_name' in litellm.model_cost. Checks if 'ft:gpt-3.5-turbo' in model map, if 'ft:gpt-3.5-turbo:my-org:custom_suffix:id' given.
-            5. 'split_model' in litellm.model_cost. Checks "llama3-8b-8192" in litellm.model_cost if model="groq/llama3-8b-8192"
+            1. 'custom_llm_provider/model' in remodl.model_cost. Checks "groq/llama3-8b-8192" if model="llama3-8b-8192" and custom_llm_provider="groq"
+            2. 'model' in remodl.model_cost. Checks "gemini-1.5-pro-002" in  remodl.model_cost if model="gemini-1.5-pro-002" and custom_llm_provider=None
+            3. 'combined_stripped_model_name' in remodl.model_cost. Checks if 'gemini/gemini-1.5-flash' in model map, if 'gemini/gemini-1.5-flash-001' given.
+            4. 'stripped_model_name' in remodl.model_cost. Checks if 'ft:gpt-3.5-turbo' in model map, if 'ft:gpt-3.5-turbo:my-org:custom_suffix:id' given.
+            5. 'split_model' in remodl.model_cost. Checks "llama3-8b-8192" in remodl.model_cost if model="groq/llama3-8b-8192"
             """
 
             _model_info: Optional[Dict[str, Any]] = None
             key: Optional[str] = None
 
-            if combined_model_name in litellm.model_cost:
+            if combined_model_name in remodl.model_cost:
                 key = combined_model_name
                 _model_info = _get_model_info_from_model_cost(key=cast(str, key))
                 if not _check_provider_match(
                     model_info=_model_info, custom_llm_provider=custom_llm_provider
                 ):
                     _model_info = None
-            if _model_info is None and model in litellm.model_cost:
+            if _model_info is None and model in remodl.model_cost:
                 key = model
                 _model_info = _get_model_info_from_model_cost(key=cast(str, key))
                 if not _check_provider_match(
@@ -4897,7 +4897,7 @@ def _get_model_info_helper(  # noqa: PLR0915
                     _model_info = None
             if (
                 _model_info is None
-                and combined_stripped_model_name in litellm.model_cost
+                and combined_stripped_model_name in remodl.model_cost
             ):
                 key = combined_stripped_model_name
                 _model_info = _get_model_info_from_model_cost(key=cast(str, key))
@@ -4905,14 +4905,14 @@ def _get_model_info_helper(  # noqa: PLR0915
                     model_info=_model_info, custom_llm_provider=custom_llm_provider
                 ):
                     _model_info = None
-            if _model_info is None and stripped_model_name in litellm.model_cost:
+            if _model_info is None and stripped_model_name in remodl.model_cost:
                 key = stripped_model_name
                 _model_info = _get_model_info_from_model_cost(key=cast(str, key))
                 if not _check_provider_match(
                     model_info=_model_info, custom_llm_provider=custom_llm_provider
                 ):
                     _model_info = None
-            if _model_info is None and split_model in litellm.model_cost:
+            if _model_info is None and split_model in remodl.model_cost:
                 key = split_model
                 _model_info = _get_model_info_from_model_cost(key=cast(str, key))
                 if not _check_provider_match(
@@ -4922,7 +4922,7 @@ def _get_model_info_helper(  # noqa: PLR0915
 
             if _model_info is None or key is None:
                 raise ValueError(
-                    "This model isn't mapped yet. Add it here - https://github.com/BerriAI/litellm/blob/main/model_prices_and_context_window.json"
+                    "This model isn't mapped yet. Add it here - https://github.com/BerriAI/remodl/blob/main/model_prices_and_context_window.json"
                 )
 
             _input_cost_per_token: Optional[float] = _model_info.get(
@@ -5029,8 +5029,8 @@ def _get_model_info_helper(  # noqa: PLR0915
                     "citation_cost_per_token", None
                 ),
                 tiered_pricing=_model_info.get("tiered_pricing", None),
-                litellm_provider=_model_info.get(
-                    "litellm_provider", custom_llm_provider
+                remodl_provider=_model_info.get(
+                    "remodl_provider", custom_llm_provider
                 ),
                 mode=_model_info.get("mode"),  # type: ignore
                 supports_system_messages=_model_info.get(
@@ -5078,7 +5078,7 @@ def _get_model_info_helper(  # noqa: PLR0915
         if "OllamaError" in str(e):
             raise e
         raise Exception(
-            "This model isn't mapped yet. model={}, custom_llm_provider={}. Add it here - https://github.com/BerriAI/litellm/blob/main/model_prices_and_context_window.json.".format(
+            "This model isn't mapped yet. model={}, custom_llm_provider={}. Add it here - https://github.com/BerriAI/remodl/blob/main/model_prices_and_context_window.json.".format(
                 model, custom_llm_provider
             )
         )
@@ -5090,11 +5090,11 @@ def get_model_info(model: str, custom_llm_provider: Optional[str] = None) -> Mod
 
     Parameters:
     - model (str): The name of the model.
-    - custom_llm_provider (str | null): the provider used for the model. If provided, used to check if the litellm model info is for that provider.
+    - custom_llm_provider (str | null): the provider used for the model. If provided, used to check if the remodl model info is for that provider.
 
     Returns:
         dict: A dictionary containing the following information:
-            key: Required[str] # the key in litellm.model_cost which is returned
+            key: Required[str] # the key in remodl.model_cost which is returned
             max_tokens: Required[Optional[int]]
             max_input_tokens: Required[Optional[int]]
             max_output_tokens: Required[Optional[int]]
@@ -5122,7 +5122,7 @@ def get_model_info(model: str, custom_llm_provider: Optional[str] = None) -> Mod
             output_vector_size: Optional[int]
             output_cost_per_video_per_second: Optional[float]  # only for vertex ai models
             output_cost_per_audio_per_second: Optional[float]  # only for vertex ai models
-            litellm_provider: Required[str]
+            remodl_provider: Required[str]
             mode: Required[
                 Literal[
                     "completion", "embedding", "image_generation", "chat", "audio_transcription"
@@ -5150,12 +5150,12 @@ def get_model_info(model: str, custom_llm_provider: Optional[str] = None) -> Mod
             "max_tokens": 8192,
             "input_cost_per_token": 0.00003,
             "output_cost_per_token": 0.00006,
-            "litellm_provider": "openai",
+            "remodl_provider": "openai",
             "mode": "chat",
             "supported_openai_params": ["temperature", "max_tokens", "top_p", "frequency_penalty", "presence_penalty"]
         }
     """
-    supported_openai_params = litellm.get_supported_openai_params(
+    supported_openai_params = remodl.get_supported_openai_params(
         model=model, custom_llm_provider=custom_llm_provider
     )
 
@@ -5211,7 +5211,7 @@ def function_to_dict(input_function) -> dict:  # noqa: C901
     Returns
     -------
     dictionnary
-        A dictionnary to add to the list passed to `functions` parameter of `litellm.completion`
+        A dictionnary to add to the list passed to `functions` parameter of `remodl.completion`
     """
     # Get function name and docstring
     try:
@@ -5313,7 +5313,7 @@ def load_test_model(
     messages = [[{"role": "user", "content": test_prompt}] for _ in range(test_calls)]
     start_time = time.time()
     try:
-        litellm.batch_completion(
+        remodl.batch_completion(
             model=model,
             messages=messages,
             custom_llm_provider=custom_llm_provider,
@@ -5343,13 +5343,13 @@ def get_provider_fields(custom_llm_provider: str) -> List[ProviderField]:
     """Return the fields required for each provider"""
 
     if custom_llm_provider == "databricks":
-        return litellm.DatabricksConfig().get_required_params()
+        return remodl.DatabricksConfig().get_required_params()
 
     elif custom_llm_provider == "ollama":
-        return litellm.OllamaConfig().get_required_params()
+        return remodl.OllamaConfig().get_required_params()
 
     elif custom_llm_provider == "azure_ai":
-        return litellm.AzureAIStudioConfig().get_required_params()
+        return remodl.AzureAIStudioConfig().get_required_params()
 
     else:
         return []
@@ -5652,108 +5652,108 @@ def validate_environment(  # noqa: PLR0915
     else:
         ## openai - chatcompletion + text completion
         if (
-            model in litellm.open_ai_chat_completion_models
-            or model in litellm.open_ai_text_completion_models
-            or model in litellm.open_ai_embedding_models
-            or model in litellm.openai_image_generation_models
+            model in remodl.open_ai_chat_completion_models
+            or model in remodl.open_ai_text_completion_models
+            or model in remodl.open_ai_embedding_models
+            or model in remodl.openai_image_generation_models
         ):
             if "OPENAI_API_KEY" in os.environ:
                 keys_in_environment = True
             else:
                 missing_keys.append("OPENAI_API_KEY")
         ## anthropic
-        elif model in litellm.anthropic_models:
+        elif model in remodl.anthropic_models:
             if "ANTHROPIC_API_KEY" in os.environ:
                 keys_in_environment = True
             else:
                 missing_keys.append("ANTHROPIC_API_KEY")
         ## cohere
-        elif model in litellm.cohere_models:
+        elif model in remodl.cohere_models:
             if "COHERE_API_KEY" in os.environ:
                 keys_in_environment = True
             else:
                 missing_keys.append("COHERE_API_KEY")
         ## replicate
-        elif model in litellm.replicate_models:
+        elif model in remodl.replicate_models:
             if "REPLICATE_API_KEY" in os.environ:
                 keys_in_environment = True
             else:
                 missing_keys.append("REPLICATE_API_KEY")
         ## openrouter
-        elif model in litellm.openrouter_models:
+        elif model in remodl.openrouter_models:
             if "OPENROUTER_API_KEY" in os.environ:
                 keys_in_environment = True
             else:
                 missing_keys.append("OPENROUTER_API_KEY")
         ## vercel_ai_gateway
-        elif model in litellm.vercel_ai_gateway_models:
+        elif model in remodl.vercel_ai_gateway_models:
             if "VERCEL_AI_GATEWAY_API_KEY" in os.environ:
                 keys_in_environment = True
             else:
                 missing_keys.append("VERCEL_AI_GATEWAY_API_KEY")
         ## datarobot
-        elif model in litellm.datarobot_models:
+        elif model in remodl.datarobot_models:
             if "DATAROBOT_API_TOKEN" in os.environ:
                 keys_in_environment = True
             else:
                 missing_keys.append("DATAROBOT_API_TOKEN")
         ## vertex - text + chat models
         elif (
-            model in litellm.vertex_chat_models
-            or model in litellm.vertex_text_models
-            or model in litellm.models_by_provider["vertex_ai"]
+            model in remodl.vertex_chat_models
+            or model in remodl.vertex_text_models
+            or model in remodl.models_by_provider["vertex_ai"]
         ):
             if "VERTEXAI_PROJECT" in os.environ and "VERTEXAI_LOCATION" in os.environ:
                 keys_in_environment = True
             else:
                 missing_keys.extend(["VERTEXAI_PROJECT", "VERTEXAI_LOCATION"])
         ## huggingface
-        elif model in litellm.huggingface_models:
+        elif model in remodl.huggingface_models:
             if "HUGGINGFACE_API_KEY" in os.environ:
                 keys_in_environment = True
             else:
                 missing_keys.append("HUGGINGFACE_API_KEY")
         ## ai21
-        elif model in litellm.ai21_models:
+        elif model in remodl.ai21_models:
             if "AI21_API_KEY" in os.environ:
                 keys_in_environment = True
             else:
                 missing_keys.append("AI21_API_KEY")
         ## together_ai
-        elif model in litellm.together_ai_models:
+        elif model in remodl.together_ai_models:
             if "TOGETHERAI_API_KEY" in os.environ:
                 keys_in_environment = True
             else:
                 missing_keys.append("TOGETHERAI_API_KEY")
         ## aleph_alpha
-        elif model in litellm.aleph_alpha_models:
+        elif model in remodl.aleph_alpha_models:
             if "ALEPH_ALPHA_API_KEY" in os.environ:
                 keys_in_environment = True
             else:
                 missing_keys.append("ALEPH_ALPHA_API_KEY")
         ## baseten
-        elif model in litellm.baseten_models:
+        elif model in remodl.baseten_models:
             if "BASETEN_API_KEY" in os.environ:
                 keys_in_environment = True
             else:
                 missing_keys.append("BASETEN_API_KEY")
         ## nlp_cloud
-        elif model in litellm.nlp_cloud_models:
+        elif model in remodl.nlp_cloud_models:
             if "NLP_CLOUD_API_KEY" in os.environ:
                 keys_in_environment = True
             else:
                 missing_keys.append("NLP_CLOUD_API_KEY")
-        elif model in litellm.novita_models:
+        elif model in remodl.novita_models:
             if "NOVITA_API_KEY" in os.environ:
                 keys_in_environment = True
             else:
                 missing_keys.append("NOVITA_API_KEY")
-        elif model in litellm.nebius_models:
+        elif model in remodl.nebius_models:
             if "NEBIUS_API_KEY" in os.environ:
                 keys_in_environment = True
             else:
                 missing_keys.append("NEBIUS_API_KEY")
-        elif model in litellm.wandb_models:
+        elif model in remodl.wandb_models:
             if "WANDB_API_KEY" in os.environ:
                 keys_in_environment = True
             else:
@@ -5779,7 +5779,7 @@ def validate_environment(  # noqa: PLR0915
 
 
 def acreate(*args, **kwargs):  ## Thin client to handle the acreate langchain call
-    return litellm.acompletion(*args, **kwargs)
+    return remodl.acompletion(*args, **kwargs)
 
 
 def prompt_token_calculator(model, messages):
@@ -5804,20 +5804,20 @@ def valid_model(model):
     try:
         # for a given model name, check if the user has the right permissions to access the model
         if (
-            model in litellm.open_ai_chat_completion_models
-            or model in litellm.open_ai_text_completion_models
+            model in remodl.open_ai_chat_completion_models
+            or model in remodl.open_ai_text_completion_models
         ):
             openai.models.retrieve(model)
         else:
             messages = [{"role": "user", "content": "Hello World"}]
-            litellm.completion(model=model, messages=messages)
+            remodl.completion(model=model, messages=messages)
     except Exception:
         raise BadRequestError(message="", model=model, llm_provider="")
 
 
 def check_valid_key(model: str, api_key: str):
     """
-    Checks if a given API key is valid for a specific model by making a litellm.completion call with max_tokens=10
+    Checks if a given API key is valid for a specific model by making a remodl.completion call with max_tokens=10
 
     Args:
         model (str): The name of the model to check the API key against.
@@ -5828,7 +5828,7 @@ def check_valid_key(model: str, api_key: str):
     """
     messages = [{"role": "user", "content": "Hey, how's it going?"}]
     try:
-        litellm.completion(
+        remodl.completion(
             model=model, messages=messages, api_key=api_key, max_tokens=10
         )
         return True
@@ -5948,8 +5948,8 @@ def register_prompt_template(
         dict: The updated custom prompt dictionary.
     Example usage:
     ```
-    import litellm
-    litellm.register_prompt_template(
+    import remodl
+    remodl.register_prompt_template(
             model="llama-2",
         initial_prompt_value="You are a good assistant" # [OPTIONAL]
             roles={
@@ -5979,19 +5979,19 @@ def register_prompt_template(
         pass
     if tokenizer_config:
         for m in potential_models:
-            litellm.known_tokenizer_config[m] = {
+            remodl.known_tokenizer_config[m] = {
                 "tokenizer": tokenizer_config,
                 "status": "success",
             }
     else:
         for m in potential_models:
-            litellm.custom_prompt_dict[m] = {
+            remodl.custom_prompt_dict[m] = {
                 "roles": roles,
                 "initial_prompt_value": initial_prompt_value,
                 "final_prompt_value": final_prompt_value,
             }
 
-    return litellm.custom_prompt_dict
+    return remodl.custom_prompt_dict
 
 
 class TextCompletionStreamWrapper:
@@ -6081,7 +6081,7 @@ class TextCompletionStreamWrapper:
 def mock_completion_streaming_obj(
     model_response, mock_response, model, n: Optional[int] = None
 ):
-    if isinstance(mock_response, litellm.MockException):
+    if isinstance(mock_response, remodl.MockException):
         raise mock_response
     if isinstance(mock_response, ModelResponseStream):
         yield mock_response
@@ -6093,9 +6093,9 @@ def mock_completion_streaming_obj(
         else:
             _all_choices = []
             for j in range(n):
-                _streaming_choice = litellm.utils.StreamingChoices(
+                _streaming_choice = remodl.utils.StreamingChoices(
                     index=j,
-                    delta=litellm.utils.Delta(
+                    delta=remodl.utils.Delta(
                         role="assistant", content=mock_response[i : i + 3]
                     ),
                 )
@@ -6110,7 +6110,7 @@ async def async_mock_completion_streaming_obj(
     model,
     n: Optional[int] = None,
 ):
-    if isinstance(mock_response, litellm.MockException):
+    if isinstance(mock_response, remodl.MockException):
         raise mock_response
     if isinstance(mock_response, ModelResponseStream):
         yield mock_response
@@ -6122,9 +6122,9 @@ async def async_mock_completion_streaming_obj(
         else:
             _all_choices = []
             for j in range(n):
-                _streaming_choice = litellm.utils.StreamingChoices(
+                _streaming_choice = remodl.utils.StreamingChoices(
                     index=j,
-                    delta=litellm.utils.Delta(
+                    delta=remodl.utils.Delta(
                         role="assistant", content=mock_response[i : i + 3]
                     ),
                 )
@@ -6322,14 +6322,14 @@ def trim_messages(
     try:
         if max_tokens is None:
             # Check if model is valid
-            if model in litellm.model_cost:
-                max_tokens_for_model = litellm.model_cost[model].get(
-                    "max_input_tokens", litellm.model_cost[model]["max_tokens"]
+            if model in remodl.model_cost:
+                max_tokens_for_model = remodl.model_cost[model].get(
+                    "max_input_tokens", remodl.model_cost[model]["max_tokens"]
                 )
                 max_tokens = int(max_tokens_for_model * trim_ratio)
             else:
                 # if user did not specify max (input) tokens
-                # or passed an llm litellm does not know
+                # or passed an llm remodl does not know
                 # do nothing, just return messages
                 return messages
 
@@ -6339,7 +6339,7 @@ def trim_messages(
                 system_message += "\n" if system_message else ""
                 system_message += message["content"]
 
-        ## Handle Tool Call ## - check if last message is a tool response, return as is - https://github.com/BerriAI/litellm/issues/4931
+        ## Handle Tool Call ## - check if last message is a tool response, return as is - https://github.com/BerriAI/remodl/issues/4931
         tool_messages = []
 
         for message in reversed(messages):
@@ -6404,7 +6404,7 @@ def trim_messages(
         return original_messages
 
 
-from litellm.caching.in_memory_cache import InMemoryCache
+from remodl.caching.in_memory_cache import InMemoryCache
 
 
 class AvailableModelsCache(InMemoryCache):
@@ -6432,12 +6432,12 @@ class AvailableModelsCache(InMemoryCache):
     def _get_cache_key(
         self,
         custom_llm_provider: Optional[str],
-        litellm_params: Optional[LiteLLM_Params],
+        remodl_params: Optional[LiteLLM_Params],
     ) -> str:
         valid_str = ""
 
-        if litellm_params is not None:
-            valid_str = litellm_params.model_dump_json()
+        if remodl_params is not None:
+            valid_str = remodl_params.model_dump_json()
         if custom_llm_provider is not None:
             valid_str = f"{custom_llm_provider}:{valid_str}"
         return hashlib.sha256(valid_str.encode()).hexdigest()
@@ -6445,15 +6445,15 @@ class AvailableModelsCache(InMemoryCache):
     def get_cached_model_info(
         self,
         custom_llm_provider: Optional[str] = None,
-        litellm_params: Optional[LiteLLM_Params] = None,
+        remodl_params: Optional[LiteLLM_Params] = None,
     ) -> Optional[List[str]]:
         """Get cached model info"""
         # Check if environment has changed
-        if litellm_params is None and self._check_env_changed():
+        if remodl_params is None and self._check_env_changed():
             self.cache_dict.clear()
             return None
 
-        cache_key = self._get_cache_key(custom_llm_provider, litellm_params)
+        cache_key = self._get_cache_key(custom_llm_provider, remodl_params)
 
         result = cast(Optional[List[str]], self.get_cache(cache_key))
 
@@ -6464,11 +6464,11 @@ class AvailableModelsCache(InMemoryCache):
     def set_cached_model_info(
         self,
         custom_llm_provider: str,
-        litellm_params: Optional[LiteLLM_Params],
+        remodl_params: Optional[LiteLLM_Params],
         available_models: List[str],
     ):
         """Set cached model info"""
-        cache_key = self._get_cache_key(custom_llm_provider, litellm_params)
+        cache_key = self._get_cache_key(custom_llm_provider, remodl_params)
         self.set_cache(cache_key, copy.deepcopy(available_models))
 
 
@@ -6481,15 +6481,15 @@ def _infer_valid_provider_from_env_vars(
 ) -> List[str]:
     valid_providers: List[str] = []
     environ_keys = os.environ.keys()
-    for provider in litellm.provider_list:
+    for provider in remodl.provider_list:
         if custom_llm_provider and provider != custom_llm_provider:
             continue
 
-        # edge case litellm has together_ai as a provider, it should be togetherai
+        # edge case remodl has together_ai as a provider, it should be togetherai
         env_provider_1 = provider.replace("_", "")
         env_provider_2 = provider
 
-        # litellm standardizes expected provider keys to
+        # remodl standardizes expected provider keys to
         # PROVIDER_API_KEY. Example: OPENAI_API_KEY, COHERE_API_KEY
         expected_provider_key_1 = f"{env_provider_1.upper()}_API_KEY"
         expected_provider_key_2 = f"{env_provider_2.upper()}_API_KEY"
@@ -6506,21 +6506,21 @@ def _infer_valid_provider_from_env_vars(
 def _get_valid_models_from_provider_api(
     provider_config: BaseLLMModelInfo,
     custom_llm_provider: str,
-    litellm_params: Optional[LiteLLM_Params] = None,
+    remodl_params: Optional[LiteLLM_Params] = None,
 ) -> List[str]:
     try:
         cached_result = _model_cache.get_cached_model_info(
-            custom_llm_provider, litellm_params
+            custom_llm_provider, remodl_params
         )
 
         if cached_result is not None:
             return cached_result
         models = provider_config.get_models(
-            api_key=litellm_params.api_key if litellm_params is not None else None,
-            api_base=litellm_params.api_base if litellm_params is not None else None,
+            api_key=remodl_params.api_key if remodl_params is not None else None,
+            api_base=remodl_params.api_base if remodl_params is not None else None,
         )
 
-        _model_cache.set_cached_model_info(custom_llm_provider, litellm_params, models)
+        _model_cache.set_cached_model_info(custom_llm_provider, remodl_params, models)
         return models
     except Exception as e:
         verbose_logger.warning(f"Error getting valid models: {e}")
@@ -6530,7 +6530,7 @@ def _get_valid_models_from_provider_api(
 def get_valid_models(
     check_provider_endpoint: Optional[bool] = None,
     custom_llm_provider: Optional[str] = None,
-    litellm_params: Optional[LiteLLM_Params] = None,
+    remodl_params: Optional[LiteLLM_Params] = None,
     api_key: Optional[str] = None,
     api_base: Optional[str] = None,
 ) -> List[str]:
@@ -6548,18 +6548,18 @@ def get_valid_models(
 
     try:
         ################################
-        # init litellm_params
+        # init remodl_params
         #################################
-        if litellm_params is None:
-            litellm_params = LiteLLM_Params(model="")
+        if remodl_params is None:
+            remodl_params = LiteLLM_Params(model="")
         if api_key is not None:
-            litellm_params.api_key = api_key
+            remodl_params.api_key = api_key
         if api_base is not None:
-            litellm_params.api_base = api_base
+            remodl_params.api_base = api_base
         #################################
 
         check_provider_endpoint = (
-            check_provider_endpoint or litellm.check_provider_endpoint
+            check_provider_endpoint or remodl.check_provider_endpoint
         )
         # get keys set in .env
 
@@ -6592,12 +6592,12 @@ def get_valid_models(
                     _get_valid_models_from_provider_api(
                         provider_config,
                         provider,
-                        litellm_params,
+                        remodl_params,
                     )
                 )
             else:
                 models_for_provider = copy.deepcopy(
-                    litellm.models_by_provider.get(provider, [])
+                    remodl.models_by_provider.get(provider, [])
                 )
                 valid_models.extend(models_for_provider)
 
@@ -6607,7 +6607,7 @@ def get_valid_models(
         return []  # NON-Blocking
 
 
-def print_args_passed_to_litellm(original_function, args, kwargs):
+def print_args_passed_to_remodl(original_function, args, kwargs):
     if not _is_debugging_on():
         return
     try:
@@ -6637,22 +6637,22 @@ def print_args_passed_to_litellm(original_function, args, kwargs):
             "\n",
         )  # new line before
         print_verbose(
-            "\033[92mRequest to litellm:\033[0m",
+            "\033[92mRequest to remodl:\033[0m",
         )
         if args and kwargs:
             print_verbose(
-                f"\033[92mlitellm.{original_function.__name__}({args_str}, {kwargs_str})\033[0m"
+                f"\033[92mremodl.{original_function.__name__}({args_str}, {kwargs_str})\033[0m"
             )
         elif args:
             print_verbose(
-                f"\033[92mlitellm.{original_function.__name__}({args_str})\033[0m"
+                f"\033[92mremodl.{original_function.__name__}({args_str})\033[0m"
             )
         elif kwargs:
             print_verbose(
-                f"\033[92mlitellm.{original_function.__name__}({kwargs_str})\033[0m"
+                f"\033[92mremodl.{original_function.__name__}({kwargs_str})\033[0m"
             )
         else:
-            print_verbose(f"\033[92mlitellm.{original_function.__name__}()\033[0m")
+            print_verbose(f"\033[92mremodl.{original_function.__name__}()\033[0m")
         print_verbose("\n")  # new line after
     except Exception:
         # This should always be non blocking
@@ -6672,14 +6672,14 @@ def get_logging_id(start_time, response_obj):
 def _get_base_model_from_metadata(model_call_details=None):
     if model_call_details is None:
         return None
-    litellm_params = model_call_details.get("litellm_params", {})
-    if litellm_params is not None:
-        _base_model = litellm_params.get("base_model", None)
+    remodl_params = model_call_details.get("remodl_params", {})
+    if remodl_params is not None:
+        _base_model = remodl_params.get("base_model", None)
         if _base_model is not None:
             return _base_model
-        metadata = litellm_params.get("metadata", {})
+        metadata = remodl_params.get("metadata", {})
 
-        return _get_base_model_from_litellm_call_metadata(metadata=metadata)
+        return _get_base_model_from_remodl_call_metadata(metadata=metadata)
     return None
 
 
@@ -6820,7 +6820,7 @@ def add_dummy_tool(custom_llm_provider: str) -> List[ChatCompletionToolParam]:
     """
     Prevent Anthropic from raising error when tool_use block exists but no tools are provided.
 
-    Relevent Issues: https://github.com/BerriAI/litellm/issues/5388, https://github.com/BerriAI/litellm/issues/5747
+    Relevent Issues: https://github.com/BerriAI/remodl/issues/5388, https://github.com/BerriAI/remodl/issues/5747
     """
     return [
         ChatCompletionToolParam(
@@ -6837,7 +6837,7 @@ def add_dummy_tool(custom_llm_provider: str) -> List[ChatCompletionToolParam]:
     ]
 
 
-from litellm.types.llms.openai import (
+from remodl.types.llms.openai import (
     ChatCompletionAudioObject,
     ChatCompletionImageObject,
     ChatCompletionTextObject,
@@ -6967,9 +6967,9 @@ def validate_chat_completion_tool_choice(
     """
     Confirm the tool choice is passed in the OpenAI format.
 
-    Prevents user errors like: https://github.com/BerriAI/litellm/issues/7483
+    Prevents user errors like: https://github.com/BerriAI/remodl/issues/7483
     """
-    from litellm.types.llms.openai import (
+    from remodl.types.llms.openai import (
         ChatCompletionToolChoiceObjectParam,
         ChatCompletionToolChoiceStringValues,
     )
@@ -7008,260 +7008,260 @@ class ProviderConfigManager:
 
         if (
             provider == LlmProviders.OPENAI
-            and litellm.openaiOSeriesConfig.is_model_o_series_model(model=model)
+            and remodl.openaiOSeriesConfig.is_model_o_series_model(model=model)
         ):
-            return litellm.openaiOSeriesConfig
+            return remodl.openaiOSeriesConfig
         elif (
             provider == LlmProviders.OPENAI
-            and litellm.OpenAIGPT5Config.is_model_gpt_5_model(model=model)
+            and remodl.OpenAIGPT5Config.is_model_gpt_5_model(model=model)
         ):
-            return litellm.OpenAIGPT5Config()
-        elif litellm.LlmProviders.DEEPSEEK == provider:
-            return litellm.DeepSeekChatConfig()
-        elif litellm.LlmProviders.GROQ == provider:
-            return litellm.GroqChatConfig()
-        elif litellm.LlmProviders.BYTEZ == provider:
-            return litellm.BytezChatConfig()
-        elif litellm.LlmProviders.DATABRICKS == provider:
-            return litellm.DatabricksConfig()
-        elif litellm.LlmProviders.XAI == provider:
-            return litellm.XAIChatConfig()
-        elif litellm.LlmProviders.LAMBDA_AI == provider:
-            return litellm.LambdaAIChatConfig()
-        elif litellm.LlmProviders.LLAMA == provider:
-            return litellm.LlamaAPIConfig()
-        elif litellm.LlmProviders.TEXT_COMPLETION_OPENAI == provider:
-            return litellm.OpenAITextCompletionConfig()
+            return remodl.OpenAIGPT5Config()
+        elif remodl.LlmProviders.DEEPSEEK == provider:
+            return remodl.DeepSeekChatConfig()
+        elif remodl.LlmProviders.GROQ == provider:
+            return remodl.GroqChatConfig()
+        elif remodl.LlmProviders.BYTEZ == provider:
+            return remodl.BytezChatConfig()
+        elif remodl.LlmProviders.DATABRICKS == provider:
+            return remodl.DatabricksConfig()
+        elif remodl.LlmProviders.XAI == provider:
+            return remodl.XAIChatConfig()
+        elif remodl.LlmProviders.LAMBDA_AI == provider:
+            return remodl.LambdaAIChatConfig()
+        elif remodl.LlmProviders.LLAMA == provider:
+            return remodl.LlamaAPIConfig()
+        elif remodl.LlmProviders.TEXT_COMPLETION_OPENAI == provider:
+            return remodl.OpenAITextCompletionConfig()
         elif (
-            litellm.LlmProviders.COHERE_CHAT == provider
-            or litellm.LlmProviders.COHERE == provider
+            remodl.LlmProviders.COHERE_CHAT == provider
+            or remodl.LlmProviders.COHERE == provider
         ):
             route = CohereModelInfo.get_cohere_route(model)
             if route == "v2":
-                return litellm.CohereV2ChatConfig()
+                return remodl.CohereV2ChatConfig()
             else:
 
-                return litellm.CohereChatConfig()
-        elif litellm.LlmProviders.SNOWFLAKE == provider:
-            return litellm.SnowflakeConfig()
-        elif litellm.LlmProviders.CLARIFAI == provider:
-            return litellm.ClarifaiConfig()
-        elif litellm.LlmProviders.ANTHROPIC == provider:
-            return litellm.AnthropicConfig()
-        elif litellm.LlmProviders.ANTHROPIC_TEXT == provider:
-            return litellm.AnthropicTextConfig()
-        elif litellm.LlmProviders.VERTEX_AI_BETA == provider:
-            return litellm.VertexGeminiConfig()
-        elif litellm.LlmProviders.VERTEX_AI == provider:
+                return remodl.CohereChatConfig()
+        elif remodl.LlmProviders.SNOWFLAKE == provider:
+            return remodl.SnowflakeConfig()
+        elif remodl.LlmProviders.CLARIFAI == provider:
+            return remodl.ClarifaiConfig()
+        elif remodl.LlmProviders.ANTHROPIC == provider:
+            return remodl.AnthropicConfig()
+        elif remodl.LlmProviders.ANTHROPIC_TEXT == provider:
+            return remodl.AnthropicTextConfig()
+        elif remodl.LlmProviders.VERTEX_AI_BETA == provider:
+            return remodl.VertexGeminiConfig()
+        elif remodl.LlmProviders.VERTEX_AI == provider:
             if "gemini" in model:
-                return litellm.VertexGeminiConfig()
+                return remodl.VertexGeminiConfig()
             elif "claude" in model:
-                return litellm.VertexAIAnthropicConfig()
+                return remodl.VertexAIAnthropicConfig()
             elif "gpt-oss" in model:
-                from litellm.llms.vertex_ai.vertex_ai_partner_models.gpt_oss.transformation import (
+                from remodl.llms.vertex_ai.vertex_ai_partner_models.gpt_oss.transformation import (
                     VertexAIGPTOSSTransformation,
                 )
 
                 return VertexAIGPTOSSTransformation()
-            elif model in litellm.vertex_mistral_models:
+            elif model in remodl.vertex_mistral_models:
                 if "codestral" in model:
-                    return litellm.CodestralTextCompletionConfig()
+                    return remodl.CodestralTextCompletionConfig()
                 else:
-                    return litellm.MistralConfig()
-            elif model in litellm.vertex_ai_ai21_models:
-                return litellm.VertexAIAi21Config()
+                    return remodl.MistralConfig()
+            elif model in remodl.vertex_ai_ai21_models:
+                return remodl.VertexAIAi21Config()
             else:  # use generic openai-like param mapping
-                return litellm.VertexAILlama3Config()
-        elif litellm.LlmProviders.CLOUDFLARE == provider:
-            return litellm.CloudflareChatConfig()
-        elif litellm.LlmProviders.SAGEMAKER_CHAT == provider:
-            return litellm.SagemakerChatConfig()
-        elif litellm.LlmProviders.SAGEMAKER == provider:
-            return litellm.SagemakerConfig()
-        elif litellm.LlmProviders.FIREWORKS_AI == provider:
-            return litellm.FireworksAIConfig()
-        elif litellm.LlmProviders.FRIENDLIAI == provider:
-            return litellm.FriendliaiChatConfig()
-        elif litellm.LlmProviders.WATSONX == provider:
-            return litellm.IBMWatsonXChatConfig()
-        elif litellm.LlmProviders.WATSONX_TEXT == provider:
-            return litellm.IBMWatsonXAIConfig()
-        elif litellm.LlmProviders.EMPOWER == provider:
-            return litellm.EmpowerChatConfig()
-        elif litellm.LlmProviders.GITHUB == provider:
-            return litellm.GithubChatConfig()
-        elif litellm.LlmProviders.COMPACTIFAI == provider:
-            return litellm.CompactifAIChatConfig()
-        elif litellm.LlmProviders.GITHUB_COPILOT == provider:
-            return litellm.GithubCopilotConfig()
+                return remodl.VertexAILlama3Config()
+        elif remodl.LlmProviders.CLOUDFLARE == provider:
+            return remodl.CloudflareChatConfig()
+        elif remodl.LlmProviders.SAGEMAKER_CHAT == provider:
+            return remodl.SagemakerChatConfig()
+        elif remodl.LlmProviders.SAGEMAKER == provider:
+            return remodl.SagemakerConfig()
+        elif remodl.LlmProviders.FIREWORKS_AI == provider:
+            return remodl.FireworksAIConfig()
+        elif remodl.LlmProviders.FRIENDLIAI == provider:
+            return remodl.FriendliaiChatConfig()
+        elif remodl.LlmProviders.WATSONX == provider:
+            return remodl.IBMWatsonXChatConfig()
+        elif remodl.LlmProviders.WATSONX_TEXT == provider:
+            return remodl.IBMWatsonXAIConfig()
+        elif remodl.LlmProviders.EMPOWER == provider:
+            return remodl.EmpowerChatConfig()
+        elif remodl.LlmProviders.GITHUB == provider:
+            return remodl.GithubChatConfig()
+        elif remodl.LlmProviders.COMPACTIFAI == provider:
+            return remodl.CompactifAIChatConfig()
+        elif remodl.LlmProviders.GITHUB_COPILOT == provider:
+            return remodl.GithubCopilotConfig()
         elif (
-            litellm.LlmProviders.CUSTOM == provider
-            or litellm.LlmProviders.CUSTOM_OPENAI == provider
-            or litellm.LlmProviders.OPENAI_LIKE == provider
+            remodl.LlmProviders.CUSTOM == provider
+            or remodl.LlmProviders.CUSTOM_OPENAI == provider
+            or remodl.LlmProviders.OPENAI_LIKE == provider
         ):
-            return litellm.OpenAILikeChatConfig()
-        elif litellm.LlmProviders.AIOHTTP_OPENAI == provider:
-            return litellm.AiohttpOpenAIChatConfig()
-        elif litellm.LlmProviders.HOSTED_VLLM == provider:
-            return litellm.HostedVLLMChatConfig()
-        elif litellm.LlmProviders.LLAMAFILE == provider:
-            return litellm.LlamafileChatConfig()
-        elif litellm.LlmProviders.LM_STUDIO == provider:
-            return litellm.LMStudioChatConfig()
-        elif litellm.LlmProviders.GALADRIEL == provider:
-            return litellm.GaladrielChatConfig()
-        elif litellm.LlmProviders.REPLICATE == provider:
-            return litellm.ReplicateConfig()
-        elif litellm.LlmProviders.HUGGINGFACE == provider:
-            return litellm.HuggingFaceChatConfig()
-        elif litellm.LlmProviders.TOGETHER_AI == provider:
-            return litellm.TogetherAIConfig()
-        elif litellm.LlmProviders.OPENROUTER == provider:
-            return litellm.OpenrouterConfig()
-        elif litellm.LlmProviders.VERCEL_AI_GATEWAY == provider:
-            return litellm.VercelAIGatewayConfig()
-        elif litellm.LlmProviders.COMETAPI == provider:
-            return litellm.CometAPIConfig()
-        elif litellm.LlmProviders.DATAROBOT == provider:
-            return litellm.DataRobotConfig()
-        elif litellm.LlmProviders.GEMINI == provider:
-            return litellm.GoogleAIStudioGeminiConfig()
+            return remodl.OpenAILikeChatConfig()
+        elif remodl.LlmProviders.AIOHTTP_OPENAI == provider:
+            return remodl.AiohttpOpenAIChatConfig()
+        elif remodl.LlmProviders.HOSTED_VLLM == provider:
+            return remodl.HostedVLLMChatConfig()
+        elif remodl.LlmProviders.LLAMAFILE == provider:
+            return remodl.LlamafileChatConfig()
+        elif remodl.LlmProviders.LM_STUDIO == provider:
+            return remodl.LMStudioChatConfig()
+        elif remodl.LlmProviders.GALADRIEL == provider:
+            return remodl.GaladrielChatConfig()
+        elif remodl.LlmProviders.REPLICATE == provider:
+            return remodl.ReplicateConfig()
+        elif remodl.LlmProviders.HUGGINGFACE == provider:
+            return remodl.HuggingFaceChatConfig()
+        elif remodl.LlmProviders.TOGETHER_AI == provider:
+            return remodl.TogetherAIConfig()
+        elif remodl.LlmProviders.OPENROUTER == provider:
+            return remodl.OpenrouterConfig()
+        elif remodl.LlmProviders.VERCEL_AI_GATEWAY == provider:
+            return remodl.VercelAIGatewayConfig()
+        elif remodl.LlmProviders.COMETAPI == provider:
+            return remodl.CometAPIConfig()
+        elif remodl.LlmProviders.DATAROBOT == provider:
+            return remodl.DataRobotConfig()
+        elif remodl.LlmProviders.GEMINI == provider:
+            return remodl.GoogleAIStudioGeminiConfig()
         elif (
-            litellm.LlmProviders.AI21 == provider
-            or litellm.LlmProviders.AI21_CHAT == provider
+            remodl.LlmProviders.AI21 == provider
+            or remodl.LlmProviders.AI21_CHAT == provider
         ):
-            return litellm.AI21ChatConfig()
-        elif litellm.LlmProviders.AZURE == provider:
-            if litellm.AzureOpenAIO1Config().is_o_series_model(model=model):
-                return litellm.AzureOpenAIO1Config()
-            if litellm.AzureOpenAIGPT5Config.is_model_gpt_5_model(model=model):
-                return litellm.AzureOpenAIGPT5Config()
-            return litellm.AzureOpenAIConfig()
-        elif litellm.LlmProviders.AZURE_AI == provider:
-            return litellm.AzureAIStudioConfig()
-        elif litellm.LlmProviders.AZURE_TEXT == provider:
-            return litellm.AzureOpenAITextConfig()
-        elif litellm.LlmProviders.HOSTED_VLLM == provider:
-            return litellm.HostedVLLMChatConfig()
-        elif litellm.LlmProviders.NLP_CLOUD == provider:
-            return litellm.NLPCloudConfig()
-        elif litellm.LlmProviders.OOBABOOGA == provider:
-            return litellm.OobaboogaConfig()
-        elif litellm.LlmProviders.OLLAMA_CHAT == provider:
-            return litellm.OllamaChatConfig()
-        elif litellm.LlmProviders.DEEPINFRA == provider:
-            return litellm.DeepInfraConfig()
-        elif litellm.LlmProviders.PERPLEXITY == provider:
-            return litellm.PerplexityChatConfig()
+            return remodl.AI21ChatConfig()
+        elif remodl.LlmProviders.AZURE == provider:
+            if remodl.AzureOpenAIO1Config().is_o_series_model(model=model):
+                return remodl.AzureOpenAIO1Config()
+            if remodl.AzureOpenAIGPT5Config.is_model_gpt_5_model(model=model):
+                return remodl.AzureOpenAIGPT5Config()
+            return remodl.AzureOpenAIConfig()
+        elif remodl.LlmProviders.AZURE_AI == provider:
+            return remodl.AzureAIStudioConfig()
+        elif remodl.LlmProviders.AZURE_TEXT == provider:
+            return remodl.AzureOpenAITextConfig()
+        elif remodl.LlmProviders.HOSTED_VLLM == provider:
+            return remodl.HostedVLLMChatConfig()
+        elif remodl.LlmProviders.NLP_CLOUD == provider:
+            return remodl.NLPCloudConfig()
+        elif remodl.LlmProviders.OOBABOOGA == provider:
+            return remodl.OobaboogaConfig()
+        elif remodl.LlmProviders.OLLAMA_CHAT == provider:
+            return remodl.OllamaChatConfig()
+        elif remodl.LlmProviders.DEEPINFRA == provider:
+            return remodl.DeepInfraConfig()
+        elif remodl.LlmProviders.PERPLEXITY == provider:
+            return remodl.PerplexityChatConfig()
         elif (
-            litellm.LlmProviders.MISTRAL == provider
-            or litellm.LlmProviders.CODESTRAL == provider
+            remodl.LlmProviders.MISTRAL == provider
+            or remodl.LlmProviders.CODESTRAL == provider
         ):
-            return litellm.MistralConfig()
-        elif litellm.LlmProviders.NVIDIA_NIM == provider:
-            return litellm.NvidiaNimConfig()
-        elif litellm.LlmProviders.CEREBRAS == provider:
-            return litellm.CerebrasConfig()
-        elif litellm.LlmProviders.BASETEN == provider:
-            return litellm.BasetenConfig()
-        elif litellm.LlmProviders.VOLCENGINE == provider:
-            return litellm.VolcEngineConfig()
-        elif litellm.LlmProviders.TEXT_COMPLETION_CODESTRAL == provider:
-            return litellm.CodestralTextCompletionConfig()
-        elif litellm.LlmProviders.SAMBANOVA == provider:
-            return litellm.SambanovaConfig()
-        elif litellm.LlmProviders.MARITALK == provider:
-            return litellm.MaritalkConfig()
-        elif litellm.LlmProviders.CLOUDFLARE == provider:
-            return litellm.CloudflareChatConfig()
-        elif litellm.LlmProviders.ANTHROPIC_TEXT == provider:
-            return litellm.AnthropicTextConfig()
-        elif litellm.LlmProviders.VLLM == provider:
-            return litellm.VLLMConfig()
-        elif litellm.LlmProviders.OLLAMA == provider:
-            return litellm.OllamaConfig()
-        elif litellm.LlmProviders.PREDIBASE == provider:
-            return litellm.PredibaseConfig()
-        elif litellm.LlmProviders.TRITON == provider:
-            return litellm.TritonConfig()
-        elif litellm.LlmProviders.PETALS == provider:
-            return litellm.PetalsConfig()
-        elif litellm.LlmProviders.FEATHERLESS_AI == provider:
-            return litellm.FeatherlessAIConfig()
-        elif litellm.LlmProviders.NOVITA == provider:
-            return litellm.NovitaConfig()
-        elif litellm.LlmProviders.NEBIUS == provider:
-            return litellm.NebiusConfig()
-        elif litellm.LlmProviders.WANDB == provider:
-            return litellm.WandbConfig()
-        elif litellm.LlmProviders.DASHSCOPE == provider:
-            return litellm.DashScopeChatConfig()
-        elif litellm.LlmProviders.MOONSHOT == provider:
-            return litellm.MoonshotChatConfig()
-        elif litellm.LlmProviders.V0 == provider:
-            return litellm.V0ChatConfig()
-        elif litellm.LlmProviders.MORPH == provider:
-            return litellm.MorphChatConfig()
-        elif litellm.LlmProviders.BEDROCK == provider:
+            return remodl.MistralConfig()
+        elif remodl.LlmProviders.NVIDIA_NIM == provider:
+            return remodl.NvidiaNimConfig()
+        elif remodl.LlmProviders.CEREBRAS == provider:
+            return remodl.CerebrasConfig()
+        elif remodl.LlmProviders.BASETEN == provider:
+            return remodl.BasetenConfig()
+        elif remodl.LlmProviders.VOLCENGINE == provider:
+            return remodl.VolcEngineConfig()
+        elif remodl.LlmProviders.TEXT_COMPLETION_CODESTRAL == provider:
+            return remodl.CodestralTextCompletionConfig()
+        elif remodl.LlmProviders.SAMBANOVA == provider:
+            return remodl.SambanovaConfig()
+        elif remodl.LlmProviders.MARITALK == provider:
+            return remodl.MaritalkConfig()
+        elif remodl.LlmProviders.CLOUDFLARE == provider:
+            return remodl.CloudflareChatConfig()
+        elif remodl.LlmProviders.ANTHROPIC_TEXT == provider:
+            return remodl.AnthropicTextConfig()
+        elif remodl.LlmProviders.VLLM == provider:
+            return remodl.VLLMConfig()
+        elif remodl.LlmProviders.OLLAMA == provider:
+            return remodl.OllamaConfig()
+        elif remodl.LlmProviders.PREDIBASE == provider:
+            return remodl.PredibaseConfig()
+        elif remodl.LlmProviders.TRITON == provider:
+            return remodl.TritonConfig()
+        elif remodl.LlmProviders.PETALS == provider:
+            return remodl.PetalsConfig()
+        elif remodl.LlmProviders.FEATHERLESS_AI == provider:
+            return remodl.FeatherlessAIConfig()
+        elif remodl.LlmProviders.NOVITA == provider:
+            return remodl.NovitaConfig()
+        elif remodl.LlmProviders.NEBIUS == provider:
+            return remodl.NebiusConfig()
+        elif remodl.LlmProviders.WANDB == provider:
+            return remodl.WandbConfig()
+        elif remodl.LlmProviders.DASHSCOPE == provider:
+            return remodl.DashScopeChatConfig()
+        elif remodl.LlmProviders.MOONSHOT == provider:
+            return remodl.MoonshotChatConfig()
+        elif remodl.LlmProviders.V0 == provider:
+            return remodl.V0ChatConfig()
+        elif remodl.LlmProviders.MORPH == provider:
+            return remodl.MorphChatConfig()
+        elif remodl.LlmProviders.BEDROCK == provider:
             bedrock_route = BedrockModelInfo.get_bedrock_route(model)
-            bedrock_invoke_provider = litellm.BedrockLLM.get_bedrock_invoke_provider(
+            bedrock_invoke_provider = remodl.BedrockLLM.get_bedrock_invoke_provider(
                 model=model
             )
 
             base_model = BedrockModelInfo.get_base_model(model)
 
             if bedrock_route == "converse" or bedrock_route == "converse_like":
-                return litellm.AmazonConverseConfig()
+                return remodl.AmazonConverseConfig()
             elif bedrock_route == "agent":
-                from litellm.llms.bedrock.chat.invoke_agent.transformation import (
+                from remodl.llms.bedrock.chat.invoke_agent.transformation import (
                     AmazonInvokeAgentConfig,
                 )
 
                 return AmazonInvokeAgentConfig()
             elif bedrock_invoke_provider == "amazon":  # amazon titan llms
-                return litellm.AmazonTitanConfig()
+                return remodl.AmazonTitanConfig()
             elif bedrock_invoke_provider == "anthropic":
                 if (
                     base_model
-                    in litellm.AmazonAnthropicConfig.get_legacy_anthropic_model_names()
+                    in remodl.AmazonAnthropicConfig.get_legacy_anthropic_model_names()
                 ):
-                    return litellm.AmazonAnthropicConfig()
+                    return remodl.AmazonAnthropicConfig()
                 else:
-                    return litellm.AmazonAnthropicClaudeConfig()
+                    return remodl.AmazonAnthropicClaudeConfig()
             elif (
                 bedrock_invoke_provider == "meta" or bedrock_invoke_provider == "llama"
             ):  # amazon / meta llms
-                return litellm.AmazonLlamaConfig()
+                return remodl.AmazonLlamaConfig()
             elif bedrock_invoke_provider == "ai21":  # ai21 llms
-                return litellm.AmazonAI21Config()
+                return remodl.AmazonAI21Config()
             elif bedrock_invoke_provider == "cohere":  # cohere models on bedrock
-                return litellm.AmazonCohereConfig()
+                return remodl.AmazonCohereConfig()
             elif bedrock_invoke_provider == "mistral":  # mistral models on bedrock
-                return litellm.AmazonMistralConfig()
+                return remodl.AmazonMistralConfig()
             elif bedrock_invoke_provider == "deepseek_r1":  # deepseek models on bedrock
-                return litellm.AmazonDeepSeekR1Config()
+                return remodl.AmazonDeepSeekR1Config()
             elif bedrock_invoke_provider == "nova":
-                return litellm.AmazonInvokeNovaConfig()
+                return remodl.AmazonInvokeNovaConfig()
             elif bedrock_invoke_provider == "qwen3":
-                return litellm.AmazonQwen3Config()
+                return remodl.AmazonQwen3Config()
             else:
-                return litellm.AmazonInvokeConfig()
-        elif litellm.LlmProviders.LITELLM_PROXY == provider:
-            return litellm.LiteLLMProxyChatConfig()
-        elif litellm.LlmProviders.OPENAI == provider:
-            return litellm.OpenAIGPTConfig()
-        elif litellm.LlmProviders.GRADIENT_AI == provider:
-            return litellm.GradientAIConfig()
-        elif litellm.LlmProviders.NSCALE == provider:
-            return litellm.NscaleConfig()
-        elif litellm.LlmProviders.HEROKU == provider:
-            return litellm.HerokuChatConfig()
-        elif litellm.LlmProviders.OCI == provider:
-            return litellm.OCIChatConfig()
-        elif litellm.LlmProviders.HYPERBOLIC == provider:
-            return litellm.HyperbolicChatConfig()
-        elif litellm.LlmProviders.OVHCLOUD == provider:
-            return litellm.OVHCloudChatConfig()
+                return remodl.AmazonInvokeConfig()
+        elif remodl.LlmProviders.LITELLM_PROXY == provider:
+            return remodl.LiteLLMProxyChatConfig()
+        elif remodl.LlmProviders.OPENAI == provider:
+            return remodl.OpenAIGPTConfig()
+        elif remodl.LlmProviders.GRADIENT_AI == provider:
+            return remodl.GradientAIConfig()
+        elif remodl.LlmProviders.NSCALE == provider:
+            return remodl.NscaleConfig()
+        elif remodl.LlmProviders.HEROKU == provider:
+            return remodl.HerokuChatConfig()
+        elif remodl.LlmProviders.OCI == provider:
+            return remodl.OCIChatConfig()
+        elif remodl.LlmProviders.HYPERBOLIC == provider:
+            return remodl.HyperbolicChatConfig()
+        elif remodl.LlmProviders.OVHCLOUD == provider:
+            return remodl.OVHCloudChatConfig()
         return None
 
     @staticmethod
@@ -7270,47 +7270,47 @@ class ProviderConfigManager:
         provider: LlmProviders,
     ) -> Optional[BaseEmbeddingConfig]:
         if (
-            litellm.LlmProviders.VOYAGE == provider
-            and litellm.VoyageContextualEmbeddingConfig.is_contextualized_embeddings(
+            remodl.LlmProviders.VOYAGE == provider
+            and remodl.VoyageContextualEmbeddingConfig.is_contextualized_embeddings(
                 model
             )
         ):
-            return litellm.VoyageContextualEmbeddingConfig()
-        elif litellm.LlmProviders.VOYAGE == provider:
-            return litellm.VoyageEmbeddingConfig()
-        elif litellm.LlmProviders.TRITON == provider:
-            return litellm.TritonEmbeddingConfig()
-        elif litellm.LlmProviders.WATSONX == provider:
-            return litellm.IBMWatsonXEmbeddingConfig()
-        elif litellm.LlmProviders.INFINITY == provider:
-            return litellm.InfinityEmbeddingConfig()
-        elif litellm.LlmProviders.SAMBANOVA == provider:
-            return litellm.SambaNovaEmbeddingConfig()
+            return remodl.VoyageContextualEmbeddingConfig()
+        elif remodl.LlmProviders.VOYAGE == provider:
+            return remodl.VoyageEmbeddingConfig()
+        elif remodl.LlmProviders.TRITON == provider:
+            return remodl.TritonEmbeddingConfig()
+        elif remodl.LlmProviders.WATSONX == provider:
+            return remodl.IBMWatsonXEmbeddingConfig()
+        elif remodl.LlmProviders.INFINITY == provider:
+            return remodl.InfinityEmbeddingConfig()
+        elif remodl.LlmProviders.SAMBANOVA == provider:
+            return remodl.SambaNovaEmbeddingConfig()
         elif (
-            litellm.LlmProviders.COHERE == provider
-            or litellm.LlmProviders.COHERE_CHAT == provider
+            remodl.LlmProviders.COHERE == provider
+            or remodl.LlmProviders.COHERE_CHAT == provider
         ):
-            from litellm.llms.cohere.embed.transformation import CohereEmbeddingConfig
+            from remodl.llms.cohere.embed.transformation import CohereEmbeddingConfig
 
             return CohereEmbeddingConfig()
-        elif litellm.LlmProviders.JINA_AI == provider:
-            from litellm.llms.jina_ai.embedding.transformation import (
+        elif remodl.LlmProviders.JINA_AI == provider:
+            from remodl.llms.jina_ai.embedding.transformation import (
                 JinaAIEmbeddingConfig,
             )
 
             return JinaAIEmbeddingConfig()
-        elif litellm.LlmProviders.VOLCENGINE == provider:
-            from litellm.llms.volcengine.embedding.transformation import (
+        elif remodl.LlmProviders.VOLCENGINE == provider:
+            from remodl.llms.volcengine.embedding.transformation import (
                 VolcEngineEmbeddingConfig,
             )
 
             return VolcEngineEmbeddingConfig()
-        elif litellm.LlmProviders.OVHCLOUD == provider:
-            return litellm.OVHCloudEmbeddingConfig()
-        elif litellm.LlmProviders.COMETAPI == provider:
-            return litellm.CometAPIEmbeddingConfig()
-        elif litellm.LlmProviders.SAGEMAKER == provider:
-            from litellm.llms.sagemaker.embedding.transformation import (
+        elif remodl.LlmProviders.OVHCLOUD == provider:
+            return remodl.OVHCloudEmbeddingConfig()
+        elif remodl.LlmProviders.COMETAPI == provider:
+            return remodl.CometAPIEmbeddingConfig()
+        elif remodl.LlmProviders.SAGEMAKER == provider:
+            from remodl.llms.sagemaker.embedding.transformation import (
                 SagemakerEmbeddingConfig,
             )
 
@@ -7325,45 +7325,45 @@ class ProviderConfigManager:
         present_version_params: List[str],
     ) -> BaseRerankConfig:
         if (
-            litellm.LlmProviders.COHERE == provider
-            or litellm.LlmProviders.COHERE_CHAT == provider
+            remodl.LlmProviders.COHERE == provider
+            or remodl.LlmProviders.COHERE_CHAT == provider
         ):
             if should_use_cohere_v1_client(api_base, present_version_params):
-                return litellm.CohereRerankConfig()
+                return remodl.CohereRerankConfig()
             else:
-                return litellm.CohereRerankV2Config()
-        elif litellm.LlmProviders.AZURE_AI == provider:
-            return litellm.AzureAIRerankConfig()
-        elif litellm.LlmProviders.INFINITY == provider:
-            return litellm.InfinityRerankConfig()
-        elif litellm.LlmProviders.JINA_AI == provider:
-            return litellm.JinaAIRerankConfig()
-        elif litellm.LlmProviders.HUGGINGFACE == provider:
-            return litellm.HuggingFaceRerankConfig()
-        elif litellm.LlmProviders.DEEPINFRA == provider:
-            return litellm.DeepinfraRerankConfig()
-        elif litellm.LlmProviders.NVIDIA_NIM == provider:
-            return litellm.NvidiaNimRerankConfig()
-        elif litellm.LlmProviders.VERTEX_AI == provider:
-            return litellm.VertexAIRerankConfig()
-        return litellm.CohereRerankConfig()
+                return remodl.CohereRerankV2Config()
+        elif remodl.LlmProviders.AZURE_AI == provider:
+            return remodl.AzureAIRerankConfig()
+        elif remodl.LlmProviders.INFINITY == provider:
+            return remodl.InfinityRerankConfig()
+        elif remodl.LlmProviders.JINA_AI == provider:
+            return remodl.JinaAIRerankConfig()
+        elif remodl.LlmProviders.HUGGINGFACE == provider:
+            return remodl.HuggingFaceRerankConfig()
+        elif remodl.LlmProviders.DEEPINFRA == provider:
+            return remodl.DeepinfraRerankConfig()
+        elif remodl.LlmProviders.NVIDIA_NIM == provider:
+            return remodl.NvidiaNimRerankConfig()
+        elif remodl.LlmProviders.VERTEX_AI == provider:
+            return remodl.VertexAIRerankConfig()
+        return remodl.CohereRerankConfig()
 
     @staticmethod
     def get_provider_anthropic_messages_config(
         model: str,
         provider: LlmProviders,
     ) -> Optional[BaseAnthropicMessagesConfig]:
-        if litellm.LlmProviders.ANTHROPIC == provider:
-            return litellm.AnthropicMessagesConfig()
+        if remodl.LlmProviders.ANTHROPIC == provider:
+            return remodl.AnthropicMessagesConfig()
         # The 'BEDROCK' provider corresponds to Amazon's implementation of Anthropic Claude v3.
         # This mapping ensures that the correct configuration is returned for BEDROCK.
-        elif litellm.LlmProviders.BEDROCK == provider:
-            from litellm.llms.bedrock.common_utils import BedrockModelInfo
+        elif remodl.LlmProviders.BEDROCK == provider:
+            from remodl.llms.bedrock.common_utils import BedrockModelInfo
 
             return BedrockModelInfo.get_bedrock_provider_config_for_messages_api(model)
-        elif litellm.LlmProviders.VERTEX_AI == provider:
+        elif remodl.LlmProviders.VERTEX_AI == provider:
             if "claude" in model:
-                from litellm.llms.vertex_ai.vertex_ai_partner_models.anthropic.experimental_pass_through.transformation import (
+                from remodl.llms.vertex_ai.vertex_ai_partner_models.anthropic.experimental_pass_through.transformation import (
                     VertexAIPartnerModelsAnthropicMessagesConfig,
                 )
 
@@ -7375,23 +7375,23 @@ class ProviderConfigManager:
         model: str,
         provider: LlmProviders,
     ) -> Optional[BaseAudioTranscriptionConfig]:
-        if litellm.LlmProviders.FIREWORKS_AI == provider:
-            return litellm.FireworksAIAudioTranscriptionConfig()
-        elif litellm.LlmProviders.DEEPGRAM == provider:
-            return litellm.DeepgramAudioTranscriptionConfig()
-        elif litellm.LlmProviders.ELEVENLABS == provider:
-            from litellm.llms.elevenlabs.audio_transcription.transformation import (
+        if remodl.LlmProviders.FIREWORKS_AI == provider:
+            return remodl.FireworksAIAudioTranscriptionConfig()
+        elif remodl.LlmProviders.DEEPGRAM == provider:
+            return remodl.DeepgramAudioTranscriptionConfig()
+        elif remodl.LlmProviders.ELEVENLABS == provider:
+            from remodl.llms.elevenlabs.audio_transcription.transformation import (
                 ElevenLabsAudioTranscriptionConfig,
             )
 
             return ElevenLabsAudioTranscriptionConfig()
-        elif litellm.LlmProviders.OPENAI == provider:
+        elif remodl.LlmProviders.OPENAI == provider:
             if "gpt-4o" in model:
-                return litellm.OpenAIGPTAudioTranscriptionConfig()
+                return remodl.OpenAIGPTAudioTranscriptionConfig()
             else:
-                return litellm.OpenAIWhisperAudioTranscriptionConfig()
-        elif litellm.LlmProviders.HOSTED_VLLM == provider:
-            from litellm.llms.hosted_vllm.transcriptions.transformation import (
+                return remodl.OpenAIWhisperAudioTranscriptionConfig()
+        elif remodl.LlmProviders.HOSTED_VLLM == provider:
+            from remodl.llms.hosted_vllm.transcriptions.transformation import (
                 HostedVLLMAudioTranscriptionConfig,
             )
 
@@ -7403,16 +7403,16 @@ class ProviderConfigManager:
         provider: LlmProviders,
         model: Optional[str] = None,
     ) -> Optional[BaseResponsesAPIConfig]:
-        if litellm.LlmProviders.OPENAI == provider:
-            return litellm.OpenAIResponsesAPIConfig()
-        elif litellm.LlmProviders.AZURE == provider:
+        if remodl.LlmProviders.OPENAI == provider:
+            return remodl.OpenAIResponsesAPIConfig()
+        elif remodl.LlmProviders.AZURE == provider:
             # Check if it's an O-series model
             if model and ("o_series" in model.lower() or supports_reasoning(model)):
-                return litellm.AzureOpenAIOSeriesResponsesAPIConfig()
+                return remodl.AzureOpenAIOSeriesResponsesAPIConfig()
             else:
-                return litellm.AzureOpenAIResponsesAPIConfig()
-        elif litellm.LlmProviders.LITELLM_PROXY == provider:
-            return litellm.LiteLLMProxyResponsesAPIConfig()
+                return remodl.AzureOpenAIResponsesAPIConfig()
+        elif remodl.LlmProviders.LITELLM_PROXY == provider:
+            return remodl.LiteLLMProxyResponsesAPIConfig()
         return None
 
     @staticmethod
@@ -7421,10 +7421,10 @@ class ProviderConfigManager:
         provider: LlmProviders,
     ) -> BaseTextCompletionConfig:
         if LlmProviders.FIREWORKS_AI == provider:
-            return litellm.FireworksAITextCompletionConfig()
+            return remodl.FireworksAITextCompletionConfig()
         elif LlmProviders.TOGETHER_AI == provider:
-            return litellm.TogetherAITextCompletionConfig()
-        return litellm.OpenAITextCompletionConfig()
+            return remodl.TogetherAITextCompletionConfig()
+        return remodl.OpenAITextCompletionConfig()
 
     @staticmethod
     def get_provider_model_info(
@@ -7432,38 +7432,38 @@ class ProviderConfigManager:
         provider: LlmProviders,
     ) -> Optional[BaseLLMModelInfo]:
         if LlmProviders.FIREWORKS_AI == provider:
-            return litellm.FireworksAIConfig()
+            return remodl.FireworksAIConfig()
         elif LlmProviders.OPENAI == provider:
-            return litellm.OpenAIGPTConfig()
+            return remodl.OpenAIGPTConfig()
         elif LlmProviders.GEMINI == provider:
-            return litellm.GeminiModelInfo()
+            return remodl.GeminiModelInfo()
         elif LlmProviders.VERTEX_AI == provider:
-            from litellm.llms.vertex_ai.common_utils import VertexAIModelInfo
+            from remodl.llms.vertex_ai.common_utils import VertexAIModelInfo
 
             return VertexAIModelInfo()
         elif LlmProviders.LITELLM_PROXY == provider:
-            return litellm.LiteLLMProxyChatConfig()
+            return remodl.LiteLLMProxyChatConfig()
         elif LlmProviders.TOPAZ == provider:
-            return litellm.TopazModelInfo()
+            return remodl.TopazModelInfo()
         elif LlmProviders.ANTHROPIC == provider:
-            return litellm.AnthropicModelInfo()
+            return remodl.AnthropicModelInfo()
         elif LlmProviders.XAI == provider:
-            return litellm.XAIModelInfo()
+            return remodl.XAIModelInfo()
         elif LlmProviders.OLLAMA == provider or LlmProviders.OLLAMA_CHAT == provider:
             # Dynamic model listing for Ollama server
-            from litellm.llms.ollama.common_utils import OllamaModelInfo
+            from remodl.llms.ollama.common_utils import OllamaModelInfo
 
             return OllamaModelInfo()
         elif LlmProviders.VLLM == provider or LlmProviders.HOSTED_VLLM == provider:
-            from litellm.llms.vllm.common_utils import (
+            from remodl.llms.vllm.common_utils import (
                 VLLMModelInfo,  # experimental approach, to reduce bloat on __init__.py
             )
 
             return VLLMModelInfo()
         elif LlmProviders.LEMONADE == provider:
-            return litellm.LemonadeChatConfig()
+            return remodl.LemonadeChatConfig()
         elif LlmProviders.CLARIFAI == provider:
-            return litellm.ClarifaiConfig()
+            return remodl.ClarifaiConfig()
         return None
 
     @staticmethod
@@ -7472,19 +7472,19 @@ class ProviderConfigManager:
         provider: LlmProviders,
     ) -> Optional[BasePassthroughConfig]:
         if LlmProviders.BEDROCK == provider:
-            from litellm.llms.bedrock.passthrough.transformation import (
+            from remodl.llms.bedrock.passthrough.transformation import (
                 BedrockPassthroughConfig,
             )
 
             return BedrockPassthroughConfig()
         elif LlmProviders.VLLM == provider:
-            from litellm.llms.vllm.passthrough.transformation import (
+            from remodl.llms.vllm.passthrough.transformation import (
                 VLLMPassthroughConfig,
             )
 
             return VLLMPassthroughConfig()
         elif LlmProviders.AZURE == provider:
-            from litellm.llms.azure.passthrough.transformation import (
+            from remodl.llms.azure.passthrough.transformation import (
                 AzurePassthroughConfig,
             )
 
@@ -7497,9 +7497,9 @@ class ProviderConfigManager:
         provider: LlmProviders,
     ) -> Optional[BaseImageVariationConfig]:
         if LlmProviders.OPENAI == provider:
-            return litellm.OpenAIImageVariationConfig()
+            return remodl.OpenAIImageVariationConfig()
         elif LlmProviders.TOPAZ == provider:
-            return litellm.TopazImageVariationConfig()
+            return remodl.TopazImageVariationConfig()
         return None
 
     @staticmethod
@@ -7508,17 +7508,17 @@ class ProviderConfigManager:
         provider: LlmProviders,
     ) -> Optional[BaseFilesConfig]:
         if LlmProviders.GEMINI == provider:
-            from litellm.llms.gemini.files.transformation import (
+            from remodl.llms.gemini.files.transformation import (
                 GoogleAIStudioFilesHandler,  # experimental approach, to reduce bloat on __init__.py
             )
 
             return GoogleAIStudioFilesHandler()
         elif LlmProviders.VERTEX_AI == provider:
-            from litellm.llms.vertex_ai.files.transformation import VertexAIFilesConfig
+            from remodl.llms.vertex_ai.files.transformation import VertexAIFilesConfig
 
             return VertexAIFilesConfig()
         elif LlmProviders.BEDROCK == provider:
-            from litellm.llms.bedrock.files.transformation import BedrockFilesConfig
+            from remodl.llms.bedrock.files.transformation import BedrockFilesConfig
 
             return BedrockFilesConfig()
         return None
@@ -7529,7 +7529,7 @@ class ProviderConfigManager:
         provider: LlmProviders,
     ) -> Optional[BaseBatchesConfig]:
         if LlmProviders.BEDROCK == provider:
-            from litellm.llms.bedrock.batches.transformation import BedrockBatchesConfig
+            from remodl.llms.bedrock.batches.transformation import BedrockBatchesConfig
 
             return BedrockBatchesConfig()
         return None
@@ -7538,7 +7538,7 @@ class ProviderConfigManager:
     def get_provider_vector_store_config(
         provider: LlmProviders,
     ) -> Optional[CustomLogger]:
-        from litellm.integrations.vector_store_integrations.bedrock_vector_store import (
+        from remodl.integrations.vector_store_integrations.bedrock_vector_store import (
             BedrockVectorStore,
         )
 
@@ -7554,45 +7554,45 @@ class ProviderConfigManager:
         """
         v2 vector store config, use this for new vector store integrations
         """
-        if litellm.LlmProviders.OPENAI == provider:
-            from litellm.llms.openai.vector_stores.transformation import (
+        if remodl.LlmProviders.OPENAI == provider:
+            from remodl.llms.openai.vector_stores.transformation import (
                 OpenAIVectorStoreConfig,
             )
 
             return OpenAIVectorStoreConfig()
-        elif litellm.LlmProviders.AZURE == provider:
-            from litellm.llms.azure.vector_stores.transformation import (
+        elif remodl.LlmProviders.AZURE == provider:
+            from remodl.llms.azure.vector_stores.transformation import (
                 AzureOpenAIVectorStoreConfig,
             )
 
             return AzureOpenAIVectorStoreConfig()
-        elif litellm.LlmProviders.VERTEX_AI == provider:
+        elif remodl.LlmProviders.VERTEX_AI == provider:
             if api_type == "rag_api" or api_type is None:  # default to rag_api
-                from litellm.llms.vertex_ai.vector_stores.rag_api.transformation import (
+                from remodl.llms.vertex_ai.vector_stores.rag_api.transformation import (
                     VertexVectorStoreConfig,
                 )
 
                 return VertexVectorStoreConfig()
             elif api_type == "search_api":
-                from litellm.llms.vertex_ai.vector_stores.search_api.transformation import (
+                from remodl.llms.vertex_ai.vector_stores.search_api.transformation import (
                     VertexSearchAPIVectorStoreConfig,
                 )
 
                 return VertexSearchAPIVectorStoreConfig()
-        elif litellm.LlmProviders.BEDROCK == provider:
-            from litellm.llms.bedrock.vector_stores.transformation import (
+        elif remodl.LlmProviders.BEDROCK == provider:
+            from remodl.llms.bedrock.vector_stores.transformation import (
                 BedrockVectorStoreConfig,
             )
 
             return BedrockVectorStoreConfig()
-        elif litellm.LlmProviders.PG_VECTOR == provider:
-            from litellm.llms.pg_vector.vector_stores.transformation import (
+        elif remodl.LlmProviders.PG_VECTOR == provider:
+            from remodl.llms.pg_vector.vector_stores.transformation import (
                 PGVectorStoreConfig,
             )
 
             return PGVectorStoreConfig()
-        elif litellm.LlmProviders.AZURE_AI == provider:
-            from litellm.llms.azure_ai.vector_stores.transformation import (
+        elif remodl.LlmProviders.AZURE_AI == provider:
+            from remodl.llms.azure_ai.vector_stores.transformation import (
                 AzureAIVectorStoreConfig,
             )
 
@@ -7605,55 +7605,55 @@ class ProviderConfigManager:
         provider: LlmProviders,
     ) -> Optional[BaseImageGenerationConfig]:
         if LlmProviders.OPENAI == provider:
-            from litellm.llms.openai.image_generation import (
+            from remodl.llms.openai.image_generation import (
                 get_openai_image_generation_config,
             )
 
             return get_openai_image_generation_config(model)
         elif LlmProviders.AZURE == provider:
-            from litellm.llms.azure.image_generation import (
+            from remodl.llms.azure.image_generation import (
                 get_azure_image_generation_config,
             )
 
             return get_azure_image_generation_config(model)
         elif LlmProviders.AZURE_AI == provider:
-            from litellm.llms.azure_ai.image_generation import (
+            from remodl.llms.azure_ai.image_generation import (
                 get_azure_ai_image_generation_config,
             )
 
             return get_azure_ai_image_generation_config(model)
         elif LlmProviders.XINFERENCE == provider:
-            from litellm.llms.xinference.image_generation import (
+            from remodl.llms.xinference.image_generation import (
                 get_xinference_image_generation_config,
             )
 
             return get_xinference_image_generation_config(model)
         elif LlmProviders.RECRAFT == provider:
-            from litellm.llms.recraft.image_generation import (
+            from remodl.llms.recraft.image_generation import (
                 get_recraft_image_generation_config,
             )
 
             return get_recraft_image_generation_config(model)
         elif LlmProviders.AIML == provider:
-            from litellm.llms.aiml.image_generation import (
+            from remodl.llms.aiml.image_generation import (
                 get_aiml_image_generation_config,
             )
 
             return get_aiml_image_generation_config(model)
         elif LlmProviders.COMETAPI == provider:
-            from litellm.llms.cometapi.image_generation import (
+            from remodl.llms.cometapi.image_generation import (
                 get_cometapi_image_generation_config,
             )
 
             return get_cometapi_image_generation_config(model)
         elif LlmProviders.GEMINI == provider:
-            from litellm.llms.gemini.image_generation import (
+            from remodl.llms.gemini.image_generation import (
                 get_gemini_image_generation_config,
             )
 
             return get_gemini_image_generation_config(model)
         elif LlmProviders.LITELLM_PROXY == provider:
-            from litellm.llms.litellm_proxy.image_generation.transformation import (
+            from remodl.llms.remodl_proxy.image_generation.transformation import (
                 LiteLLMProxyImageGenerationConfig,
             )
 
@@ -7666,11 +7666,11 @@ class ProviderConfigManager:
         provider: LlmProviders,
     ) -> Optional[BaseVideoConfig]:
         if LlmProviders.OPENAI == provider:
-            from litellm.llms.openai.videos.transformation import OpenAIVideoConfig
+            from remodl.llms.openai.videos.transformation import OpenAIVideoConfig
 
             return OpenAIVideoConfig()
         elif LlmProviders.AZURE == provider:
-            from litellm.llms.azure.videos.transformation import AzureVideoConfig
+            from remodl.llms.azure.videos.transformation import AzureVideoConfig
 
             return AzureVideoConfig()
         return None
@@ -7682,7 +7682,7 @@ class ProviderConfigManager:
         provider: LlmProviders,
     ) -> Optional[BaseRealtimeConfig]:
         if LlmProviders.GEMINI == provider:
-            from litellm.llms.gemini.realtime.transformation import GeminiRealtimeConfig
+            from remodl.llms.gemini.realtime.transformation import GeminiRealtimeConfig
 
             return GeminiRealtimeConfig()
         return None
@@ -7693,27 +7693,27 @@ class ProviderConfigManager:
         provider: LlmProviders,
     ) -> Optional[BaseImageEditConfig]:
         if LlmProviders.OPENAI == provider:
-            from litellm.llms.openai.image_edit import get_openai_image_edit_config
+            from remodl.llms.openai.image_edit import get_openai_image_edit_config
 
             return get_openai_image_edit_config(model=model)
         elif LlmProviders.AZURE == provider:
-            from litellm.llms.azure.image_edit.transformation import (
+            from remodl.llms.azure.image_edit.transformation import (
                 AzureImageEditConfig,
             )
 
             return AzureImageEditConfig()
         elif LlmProviders.RECRAFT == provider:
-            from litellm.llms.recraft.image_edit.transformation import (
+            from remodl.llms.recraft.image_edit.transformation import (
                 RecraftImageEditConfig,
             )
 
             return RecraftImageEditConfig()
         elif LlmProviders.AZURE_AI == provider:
-            from litellm.llms.azure_ai.image_edit import get_azure_ai_image_edit_config
+            from remodl.llms.azure_ai.image_edit import get_azure_ai_image_edit_config
 
             return get_azure_ai_image_edit_config(model)
         elif LlmProviders.LITELLM_PROXY == provider:
-            from litellm.llms.litellm_proxy.image_edit.transformation import (
+            from remodl.llms.remodl_proxy.image_edit.transformation import (
                 LiteLLMProxyImageEditConfig,
             )
 
@@ -7728,11 +7728,11 @@ class ProviderConfigManager:
         """
         Get OCR configuration for a given provider.
         """
-        from litellm.llms.azure_ai.ocr.transformation import AzureAIOCRConfig
+        from remodl.llms.azure_ai.ocr.transformation import AzureAIOCRConfig
 
         PROVIDER_TO_CONFIG_MAP = {
-            litellm.LlmProviders.MISTRAL: MistralOCRConfig,
-            litellm.LlmProviders.AZURE_AI: AzureAIOCRConfig,
+            remodl.LlmProviders.MISTRAL: MistralOCRConfig,
+            remodl.LlmProviders.AZURE_AI: AzureAIOCRConfig,
         }
         config_class = PROVIDER_TO_CONFIG_MAP.get(provider, None)
         if config_class is None:
@@ -7746,14 +7746,14 @@ class ProviderConfigManager:
         """
         Get Search configuration for a given provider.
         """
-        from litellm.llms.dataforseo.search.transformation import DataForSEOSearchConfig
-        from litellm.llms.exa_ai.search.transformation import ExaAISearchConfig
-        from litellm.llms.google_pse.search.transformation import GooglePSESearchConfig
-        from litellm.llms.parallel_ai.search.transformation import (
+        from remodl.llms.dataforseo.search.transformation import DataForSEOSearchConfig
+        from remodl.llms.exa_ai.search.transformation import ExaAISearchConfig
+        from remodl.llms.google_pse.search.transformation import GooglePSESearchConfig
+        from remodl.llms.parallel_ai.search.transformation import (
             ParallelAISearchConfig,
         )
-        from litellm.llms.perplexity.search.transformation import PerplexitySearchConfig
-        from litellm.llms.tavily.search.transformation import TavilySearchConfig
+        from remodl.llms.perplexity.search.transformation import PerplexitySearchConfig
+        from remodl.llms.tavily.search.transformation import TavilySearchConfig
 
         PROVIDER_TO_CONFIG_MAP = {
             SearchProviders.PERPLEXITY: PerplexitySearchConfig,
@@ -7762,6 +7762,7 @@ class ProviderConfigManager:
             SearchProviders.EXA_AI: ExaAISearchConfig,
             SearchProviders.GOOGLE_PSE: GooglePSESearchConfig,
             SearchProviders.DATAFORSEO: DataForSEOSearchConfig,
+            SearchProviders.WEB_SEARCH: TavilySearchConfig,  # RemodlAI alias for Tavily
         }
         config_class = PROVIDER_TO_CONFIG_MAP.get(provider, None)
         if config_class is None:
@@ -7776,15 +7777,15 @@ class ProviderConfigManager:
         """
         Get text-to-speech configuration for a given provider.
         """
-        from litellm.llms.base_llm.text_to_speech.transformation import (
+        from remodl.llms.base_llm.text_to_speech.transformation import (
             BaseTextToSpeechConfig,
         )
 
-        if litellm.LlmProviders.AZURE == provider:
+        if remodl.LlmProviders.AZURE == provider:
             # Only return Azure AVA config for Azure Speech Service models (speech/)
             # Azure OpenAI TTS models (azure/azure-tts) should not use this config
             if model.startswith("speech/"):
-                from litellm.llms.azure.text_to_speech.transformation import (
+                from remodl.llms.azure.text_to_speech.transformation import (
                     AzureAVATextToSpeechConfig,
                 )
 
@@ -7796,23 +7797,23 @@ class ProviderConfigManager:
         model: str,
         provider: LlmProviders,
     ) -> Optional[BaseGoogleGenAIGenerateContentConfig]:
-        if litellm.LlmProviders.GEMINI == provider:
-            from litellm.llms.gemini.google_genai.transformation import (
+        if remodl.LlmProviders.GEMINI == provider:
+            from remodl.llms.gemini.google_genai.transformation import (
                 GoogleGenAIConfig,
             )
 
             return GoogleGenAIConfig()
-        elif litellm.LlmProviders.VERTEX_AI == provider:
-            from litellm.llms.vertex_ai.google_genai.transformation import (
+        elif remodl.LlmProviders.VERTEX_AI == provider:
+            from remodl.llms.vertex_ai.google_genai.transformation import (
                 VertexAIGoogleGenAIConfig,
             )
-            from litellm.llms.vertex_ai.vertex_ai_partner_models.main import (
+            from remodl.llms.vertex_ai.vertex_ai_partner_models.main import (
                 VertexAIPartnerModels,
             )
 
             #########################################################
             # If Vertex Partner models like Anthropic, Mistral, etc. are used,
-            # return None as we want this to go through the litellm.completion() adapter
+            # return None as we want this to go through the remodl.completion() adapter
             # and not the Google Gen AI adapter
             #########################################################
             if VertexAIPartnerModels.is_vertex_partner_model(model):
@@ -7827,32 +7828,32 @@ class ProviderConfigManager:
 
 
 def get_end_user_id_for_cost_tracking(
-    litellm_params: dict,
-    service_type: Literal["litellm_logging", "prometheus"] = "litellm_logging",
+    remodl_params: dict,
+    service_type: Literal["remodl_logging", "prometheus"] = "remodl_logging",
 ) -> Optional[str]:
     """
     Used for enforcing `disable_end_user_cost_tracking` param.
 
-    service_type: "litellm_logging" or "prometheus" - used to allow prometheus only disable cost tracking.
+    service_type: "remodl_logging" or "prometheus" - used to allow prometheus only disable cost tracking.
     """
     _metadata = cast(
-        dict, get_litellm_metadata_from_kwargs(dict(litellm_params=litellm_params))
+        dict, get_remodl_metadata_from_kwargs(dict(remodl_params=remodl_params))
     )
 
     end_user_id = cast(
         Optional[str],
-        litellm_params.get("user_api_key_end_user_id")
+        remodl_params.get("user_api_key_end_user_id")
         or _metadata.get("user_api_key_end_user_id"),
     )
-    if litellm.disable_end_user_cost_tracking:
+    if remodl.disable_end_user_cost_tracking:
         return None
 
     #######################################
     # By default we don't track end_user on prometheus since we don't want to increase cardinality
-    # by default litellm.enable_end_user_cost_tracking_prometheus_only is None, so we don't track end_user on prometheus
+    # by default remodl.enable_end_user_cost_tracking_prometheus_only is None, so we don't track end_user on prometheus
     #######################################
     if service_type == "prometheus":
-        if litellm.enable_end_user_cost_tracking_prometheus_only is not True:
+        if remodl.enable_end_user_cost_tracking_prometheus_only is not True:
             return None
     return end_user_id
 
@@ -7973,13 +7974,13 @@ def get_standard_openai_params(params: dict) -> dict:
     return {
         k: v
         for k, v in params.items()
-        if k in litellm.OPENAI_CHAT_COMPLETION_PARAMS and v is not None
+        if k in remodl.OPENAI_CHAT_COMPLETION_PARAMS and v is not None
     }
 
 
 def get_non_default_completion_params(kwargs: dict) -> dict:
-    openai_params = litellm.OPENAI_CHAT_COMPLETION_PARAMS
-    default_params = openai_params + all_litellm_params
+    openai_params = remodl.OPENAI_CHAT_COMPLETION_PARAMS
+    default_params = openai_params + all_remodl_params
     non_default_params = {
         k: v for k, v in kwargs.items() if k not in default_params
     }  # model-specific params - pass them straight to the model/provider
@@ -7988,9 +7989,9 @@ def get_non_default_completion_params(kwargs: dict) -> dict:
 
 
 def get_non_default_transcription_params(kwargs: dict) -> dict:
-    from litellm.constants import OPENAI_TRANSCRIPTION_PARAMS
+    from remodl.constants import OPENAI_TRANSCRIPTION_PARAMS
 
-    default_params = OPENAI_TRANSCRIPTION_PARAMS + all_litellm_params
+    default_params = OPENAI_TRANSCRIPTION_PARAMS + all_remodl_params
     non_default_params = {k: v for k, v in kwargs.items() if k not in default_params}
     return non_default_params
 
@@ -8034,37 +8035,37 @@ def return_raw_request(endpoint: CallTypes, kwargs: dict) -> RawRequestTypedDict
     """
     Return the json str of the request
 
-    This is currently in BETA, and tested for `/chat/completions` -> `litellm.completion` calls.
+    This is currently in BETA, and tested for `/chat/completions` -> `remodl.completion` calls.
     """
     from datetime import datetime
 
-    from litellm.litellm_core_utils.litellm_logging import Logging
+    from remodl.remodl_core_utils.remodl_logging import Logging
 
-    litellm_logging_obj = Logging(
+    remodl_logging_obj = Logging(
         model="gpt-3.5-turbo",
         messages=[{"role": "user", "content": "hi"}],
         stream=False,
         call_type="acompletion",
-        litellm_call_id="1234",
+        remodl_call_id="1234",
         start_time=datetime.now(),
         function_id="1234",
         log_raw_request_response=True,
     )
 
-    llm_api_endpoint = getattr(litellm, endpoint.value)
+    llm_api_endpoint = getattr(remodl, endpoint.value)
 
     received_exception = ""
 
     try:
         llm_api_endpoint(
             **kwargs,
-            litellm_logging_obj=litellm_logging_obj,
+            remodl_logging_obj=remodl_logging_obj,
             api_key="my-fake-api-key",  # 👈 ensure the request fails
         )
     except Exception as e:
         received_exception = str(e)
 
-    raw_request_typed_dict = litellm_logging_obj.model_call_details.get(
+    raw_request_typed_dict = remodl_logging_obj.model_call_details.get(
         "raw_request_typed_dict"
     )
     if raw_request_typed_dict:
@@ -8077,7 +8078,7 @@ def return_raw_request(endpoint: CallTypes, kwargs: dict) -> RawRequestTypedDict
 
 def jsonify_tools(tools: List[Any]) -> List[Dict]:
     """
-    Fixes https://github.com/BerriAI/litellm/issues/9321
+    Fixes https://github.com/BerriAI/remodl/issues/9321
 
     Where user passes in a pydantic base model
     """

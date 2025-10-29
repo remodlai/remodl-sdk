@@ -7,7 +7,7 @@ https://docs.morphllm.com/quickstart
 
 from typing import Optional, Tuple
 
-from litellm.secret_managers.main import get_secret_str
+from remodl.secret_managers.main import get_secret_str
 
 from ...openai_like.chat.transformation import OpenAILikeChatConfig
 

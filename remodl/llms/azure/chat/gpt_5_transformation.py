@@ -2,8 +2,8 @@
 
 from typing import List
 
-from litellm.llms.openai.chat.gpt_5_transformation import OpenAIGPT5Config
-from litellm.types.llms.openai import AllMessageValues
+from remodl.llms.openai.chat.gpt_5_transformation import OpenAIGPT5Config
+from remodl.types.llms.openai import AllMessageValues
 
 from .gpt_transformation import AzureOpenAIConfig
 
@@ -46,7 +46,7 @@ class AzureOpenAIGPT5Config(AzureOpenAIConfig, OpenAIGPT5Config):
         model: str,
         messages: List[AllMessageValues],
         optional_params: dict,
-        litellm_params: dict,
+        remodl_params: dict,
         headers: dict,
     ) -> dict:
         model = model.replace(self.GPT5_SERIES_ROUTE, "")
@@ -54,6 +54,6 @@ class AzureOpenAIGPT5Config(AzureOpenAIConfig, OpenAIGPT5Config):
             model=model,
             messages=messages,
             optional_params=optional_params,
-            litellm_params=litellm_params,
+            remodl_params=remodl_params,
             headers=headers,
         )

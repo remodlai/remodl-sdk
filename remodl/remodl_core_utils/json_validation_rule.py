@@ -1,7 +1,7 @@
 import json
 from typing import Any, Dict, List, Union
 
-from litellm.constants import DEFAULT_MAX_RECURSE_DEPTH
+from remodl.constants import DEFAULT_MAX_RECURSE_DEPTH
 
 
 def normalize_json_schema_types(schema: Union[Dict[str, Any], List[Any], Any], depth: int = 0, max_depth: int = DEFAULT_MAX_RECURSE_DEPTH) -> Union[Dict[str, Any], List[Any], Any]:
@@ -104,7 +104,7 @@ def validate_schema(schema: dict, response: str):
     """
     from jsonschema import ValidationError, validate
 
-    from litellm import JSONSchemaValidationError
+    from remodl import JSONSchemaValidationError
 
     try:
         response_dict = json.loads(response)

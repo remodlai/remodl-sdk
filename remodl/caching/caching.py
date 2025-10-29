@@ -1,7 +1,7 @@
 # +-----------------------------------------------+
 # |                                               |
 # |           Give Feedback / Get Help            |
-# | https://github.com/BerriAI/litellm/issues/new |
+# | https://github.com/BerriAI/remodl/issues/new |
 # |                                               |
 # +-----------------------------------------------+
 #
@@ -17,12 +17,12 @@ from typing import Any, Dict, List, Optional, Tuple, Union
 
 from pydantic import BaseModel
 
-import litellm
-from litellm._logging import verbose_logger
-from litellm.constants import CACHED_STREAMING_CHUNK_DELAY
-from litellm.litellm_core_utils.model_param_helper import ModelParamHelper
-from litellm.types.caching import *
-from litellm.types.utils import EmbeddingResponse, all_litellm_params
+import remodl
+from remodl._logging import verbose_logger
+from remodl.constants import CACHED_STREAMING_CHUNK_DELAY
+from remodl.remodl_core_utils.model_param_helper import ModelParamHelper
+from remodl.types.caching import *
+from remodl.types.utils import EmbeddingResponse, all_remodl_params
 
 from .azure_blob_cache import AzureBlobCache
 from .base_cache import BaseCache
@@ -40,7 +40,7 @@ from .s3_cache import S3Cache
 def print_verbose(print_statement):
     try:
         verbose_logger.debug(print_statement)
-        if litellm.set_verbose:
+        if remodl.set_verbose:
             print(print_statement)  # noqa
     except Exception:
         pass
@@ -160,7 +160,7 @@ class Cache:
             ValueError: If an invalid cache type is provided.
 
         Returns:
-            None. Cache is set as a litellm param
+            None. Cache is set as a remodl param
         """
         if type == LiteLLMCacheType.REDIS:
             if redis_startup_nodes:
@@ -236,12 +236,12 @@ class Cache:
             )
         elif type == LiteLLMCacheType.DISK:
             self.cache = DiskCache(disk_cache_dir=disk_cache_dir)
-        if "cache" not in litellm.input_callback:
-            litellm.input_callback.append("cache")
-        if "cache" not in litellm.success_callback:
-            litellm.logging_callback_manager.add_litellm_success_callback("cache")
-        if "cache" not in litellm._async_success_callback:
-            litellm.logging_callback_manager.add_litellm_async_success_callback("cache")
+        if "cache" not in remodl.input_callback:
+            remodl.input_callback.append("cache")
+        if "cache" not in remodl.success_callback:
+            remodl.logging_callback_manager.add_remodl_success_callback("cache")
+        if "cache" not in remodl._async_success_callback:
+            remodl.logging_callback_manager.add_remodl_async_success_callback("cache")
         self.supported_call_types = supported_call_types  # default to ["completion", "acompletion", "embedding", "aembedding"]
         self.type = type
         self.namespace = namespace
@@ -266,7 +266,7 @@ class Cache:
         Get the cache key for the given arguments.
 
         Args:
-            **kwargs: kwargs to litellm.completion() or embedding()
+            **kwargs: kwargs to remodl.completion() or embedding()
 
         Returns:
             str: The cache key generated from the arguments, or None if no cache key could be generated.
@@ -280,17 +280,17 @@ class Cache:
             return preset_cache_key
 
         combined_kwargs = ModelParamHelper._get_all_llm_api_params()
-        litellm_param_kwargs = all_litellm_params
+        remodl_param_kwargs = all_remodl_params
         for param in kwargs:
             if param in combined_kwargs:
                 param_value: Optional[str] = self._get_param_value(param, kwargs)
                 if param_value is not None:
                     cache_key += f"{str(param)}: {str(param_value)}"
             elif (
-                param not in litellm_param_kwargs
+                param not in remodl_param_kwargs
             ):  # check if user passed in optional param - e.g. top_k
                 if (
-                    litellm.enable_caching_on_provider_specific_optional_params is True
+                    remodl.enable_caching_on_provider_specific_optional_params is True
                 ):  # feature flagged for now
                     if kwargs[param] is None:
                         continue  # ignore None params
@@ -323,16 +323,16 @@ class Cache:
         """
         Handles getting the value for the 'model' param from kwargs
 
-        1. If caching groups are set, then return the caching group as the model https://docs.litellm.ai/docs/routing#caching-across-model-groups
-        2. Else if a model_group is set, then return the model_group as the model. This is used for all requests sent through the litellm.Router()
+        1. If caching groups are set, then return the caching group as the model https://docs.remodl.ai/docs/routing#caching-across-model-groups
+        2. Else if a model_group is set, then return the model_group as the model. This is used for all requests sent through the remodl.Router()
         3. Else use the `model` passed in kwargs
         """
         metadata: Dict = kwargs.get("metadata", {}) or {}
-        litellm_params: Dict = kwargs.get("litellm_params", {}) or {}
-        metadata_in_litellm_params: Dict = litellm_params.get("metadata", {}) or {}
+        remodl_params: Dict = kwargs.get("remodl_params", {}) or {}
+        metadata_in_remodl_params: Dict = remodl_params.get("metadata", {}) or {}
         model_group: Optional[str] = metadata.get(
             "model_group"
-        ) or metadata_in_litellm_params.get("model_group")
+        ) or metadata_in_remodl_params.get("model_group")
         caching_group = self._get_caching_group(metadata, model_group)
         return caching_group or model_group or kwargs["model"]
 
@@ -352,17 +352,17 @@ class Cache:
         """
         file = kwargs.get("file")
         metadata = kwargs.get("metadata", {})
-        litellm_params = kwargs.get("litellm_params", {})
+        remodl_params = kwargs.get("remodl_params", {})
         return (
             metadata.get("file_checksum")
             or getattr(file, "name", None)
             or metadata.get("file_name")
-            or litellm_params.get("file_name")
+            or remodl_params.get("file_name")
         )
 
     def _get_preset_cache_key_from_kwargs(self, **kwargs) -> Optional[str]:
         """
-        Get the preset cache key from kwargs["litellm_params"]
+        Get the preset cache key from kwargs["remodl_params"]
 
         We use _get_preset_cache_keys for two reasons
 
@@ -370,8 +370,8 @@ class Cache:
         2. avoid doing duplicate / repeated work
         """
         if kwargs:
-            if "litellm_params" in kwargs:
-                return kwargs["litellm_params"].get("preset_cache_key", None)
+            if "remodl_params" in kwargs:
+                return kwargs["remodl_params"].get("preset_cache_key", None)
         return None
 
     def _set_preset_cache_key_in_kwargs(self, preset_cache_key: str, **kwargs) -> None:
@@ -380,11 +380,11 @@ class Cache:
 
         This is used to avoid doing duplicate / repeated work
 
-        Placed in kwargs["litellm_params"]
+        Placed in kwargs["remodl_params"]
         """
         if kwargs:
-            if "litellm_params" in kwargs:
-                kwargs["litellm_params"]["preset_cache_key"] = preset_cache_key
+            if "remodl_params" in kwargs:
+                kwargs["remodl_params"]["preset_cache_key"] = preset_cache_key
 
     @staticmethod
     def _get_hashed_cache_key(cache_key: str) -> str:
@@ -486,8 +486,8 @@ class Cache:
         Retrieves the cached result for the given arguments.
 
         Args:
-            *args: args to litellm.completion() or embedding()
-            **kwargs: kwargs to litellm.completion() or embedding()
+            *args: args to remodl.completion() or embedding()
+            **kwargs: kwargs to remodl.completion() or embedding()
 
         Returns:
             The cached result if it exists, otherwise None.
@@ -593,8 +593,8 @@ class Cache:
         Adds a result to the cache.
 
         Args:
-            *args: args to litellm.completion() or embedding()
-            **kwargs: kwargs to litellm.completion() or embedding()
+            *args: args to remodl.completion() or embedding()
+            **kwargs: kwargs to remodl.completion() or embedding()
 
         Returns:
             None
@@ -818,15 +818,15 @@ def enable_cache(
         None
     """
     print_verbose("LiteLLM: Enabling Cache")
-    if "cache" not in litellm.input_callback:
-        litellm.input_callback.append("cache")
-    if "cache" not in litellm.success_callback:
-        litellm.logging_callback_manager.add_litellm_success_callback("cache")
-    if "cache" not in litellm._async_success_callback:
-        litellm.logging_callback_manager.add_litellm_async_success_callback("cache")
+    if "cache" not in remodl.input_callback:
+        remodl.input_callback.append("cache")
+    if "cache" not in remodl.success_callback:
+        remodl.logging_callback_manager.add_remodl_success_callback("cache")
+    if "cache" not in remodl._async_success_callback:
+        remodl.logging_callback_manager.add_remodl_async_success_callback("cache")
 
-    if litellm.cache is None:
-        litellm.cache = Cache(
+    if remodl.cache is None:
+        remodl.cache = Cache(
             type=type,
             host=host,
             port=port,
@@ -834,8 +834,8 @@ def enable_cache(
             supported_call_types=supported_call_types,
             **kwargs,
         )
-    print_verbose(f"LiteLLM: Cache enabled, litellm.cache={litellm.cache}")
-    print_verbose(f"LiteLLM Cache: {vars(litellm.cache)}")
+    print_verbose(f"LiteLLM: Cache enabled, remodl.cache={remodl.cache}")
+    print_verbose(f"LiteLLM Cache: {vars(remodl.cache)}")
 
 
 def update_cache(
@@ -874,7 +874,7 @@ def update_cache(
 
     """
     print_verbose("LiteLLM: Updating Cache")
-    litellm.cache = Cache(
+    remodl.cache = Cache(
         type=type,
         host=host,
         port=port,
@@ -882,15 +882,15 @@ def update_cache(
         supported_call_types=supported_call_types,
         **kwargs,
     )
-    print_verbose(f"LiteLLM: Cache Updated, litellm.cache={litellm.cache}")
-    print_verbose(f"LiteLLM Cache: {vars(litellm.cache)}")
+    print_verbose(f"LiteLLM: Cache Updated, remodl.cache={remodl.cache}")
+    print_verbose(f"LiteLLM Cache: {vars(remodl.cache)}")
 
 
 def disable_cache():
     """
     Disable the cache used by LiteLLM.
 
-    This function disables the cache used by the LiteLLM module. It removes the cache-related callbacks from the input_callback, success_callback, and _async_success_callback lists. It also sets the litellm.cache attribute to None.
+    This function disables the cache used by the LiteLLM module. It removes the cache-related callbacks from the input_callback, success_callback, and _async_success_callback lists. It also sets the remodl.cache attribute to None.
 
     Parameters:
     None
@@ -902,9 +902,9 @@ def disable_cache():
 
     print_verbose("LiteLLM: Disabling Cache")
     with suppress(ValueError):
-        litellm.input_callback.remove("cache")
-        litellm.success_callback.remove("cache")
-        litellm._async_success_callback.remove("cache")
+        remodl.input_callback.remove("cache")
+        remodl.success_callback.remove("cache")
+        remodl._async_success_callback.remove("cache")
 
-    litellm.cache = None
-    print_verbose(f"LiteLLM: Cache disabled, litellm.cache={litellm.cache}")
+    remodl.cache = None
+    print_verbose(f"LiteLLM: Cache disabled, remodl.cache={remodl.cache}")

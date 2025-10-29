@@ -16,12 +16,12 @@ from typing import (
 
 from pydantic import BaseModel
 
-from litellm._logging import verbose_logger
-from litellm.caching.caching import DualCache
-from litellm.constants import DEFAULT_MAX_RECURSE_DEPTH_SENSITIVE_DATA_MASKER
-from litellm.types.integrations.argilla import ArgillaItem
-from litellm.types.llms.openai import AllMessageValues, ChatCompletionRequest
-from litellm.types.utils import (
+from remodl._logging import verbose_logger
+from remodl.caching.caching import DualCache
+from remodl.constants import DEFAULT_MAX_RECURSE_DEPTH_SENSITIVE_DATA_MASKER
+from remodl.types.integrations.argilla import ArgillaItem
+from remodl.types.llms.openai import AllMessageValues, ChatCompletionRequest
+from remodl.types.utils import (
     AdapterCompletionStreamWrapper,
     CallTypes,
     LLMResponseTypes,
@@ -34,14 +34,14 @@ from litellm.types.utils import (
 if TYPE_CHECKING:
     from opentelemetry.trace import Span as _Span
 
-    from litellm.litellm_core_utils.litellm_logging import Logging as LiteLLMLoggingObj
-    from litellm.proxy._types import UserAPIKeyAuth
-    from litellm.types.mcp import (
+    from remodl.remodl_core_utils.remodl_logging import Logging as LiteLLMLoggingObj
+    from remodl.proxy._types import UserAPIKeyAuth
+    from remodl.types.mcp import (
         MCPPostCallResponseObject,
         MCPPreCallRequestObject,
         MCPPreCallResponseObject,
     )
-    from litellm.types.router import PreRoutingHookResponse
+    from remodl.types.router import PreRoutingHookResponse
 
     Span = Union[_Span, Any]
 else:
@@ -62,7 +62,7 @@ _BASE64_INLINE_PATTERN = re.compile(
 )
 
 
-class CustomLogger:  # https://docs.litellm.ai/docs/observability/custom_callback#callback-class
+class CustomLogger:  # https://docs.remodl.ai/docs/observability/custom_callback#callback-class
     # Class variables or attributes
     def __init__(
         self, 
@@ -120,7 +120,7 @@ class CustomLogger:  # https://docs.litellm.ai/docs/observability/custom_callbac
         prompt_id: Optional[str],
         prompt_variables: Optional[dict],
         dynamic_callback_params: StandardCallbackDynamicParams,
-        litellm_logging_obj: LiteLLMLoggingObj,
+        remodl_logging_obj: LiteLLMLoggingObj,
         tools: Optional[List[Dict]] = None,
         prompt_label: Optional[str] = None,
         prompt_version: Optional[int] = None,
@@ -168,7 +168,7 @@ class CustomLogger:  # https://docs.litellm.ai/docs/observability/custom_callbac
         """
         This hook is called before the routing decision is made.
 
-        Used for the litellm auto-router to modify the request before the routing decision is made.
+        Used for the remodl auto-router to modify the request before the routing decision is made.
         """
         return None
 
@@ -242,13 +242,13 @@ class CustomLogger:  # https://docs.litellm.ai/docs/observability/custom_callbac
     ):
         pass
 
-    #### ADAPTERS #### Allow calling 100+ LLMs in custom format - https://github.com/BerriAI/litellm/pulls
+    #### ADAPTERS #### Allow calling 100+ LLMs in custom format - https://github.com/BerriAI/remodl/pulls
 
     def translate_completion_input_params(
         self, kwargs
     ) -> Optional[ChatCompletionRequest]:
         """
-        Translates the input params, from the provider's native format to the litellm.completion() format.
+        Translates the input params, from the provider's native format to the remodl.completion() format.
         """
         pass
 
@@ -306,7 +306,7 @@ class CustomLogger:  # https://docs.litellm.ai/docs/observability/custom_callbac
         ],
     ) -> Optional[
         Union[Exception, str, dict]
-    ]:  # raise exception if invalid, return a str for the user to receive - if rejected, or return a modified dictionary for passing into litellm
+    ]:  # raise exception if invalid, return a str for the user to receive - if rejected, or return a modified dictionary for passing into remodl
         pass
 
     async def async_post_call_failure_hook(
@@ -371,7 +371,7 @@ class CustomLogger:  # https://docs.litellm.ai/docs/observability/custom_callbac
         async for item in response:
             yield item
 
-    #### SINGLE-USE #### - https://docs.litellm.ai/docs/observability/custom_callback#using-your-custom-callback-function
+    #### SINGLE-USE #### - https://docs.remodl.ai/docs/observability/custom_callback#using-your-custom-callback-function
 
     def log_input_event(self, model, messages, kwargs, print_verbose, callback_func):
         try:
@@ -498,7 +498,7 @@ class CustomLogger:  # https://docs.litellm.ai/docs/observability/custom_callbac
         """Truncate text if it exceeds max_length"""
         return (
             text[:max_length]
-            + "...truncated by litellm, this logger does not support large content"
+            + "...truncated by remodl, this logger does not support large content"
             if len(text) > max_length
             else text
         )
@@ -509,10 +509,10 @@ class CustomLogger:  # https://docs.litellm.ai/docs/observability/custom_callbac
         """
         Select the metadata field to use for logging
 
-        1. If `litellm_metadata` is in the request kwargs, use it
+        1. If `remodl_metadata` is in the request kwargs, use it
         2. Otherwise, use `metadata`
         """
-        from litellm.constants import LITELLM_METADATA_FIELD, OLD_LITELLM_METADATA_FIELD
+        from remodl.constants import LITELLM_METADATA_FIELD, OLD_LITELLM_METADATA_FIELD
 
         if request_kwargs is None:
             return None
@@ -535,8 +535,8 @@ class CustomLogger:  # https://docs.litellm.ai/docs/observability/custom_callbac
         """
         from copy import copy
 
-        from litellm import Choices, Message, ModelResponse
-        from litellm.types.utils import LiteLLMCommonStrings
+        from remodl import Choices, Message, ModelResponse
+        from remodl.types.utils import LiteLLMCommonStrings
         turn_off_message_logging: bool = getattr(self, "turn_off_message_logging", False)
         
         if turn_off_message_logging is False:
@@ -545,7 +545,7 @@ class CustomLogger:  # https://docs.litellm.ai/docs/observability/custom_callbac
         # Only make a shallow copy of the top-level dict to avoid deepcopy issues
         # with complex objects like AuthenticationError that may be present
         model_call_details_copy = copy(model_call_details)
-        redacted_str = LiteLLMCommonStrings.redacted_by_litellm.value
+        redacted_str = LiteLLMCommonStrings.redacted_by_remodl.value
         standard_logging_object = model_call_details.get("standard_logging_object")
         if standard_logging_object is None:
             return model_call_details_copy

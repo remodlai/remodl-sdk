@@ -6,15 +6,15 @@ from typing import Any, Dict, List, Optional, Union
 
 import httpx
 
-import litellm
-from litellm.litellm_core_utils.prompt_templates.common_utils import (
+import remodl
+from remodl.remodl_core_utils.prompt_templates.common_utils import (
     get_file_ids_from_messages,
 )
-from litellm.llms.base_llm.base_utils import BaseLLMModelInfo, BaseTokenCounter
-from litellm.llms.base_llm.chat.transformation import BaseLLMException
-from litellm.types.llms.anthropic import AllAnthropicToolsValues, AnthropicMcpServerTool
-from litellm.types.llms.openai import AllMessageValues
-from litellm.types.utils import TokenCountResponse
+from remodl.llms.base_llm.base_utils import BaseLLMModelInfo, BaseTokenCounter
+from remodl.llms.base_llm.chat.transformation import BaseLLMException
+from remodl.types.llms.anthropic import AllAnthropicToolsValues, AnthropicMcpServerTool
+from remodl.types.llms.openai import AllMessageValues
+from remodl.types.utils import TokenCountResponse
 
 
 class AnthropicError(BaseLLMException):
@@ -143,12 +143,12 @@ class AnthropicModelInfo(BaseLLMModelInfo):
         model: str,
         messages: List[AllMessageValues],
         optional_params: dict,
-        litellm_params: dict,
+        remodl_params: dict,
         api_key: Optional[str] = None,
         api_base: Optional[str] = None,
     ) -> Dict:
         if api_key is None:
-            raise litellm.AuthenticationError(
+            raise remodl.AuthenticationError(
                 message="Missing Anthropic API Key - A call is being made to anthropic but no key is set either in the environment variables or via params. Please set `ANTHROPIC_API_KEY` in your environment vars",
                 llm_provider="anthropic",
                 model=model,
@@ -182,7 +182,7 @@ class AnthropicModelInfo(BaseLLMModelInfo):
 
     @staticmethod
     def get_api_base(api_base: Optional[str] = None) -> Optional[str]:
-        from litellm.secret_managers.main import get_secret_str
+        from remodl.secret_managers.main import get_secret_str
 
         return (
             api_base
@@ -192,7 +192,7 @@ class AnthropicModelInfo(BaseLLMModelInfo):
 
     @staticmethod
     def get_api_key(api_key: Optional[str] = None) -> Optional[str]:
-        from litellm.secret_managers.main import get_secret_str
+        from remodl.secret_managers.main import get_secret_str
 
         return api_key or get_secret_str("ANTHROPIC_API_KEY")
 
@@ -209,7 +209,7 @@ class AnthropicModelInfo(BaseLLMModelInfo):
             raise ValueError(
                 "ANTHROPIC_API_BASE or ANTHROPIC_API_KEY is not set. Please set the environment variable, to query Anthropic's `/models` endpoint."
             )
-        response = litellm.module_level_client.get(
+        response = remodl.module_level_client.get(
             url=f"{api_base}/v1/models",
             headers={"x-api-key": api_key, "anthropic-version": "2023-06-01"},
         )
@@ -223,12 +223,12 @@ class AnthropicModelInfo(BaseLLMModelInfo):
 
         models = response.json()["data"]
 
-        litellm_model_names = []
+        remodl_model_names = []
         for model in models:
             stripped_model_name = model["id"]
-            litellm_model_name = "anthropic/" + stripped_model_name
-            litellm_model_names.append(litellm_model_name)
-        return litellm_model_names
+            remodl_model_name = "anthropic/" + stripped_model_name
+            remodl_model_names.append(remodl_model_name)
+        return remodl_model_names
 
     def get_token_counter(self) -> Optional[BaseTokenCounter]:
         """
@@ -247,7 +247,7 @@ class AnthropicTokenCounter(BaseTokenCounter):
         self, 
         custom_llm_provider: Optional[str] = None,
     ) -> bool:
-        from litellm.types.utils import LlmProviders
+        from remodl.types.utils import LlmProviders
         return custom_llm_provider == LlmProviders.ANTHROPIC.value
     
     async def count_tokens(
@@ -258,7 +258,7 @@ class AnthropicTokenCounter(BaseTokenCounter):
         deployment: Optional[Dict[str, Any]] = None,
         request_model: str = "",
     ) -> Optional[TokenCountResponse]:
-        from litellm.proxy.utils import count_tokens_with_anthropic_api
+        from remodl.proxy.utils import count_tokens_with_anthropic_api
         
         result = await count_tokens_with_anthropic_api(
             model_to_use=model_to_use,

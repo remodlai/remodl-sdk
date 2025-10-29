@@ -6,11 +6,11 @@ from typing import Optional
 
 import httpx
 
-import litellm
-from litellm.litellm_core_utils.litellm_logging import Logging as LiteLLMLoggingObj
-from litellm.llms.cohere.rerank.transformation import CohereRerankConfig
-from litellm.secret_managers.main import get_secret_str
-from litellm.types.utils import RerankResponse
+import remodl
+from remodl.remodl_core_utils.remodl_logging import Logging as LiteLLMLoggingObj
+from remodl.llms.cohere.rerank.transformation import CohereRerankConfig
+from remodl.secret_managers.main import get_secret_str
+from remodl.types.utils import RerankResponse
 
 
 class AzureAIRerankConfig(CohereRerankConfig):
@@ -34,11 +34,11 @@ class AzureAIRerankConfig(CohereRerankConfig):
         api_key: Optional[str] = None,
     ) -> dict:
         if api_key is None:
-            api_key = get_secret_str("AZURE_AI_API_KEY") or litellm.azure_key
+            api_key = get_secret_str("AZURE_AI_API_KEY") or remodl.azure_key
 
         if api_key is None:
             raise ValueError(
-                "Azure AI API key is required. Please set 'AZURE_AI_API_KEY' or 'litellm.azure_key'"
+                "Azure AI API key is required. Please set 'AZURE_AI_API_KEY' or 'remodl.azure_key'"
             )
 
         default_headers = {
@@ -63,7 +63,7 @@ class AzureAIRerankConfig(CohereRerankConfig):
         api_key: Optional[str] = None,
         request_data: dict = {},
         optional_params: dict = {},
-        litellm_params: dict = {},
+        remodl_params: dict = {},
     ) -> RerankResponse:
         rerank_response = super().transform_rerank_response(
             model=model,
@@ -73,7 +73,7 @@ class AzureAIRerankConfig(CohereRerankConfig):
             api_key=api_key,
             request_data=request_data,
             optional_params=optional_params,
-            litellm_params=litellm_params,
+            remodl_params=remodl_params,
         )
         base_model = self._get_base_model(
             rerank_response._hidden_params.get("llm_provider-azureml-model-group")

@@ -6,14 +6,14 @@ LiteLLM supports the re rank API format, no paramter transformation occurs
 
 from typing import Any, Dict, List, Optional, Union
 
-import litellm
-from litellm.llms.base import BaseLLM
-from litellm.llms.custom_httpx.http_handler import (
+import remodl
+from remodl.llms.base import BaseLLM
+from remodl.llms.custom_httpx.http_handler import (
     _get_httpx_client,
     get_async_httpx_client,
 )
-from litellm.llms.together_ai.rerank.transformation import TogetherAIRerankConfig
-from litellm.types.rerank import RerankRequest, RerankResponse
+from remodl.llms.together_ai.rerank.transformation import TogetherAIRerankConfig
+from remodl.types.rerank import RerankRequest, RerankResponse
 
 
 class TogetherAIRerank(BaseLLM):
@@ -71,7 +71,7 @@ class TogetherAIRerank(BaseLLM):
         api_key: str,
     ) -> RerankResponse:
         client = get_async_httpx_client(
-            llm_provider=litellm.LlmProviders.TOGETHER_AI
+            llm_provider=remodl.LlmProviders.TOGETHER_AI
         )  # Use async client
 
         response = await client.post(

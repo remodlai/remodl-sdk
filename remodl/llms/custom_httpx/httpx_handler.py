@@ -3,12 +3,12 @@ from typing import Optional, Union
 import httpx
 
 try:
-    from litellm._version import version
+    from remodl._version import version
 except Exception:
     version = "0.0.0"
 
 headers = {
-    "User-Agent": f"litellm/{version}",
+    "User-Agent": f"remodl/{version}",
 }
 
 

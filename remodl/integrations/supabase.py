@@ -6,7 +6,7 @@ import subprocess
 import sys
 import traceback
 
-import litellm
+import remodl
 
 
 class Supabase:
@@ -25,14 +25,14 @@ class Supabase:
 
         if self.supabase_url is None or self.supabase_key is None:
             raise ValueError(
-                "LiteLLM Error, trying to use Supabase but url or key not passed. Create a table and set `litellm.supabase_url=<your-url>` and `litellm.supabase_key=<your-key>`"
+                "LiteLLM Error, trying to use Supabase but url or key not passed. Create a table and set `remodl.supabase_url=<your-url>` and `remodl.supabase_key=<your-key>`"
             )
         self.supabase_client = supabase.create_client(  # type: ignore
             self.supabase_url, self.supabase_key
         )
 
     def input_log_event(
-        self, model, messages, end_user, litellm_call_id, print_verbose
+        self, model, messages, end_user, remodl_call_id, print_verbose
     ):
         try:
             print_verbose(
@@ -43,7 +43,7 @@ class Supabase:
                 "messages": messages,
                 "end_user": end_user,
                 "status": "initiated",
-                "litellm_call_id": litellm_call_id,
+                "remodl_call_id": remodl_call_id,
             }
             data, count = (
                 self.supabase_client.table(self.supabase_table_name)
@@ -63,7 +63,7 @@ class Supabase:
         response_obj,
         start_time,
         end_time,
-        litellm_call_id,
+        remodl_call_id,
         print_verbose,
     ):
         try:
@@ -71,7 +71,7 @@ class Supabase:
                 f"Supabase Logging - Enters logging function for model {model}, response_obj: {response_obj}"
             )
 
-            total_cost = litellm.completion_cost(completion_response=response_obj)
+            total_cost = remodl.completion_cost(completion_response=response_obj)
 
             response_time = (end_time - start_time).total_seconds()
             if "choices" in response_obj:
@@ -82,7 +82,7 @@ class Supabase:
                     "messages": messages,
                     "response": response_obj["choices"][0]["message"]["content"],
                     "end_user": end_user,
-                    "litellm_call_id": litellm_call_id,
+                    "remodl_call_id": remodl_call_id,
                     "status": "success",
                 }
                 print_verbose(
@@ -90,7 +90,7 @@ class Supabase:
                 )
                 data, count = (
                     self.supabase_client.table(self.supabase_table_name)
-                    .upsert(supabase_data_obj, on_conflict="litellm_call_id")
+                    .upsert(supabase_data_obj, on_conflict="remodl_call_id")
                     .execute()
                 )
             elif "error" in response_obj:
@@ -103,7 +103,7 @@ class Supabase:
                     "messages": messages,
                     "error": response_obj["error"],
                     "end_user": end_user,
-                    "litellm_call_id": litellm_call_id,
+                    "remodl_call_id": remodl_call_id,
                     "status": "failure",
                 }
                 print_verbose(
@@ -111,7 +111,7 @@ class Supabase:
                 )
                 data, count = (
                     self.supabase_client.table(self.supabase_table_name)
-                    .upsert(supabase_data_obj, on_conflict="litellm_call_id")
+                    .upsert(supabase_data_obj, on_conflict="remodl_call_id")
                     .execute()
                 )
 

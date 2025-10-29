@@ -11,11 +11,11 @@ from typing import Any, AsyncIterator, Iterator, List, Optional, Tuple, Union, c
 
 import httpx
 
-from litellm.llms.base_llm.base_model_iterator import BaseModelResponseIterator
-from litellm.llms.base_llm.chat.transformation import BaseLLMException
-from litellm.types.llms.openai import AllMessageValues, ChatCompletionToolParam
-from litellm.types.llms.openrouter import OpenRouterErrorMessage
-from litellm.types.utils import ModelResponse, ModelResponseStream
+from remodl.llms.base_llm.base_model_iterator import BaseModelResponseIterator
+from remodl.llms.base_llm.chat.transformation import BaseLLMException
+from remodl.types.llms.openai import AllMessageValues, ChatCompletionToolParam
+from remodl.types.llms.openrouter import OpenRouterErrorMessage
+from remodl.types.utils import ModelResponse, ModelResponseStream
 
 from ...openai.chat.gpt_transformation import OpenAIGPTConfig
 from ..common_utils import OpenRouterException
@@ -130,7 +130,7 @@ class OpenrouterConfig(OpenAIGPTConfig):
         model: str,
         messages: List[AllMessageValues],
         optional_params: dict,
-        litellm_params: dict,
+        remodl_params: dict,
         headers: dict,
     ) -> dict:
         """
@@ -144,7 +144,7 @@ class OpenrouterConfig(OpenAIGPTConfig):
         
         extra_body = optional_params.pop("extra_body", {})
         response = super().transform_request(
-            model, messages, optional_params, litellm_params, headers
+            model, messages, optional_params, remodl_params, headers
         )
         response.update(extra_body)
 
@@ -164,7 +164,7 @@ class OpenrouterConfig(OpenAIGPTConfig):
         request_data: dict,
         messages: List[AllMessageValues],
         optional_params: dict,
-        litellm_params: dict,
+        remodl_params: dict,
         encoding: Any,
         api_key: Optional[str] = None,
         json_mode: Optional[bool] = None,
@@ -186,7 +186,7 @@ class OpenrouterConfig(OpenAIGPTConfig):
             request_data=request_data,
             messages=messages,
             optional_params=optional_params,
-            litellm_params=litellm_params,
+            remodl_params=remodl_params,
             encoding=encoding,
             api_key=api_key,
             json_mode=json_mode,

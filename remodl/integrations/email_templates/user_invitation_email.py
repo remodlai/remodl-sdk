@@ -138,7 +138,7 @@ USER_INVITATION_EMAIL_TEMPLATE = """
             
             <div class="divider"></div>
             
-            <a href="https://docs.litellm.ai/docs/proxy/user_keys" class="link-with-arrow">
+            <a href="https://docs.remodl.ai/docs/proxy/user_keys" class="link-with-arrow">
                 Make your first LLM request →
                 <span class="arrow"></span>
             </a>
@@ -147,7 +147,7 @@ USER_INVITATION_EMAIL_TEMPLATE = """
             
             <div class="divider"></div>
             
-            <a href="https://docs.litellm.ai/docs/supported_endpoints" class="link-with-arrow">
+            <a href="https://docs.remodl.ai/docs/supported_endpoints" class="link-with-arrow">
                 Supported Endpoints →
                 <span class="arrow"></span>
             </a>
@@ -156,7 +156,7 @@ USER_INVITATION_EMAIL_TEMPLATE = """
             
             <div class="divider"></div>
             
-            <a href="https://docs.litellm.ai/docs/pass_through/vertex_ai" class="link-with-arrow">
+            <a href="https://docs.remodl.ai/docs/pass_through/vertex_ai" class="link-with-arrow">
                 Passthrough Endpoints →
                 <span class="arrow"></span>
             </a>

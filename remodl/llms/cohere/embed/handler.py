@@ -7,15 +7,15 @@ from typing import Any, Callable, Optional, Union
 
 import httpx
 
-import litellm
-from litellm.litellm_core_utils.litellm_logging import Logging as LiteLLMLoggingObj
-from litellm.llms.custom_httpx.http_handler import (
+import remodl
+from remodl.remodl_core_utils.remodl_logging import Logging as LiteLLMLoggingObj
+from remodl.llms.custom_httpx.http_handler import (
     AsyncHTTPHandler,
     HTTPHandler,
     get_async_httpx_client,
 )
-from litellm.types.llms.bedrock import CohereEmbeddingRequest
-from litellm.types.utils import EmbeddingResponse
+from remodl.types.llms.bedrock import CohereEmbeddingRequest
+from remodl.types.utils import EmbeddingResponse
 
 from .v1_transformation import CohereEmbeddingConfig
 
@@ -23,7 +23,7 @@ from .v1_transformation import CohereEmbeddingConfig
 def validate_environment(api_key, headers: dict):
     headers.update(
         {
-            "Request-Source": "unspecified:litellm",
+            "Request-Source": "unspecified:remodl",
             "accept": "application/json",
             "content-type": "application/json",
         }
@@ -50,7 +50,7 @@ async def async_embedding(
     model: str,
     data: Union[dict, CohereEmbeddingRequest],
     input: list,
-    model_response: litellm.utils.EmbeddingResponse,
+    model_response: remodl.utils.EmbeddingResponse,
     timeout: Optional[Union[float, httpx.Timeout]],
     logging_obj: LiteLLMLoggingObj,
     optional_params: dict,
@@ -74,7 +74,7 @@ async def async_embedding(
 
     if client is None:
         client = get_async_httpx_client(
-            llm_provider=litellm.LlmProviders.COHERE,
+            llm_provider=remodl.LlmProviders.COHERE,
             params={"timeout": timeout},
         )
 

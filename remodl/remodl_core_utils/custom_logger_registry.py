@@ -10,47 +10,47 @@ Example:
 
 from typing import Union
 
-from litellm import _custom_logger_compatible_callbacks_literal
-from litellm.integrations.agentops import AgentOps
-from litellm.integrations.anthropic_cache_control_hook import AnthropicCacheControlHook
-from litellm.integrations.argilla import ArgillaLogger
-from litellm.integrations.azure_storage.azure_storage import AzureBlobStorageLogger
-from litellm.integrations.bitbucket import BitBucketPromptManager
-from litellm.integrations.gitlab import GitLabPromptManager
-from litellm.integrations.braintrust_logging import BraintrustLogger
-from litellm.integrations.datadog.datadog import DataDogLogger
-from litellm.integrations.datadog.datadog_llm_obs import DataDogLLMObsLogger
-from litellm.integrations.deepeval import DeepEvalLogger
-from litellm.integrations.galileo import GalileoObserve
-from litellm.integrations.gcs_bucket.gcs_bucket import GCSBucketLogger
-from litellm.integrations.gcs_pubsub.pub_sub import GcsPubSubLogger
-from litellm.integrations.humanloop import HumanloopLogger
-from litellm.integrations.lago import LagoLogger
-from litellm.integrations.langfuse.langfuse_prompt_management import (
+from remodl import _custom_logger_compatible_callbacks_literal
+from remodl.integrations.agentops import AgentOps
+from remodl.integrations.anthropic_cache_control_hook import AnthropicCacheControlHook
+from remodl.integrations.argilla import ArgillaLogger
+from remodl.integrations.azure_storage.azure_storage import AzureBlobStorageLogger
+from remodl.integrations.bitbucket import BitBucketPromptManager
+from remodl.integrations.gitlab import GitLabPromptManager
+from remodl.integrations.braintrust_logging import BraintrustLogger
+from remodl.integrations.datadog.datadog import DataDogLogger
+from remodl.integrations.datadog.datadog_llm_obs import DataDogLLMObsLogger
+from remodl.integrations.deepeval import DeepEvalLogger
+from remodl.integrations.galileo import GalileoObserve
+from remodl.integrations.gcs_bucket.gcs_bucket import GCSBucketLogger
+from remodl.integrations.gcs_pubsub.pub_sub import GcsPubSubLogger
+from remodl.integrations.humanloop import HumanloopLogger
+from remodl.integrations.lago import LagoLogger
+from remodl.integrations.langfuse.langfuse_prompt_management import (
     LangfusePromptManagement,
 )
-from litellm.integrations.langsmith import LangsmithLogger
-from litellm.integrations.literal_ai import LiteralAILogger
-from litellm.integrations.mlflow import MlflowLogger
-from litellm.integrations.openmeter import OpenMeterLogger
-from litellm.integrations.opentelemetry import OpenTelemetry
-from litellm.integrations.opik.opik import OpikLogger
-from litellm.integrations.posthog import PostHogLogger
+from remodl.integrations.langsmith import LangsmithLogger
+from remodl.integrations.literal_ai import LiteralAILogger
+from remodl.integrations.mlflow import MlflowLogger
+from remodl.integrations.openmeter import OpenMeterLogger
+from remodl.integrations.opentelemetry import OpenTelemetry
+from remodl.integrations.opik.opik import OpikLogger
+from remodl.integrations.posthog import PostHogLogger
 
 try:
-    from litellm_enterprise.integrations.prometheus import PrometheusLogger
+    from remodl_enterprise.integrations.prometheus import PrometheusLogger
 except Exception:
     PrometheusLogger = None
-from litellm.integrations.cloudzero.cloudzero import CloudZeroLogger
-from litellm.integrations.dotprompt import DotpromptManager
-from litellm.integrations.s3_v2 import S3Logger
-from litellm.integrations.sqs import SQSLogger
-from litellm.integrations.vector_store_integrations.vector_store_pre_call_hook import (
+from remodl.integrations.cloudzero.cloudzero import CloudZeroLogger
+from remodl.integrations.dotprompt import DotpromptManager
+from remodl.integrations.s3_v2 import S3Logger
+from remodl.integrations.sqs import SQSLogger
+from remodl.integrations.vector_store_integrations.vector_store_pre_call_hook import (
     VectorStorePreCallHook,
 )
-from litellm.proxy.hooks.dynamic_rate_limiter import _PROXY_DynamicRateLimitHandler
-from litellm.proxy.hooks.dynamic_rate_limiter_v3 import _PROXY_DynamicRateLimitHandlerV3
-from litellm.proxy.hooks.nova_task_routing import NovaTaskRoutingHook
+from remodl.proxy.hooks.dynamic_rate_limiter import _PROXY_DynamicRateLimitHandler
+from remodl.proxy.hooks.dynamic_rate_limiter_v3 import _PROXY_DynamicRateLimitHandlerV3
+from remodl.proxy.hooks.nova_task_routing import NovaTaskRoutingHook
 
 
 class CustomLoggerRegistry:
@@ -101,16 +101,16 @@ class CustomLoggerRegistry:
     }
 
     try:
-        from litellm_enterprise.enterprise_callbacks.generic_api_callback import (
+        from remodl_enterprise.enterprise_callbacks.generic_api_callback import (
             GenericAPILogger,
         )
-        from litellm_enterprise.enterprise_callbacks.pagerduty.pagerduty import (
+        from remodl_enterprise.enterprise_callbacks.pagerduty.pagerduty import (
             PagerDutyAlerting,
         )
-        from litellm_enterprise.enterprise_callbacks.send_emails.resend_email import (
+        from remodl_enterprise.enterprise_callbacks.send_emails.resend_email import (
             ResendEmailLogger,
         )
-        from litellm_enterprise.enterprise_callbacks.send_emails.smtp_email import (
+        from remodl_enterprise.enterprise_callbacks.send_emails.smtp_email import (
             SMTPEmailLogger,
         )
 

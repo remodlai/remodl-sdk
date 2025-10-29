@@ -13,10 +13,10 @@ import asyncio
 import json
 from typing import Any, cast
 
-import litellm
-from litellm._logging import print_verbose
-from litellm.constants import QDRANT_SCALAR_QUANTILE, QDRANT_VECTOR_SIZE
-from litellm.types.utils import EmbeddingResponse
+import remodl
+from remodl._logging import print_verbose
+from remodl.constants import QDRANT_SCALAR_QUANTILE, QDRANT_VECTOR_SIZE
+from remodl.types.utils import EmbeddingResponse
 
 from .base_cache import BaseCache
 
@@ -34,12 +34,12 @@ class QdrantSemanticCache(BaseCache):
     ):
         import os
 
-        from litellm.llms.custom_httpx.http_handler import (
+        from remodl.llms.custom_httpx.http_handler import (
             _get_httpx_client,
             get_async_httpx_client,
             httpxSpecialProvider,
         )
-        from litellm.secret_managers.main import get_secret_str
+        from remodl.secret_managers.main import get_secret_str
 
         if collection_name is None:
             raise Exception("collection_name must be provided, passed None")
@@ -168,7 +168,7 @@ class QdrantSemanticCache(BaseCache):
 
     def set_cache(self, key, value, **kwargs):
         print_verbose(f"qdrant semantic-cache set_cache, kwargs: {kwargs}")
-        from litellm._uuid import uuid
+        from remodl._uuid import uuid
 
         # get the prompt
         messages = kwargs["messages"]
@@ -179,7 +179,7 @@ class QdrantSemanticCache(BaseCache):
         # create an embedding for prompt
         embedding_response = cast(
             EmbeddingResponse,
-            litellm.embedding(
+            remodl.embedding(
                 model=self.embedding_model,
                 input=prompt,
                 cache={"no-store": True, "no-cache": True},
@@ -223,7 +223,7 @@ class QdrantSemanticCache(BaseCache):
         # convert to embedding
         embedding_response = cast(
             EmbeddingResponse,
-            litellm.embedding(
+            remodl.embedding(
                 model=self.embedding_model,
                 input=prompt,
                 cache={"no-store": True, "no-cache": True},
@@ -279,9 +279,9 @@ class QdrantSemanticCache(BaseCache):
         pass
 
     async def async_set_cache(self, key, value, **kwargs):
-        from litellm._uuid import uuid
+        from remodl._uuid import uuid
 
-        from litellm.proxy.proxy_server import llm_model_list, llm_router
+        from remodl.proxy.proxy_server import llm_model_list, llm_router
 
         print_verbose(f"async qdrant semantic-cache set_cache, kwargs: {kwargs}")
 
@@ -310,7 +310,7 @@ class QdrantSemanticCache(BaseCache):
             )
         else:
             # convert to embedding
-            embedding_response = await litellm.aembedding(
+            embedding_response = await remodl.aembedding(
                 model=self.embedding_model,
                 input=prompt,
                 cache={"no-store": True, "no-cache": True},
@@ -344,7 +344,7 @@ class QdrantSemanticCache(BaseCache):
 
     async def async_get_cache(self, key, **kwargs):
         print_verbose(f"async qdrant semantic-cache get_cache, kwargs: {kwargs}")
-        from litellm.proxy.proxy_server import llm_model_list, llm_router
+        from remodl.proxy.proxy_server import llm_model_list, llm_router
 
         # get the messages
         messages = kwargs["messages"]
@@ -371,7 +371,7 @@ class QdrantSemanticCache(BaseCache):
             )
         else:
             # convert to embedding
-            embedding_response = await litellm.aembedding(
+            embedding_response = await remodl.aembedding(
                 model=self.embedding_model,
                 input=prompt,
                 cache={"no-store": True, "no-cache": True},

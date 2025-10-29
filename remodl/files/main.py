@@ -13,28 +13,28 @@ from typing import Any, Coroutine, Dict, Literal, Optional, Union, cast
 
 import httpx
 
-import litellm
-from litellm import get_secret_str
-from litellm.litellm_core_utils.get_llm_provider_logic import get_llm_provider
-from litellm.litellm_core_utils.litellm_logging import Logging as LiteLLMLoggingObj
-from litellm.llms.azure.files.handler import AzureOpenAIFilesAPI
-from litellm.llms.custom_httpx.http_handler import AsyncHTTPHandler, HTTPHandler
-from litellm.llms.custom_httpx.llm_http_handler import BaseLLMHTTPHandler
-from litellm.llms.openai.openai import FileDeleted, FileObject, OpenAIFilesAPI
-from litellm.llms.vertex_ai.files.handler import VertexAIFilesHandler
-from litellm.types.llms.openai import (
+import remodl
+from remodl import get_secret_str
+from remodl.remodl_core_utils.get_llm_provider_logic import get_llm_provider
+from remodl.remodl_core_utils.remodl_logging import Logging as LiteLLMLoggingObj
+from remodl.llms.azure.files.handler import AzureOpenAIFilesAPI
+from remodl.llms.custom_httpx.http_handler import AsyncHTTPHandler, HTTPHandler
+from remodl.llms.custom_httpx.llm_http_handler import BaseLLMHTTPHandler
+from remodl.llms.openai.openai import FileDeleted, FileObject, OpenAIFilesAPI
+from remodl.llms.vertex_ai.files.handler import VertexAIFilesHandler
+from remodl.types.llms.openai import (
     CreateFileRequest,
     FileContentRequest,
     FileTypes,
     HttpxBinaryResponseContent,
     OpenAIFileObject,
 )
-from litellm.types.router import *
-from litellm.types.utils import LlmProviders
-from litellm.utils import (
+from remodl.types.router import *
+from remodl.types.utils import LlmProviders
+from remodl.utils import (
     ProviderConfigManager,
     client,
-    get_litellm_params,
+    get_remodl_params,
     supports_httpx_timeout,
 )
 
@@ -110,9 +110,9 @@ def create_file(
     try:
         _is_async = kwargs.pop("acreate_file", False) is True
         optional_params = GenericLiteLLMParams(**kwargs)
-        litellm_params_dict = dict(**kwargs)
+        remodl_params_dict = dict(**kwargs)
         logging_obj = cast(
-            Optional[LiteLLMLoggingObj], kwargs.get("litellm_logging_obj")
+            Optional[LiteLLMLoggingObj], kwargs.get("remodl_logging_obj")
         )
         if logging_obj is None:
             raise ValueError("logging_obj is required")
@@ -148,7 +148,7 @@ def create_file(
         if provider_config is not None:
             response = base_llm_http_handler.create_file(
                 provider_config=provider_config,
-                litellm_params=litellm_params_dict,
+                remodl_params=remodl_params_dict,
                 create_file_data=_create_file_request,
                 headers=extra_headers or {},
                 api_base=optional_params.api_base,
@@ -165,22 +165,22 @@ def create_file(
             # for deepinfra/perplexity/anyscale/groq we check in get_llm_provider and pass in the api base from there
             api_base = (
                 optional_params.api_base
-                or litellm.api_base
+                or remodl.api_base
                 or os.getenv("OPENAI_BASE_URL")
                 or os.getenv("OPENAI_API_BASE")
                 or "https://api.openai.com/v1"
             )
             organization = (
                 optional_params.organization
-                or litellm.organization
+                or remodl.organization
                 or os.getenv("OPENAI_ORGANIZATION", None)
                 or None  # default - https://github.com/openai/openai-python/blob/284c1799070c723c6a553337134148a7ab088dd8/openai/util.py#L105
             )
             # set API KEY
             api_key = (
                 optional_params.api_key
-                or litellm.api_key  # for deepinfra/perplexity/anyscale we check in get_llm_provider and pass in the api key from there
-                or litellm.openai_key
+                or remodl.api_key  # for deepinfra/perplexity/anyscale we check in get_llm_provider and pass in the api key from there
+                or remodl.openai_key
                 or os.getenv("OPENAI_API_KEY")
             )
 
@@ -194,17 +194,17 @@ def create_file(
                 create_file_data=_create_file_request,
             )
         elif custom_llm_provider == "azure":
-            api_base = optional_params.api_base or litellm.api_base or get_secret_str("AZURE_API_BASE")  # type: ignore
+            api_base = optional_params.api_base or remodl.api_base or get_secret_str("AZURE_API_BASE")  # type: ignore
             api_version = (
                 optional_params.api_version
-                or litellm.api_version
+                or remodl.api_version
                 or get_secret_str("AZURE_API_VERSION")
             )  # type: ignore
 
             api_key = (
                 optional_params.api_key
-                or litellm.api_key
-                or litellm.azure_key
+                or remodl.api_key
+                or remodl.azure_key
                 or get_secret_str("AZURE_OPENAI_API_KEY")
                 or get_secret_str("AZURE_API_KEY")
             )  # type: ignore
@@ -223,18 +223,18 @@ def create_file(
                 timeout=timeout,
                 max_retries=optional_params.max_retries,
                 create_file_data=_create_file_request,
-                litellm_params=litellm_params_dict,
+                remodl_params=remodl_params_dict,
             )
         elif custom_llm_provider == "vertex_ai":
             api_base = optional_params.api_base or ""
             vertex_ai_project = (
                 optional_params.vertex_project
-                or litellm.vertex_project
+                or remodl.vertex_project
                 or get_secret_str("VERTEXAI_PROJECT")
             )
             vertex_ai_location = (
                 optional_params.vertex_location
-                or litellm.vertex_location
+                or remodl.vertex_location
                 or get_secret_str("VERTEXAI_LOCATION")
             )
             vertex_credentials = optional_params.vertex_credentials or get_secret_str(
@@ -252,7 +252,7 @@ def create_file(
                 create_file_data=_create_file_request,
             )
         else:
-            raise litellm.exceptions.BadRequestError(
+            raise remodl.exceptions.BadRequestError(
                 message="LiteLLM doesn't support {} for 'create_file'. Only ['openai', 'azure', 'vertex_ai'] are supported.".format(
                     custom_llm_provider
                 ),
@@ -261,7 +261,7 @@ def create_file(
                 response=httpx.Response(
                     status_code=400,
                     content="Unsupported provider",
-                    request=httpx.Request(method="create_file", url="https://github.com/BerriAI/litellm"),  # type: ignore
+                    request=httpx.Request(method="create_file", url="https://github.com/BerriAI/remodl"),  # type: ignore
                 ),
             )
         return response
@@ -347,22 +347,22 @@ def file_retrieve(
             # for deepinfra/perplexity/anyscale/groq we check in get_llm_provider and pass in the api base from there
             api_base = (
                 optional_params.api_base
-                or litellm.api_base
+                or remodl.api_base
                 or os.getenv("OPENAI_BASE_URL")
                 or os.getenv("OPENAI_API_BASE")
                 or "https://api.openai.com/v1"
             )
             organization = (
                 optional_params.organization
-                or litellm.organization
+                or remodl.organization
                 or os.getenv("OPENAI_ORGANIZATION", None)
                 or None  # default - https://github.com/openai/openai-python/blob/284c1799070c723c6a553337134148a7ab088dd8/openai/util.py#L105
             )
             # set API KEY
             api_key = (
                 optional_params.api_key
-                or litellm.api_key  # for deepinfra/perplexity/anyscale we check in get_llm_provider and pass in the api key from there
-                or litellm.openai_key
+                or remodl.api_key  # for deepinfra/perplexity/anyscale we check in get_llm_provider and pass in the api key from there
+                or remodl.openai_key
                 or os.getenv("OPENAI_API_KEY")
             )
 
@@ -376,17 +376,17 @@ def file_retrieve(
                 organization=organization,
             )
         elif custom_llm_provider == "azure":
-            api_base = optional_params.api_base or litellm.api_base or get_secret_str("AZURE_API_BASE")  # type: ignore
+            api_base = optional_params.api_base or remodl.api_base or get_secret_str("AZURE_API_BASE")  # type: ignore
             api_version = (
                 optional_params.api_version
-                or litellm.api_version
+                or remodl.api_version
                 or get_secret_str("AZURE_API_VERSION")
             )  # type: ignore
 
             api_key = (
                 optional_params.api_key
-                or litellm.api_key
-                or litellm.azure_key
+                or remodl.api_key
+                or remodl.azure_key
                 or get_secret_str("AZURE_OPENAI_API_KEY")
                 or get_secret_str("AZURE_API_KEY")
             )  # type: ignore
@@ -407,7 +407,7 @@ def file_retrieve(
                 file_id=file_id,
             )
         else:
-            raise litellm.exceptions.BadRequestError(
+            raise remodl.exceptions.BadRequestError(
                 message="LiteLLM doesn't support {} for 'file_retrieve'. Only 'openai' and 'azure' are supported.".format(
                     custom_llm_provider
                 ),
@@ -416,7 +416,7 @@ def file_retrieve(
                 response=httpx.Response(
                     status_code=400,
                     content="Unsupported provider",
-                    request=httpx.Request(method="create_thread", url="https://github.com/BerriAI/litellm"),  # type: ignore
+                    request=httpx.Request(method="create_thread", url="https://github.com/BerriAI/remodl"),  # type: ignore
                 ),
             )
 
@@ -482,7 +482,7 @@ def file_delete(
     """
     try:
         optional_params = GenericLiteLLMParams(**kwargs)
-        litellm_params_dict = get_litellm_params(**kwargs)
+        remodl_params_dict = get_remodl_params(**kwargs)
         ### TIMEOUT LOGIC ###
         timeout = optional_params.timeout or kwargs.get("request_timeout", 600) or 600
         # set timeout for 10 minutes by default
@@ -504,22 +504,22 @@ def file_delete(
             # for deepinfra/perplexity/anyscale/groq we check in get_llm_provider and pass in the api base from there
             api_base = (
                 optional_params.api_base
-                or litellm.api_base
+                or remodl.api_base
                 or os.getenv("OPENAI_BASE_URL")
                 or os.getenv("OPENAI_API_BASE")
                 or "https://api.openai.com/v1"
             )
             organization = (
                 optional_params.organization
-                or litellm.organization
+                or remodl.organization
                 or os.getenv("OPENAI_ORGANIZATION", None)
                 or None  # default - https://github.com/openai/openai-python/blob/284c1799070c723c6a553337134148a7ab088dd8/openai/util.py#L105
             )
             # set API KEY
             api_key = (
                 optional_params.api_key
-                or litellm.api_key  # for deepinfra/perplexity/anyscale we check in get_llm_provider and pass in the api key from there
-                or litellm.openai_key
+                or remodl.api_key  # for deepinfra/perplexity/anyscale we check in get_llm_provider and pass in the api key from there
+                or remodl.openai_key
                 or os.getenv("OPENAI_API_KEY")
             )
             response = openai_files_instance.delete_file(
@@ -532,17 +532,17 @@ def file_delete(
                 organization=organization,
             )
         elif custom_llm_provider == "azure":
-            api_base = optional_params.api_base or litellm.api_base or get_secret_str("AZURE_API_BASE")  # type: ignore
+            api_base = optional_params.api_base or remodl.api_base or get_secret_str("AZURE_API_BASE")  # type: ignore
             api_version = (
                 optional_params.api_version
-                or litellm.api_version
+                or remodl.api_version
                 or get_secret_str("AZURE_API_VERSION")
             )  # type: ignore
 
             api_key = (
                 optional_params.api_key
-                or litellm.api_key
-                or litellm.azure_key
+                or remodl.api_key
+                or remodl.azure_key
                 or get_secret_str("AZURE_OPENAI_API_KEY")
                 or get_secret_str("AZURE_API_KEY")
             )  # type: ignore
@@ -562,10 +562,10 @@ def file_delete(
                 max_retries=optional_params.max_retries,
                 file_id=file_id,
                 client=client,
-                litellm_params=litellm_params_dict,
+                remodl_params=remodl_params_dict,
             )
         else:
-            raise litellm.exceptions.BadRequestError(
+            raise remodl.exceptions.BadRequestError(
                 message="LiteLLM doesn't support {} for 'create_batch'. Only 'openai' is supported.".format(
                     custom_llm_provider
                 ),
@@ -574,7 +574,7 @@ def file_delete(
                 response=httpx.Response(
                     status_code=400,
                     content="Unsupported provider",
-                    request=httpx.Request(method="create_thread", url="https://github.com/BerriAI/litellm"),  # type: ignore
+                    request=httpx.Request(method="create_thread", url="https://github.com/BerriAI/remodl"),  # type: ignore
                 ),
             )
         return cast(FileDeleted, response)
@@ -660,22 +660,22 @@ def file_list(
             # for deepinfra/perplexity/anyscale/groq we check in get_llm_provider and pass in the api base from there
             api_base = (
                 optional_params.api_base
-                or litellm.api_base
+                or remodl.api_base
                 or os.getenv("OPENAI_BASE_URL")
                 or os.getenv("OPENAI_API_BASE")
                 or "https://api.openai.com/v1"
             )
             organization = (
                 optional_params.organization
-                or litellm.organization
+                or remodl.organization
                 or os.getenv("OPENAI_ORGANIZATION", None)
                 or None  # default - https://github.com/openai/openai-python/blob/284c1799070c723c6a553337134148a7ab088dd8/openai/util.py#L105
             )
             # set API KEY
             api_key = (
                 optional_params.api_key
-                or litellm.api_key  # for deepinfra/perplexity/anyscale we check in get_llm_provider and pass in the api key from there
-                or litellm.openai_key
+                or remodl.api_key  # for deepinfra/perplexity/anyscale we check in get_llm_provider and pass in the api key from there
+                or remodl.openai_key
                 or os.getenv("OPENAI_API_KEY")
             )
 
@@ -689,17 +689,17 @@ def file_list(
                 organization=organization,
             )
         elif custom_llm_provider == "azure":
-            api_base = optional_params.api_base or litellm.api_base or get_secret_str("AZURE_API_BASE")  # type: ignore
+            api_base = optional_params.api_base or remodl.api_base or get_secret_str("AZURE_API_BASE")  # type: ignore
             api_version = (
                 optional_params.api_version
-                or litellm.api_version
+                or remodl.api_version
                 or get_secret_str("AZURE_API_VERSION")
             )  # type: ignore
 
             api_key = (
                 optional_params.api_key
-                or litellm.api_key
-                or litellm.azure_key
+                or remodl.api_key
+                or remodl.azure_key
                 or get_secret_str("AZURE_OPENAI_API_KEY")
                 or get_secret_str("AZURE_API_KEY")
             )  # type: ignore
@@ -720,7 +720,7 @@ def file_list(
                 purpose=purpose,
             )
         else:
-            raise litellm.exceptions.BadRequestError(
+            raise remodl.exceptions.BadRequestError(
                 message="LiteLLM doesn't support {} for 'file_list'. Only 'openai' and 'azure' are supported.".format(
                     custom_llm_provider
                 ),
@@ -729,7 +729,7 @@ def file_list(
                 response=httpx.Response(
                     status_code=400,
                     content="Unsupported provider",
-                    request=httpx.Request(method="file_list", url="https://github.com/BerriAI/litellm"),  # type: ignore
+                    request=httpx.Request(method="file_list", url="https://github.com/BerriAI/remodl"),  # type: ignore
                 ),
             )
         return response
@@ -798,7 +798,7 @@ def file_content(
     """
     try:
         optional_params = GenericLiteLLMParams(**kwargs)
-        litellm_params_dict = get_litellm_params(**kwargs)
+        remodl_params_dict = get_remodl_params(**kwargs)
         ### TIMEOUT LOGIC ###
         timeout = optional_params.timeout or kwargs.get("request_timeout", 600) or 600
         client = kwargs.get("client")
@@ -836,22 +836,22 @@ def file_content(
             # for deepinfra/perplexity/anyscale/groq we check in get_llm_provider and pass in the api base from there
             api_base = (
                 optional_params.api_base
-                or litellm.api_base
+                or remodl.api_base
                 or os.getenv("OPENAI_BASE_URL")
                 or os.getenv("OPENAI_API_BASE")
                 or "https://api.openai.com/v1"
             )
             organization = (
                 optional_params.organization
-                or litellm.organization
+                or remodl.organization
                 or os.getenv("OPENAI_ORGANIZATION", None)
                 or None  # default - https://github.com/openai/openai-python/blob/284c1799070c723c6a553337134148a7ab088dd8/openai/util.py#L105
             )
             # set API KEY
             api_key = (
                 optional_params.api_key
-                or litellm.api_key  # for deepinfra/perplexity/anyscale we check in get_llm_provider and pass in the api key from there
-                or litellm.openai_key
+                or remodl.api_key  # for deepinfra/perplexity/anyscale we check in get_llm_provider and pass in the api key from there
+                or remodl.openai_key
                 or os.getenv("OPENAI_API_KEY")
             )
 
@@ -865,17 +865,17 @@ def file_content(
                 organization=organization,
             )
         elif custom_llm_provider == "azure":
-            api_base = optional_params.api_base or litellm.api_base or get_secret_str("AZURE_API_BASE")  # type: ignore
+            api_base = optional_params.api_base or remodl.api_base or get_secret_str("AZURE_API_BASE")  # type: ignore
             api_version = (
                 optional_params.api_version
-                or litellm.api_version
+                or remodl.api_version
                 or get_secret_str("AZURE_API_VERSION")
             )  # type: ignore
 
             api_key = (
                 optional_params.api_key
-                or litellm.api_key
-                or litellm.azure_key
+                or remodl.api_key
+                or remodl.azure_key
                 or get_secret_str("AZURE_OPENAI_API_KEY")
                 or get_secret_str("AZURE_API_KEY")
             )  # type: ignore
@@ -895,18 +895,18 @@ def file_content(
                 max_retries=optional_params.max_retries,
                 file_content_request=_file_content_request,
                 client=client,
-                litellm_params=litellm_params_dict,
+                remodl_params=remodl_params_dict,
             )
         elif custom_llm_provider == "vertex_ai":
             api_base = optional_params.api_base or ""
             vertex_ai_project = (
                 optional_params.vertex_project
-                or litellm.vertex_project
+                or remodl.vertex_project
                 or get_secret_str("VERTEXAI_PROJECT")
             )
             vertex_ai_location = (
                 optional_params.vertex_location
-                or litellm.vertex_location
+                or remodl.vertex_location
                 or get_secret_str("VERTEXAI_LOCATION")
             )
             vertex_credentials = optional_params.vertex_credentials or get_secret_str(
@@ -924,7 +924,7 @@ def file_content(
                 max_retries=optional_params.max_retries,
             )
         else:
-            raise litellm.exceptions.BadRequestError(
+            raise remodl.exceptions.BadRequestError(
                 message="LiteLLM doesn't support {} for 'custom_llm_provider'. Supported providers are 'openai', 'azure', 'vertex_ai'.".format(
                     custom_llm_provider
                 ),
@@ -933,7 +933,7 @@ def file_content(
                 response=httpx.Response(
                     status_code=400,
                     content="Unsupported provider",
-                    request=httpx.Request(method="create_thread", url="https://github.com/BerriAI/litellm"),  # type: ignore
+                    request=httpx.Request(method="create_thread", url="https://github.com/BerriAI/remodl"),  # type: ignore
                 ),
             )
         return response

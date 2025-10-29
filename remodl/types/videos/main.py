@@ -2,7 +2,7 @@ from typing import Any, Dict, List, Literal, Optional
 from typing_extensions import TypedDict
 
 from pydantic import BaseModel
-from litellm.types.utils import FileTypes
+from remodl.types.utils import FileTypes
 
 
 class VideoObject(BaseModel):

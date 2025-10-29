@@ -13,11 +13,11 @@ from typing import (
 
 import httpx
 
-from litellm.llms.base_llm.base_model_iterator import BaseModelResponseIterator
-from litellm.types.llms.openai import AllMessageValues, ChatCompletionUsageBlock
-from litellm.types.llms.watsonx import WatsonXAIEndpoint
-from litellm.types.utils import GenericStreamingChunk, ModelResponse, Usage
-from litellm.utils import map_finish_reason
+from remodl.llms.base_llm.base_model_iterator import BaseModelResponseIterator
+from remodl.types.llms.openai import AllMessageValues, ChatCompletionUsageBlock
+from remodl.types.llms.watsonx import WatsonXAIEndpoint
+from remodl.types.utils import GenericStreamingChunk, ModelResponse, Usage
+from remodl.utils import map_finish_reason
 
 from ...base_llm.chat.transformation import BaseConfig
 from ..common_utils import (
@@ -28,7 +28,7 @@ from ..common_utils import (
 )
 
 if TYPE_CHECKING:
-    from litellm.litellm_core_utils.litellm_logging import Logging as _LiteLLMLoggingObj
+    from remodl.remodl_core_utils.remodl_logging import Logging as _LiteLLMLoggingObj
 
     LiteLLMLoggingObj = _LiteLLMLoggingObj
 else:
@@ -75,7 +75,7 @@ class IBMWatsonXAIConfig(IBMWatsonXMixin, BaseConfig):
 
     decoding_method: Optional[str] = "sample"
     temperature: Optional[float] = None
-    max_new_tokens: Optional[int] = None  # litellm.max_tokens
+    max_new_tokens: Optional[int] = None  # remodl.max_tokens
     min_new_tokens: Optional[int] = None
     length_penalty: Optional[dict] = None  # e.g {"decay_factor": 2.5, "start_index": 5}
     stop_sequences: Optional[List[str]] = None  # e.g ["}", ")", "."]
@@ -242,9 +242,9 @@ class IBMWatsonXAIConfig(IBMWatsonXMixin, BaseConfig):
             **watsonx_auth_payload,
         }
 
-    async def atransform_request(self, model: str, messages: List[AllMessageValues], optional_params: Dict, litellm_params: Dict, headers: Dict) -> Dict:
+    async def atransform_request(self, model: str, messages: List[AllMessageValues], optional_params: Dict, remodl_params: Dict, headers: Dict) -> Dict:
         """Async version of transform_request"""
-        from litellm.llms.watsonx.common_utils import (
+        from remodl.llms.watsonx.common_utils import (
             aconvert_watsonx_messages_to_prompt,
         )
         
@@ -252,7 +252,7 @@ class IBMWatsonXAIConfig(IBMWatsonXMixin, BaseConfig):
         prompt = await aconvert_watsonx_messages_to_prompt(model=model, messages=messages, provider=provider, custom_prompt_dict={})
         return self._build_request_payload(model=model, prompt=prompt, optional_params=optional_params)
     
-    def transform_request(self, model: str, messages: List[AllMessageValues], optional_params: Dict, litellm_params: Dict, headers: Dict) -> Dict:
+    def transform_request(self, model: str, messages: List[AllMessageValues], optional_params: Dict, remodl_params: Dict, headers: Dict) -> Dict:
         """Sync version of transform_request"""
         provider = model.split("/")[0]
         prompt = convert_watsonx_messages_to_prompt(model=model, messages=messages, provider=provider, custom_prompt_dict={})
@@ -267,7 +267,7 @@ class IBMWatsonXAIConfig(IBMWatsonXMixin, BaseConfig):
         request_data: Dict,
         messages: List[AllMessageValues],
         optional_params: Dict,
-        litellm_params: Dict,
+        remodl_params: Dict,
         encoding: str,
         api_key: Optional[str] = None,
         json_mode: Optional[bool] = None,
@@ -320,7 +320,7 @@ class IBMWatsonXAIConfig(IBMWatsonXMixin, BaseConfig):
         api_key: Optional[str],
         model: str,
         optional_params: dict,
-        litellm_params: dict,
+        remodl_params: dict,
         stream: Optional[bool] = None,
     ) -> str:
         url = self._get_base_url(api_base=api_base)

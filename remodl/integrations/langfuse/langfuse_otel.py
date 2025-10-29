@@ -3,22 +3,22 @@ import json  # <--- NEW
 import os
 from typing import TYPE_CHECKING, Any, Optional, Union
 
-from litellm._logging import verbose_logger
-from litellm.integrations.arize import _utils
-from litellm.integrations.opentelemetry import OpenTelemetry
-from litellm.types.integrations.langfuse_otel import (
+from remodl._logging import verbose_logger
+from remodl.integrations.arize import _utils
+from remodl.integrations.opentelemetry import OpenTelemetry
+from remodl.types.integrations.langfuse_otel import (
     LangfuseOtelConfig,
     LangfuseSpanAttributes,
 )
-from litellm.types.utils import StandardCallbackDynamicParams
+from remodl.types.utils import StandardCallbackDynamicParams
 
 if TYPE_CHECKING:
     from opentelemetry.trace import Span as _Span
 
-    from litellm.integrations.opentelemetry import (
+    from remodl.integrations.opentelemetry import (
         OpenTelemetryConfig as _OpenTelemetryConfig,
     )
-    from litellm.types.integrations.arize import Protocol as _Protocol
+    from remodl.types.integrations.arize import Protocol as _Protocol
 
     Protocol = _Protocol
     OpenTelemetryConfig = _OpenTelemetryConfig
@@ -62,24 +62,24 @@ class LangfuseOtelLogger(OpenTelemetry):
         """
         Extracts Langfuse metadata from the standard LiteLLM kwargs structure.
 
-        1. Reads kwargs["litellm_params"]["metadata"] if present and is a dict.
+        1. Reads kwargs["remodl_params"]["metadata"] if present and is a dict.
         2. Enriches it with any `langfuse_*` request-header params via the
            existing LangFuseLogger.add_metadata_from_header helper so that proxy
            users get identical behaviour across vanilla and OTEL integrations.
         """
-        litellm_params = kwargs.get("litellm_params", {}) or {}
-        metadata = litellm_params.get("metadata") or {}
+        remodl_params = kwargs.get("remodl_params", {}) or {}
+        metadata = remodl_params.get("metadata") or {}
         # Ensure we only work with dicts
         if metadata is None or not isinstance(metadata, dict):
             metadata = {}
 
         # Re-use header extraction logic from the vanilla logger if available
         try:
-            from litellm.integrations.langfuse.langfuse import (
+            from remodl.integrations.langfuse.langfuse import (
                 LangFuseLogger as _LFLogger,
             )
 
-            metadata = _LFLogger.add_metadata_from_header(litellm_params, metadata)  # type: ignore
+            metadata = _LFLogger.add_metadata_from_header(remodl_params, metadata)  # type: ignore
         except Exception:
             # Fallback silently if import fails; header enrichment just won't happen
             pass
@@ -96,8 +96,8 @@ class LangfuseOtelLogger(OpenTelemetry):
         values (lists/dicts) are serialised to JSON strings for OTEL
         compatibility.
         """
-        from litellm.integrations.arize._utils import safe_set_attribute
-        from litellm.litellm_core_utils.safe_json_dumps import safe_dumps
+        from remodl.integrations.arize._utils import safe_set_attribute
+        from remodl.remodl_core_utils.safe_json_dumps import safe_dumps
 
         # 1) Environment variable override
         langfuse_environment = os.environ.get("LANGFUSE_TRACING_ENVIRONMENT")

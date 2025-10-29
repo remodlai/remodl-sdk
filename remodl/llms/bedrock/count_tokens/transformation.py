@@ -7,8 +7,8 @@ to AWS Bedrock's CountTokens API format and vice versa.
 
 from typing import Any, Dict, List
 
-from litellm.llms.bedrock.base_aws_llm import BaseAWSLLM
-from litellm.llms.bedrock.common_utils import BedrockModelInfo
+from remodl.llms.bedrock.base_aws_llm import BaseAWSLLM
+from remodl.llms.bedrock.common_utils import BedrockModelInfo
 
 
 class BedrockCountTokensConfig(BaseAWSLLM):

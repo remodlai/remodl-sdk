@@ -4,21 +4,21 @@ from functools import partial
 from typing import Any, Coroutine, Literal, Optional, Union, overload, Dict, List
 
 import json
-import litellm
-from litellm.litellm_core_utils.get_llm_provider_logic import get_llm_provider
-from litellm.types.videos.main import (
+import remodl
+from remodl.remodl_core_utils.get_llm_provider_logic import get_llm_provider
+from remodl.types.videos.main import (
     VideoCreateOptionalRequestParams,
     VideoObject,
 )
-from litellm.videos.utils import VideoGenerationRequestUtils
-from litellm.constants import DEFAULT_VIDEO_ENDPOINT_MODEL, request_timeout as DEFAULT_REQUEST_TIMEOUT
-from litellm.main import base_llm_http_handler
-from litellm.utils import client, ProviderConfigManager
-from litellm.types.utils import FileTypes, CallTypes
-from litellm.types.router import GenericLiteLLMParams
-from litellm.litellm_core_utils.litellm_logging import Logging as LiteLLMLoggingObj
-from litellm.llms.base_llm.videos.transformation import BaseVideoConfig
-from litellm.llms.custom_httpx.llm_http_handler import BaseLLMHTTPHandler
+from remodl.videos.utils import VideoGenerationRequestUtils
+from remodl.constants import DEFAULT_VIDEO_ENDPOINT_MODEL, request_timeout as DEFAULT_REQUEST_TIMEOUT
+from remodl.main import base_llm_http_handler
+from remodl.utils import client, ProviderConfigManager
+from remodl.types.utils import FileTypes, CallTypes
+from remodl.types.router import GenericLiteLLMParams
+from remodl.remodl_core_utils.remodl_logging import Logging as LiteLLMLoggingObj
+from remodl.llms.base_llm.videos.transformation import BaseVideoConfig
+from remodl.llms.custom_httpx.llm_http_handler import BaseLLMHTTPHandler
 
 #################### Initialize provider clients ####################
 llm_http_handler: BaseLLMHTTPHandler = BaseLLMHTTPHandler()
@@ -68,7 +68,7 @@ async def avideo_generation(
 
         # get custom llm provider so we can use this for mapping exceptions
         if custom_llm_provider is None:
-            _, custom_llm_provider, _, _ = litellm.get_llm_provider(
+            _, custom_llm_provider, _, _ = remodl.get_llm_provider(
                 model=model or DEFAULT_VIDEO_ENDPOINT_MODEL, api_base=local_vars.get("api_base", None)
             )
 
@@ -99,7 +99,7 @@ async def avideo_generation(
 
         return response
     except Exception as e:
-        raise litellm.exception_type(
+        raise remodl.exception_type(
             model=model,
             custom_llm_provider=custom_llm_provider,
             original_exception=e,
@@ -179,8 +179,8 @@ def video_generation(  # noqa: PLR0915
     """
     local_vars = locals()
     try:
-        litellm_logging_obj: LiteLLMLoggingObj = kwargs.pop("litellm_logging_obj")  # type: ignore
-        litellm_call_id: Optional[str] = kwargs.get("litellm_call_id", None)
+        remodl_logging_obj: LiteLLMLoggingObj = kwargs.pop("remodl_logging_obj")  # type: ignore
+        remodl_call_id: Optional[str] = kwargs.get("remodl_call_id", None)
         _is_async = kwargs.pop("async_call", False) is True
 
         # Check for mock response first
@@ -193,7 +193,7 @@ def video_generation(  # noqa: PLR0915
             return response
 
         # get llm provider logic
-        litellm_params = GenericLiteLLMParams(**kwargs)
+        remodl_params = GenericLiteLLMParams(**kwargs)
         model, custom_llm_provider, _, _ = get_llm_provider(
             model=model or DEFAULT_VIDEO_ENDPOINT_MODEL,
             custom_llm_provider=custom_llm_provider,
@@ -203,7 +203,7 @@ def video_generation(  # noqa: PLR0915
         video_generation_provider_config: Optional[BaseVideoConfig] = (
             ProviderConfigManager.get_provider_video_config(
                 model=model,
-                provider=litellm.LlmProviders(custom_llm_provider),
+                provider=remodl.LlmProviders(custom_llm_provider),
             )
         )
 
@@ -226,19 +226,19 @@ def video_generation(  # noqa: PLR0915
         )
 
         # Pre Call logging
-        litellm_logging_obj.update_environment_variables(
+        remodl_logging_obj.update_environment_variables(
             model=model,
             user=user,
             optional_params=dict(video_generation_request_params),
-            litellm_params={
-                "litellm_call_id": litellm_call_id,
+            remodl_params={
+                "remodl_call_id": remodl_call_id,
                 **video_generation_request_params,
             },
             custom_llm_provider=custom_llm_provider,
         )
 
         # Set the correct call type for video generation
-        litellm_logging_obj.call_type = CallTypes.create_video.value
+        remodl_logging_obj.call_type = CallTypes.create_video.value
 
         # Call the handler with _is_async flag instead of directly calling the async handler
         return base_llm_http_handler.video_generation_handler(
@@ -247,8 +247,8 @@ def video_generation(  # noqa: PLR0915
             video_generation_provider_config=video_generation_provider_config,
             video_generation_optional_request_params=video_generation_request_params,
             custom_llm_provider=custom_llm_provider,
-            litellm_params=litellm_params,
-            logging_obj=litellm_logging_obj,
+            remodl_params=remodl_params,
+            logging_obj=remodl_logging_obj,
             extra_headers=extra_headers,
             extra_body=extra_body,
             timeout=timeout or DEFAULT_REQUEST_TIMEOUT,
@@ -257,7 +257,7 @@ def video_generation(  # noqa: PLR0915
         )
 
     except Exception as e:
-        raise litellm.exception_type(
+        raise remodl.exception_type(
             model=model,
             custom_llm_provider=custom_llm_provider,
             original_exception=e,
@@ -303,10 +303,10 @@ def video_content(
 
     Example:
         ```python
-        import litellm
+        import remodl
 
         # Download video content
-        video_bytes = litellm.video_content(
+        video_bytes = remodl.video_content(
             video_id="video_123",
             custom_llm_provider="openai"
         )
@@ -318,12 +318,12 @@ def video_content(
     """
     local_vars = locals()
     try:
-        litellm_logging_obj: LiteLLMLoggingObj = kwargs.get("litellm_logging_obj")  # type: ignore
-        litellm_call_id: Optional[str] = kwargs.get("litellm_call_id", None)
+        remodl_logging_obj: LiteLLMLoggingObj = kwargs.get("remodl_logging_obj")  # type: ignore
+        remodl_call_id: Optional[str] = kwargs.get("remodl_call_id", None)
         _is_async = kwargs.pop("async_call", False) is True
 
         # get llm provider logic
-        litellm_params = GenericLiteLLMParams(**kwargs)
+        remodl_params = GenericLiteLLMParams(**kwargs)
         model, custom_llm_provider, _, _ = get_llm_provider(
             model=model or "sora-2",  # Default model for video content
             custom_llm_provider=custom_llm_provider,
@@ -333,7 +333,7 @@ def video_content(
         video_provider_config: Optional[BaseVideoConfig] = (
             ProviderConfigManager.get_provider_video_config(
                 model=model,
-                provider=litellm.LlmProviders(custom_llm_provider),
+                provider=remodl.LlmProviders(custom_llm_provider),
             )
         )
 
@@ -348,12 +348,12 @@ def video_content(
         }
 
         # Pre Call logging
-        litellm_logging_obj.update_environment_variables(
+        remodl_logging_obj.update_environment_variables(
             model=model,
             user=kwargs.get("user"),
             optional_params=dict(video_content_request_params),
-            litellm_params={
-                "litellm_call_id": litellm_call_id,
+            remodl_params={
+                "remodl_call_id": remodl_call_id,
                 **video_content_request_params,
             },
             custom_llm_provider=custom_llm_provider,
@@ -365,8 +365,8 @@ def video_content(
             model=model,
             video_content_provider_config=video_provider_config,
             custom_llm_provider=custom_llm_provider,
-            litellm_params=litellm_params,
-            logging_obj=litellm_logging_obj,
+            remodl_params=remodl_params,
+            logging_obj=remodl_logging_obj,
             timeout=timeout or DEFAULT_REQUEST_TIMEOUT,
             extra_headers=extra_headers,
             client=kwargs.get("client"),
@@ -374,7 +374,7 @@ def video_content(
         )
 
     except Exception as e:
-        raise litellm.exception_type(
+        raise remodl.exception_type(
             model=model,
             custom_llm_provider=custom_llm_provider,
             original_exception=e,
@@ -424,7 +424,7 @@ async def avideo_content(
 
         # get custom llm provider so we can use this for mapping exceptions
         if custom_llm_provider is None:
-            _, custom_llm_provider, _, _ = litellm.get_llm_provider(
+            _, custom_llm_provider, _, _ = remodl.get_llm_provider(
                 model=model or DEFAULT_VIDEO_ENDPOINT_MODEL, api_base=api_base
             )
 
@@ -453,7 +453,7 @@ async def avideo_content(
 
         return response
     except Exception as e:
-        raise litellm.exception_type(
+        raise remodl.exception_type(
             model=model,
             custom_llm_provider=custom_llm_provider,
             original_exception=e,
@@ -500,7 +500,7 @@ async def avideo_remix(
 
         # get custom llm provider so we can use this for mapping exceptions
         if custom_llm_provider is None:
-            _, custom_llm_provider, _, _ = litellm.get_llm_provider(
+            _, custom_llm_provider, _, _ = remodl.get_llm_provider(
                 model=model or DEFAULT_VIDEO_ENDPOINT_MODEL, api_base=local_vars.get("api_base", None)
             )
 
@@ -528,7 +528,7 @@ async def avideo_remix(
 
         return response
     except Exception as e:
-        raise litellm.exception_type(
+        raise remodl.exception_type(
             model=model,
             custom_llm_provider=custom_llm_provider,
             original_exception=e,
@@ -600,8 +600,8 @@ def video_remix(  # noqa: PLR0915
     """
     local_vars = locals()
     try:
-        litellm_logging_obj: LiteLLMLoggingObj = kwargs.pop("litellm_logging_obj")  # type: ignore
-        litellm_call_id: Optional[str] = kwargs.get("litellm_call_id", None)
+        remodl_logging_obj: LiteLLMLoggingObj = kwargs.pop("remodl_logging_obj")  # type: ignore
+        remodl_call_id: Optional[str] = kwargs.get("remodl_call_id", None)
         _is_async = kwargs.pop("async_call", False) is True
 
         # Check for mock response first
@@ -614,7 +614,7 @@ def video_remix(  # noqa: PLR0915
             return response
 
         # get llm provider logic
-        litellm_params = GenericLiteLLMParams(**kwargs)
+        remodl_params = GenericLiteLLMParams(**kwargs)
         model, custom_llm_provider, _, _ = get_llm_provider(
             model=model or DEFAULT_VIDEO_ENDPOINT_MODEL,
             custom_llm_provider=custom_llm_provider,
@@ -624,7 +624,7 @@ def video_remix(  # noqa: PLR0915
         video_remix_provider_config: Optional[BaseVideoConfig] = (
             ProviderConfigManager.get_provider_video_config(
                 model=model,
-                provider=litellm.LlmProviders(custom_llm_provider),
+                provider=remodl.LlmProviders(custom_llm_provider),
             )
         )
 
@@ -639,19 +639,19 @@ def video_remix(  # noqa: PLR0915
         }
 
         # Pre Call logging
-        litellm_logging_obj.update_environment_variables(
+        remodl_logging_obj.update_environment_variables(
             model=model,
             user=kwargs.get("user"),
             optional_params=dict(video_remix_request_params),
-            litellm_params={
-                "litellm_call_id": litellm_call_id,
+            remodl_params={
+                "remodl_call_id": remodl_call_id,
                 **video_remix_request_params,
             },
             custom_llm_provider=custom_llm_provider,
         )
 
         # Set the correct call type for video remix
-        litellm_logging_obj.call_type = CallTypes.video_remix.value
+        remodl_logging_obj.call_type = CallTypes.video_remix.value
 
         # Call the handler with _is_async flag instead of directly calling the async handler
         return base_llm_http_handler.video_remix_handler(
@@ -660,8 +660,8 @@ def video_remix(  # noqa: PLR0915
             model=model,
             video_remix_provider_config=video_remix_provider_config,
             custom_llm_provider=custom_llm_provider,
-            litellm_params=litellm_params,
-            logging_obj=litellm_logging_obj,
+            remodl_params=remodl_params,
+            logging_obj=remodl_logging_obj,
             extra_headers=extra_headers,
             extra_body=extra_body,
             timeout=timeout or DEFAULT_REQUEST_TIMEOUT,
@@ -670,7 +670,7 @@ def video_remix(  # noqa: PLR0915
         )
 
     except Exception as e:
-        raise litellm.exception_type(
+        raise remodl.exception_type(
             model=model,
             custom_llm_provider=custom_llm_provider,
             original_exception=e,
@@ -720,7 +720,7 @@ async def avideo_list(
 
         # get custom llm provider so we can use this for mapping exceptions
         if custom_llm_provider is None:
-            _, custom_llm_provider, _, _ = litellm.get_llm_provider(
+            _, custom_llm_provider, _, _ = remodl.get_llm_provider(
                 model=model or DEFAULT_VIDEO_ENDPOINT_MODEL, api_base=local_vars.get("api_base", None)
             )
 
@@ -749,7 +749,7 @@ async def avideo_list(
 
         return response
     except Exception as e:
-        raise litellm.exception_type(
+        raise remodl.exception_type(
             model=model,
             custom_llm_provider=custom_llm_provider,
             original_exception=e,
@@ -824,8 +824,8 @@ def video_list(  # noqa: PLR0915
     """
     local_vars = locals()
     try:
-        litellm_logging_obj: LiteLLMLoggingObj = kwargs.get("litellm_logging_obj")  # type: ignore
-        litellm_call_id: Optional[str] = kwargs.get("litellm_call_id", None)
+        remodl_logging_obj: LiteLLMLoggingObj = kwargs.get("remodl_logging_obj")  # type: ignore
+        remodl_call_id: Optional[str] = kwargs.get("remodl_call_id", None)
         _is_async = kwargs.pop("async_call", False) is True
 
         # Check for mock response first
@@ -836,7 +836,7 @@ def video_list(  # noqa: PLR0915
             return [VideoObject(**item) for item in mock_response]
 
         # get llm provider logic
-        litellm_params = GenericLiteLLMParams(**kwargs)
+        remodl_params = GenericLiteLLMParams(**kwargs)
         model, custom_llm_provider, _, _ = get_llm_provider(
             model=model or DEFAULT_VIDEO_ENDPOINT_MODEL,
             custom_llm_provider=custom_llm_provider,
@@ -846,7 +846,7 @@ def video_list(  # noqa: PLR0915
         video_list_provider_config: Optional[BaseVideoConfig] = (
             ProviderConfigManager.get_provider_video_config(
                 model=model,
-                provider=litellm.LlmProviders(custom_llm_provider),
+                provider=remodl.LlmProviders(custom_llm_provider),
             )
         )
 
@@ -862,19 +862,19 @@ def video_list(  # noqa: PLR0915
         }
 
         # Pre Call logging
-        litellm_logging_obj.update_environment_variables(
+        remodl_logging_obj.update_environment_variables(
             model=model,
             user=kwargs.get("user"),
             optional_params=dict(video_list_request_params),
-            litellm_params={
-                "litellm_call_id": litellm_call_id,
+            remodl_params={
+                "remodl_call_id": remodl_call_id,
                 **video_list_request_params,
             },
             custom_llm_provider=custom_llm_provider,
         )
 
         # Set the correct call type for video list
-        litellm_logging_obj.call_type = CallTypes.video_list.value
+        remodl_logging_obj.call_type = CallTypes.video_list.value
 
         # Call the handler with _is_async flag instead of directly calling the async handler
         return base_llm_http_handler.video_list_handler(
@@ -884,8 +884,8 @@ def video_list(  # noqa: PLR0915
             model=model,
             video_list_provider_config=video_list_provider_config,
             custom_llm_provider=custom_llm_provider,
-            litellm_params=litellm_params,
-            logging_obj=litellm_logging_obj,
+            remodl_params=remodl_params,
+            logging_obj=remodl_logging_obj,
             extra_headers=extra_headers,
             extra_query=extra_query,
             timeout=timeout or DEFAULT_REQUEST_TIMEOUT,
@@ -894,7 +894,7 @@ def video_list(  # noqa: PLR0915
         )
 
     except Exception as e:
-        raise litellm.exception_type(
+        raise remodl.exception_type(
             model=model,
             custom_llm_provider=custom_llm_provider,
             original_exception=e,
@@ -940,7 +940,7 @@ async def avideo_status(
 
         # get custom llm provider so we can use this for mapping exceptions
         if custom_llm_provider is None:
-            _, custom_llm_provider, _, _ = litellm.get_llm_provider(
+            _, custom_llm_provider, _, _ = remodl.get_llm_provider(
                 model=model or DEFAULT_VIDEO_ENDPOINT_MODEL, api_base=local_vars.get("api_base", None)
             )
 
@@ -967,7 +967,7 @@ async def avideo_status(
 
         return response
     except Exception as e:
-        raise litellm.exception_type(
+        raise remodl.exception_type(
             model=model,
             custom_llm_provider=custom_llm_provider,
             original_exception=e,
@@ -1046,10 +1046,10 @@ def video_status(  # noqa: PLR0915
 
     Example:
         ```python
-        import litellm
+        import remodl
 
         # Get video status
-        video_status = litellm.video_status(
+        video_status = remodl.video_status(
             video_id="video_123",
             custom_llm_provider="openai"
         )
@@ -1060,8 +1060,8 @@ def video_status(  # noqa: PLR0915
     """
     local_vars = locals()
     try:
-        litellm_logging_obj: LiteLLMLoggingObj = kwargs.get("litellm_logging_obj")  # type: ignore
-        litellm_call_id: Optional[str] = kwargs.get("litellm_call_id", None)
+        remodl_logging_obj: LiteLLMLoggingObj = kwargs.get("remodl_logging_obj")  # type: ignore
+        remodl_call_id: Optional[str] = kwargs.get("remodl_call_id", None)
         _is_async = kwargs.pop("async_call", False) is True
 
         # Check for mock response first
@@ -1074,7 +1074,7 @@ def video_status(  # noqa: PLR0915
             return response
 
         # get llm provider logic
-        litellm_params = GenericLiteLLMParams(**kwargs)
+        remodl_params = GenericLiteLLMParams(**kwargs)
         model, custom_llm_provider, _, _ = get_llm_provider(
             model=model or DEFAULT_VIDEO_ENDPOINT_MODEL,
             custom_llm_provider=custom_llm_provider,
@@ -1084,7 +1084,7 @@ def video_status(  # noqa: PLR0915
         video_status_provider_config: Optional[BaseVideoConfig] = (
             ProviderConfigManager.get_provider_video_config(
                 model=model,
-                provider=litellm.LlmProviders(custom_llm_provider),
+                provider=remodl.LlmProviders(custom_llm_provider),
             )
         )
 
@@ -1098,19 +1098,19 @@ def video_status(  # noqa: PLR0915
         }
 
         # Pre Call logging
-        litellm_logging_obj.update_environment_variables(
+        remodl_logging_obj.update_environment_variables(
             model=model,
             user=kwargs.get("user"),
             optional_params=dict(video_status_request_params),
-            litellm_params={
-                "litellm_call_id": litellm_call_id,
+            remodl_params={
+                "remodl_call_id": remodl_call_id,
                 **video_status_request_params,
             },
             custom_llm_provider=custom_llm_provider,
         )
 
         # Set the correct call type for video status
-        litellm_logging_obj.call_type = CallTypes.video_retrieve.value
+        remodl_logging_obj.call_type = CallTypes.video_retrieve.value
 
         # Call the handler with _is_async flag instead of directly calling the async handler
         return base_llm_http_handler.video_status_handler(
@@ -1118,8 +1118,8 @@ def video_status(  # noqa: PLR0915
             model=model,
             video_status_provider_config=video_status_provider_config,
             custom_llm_provider=custom_llm_provider,
-            litellm_params=litellm_params,
-            logging_obj=litellm_logging_obj,
+            remodl_params=remodl_params,
+            logging_obj=remodl_logging_obj,
             extra_headers=extra_headers,
             extra_body=extra_body,
             timeout=timeout or DEFAULT_REQUEST_TIMEOUT,
@@ -1128,7 +1128,7 @@ def video_status(  # noqa: PLR0915
         )
 
     except Exception as e:
-        raise litellm.exception_type(
+        raise remodl.exception_type(
             model=model,
             custom_llm_provider=custom_llm_provider,
             original_exception=e,

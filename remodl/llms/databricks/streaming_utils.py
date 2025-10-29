@@ -1,14 +1,14 @@
 import json
 from typing import Optional
 
-import litellm
-from litellm import verbose_logger
-from litellm.types.llms.openai import (
+import remodl
+from remodl import verbose_logger
+from remodl.types.llms.openai import (
     ChatCompletionToolCallChunk,
     ChatCompletionToolCallFunctionChunk,
     ChatCompletionUsageBlock,
 )
-from litellm.types.utils import GenericStreamingChunk, Usage
+from remodl.types.utils import GenericStreamingChunk, Usage
 
 
 class ModelResponseIterator:
@@ -17,7 +17,7 @@ class ModelResponseIterator:
 
     def chunk_parser(self, chunk: dict) -> GenericStreamingChunk:
         try:
-            processed_chunk = litellm.ModelResponseStream(**chunk)
+            processed_chunk = remodl.ModelResponseStream(**chunk)
 
             text = ""
             tool_use: Optional[ChatCompletionToolCallChunk] = None
@@ -88,7 +88,7 @@ class ModelResponseIterator:
             raise RuntimeError(f"Error receiving chunk from stream: {e}")
 
         try:
-            chunk = litellm.CustomStreamWrapper._strip_sse_data_from_chunk(chunk) or ""
+            chunk = remodl.CustomStreamWrapper._strip_sse_data_from_chunk(chunk) or ""
             chunk = chunk.strip()
             if len(chunk) > 0:
                 json_chunk = json.loads(chunk)
@@ -133,7 +133,7 @@ class ModelResponseIterator:
             raise RuntimeError(f"Error receiving chunk from stream: {e}")
 
         try:
-            chunk = litellm.CustomStreamWrapper._strip_sse_data_from_chunk(chunk) or ""
+            chunk = remodl.CustomStreamWrapper._strip_sse_data_from_chunk(chunk) or ""
             chunk = chunk.strip()
             if chunk == "[DONE]":
                 raise StopAsyncIteration

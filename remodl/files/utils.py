@@ -1,12 +1,12 @@
 from typing import Optional
 
-from litellm.types.llms.openai import CreateFileRequest
-from litellm.types.utils import ExtractedFileData
+from remodl.types.llms.openai import CreateFileRequest
+from remodl.types.utils import ExtractedFileData
 
 
 class FilesAPIUtils:
     """
-    Utils for files API interface on litellm
+    Utils for files API interface on remodl
     """
     @staticmethod
     def is_batch_jsonl_file(create_file_data: CreateFileRequest, extracted_file_data: ExtractedFileData) -> bool:

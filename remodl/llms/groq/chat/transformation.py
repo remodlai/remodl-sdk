@@ -6,17 +6,17 @@ from typing import Any, Coroutine, List, Literal, Optional, Tuple, Union, cast, 
 import httpx
 from pydantic import BaseModel
 
-import litellm
-from litellm._logging import verbose_logger
-from litellm.litellm_core_utils.litellm_logging import Logging as LiteLLMLoggingObj
-from litellm.secret_managers.main import get_secret_str
-from litellm.types.llms.openai import (
+import remodl
+from remodl._logging import verbose_logger
+from remodl.remodl_core_utils.remodl_logging import Logging as LiteLLMLoggingObj
+from remodl.secret_managers.main import get_secret_str
+from remodl.types.llms.openai import (
     AllMessageValues,
     ChatCompletionAssistantMessage,
     ChatCompletionToolParam,
     ChatCompletionToolParamFunctionChunk,
 )
-from litellm.types.utils import ModelResponse
+from remodl.types.utils import ModelResponse
 
 from ...openai_like.chat.transformation import OpenAILikeChatConfig
 
@@ -73,7 +73,7 @@ class GroqChatConfig(OpenAILikeChatConfig):
             pass
 
         try:
-            if litellm.supports_reasoning(
+            if remodl.supports_reasoning(
                 model=model, custom_llm_provider=self.custom_llm_provider
             ):
                 base_params.append("reasoning_effort")
@@ -102,7 +102,7 @@ class GroqChatConfig(OpenAILikeChatConfig):
     ) -> Union[List[AllMessageValues], Coroutine[Any, Any, List[AllMessageValues]]]:
         for idx, message in enumerate(messages):
             """
-            1. Don't pass 'null' function_call assistant message to groq - https://github.com/BerriAI/litellm/issues/5839
+            1. Don't pass 'null' function_call assistant message to groq - https://github.com/BerriAI/remodl/issues/5839
             """
             if isinstance(message, BaseModel):
                 _message = message.model_dump()
@@ -220,7 +220,7 @@ class GroqChatConfig(OpenAILikeChatConfig):
         request_data: dict,
         messages: List[AllMessageValues],
         optional_params: dict,
-        litellm_params: dict,
+        remodl_params: dict,
         encoding: Any,
         api_key: Optional[str] = None,
         json_mode: Optional[bool] = None,
@@ -233,7 +233,7 @@ class GroqChatConfig(OpenAILikeChatConfig):
             request_data=request_data,
             messages=messages,
             optional_params=optional_params,
-            litellm_params=litellm_params,
+            remodl_params=remodl_params,
             encoding=encoding,
             api_key=api_key,
             json_mode=json_mode,

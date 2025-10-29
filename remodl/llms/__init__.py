@@ -2,16 +2,16 @@ import importlib
 import os
 from typing import TYPE_CHECKING, Dict, Optional, Type
 
-from litellm._logging import verbose_logger
-from litellm.types.utils import CallTypes
+from remodl._logging import verbose_logger
+from remodl.types.utils import CallTypes
 
 from . import *
 
 if TYPE_CHECKING:
-    from litellm.llms.base_llm.guardrail_translation.base_translation import (
+    from remodl.llms.base_llm.guardrail_translation.base_translation import (
         BaseTranslation,
     )
-    from litellm.types.utils import ModelInfo, Usage
+    from remodl.types.utils import ModelInfo, Usage
 
 
 def get_cost_for_web_search_request(
@@ -79,9 +79,9 @@ def discover_guardrail_translation_mappings() -> (
                 os.path.basename(root) == "guardrail_translation"
                 and "__init__.py" in files
             ):
-                # Build the module path relative to litellm
+                # Build the module path relative to remodl
                 rel_path = os.path.relpath(root, os.path.dirname(llms_dir))
-                module_path = "litellm." + rel_path.replace(os.sep, ".")
+                module_path = "remodl." + rel_path.replace(os.sep, ".")
 
                 try:
                     # Import the module

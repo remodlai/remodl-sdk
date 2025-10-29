@@ -1,23 +1,23 @@
 import json
-from litellm._uuid import uuid
+from remodl._uuid import uuid
 from typing import Any, List, Literal, Optional, Tuple, Union, cast
 
 import httpx
 
-import litellm
-from litellm.constants import RESPONSE_FORMAT_TOOL_NAME
-from litellm.litellm_core_utils.litellm_logging import Logging as LiteLLMLoggingObj
-from litellm.litellm_core_utils.llm_response_utils.get_headers import (
+import remodl
+from remodl.constants import RESPONSE_FORMAT_TOOL_NAME
+from remodl.remodl_core_utils.remodl_logging import Logging as LiteLLMLoggingObj
+from remodl.remodl_core_utils.llm_response_utils.get_headers import (
     get_response_headers,
 )
-from litellm.secret_managers.main import get_secret_str
-from litellm.types.llms.openai import (
+from remodl.secret_managers.main import get_secret_str
+from remodl.types.llms.openai import (
     AllMessageValues,
     ChatCompletionImageObject,
     ChatCompletionToolParam,
     OpenAIChatCompletionToolParam,
 )
-from litellm.types.utils import (
+from remodl.types.utils import (
     ChatCompletionMessageToolCall,
     Choices,
     Function,
@@ -25,7 +25,7 @@ from litellm.types.utils import (
     ModelResponse,
     ProviderSpecificModelInfo,
 )
-from litellm.utils import supports_function_calling, supports_tool_choice
+from remodl.utils import supports_function_calling, supports_tool_choice
 
 from ...openai.chat.gpt_transformation import OpenAIGPTConfig
 from ..common_utils import FireworksAIException
@@ -129,7 +129,7 @@ class FireworksAIConfig(OpenAIGPTConfig):
         for param, value in non_default_params.items():
             if param == "tool_choice":
                 if value == "required":
-                    # relevant issue: https://github.com/BerriAI/litellm/issues/4416
+                    # relevant issue: https://github.com/BerriAI/remodl/issues/4416
                     optional_params["tool_choice"] = "any"
                 else:
                     # pass through the value of tool choice
@@ -191,20 +191,20 @@ class FireworksAIConfig(OpenAIGPTConfig):
         return tools
 
     def _transform_messages_helper(
-        self, messages: List[AllMessageValues], model: str, litellm_params: dict
+        self, messages: List[AllMessageValues], model: str, remodl_params: dict
     ) -> List[AllMessageValues]:
         """
         Add 'transform=inline' to the url of the image_url
         """
-        from litellm.litellm_core_utils.prompt_templates.common_utils import (
+        from remodl.remodl_core_utils.prompt_templates.common_utils import (
             filter_value_from_dict,
             migrate_file_to_image_url,
         )
 
         disable_add_transform_inline_image_block = cast(
             Optional[bool],
-            litellm_params.get("disable_add_transform_inline_image_block")
-            or litellm.disable_add_transform_inline_image_block,
+            remodl_params.get("disable_add_transform_inline_image_block")
+            or remodl.disable_add_transform_inline_image_block,
         )
         ## For any 'file' message type with pdf content, move to 'image_url' message type
         for message in messages:
@@ -243,13 +243,13 @@ class FireworksAIConfig(OpenAIGPTConfig):
         model: str,
         messages: List[AllMessageValues],
         optional_params: dict,
-        litellm_params: dict,
+        remodl_params: dict,
         headers: dict,
     ) -> dict:
         if not model.startswith("accounts/"):
             model = f"accounts/fireworks/models/{model}"
         messages = self._transform_messages_helper(
-            messages=messages, model=model, litellm_params=litellm_params
+            messages=messages, model=model, remodl_params=remodl_params
         )
         if "tools" in optional_params and optional_params["tools"] is not None:
             tools = self._transform_tools(tools=optional_params["tools"])
@@ -258,7 +258,7 @@ class FireworksAIConfig(OpenAIGPTConfig):
             model=model,
             messages=messages,
             optional_params=optional_params,
-            litellm_params=litellm_params,
+            remodl_params=remodl_params,
             headers=headers,
         )
 
@@ -270,7 +270,7 @@ class FireworksAIConfig(OpenAIGPTConfig):
         """
         Fireworks AI sends tool calls in the content field instead of tool_calls
 
-        Relevant Issue: https://github.com/BerriAI/litellm/issues/7209#issuecomment-2813208780
+        Relevant Issue: https://github.com/BerriAI/remodl/issues/7209#issuecomment-2813208780
         """
         if (
             tool_calls is not None
@@ -302,7 +302,7 @@ class FireworksAIConfig(OpenAIGPTConfig):
         request_data: dict,
         messages: List[AllMessageValues],
         optional_params: dict,
-        litellm_params: dict,
+        remodl_params: dict,
         encoding: Any,
         api_key: Optional[str] = None,
         json_mode: Optional[bool] = None,
@@ -381,7 +381,7 @@ class FireworksAIConfig(OpenAIGPTConfig):
                 "FIREWORKS_ACCOUNT_ID is not set. Please set the environment variable, to query Fireworks AI's `/models` endpoint."
             )
 
-        response = litellm.module_level_client.get(
+        response = remodl.module_level_client.get(
             url=f"{api_base}/v1/accounts/{account_id}/models",
             headers={"Authorization": f"Bearer {api_key}"},
         )

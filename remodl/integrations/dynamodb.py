@@ -3,10 +3,10 @@
 
 import os
 import traceback
-from litellm._uuid import uuid
+from remodl._uuid import uuid
 from typing import Any
 
-import litellm
+import remodl
 
 
 class DyanmoDBLogger:
@@ -19,11 +19,11 @@ class DyanmoDBLogger:
         self.dynamodb: Any = boto3.resource(
             "dynamodb", region_name=os.environ["AWS_REGION_NAME"]
         )
-        if litellm.dynamodb_table_name is None:
+        if remodl.dynamodb_table_name is None:
             raise ValueError(
-                "LiteLLM Error, trying to use DynamoDB but not table name passed. Create a table and set `litellm.dynamodb_table_name=<your-table>`"
+                "LiteLLM Error, trying to use DynamoDB but not table name passed. Create a table and set `remodl.dynamodb_table_name=<your-table>`"
             )
-        self.table_name = litellm.dynamodb_table_name
+        self.table_name = remodl.dynamodb_table_name
 
     async def _async_log_event(
         self, kwargs, response_obj, start_time, end_time, print_verbose
@@ -38,13 +38,13 @@ class DyanmoDBLogger:
 
             # construct payload to send to DynamoDB
             # follows the same params as langfuse.py
-            litellm_params = kwargs.get("litellm_params", {})
+            remodl_params = kwargs.get("remodl_params", {})
             metadata = (
-                litellm_params.get("metadata", {}) or {}
-            )  # if litellm_params['metadata'] == None
+                remodl_params.get("metadata", {}) or {}
+            )  # if remodl_params['metadata'] == None
             messages = kwargs.get("messages")
             optional_params = kwargs.get("optional_params", {})
-            call_type = kwargs.get("call_type", "litellm.completion")
+            call_type = kwargs.get("call_type", "remodl.completion")
             usage = response_obj["usage"]
             id = response_obj.get("id", str(uuid.uuid4()))
 

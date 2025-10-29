@@ -8,19 +8,19 @@ from typing import List, Optional
 
 import httpx
 
-from litellm._logging import verbose_logger
-from litellm.litellm_core_utils.prompt_templates.common_utils import extract_file_data
-from litellm.llms.base_llm.files.transformation import (
+from remodl._logging import verbose_logger
+from remodl.remodl_core_utils.prompt_templates.common_utils import extract_file_data
+from remodl.llms.base_llm.files.transformation import (
     BaseFilesConfig,
     LiteLLMLoggingObj,
 )
-from litellm.types.llms.gemini import GeminiCreateFilesResponseObject
-from litellm.types.llms.openai import (
+from remodl.types.llms.gemini import GeminiCreateFilesResponseObject
+from remodl.types.llms.openai import (
     CreateFileRequest,
     OpenAICreateFileRequestOptionalParams,
     OpenAIFileObject,
 )
-from litellm.types.utils import LlmProviders
+from remodl.types.utils import LlmProviders
 
 from ..common_utils import GeminiModelInfo
 
@@ -39,7 +39,7 @@ class GoogleAIStudioFilesHandler(GeminiModelInfo, BaseFilesConfig):
         api_key: Optional[str],
         model: str,
         optional_params: dict,
-        litellm_params: dict,
+        remodl_params: dict,
         stream: Optional[bool] = None,
     ) -> str:
         """
@@ -79,7 +79,7 @@ class GoogleAIStudioFilesHandler(GeminiModelInfo, BaseFilesConfig):
         model: str,
         create_file_data: CreateFileRequest,
         optional_params: dict,
-        litellm_params: dict,
+        remodl_params: dict,
     ) -> dict:
         """
         Transform the OpenAI-style file creation request into Gemini's format
@@ -135,7 +135,7 @@ class GoogleAIStudioFilesHandler(GeminiModelInfo, BaseFilesConfig):
         model: Optional[str],
         raw_response: httpx.Response,
         logging_obj: LiteLLMLoggingObj,
-        litellm_params: dict,
+        remodl_params: dict,
     ) -> OpenAIFileObject:
         """
         Transform Gemini's file upload response into OpenAI-style FileObject

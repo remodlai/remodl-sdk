@@ -3,7 +3,7 @@ Translate from OpenAI's `/v1/chat/completions` to Sagemaker's `/invocations` API
 
 Called if Sagemaker endpoint supports HF Messages API.
 
-LiteLLM Docs: https://docs.litellm.ai/docs/providers/aws_sagemaker#sagemaker-messages-api
+LiteLLM Docs: https://docs.remodl.ai/docs/providers/aws_sagemaker#sagemaker-messages-api
 Huggingface Docs: https://huggingface.co/docs/text-generation-inference/en/messages_api
 """
 
@@ -12,24 +12,24 @@ from typing import TYPE_CHECKING, Any, List, Optional, Tuple, Union, cast
 import httpx
 from httpx._models import Headers
 
-from litellm.litellm_core_utils.logging_utils import track_llm_api_timing
-from litellm.litellm_core_utils.streaming_handler import CustomStreamWrapper
-from litellm.llms.base_llm.chat.transformation import BaseLLMException
-from litellm.llms.bedrock.base_aws_llm import BaseAWSLLM
-from litellm.llms.custom_httpx.http_handler import (
+from remodl.remodl_core_utils.logging_utils import track_llm_api_timing
+from remodl.remodl_core_utils.streaming_handler import CustomStreamWrapper
+from remodl.llms.base_llm.chat.transformation import BaseLLMException
+from remodl.llms.bedrock.base_aws_llm import BaseAWSLLM
+from remodl.llms.custom_httpx.http_handler import (
     AsyncHTTPHandler,
     HTTPHandler,
     _get_httpx_client,
     get_async_httpx_client,
 )
-from litellm.types.llms.openai import AllMessageValues
-from litellm.types.utils import LlmProviders
+from remodl.types.llms.openai import AllMessageValues
+from remodl.types.utils import LlmProviders
 
 from ...openai.chat.gpt_transformation import OpenAIGPTConfig
 from ..common_utils import AWSEventStreamDecoder, SagemakerError
 
 if TYPE_CHECKING:
-    from litellm.litellm_core_utils.litellm_logging import Logging as _LiteLLMLoggingObj
+    from remodl.remodl_core_utils.remodl_logging import Logging as _LiteLLMLoggingObj
 
     LiteLLMLoggingObj = _LiteLLMLoggingObj
 else:
@@ -54,7 +54,7 @@ class SagemakerChatConfig(OpenAIGPTConfig, BaseAWSLLM):
         model: str,
         messages: List[AllMessageValues],
         optional_params: dict,
-        litellm_params: dict,
+        remodl_params: dict,
         api_key: Optional[str] = None,
         api_base: Optional[str] = None,
     ) -> dict:
@@ -66,7 +66,7 @@ class SagemakerChatConfig(OpenAIGPTConfig, BaseAWSLLM):
         api_key: Optional[str],
         model: str,
         optional_params: dict,
-        litellm_params: dict,
+        remodl_params: dict,
         stream: Optional[bool] = None,
     ) -> str:
         aws_region_name = self._get_aws_region_name(

@@ -2,16 +2,16 @@ from typing import TYPE_CHECKING, Any, List, Optional, Union
 
 from httpx._models import Headers, Response
 
-import litellm
-from litellm.litellm_core_utils.prompt_templates.factory import (
+import remodl
+from remodl.remodl_core_utils.prompt_templates.factory import (
     convert_to_azure_openai_messages,
 )
-from litellm.llms.base_llm.chat.transformation import BaseLLMException
-from litellm.types.llms.azure import (
+from remodl.llms.base_llm.chat.transformation import BaseLLMException
+from remodl.types.llms.azure import (
     API_VERSION_MONTH_SUPPORTED_RESPONSE_FORMAT,
     API_VERSION_YEAR_SUPPORTED_RESPONSE_FORMAT,
 )
-from litellm.types.utils import ModelResponse
+from remodl.types.utils import ModelResponse
 
 from ....exceptions import UnsupportedParamsError
 from ....types.llms.openai import AllMessageValues
@@ -19,7 +19,7 @@ from ...base_llm.chat.transformation import BaseConfig
 from ..common_utils import AzureOpenAIError
 
 if TYPE_CHECKING:
-    from litellm.litellm_core_utils.litellm_logging import Logging as LiteLLMLoggingObj
+    from remodl.remodl_core_utils.remodl_logging import Logging as LiteLLMLoggingObj
 
     LoggingClass = LiteLLMLoggingObj
 else:
@@ -193,7 +193,7 @@ class AzureOpenAIConfig(BaseConfig):
                             and api_version_day < "01"
                         )
                     ):
-                        if litellm.drop_params is True or (
+                        if remodl.drop_params is True or (
                             drop_params is not None and drop_params is True
                         ):
                             pass
@@ -205,14 +205,14 @@ class AzureOpenAIConfig(BaseConfig):
                     elif value == "required" and (
                         api_version_year == "2024" and api_version_month <= "05"
                     ):  ## check if tool_choice value is supported ##
-                        if litellm.drop_params is True or (
+                        if remodl.drop_params is True or (
                             drop_params is not None and drop_params is True
                         ):
                             pass
                         else:
                             raise UnsupportedParamsError(
                                 status_code=400,
-                                message=f"Azure does not support '{value}' as a {param} param, for api_version={api_version}. To drop 'tool_choice=required' for calls with this Azure API version, set `litellm.drop_params=True` or for proxy:\n\n`litellm_settings:\n drop_params: true`\nAzure API Reference: https://learn.microsoft.com/en-us/azure/ai-services/openai/reference#chat-completions",
+                                message=f"Azure does not support '{value}' as a {param} param, for api_version={api_version}. To drop 'tool_choice=required' for calls with this Azure API version, set `remodl.drop_params=True` or for proxy:\n\n`remodl_settings:\n drop_params: true`\nAzure API Reference: https://learn.microsoft.com/en-us/azure/ai-services/openai/reference#chat-completions",
                             )
                     else:
                         optional_params["tool_choice"] = value
@@ -252,7 +252,7 @@ class AzureOpenAIConfig(BaseConfig):
         model: str,
         messages: List[AllMessageValues],
         optional_params: dict,
-        litellm_params: dict,
+        remodl_params: dict,
         headers: dict,
     ) -> dict:
         messages = convert_to_azure_openai_messages(messages)
@@ -271,7 +271,7 @@ class AzureOpenAIConfig(BaseConfig):
         request_data: dict,
         messages: List[AllMessageValues],
         optional_params: dict,
-        litellm_params: dict,
+        remodl_params: dict,
         encoding: Any,
         api_key: Optional[str] = None,
         json_mode: Optional[bool] = None,
@@ -325,7 +325,7 @@ class AzureOpenAIConfig(BaseConfig):
         model: str,
         messages: List[AllMessageValues],
         optional_params: dict,
-        litellm_params: dict,
+        remodl_params: dict,
         api_key: Optional[str] = None,
         api_base: Optional[str] = None,
     ) -> dict:

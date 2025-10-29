@@ -3,16 +3,16 @@ from typing import TYPE_CHECKING, Any, Dict, List, Literal, Optional, Tuple, Uni
 import httpx
 from openai.types.responses import ResponseReasoningItem
 
-from litellm._logging import verbose_logger
-from litellm.llms.azure.common_utils import BaseAzureLLM
-from litellm.llms.openai.responses.transformation import OpenAIResponsesAPIConfig
-from litellm.types.llms.openai import *
-from litellm.types.responses.main import *
-from litellm.types.router import GenericLiteLLMParams
-from litellm.types.utils import LlmProviders
+from remodl._logging import verbose_logger
+from remodl.llms.azure.common_utils import BaseAzureLLM
+from remodl.llms.openai.responses.transformation import OpenAIResponsesAPIConfig
+from remodl.types.llms.openai import *
+from remodl.types.responses.main import *
+from remodl.types.router import GenericLiteLLMParams
+from remodl.types.utils import LlmProviders
 
 if TYPE_CHECKING:
-    from litellm.litellm_core_utils.litellm_logging import Logging as _LiteLLMLoggingObj
+    from remodl.remodl_core_utils.remodl_logging import Logging as _LiteLLMLoggingObj
 
     LiteLLMLoggingObj = _LiteLLMLoggingObj
 else:
@@ -25,10 +25,10 @@ class AzureOpenAIResponsesAPIConfig(OpenAIResponsesAPIConfig):
         return LlmProviders.AZURE
 
     def validate_environment(
-        self, headers: dict, model: str, litellm_params: Optional[GenericLiteLLMParams]
+        self, headers: dict, model: str, remodl_params: Optional[GenericLiteLLMParams]
     ) -> dict:
         return BaseAzureLLM._base_validate_azure_environment(
-            headers=headers, litellm_params=litellm_params
+            headers=headers, remodl_params=remodl_params
         )
 
     def get_stripped_model_name(self, model: str) -> str:
@@ -42,7 +42,7 @@ class AzureOpenAIResponsesAPIConfig(OpenAIResponsesAPIConfig):
     def _handle_reasoning_item(self, item: Dict[str, Any]) -> Dict[str, Any]:
         """
         Handle reasoning items to filter out the status field.
-        Issue: https://github.com/BerriAI/litellm/issues/13484
+        Issue: https://github.com/BerriAI/remodl/issues/13484
         
         Azure OpenAI API does not accept 'status' field in reasoning input items.
         """
@@ -110,7 +110,7 @@ class AzureOpenAIResponsesAPIConfig(OpenAIResponsesAPIConfig):
         model: str,
         input: Union[str, ResponseInputParam],
         response_api_optional_request_params: Dict,
-        litellm_params: GenericLiteLLMParams,
+        remodl_params: GenericLiteLLMParams,
         headers: dict,
     ) -> Dict:
         """No transform applied since inputs are in OpenAI spec already"""
@@ -120,36 +120,36 @@ class AzureOpenAIResponsesAPIConfig(OpenAIResponsesAPIConfig):
             model=stripped_model_name,
             input=input,
             response_api_optional_request_params=response_api_optional_request_params,
-            litellm_params=litellm_params,
+            remodl_params=remodl_params,
             headers=headers,
         )
 
     def get_complete_url(
         self,
         api_base: Optional[str],
-        litellm_params: dict,
+        remodl_params: dict,
     ) -> str:
         """
         Constructs a complete URL for the API request.
 
         Args:
         - api_base: Base URL, e.g.,
-            "https://litellm8397336933.openai.azure.com"
+            "https://remodl8397336933.openai.azure.com"
             OR
-            "https://litellm8397336933.openai.azure.com/openai/responses?api-version=2024-05-01-preview"
+            "https://remodl8397336933.openai.azure.com/openai/responses?api-version=2024-05-01-preview"
         - model: Model name.
         - optional_params: Additional query parameters, including "api_version".
         - stream: If streaming is required (optional).
 
         Returns:
         - A complete URL string, e.g.,
-        "https://litellm8397336933.openai.azure.com/openai/responses?api-version=2024-05-01-preview"
+        "https://remodl8397336933.openai.azure.com/openai/responses?api-version=2024-05-01-preview"
         """
-        from litellm.constants import AZURE_DEFAULT_RESPONSES_API_VERSION
+        from remodl.constants import AZURE_DEFAULT_RESPONSES_API_VERSION
 
         return BaseAzureLLM._get_base_azure_url(
             api_base=api_base,
-            litellm_params=litellm_params,
+            remodl_params=remodl_params,
             route="/openai/responses",
             default_api_version=AZURE_DEFAULT_RESPONSES_API_VERSION,
         )
@@ -190,7 +190,7 @@ class AzureOpenAIResponsesAPIConfig(OpenAIResponsesAPIConfig):
         self,
         response_id: str,
         api_base: str,
-        litellm_params: GenericLiteLLMParams,
+        remodl_params: GenericLiteLLMParams,
         headers: dict,
     ) -> Tuple[str, Dict]:
         """
@@ -217,7 +217,7 @@ class AzureOpenAIResponsesAPIConfig(OpenAIResponsesAPIConfig):
         self,
         response_id: str,
         api_base: str,
-        litellm_params: GenericLiteLLMParams,
+        remodl_params: GenericLiteLLMParams,
         headers: dict,
     ) -> Tuple[str, Dict]:
         """
@@ -237,7 +237,7 @@ class AzureOpenAIResponsesAPIConfig(OpenAIResponsesAPIConfig):
         self,
         response_id: str,
         api_base: str,
-        litellm_params: GenericLiteLLMParams,
+        remodl_params: GenericLiteLLMParams,
         headers: dict,
         after: Optional[str] = None,
         before: Optional[str] = None,
@@ -272,7 +272,7 @@ class AzureOpenAIResponsesAPIConfig(OpenAIResponsesAPIConfig):
         self,
         response_id: str,
         api_base: str,
-        litellm_params: GenericLiteLLMParams,
+        remodl_params: GenericLiteLLMParams,
         headers: dict,
     ) -> Tuple[str, Dict]:
         """
@@ -321,7 +321,7 @@ class AzureOpenAIResponsesAPIConfig(OpenAIResponsesAPIConfig):
         try:
             raw_response_json = raw_response.json()
         except Exception:
-            from litellm.llms.azure.chat.gpt_transformation import AzureOpenAIError
+            from remodl.llms.azure.chat.gpt_transformation import AzureOpenAIError
 
             raise AzureOpenAIError(
                 message=raw_response.text, status_code=raw_response.status_code

@@ -9,7 +9,7 @@ from abc import ABC, abstractmethod
 from datetime import datetime
 from typing import Optional
 
-from litellm.types.integrations.base_health_check import IntegrationHealthCheckStatus
+from remodl.types.integrations.base_health_check import IntegrationHealthCheckStatus
 
 
 class AdditionalLoggingUtils(ABC):

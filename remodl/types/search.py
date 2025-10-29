@@ -7,7 +7,7 @@ from typing import List, Optional
 
 from typing_extensions import Required, TypedDict
 
-from litellm.types.utils import SearchProviders
+from remodl.types.utils import SearchProviders
 
 # Re-export SearchProviders as SearchProvider for backwards compatibility
 SearchProvider = SearchProviders
@@ -34,8 +34,8 @@ class SearchTool(TypedDict, total=False):
     Example:
         {
             "search_tool_id": "123e4567-e89b-12d3-a456-426614174000",
-            "search_tool_name": "litellm-search",
-            "litellm_params": {
+            "search_tool_name": "remodl-search",
+            "remodl_params": {
                 "search_provider": "perplexity",
                 "api_key": "sk-..."
             },
@@ -46,7 +46,7 @@ class SearchTool(TypedDict, total=False):
     """
     search_tool_id: Optional[str]
     search_tool_name: Required[str]
-    litellm_params: Required[SearchToolLiteLLMParams]
+    remodl_params: Required[SearchToolLiteLLMParams]
     search_tool_info: Optional[dict]
     created_at: Optional[str]
     updated_at: Optional[str]
@@ -56,7 +56,7 @@ class SearchToolInfoResponse(TypedDict, total=False):
     """Response model for search tool information."""
     search_tool_id: Optional[str]
     search_tool_name: str
-    litellm_params: dict
+    remodl_params: dict
     search_tool_info: Optional[dict]
     created_at: Optional[str]
     updated_at: Optional[str]

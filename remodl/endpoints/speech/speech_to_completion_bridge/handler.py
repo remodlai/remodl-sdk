@@ -1,5 +1,5 @@
 """
-Handler for transforming /chat/completions api requests to litellm.responses requests
+Handler for transforming /chat/completions api requests to remodl.responses requests
 """
 
 from typing import TYPE_CHECKING, Optional, Union
@@ -7,8 +7,8 @@ from typing import TYPE_CHECKING, Optional, Union
 from typing_extensions import TypedDict
 
 if TYPE_CHECKING:
-    from litellm import LiteLLMLoggingObj
-    from litellm.types.llms.openai import HttpxBinaryResponseContent
+    from remodl import LiteLLMLoggingObj
+    from remodl.types.llms.openai import HttpxBinaryResponseContent
 
 
 class SpeechToCompletionBridgeHandlerInputKwargs(TypedDict):
@@ -16,7 +16,7 @@ class SpeechToCompletionBridgeHandlerInputKwargs(TypedDict):
     input: str
     voice: Optional[Union[str, dict]]
     optional_params: dict
-    litellm_params: dict
+    remodl_params: dict
     logging_obj: "LiteLLMLoggingObj"
     headers: dict
     custom_llm_provider: str
@@ -32,7 +32,7 @@ class SpeechToCompletionBridgeHandler:
     def validate_input_kwargs(
         self, kwargs: dict
     ) -> SpeechToCompletionBridgeHandlerInputKwargs:
-        from litellm import LiteLLMLoggingObj
+        from remodl import LiteLLMLoggingObj
 
         model = kwargs.get("model")
         if model is None or not isinstance(model, str):
@@ -50,9 +50,9 @@ class SpeechToCompletionBridgeHandler:
         if optional_params is None or not isinstance(optional_params, dict):
             raise ValueError("optional_params is required")
 
-        litellm_params = kwargs.get("litellm_params")
-        if litellm_params is None or not isinstance(litellm_params, dict):
-            raise ValueError("litellm_params is required")
+        remodl_params = kwargs.get("remodl_params")
+        if remodl_params is None or not isinstance(remodl_params, dict):
+            raise ValueError("remodl_params is required")
 
         headers = kwargs.get("headers")
         if headers is None or not isinstance(headers, dict):
@@ -71,7 +71,7 @@ class SpeechToCompletionBridgeHandler:
             input=input,
             voice=kwargs.get("voice"),
             optional_params=optional_params,
-            litellm_params=litellm_params,
+            remodl_params=remodl_params,
             logging_obj=logging_obj,
             custom_llm_provider=custom_llm_provider,
             headers=headers,
@@ -83,20 +83,20 @@ class SpeechToCompletionBridgeHandler:
         input: str,
         voice: Optional[Union[str, dict]],
         optional_params: dict,
-        litellm_params: dict,
+        remodl_params: dict,
         headers: dict,
         logging_obj: "LiteLLMLoggingObj",
         custom_llm_provider: str,
     ) -> "HttpxBinaryResponseContent":
         received_args = locals()
-        from litellm import completion
-        from litellm.types.utils import ModelResponse
+        from remodl import completion
+        from remodl.types.utils import ModelResponse
 
         validated_kwargs = self.validate_input_kwargs(received_args)
         model = validated_kwargs["model"]
         input = validated_kwargs["input"]
         optional_params = validated_kwargs["optional_params"]
-        litellm_params = validated_kwargs["litellm_params"]
+        remodl_params = validated_kwargs["remodl_params"]
         headers = validated_kwargs["headers"]
         logging_obj = validated_kwargs["logging_obj"]
         custom_llm_provider = validated_kwargs["custom_llm_provider"]
@@ -106,9 +106,9 @@ class SpeechToCompletionBridgeHandler:
             model=model,
             input=input,
             optional_params=optional_params,
-            litellm_params=litellm_params,
+            remodl_params=remodl_params,
             headers=headers,
-            litellm_logging_obj=logging_obj,
+            remodl_logging_obj=logging_obj,
             custom_llm_provider=custom_llm_provider,
             voice=voice,
         )

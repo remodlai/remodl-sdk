@@ -3,7 +3,7 @@ from typing import List, Optional
 
 from openai.types.image import Image
 
-from litellm.types.utils import ImageResponse
+from remodl.types.utils import ImageResponse
 
 
 class AmazonStabilityConfig:

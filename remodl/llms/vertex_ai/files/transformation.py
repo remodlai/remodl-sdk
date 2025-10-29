@@ -1,26 +1,26 @@
 import json
 import os
 import time
-from litellm._uuid import uuid
+from remodl._uuid import uuid
 from typing import Any, Dict, List, Optional, Tuple, Union
 
 from httpx import Headers, Response
 
-from litellm.files.utils import FilesAPIUtils
-from litellm.litellm_core_utils.prompt_templates.common_utils import extract_file_data
-from litellm.llms.base_llm.chat.transformation import BaseLLMException
-from litellm.llms.base_llm.files.transformation import (
+from remodl.files.utils import FilesAPIUtils
+from remodl.remodl_core_utils.prompt_templates.common_utils import extract_file_data
+from remodl.llms.base_llm.chat.transformation import BaseLLMException
+from remodl.llms.base_llm.files.transformation import (
     BaseFilesConfig,
     LiteLLMLoggingObj,
 )
-from litellm.llms.vertex_ai.common_utils import (
+from remodl.llms.vertex_ai.common_utils import (
     _convert_vertex_datetime_to_openai_datetime,
 )
-from litellm.llms.vertex_ai.gemini.transformation import _transform_request_body
-from litellm.llms.vertex_ai.gemini.vertex_and_google_ai_studio_gemini import (
+from remodl.llms.vertex_ai.gemini.transformation import _transform_request_body
+from remodl.llms.vertex_ai.gemini.vertex_and_google_ai_studio_gemini import (
     VertexGeminiConfig,
 )
-from litellm.types.llms.openai import (
+from remodl.types.llms.openai import (
     AllMessageValues,
     CreateFileRequest,
     FileTypes,
@@ -28,8 +28,8 @@ from litellm.types.llms.openai import (
     OpenAIFileObject,
     PathLike,
 )
-from litellm.types.llms.vertex_ai import GcsBucketResponse
-from litellm.types.utils import ExtractedFileData, LlmProviders
+from remodl.types.llms.vertex_ai import GcsBucketResponse
+from remodl.types.utils import ExtractedFileData, LlmProviders
 
 from ..common_utils import VertexAIError
 from ..vertex_llm_base import VertexBase
@@ -54,14 +54,14 @@ class VertexAIFilesConfig(VertexBase, BaseFilesConfig):
         model: str,
         messages: List[AllMessageValues],
         optional_params: dict,
-        litellm_params: dict,
+        remodl_params: dict,
         api_key: Optional[str] = None,
         api_base: Optional[str] = None,
     ) -> dict:
         if not api_key:
             api_key, _ = self.get_access_token(
-                credentials=litellm_params.get("vertex_credentials"),
-                project_id=litellm_params.get("vertex_project"),
+                credentials=remodl_params.get("vertex_credentials"),
+                project_id=remodl_params.get("vertex_project"),
             )
             if not api_key:
                 raise ValueError("api_key is required")
@@ -112,12 +112,12 @@ class VertexAIFilesConfig(VertexBase, BaseFilesConfig):
         """
         Gets a unique GCS object name for the VertexAI batch prediction job
 
-        named as: litellm-vertex-{model}-{uuid}
+        named as: remodl-vertex-{model}-{uuid}
         """
         _model = openai_jsonl_content[0].get("body", {}).get("model", "")
         if "publishers/google/models" not in _model:
             _model = f"publishers/google/models/{_model}"
-        object_name = f"litellm-vertex-files/{_model}/{uuid.uuid4()}"
+        object_name = f"remodl-vertex-files/{_model}/{uuid.uuid4()}"
         return object_name
 
     def get_object_name(
@@ -157,13 +157,13 @@ class VertexAIFilesConfig(VertexBase, BaseFilesConfig):
         api_key: Optional[str],
         model: str,
         optional_params: Dict,
-        litellm_params: Dict,
+        remodl_params: Dict,
         data: CreateFileRequest,
     ) -> str:
         """
         Get the complete url for the request
         """
-        bucket_name = litellm_params.get("bucket_name") or os.getenv("GCS_BUCKET_NAME")
+        bucket_name = remodl_params.get("bucket_name") or os.getenv("GCS_BUCKET_NAME")
         if not bucket_name:
             raise ValueError("GCS bucket_name is required")
         file_data = data.get("file")
@@ -204,7 +204,7 @@ class VertexAIFilesConfig(VertexBase, BaseFilesConfig):
         """
         wrapper to call VertexGeminiConfig.map_openai_params
         """
-        from litellm.llms.vertex_ai.gemini.vertex_and_google_ai_studio_gemini import (
+        from remodl.llms.vertex_ai.gemini.vertex_and_google_ai_studio_gemini import (
             VertexGeminiConfig,
         )
 
@@ -238,7 +238,7 @@ class VertexAIFilesConfig(VertexBase, BaseFilesConfig):
                 model=openai_request_body.get("model", ""),
                 optional_params=self._map_openai_to_vertex_params(openai_request_body),
                 custom_llm_provider="vertex_ai",
-                litellm_params={},
+                remodl_params={},
                 cached_content=None,
             )
             vertex_jsonl_content.append({"request": vertex_request_body})
@@ -249,7 +249,7 @@ class VertexAIFilesConfig(VertexBase, BaseFilesConfig):
         model: str,
         create_file_data: CreateFileRequest,
         optional_params: dict,
-        litellm_params: dict,
+        remodl_params: dict,
     ) -> Union[bytes, str, dict]:
         """
         2 Cases:
@@ -294,7 +294,7 @@ class VertexAIFilesConfig(VertexBase, BaseFilesConfig):
         model: Optional[str],
         raw_response: Response,
         logging_obj: LiteLLMLoggingObj,
-        litellm_params: dict,
+        remodl_params: dict,
     ) -> OpenAIFileObject:
         """
         Transform VertexAI File upload response into OpenAI-style FileObject
@@ -388,7 +388,7 @@ class VertexAIJsonlFilesTransformation(VertexGeminiConfig):
                 model=openai_request_body.get("model", ""),
                 optional_params=self._map_openai_to_vertex_params(openai_request_body),
                 custom_llm_provider="vertex_ai",
-                litellm_params={},
+                remodl_params={},
                 cached_content=None,
             )
             vertex_jsonl_content.append({"request": vertex_request_body})
@@ -401,12 +401,12 @@ class VertexAIJsonlFilesTransformation(VertexGeminiConfig):
         """
         Gets a unique GCS object name for the VertexAI batch prediction job
 
-        named as: litellm-vertex-{model}-{uuid}
+        named as: remodl-vertex-{model}-{uuid}
         """
         _model = openai_jsonl_content[0].get("body", {}).get("model", "")
         if "publishers/google/models" not in _model:
             _model = f"publishers/google/models/{_model}"
-        object_name = f"litellm-vertex-files/{_model}/{uuid.uuid4()}"
+        object_name = f"remodl-vertex-files/{_model}/{uuid.uuid4()}"
         return object_name
 
     def _map_openai_to_vertex_params(

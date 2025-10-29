@@ -3,18 +3,18 @@ from typing import Literal, Optional, Union
 
 import httpx
 
-import litellm
-from litellm.litellm_core_utils.litellm_logging import Logging as LiteLLMLoggingObj
-from litellm.llms.custom_httpx.http_handler import (
+import remodl
+from remodl.remodl_core_utils.remodl_logging import Logging as LiteLLMLoggingObj
+from remodl.llms.custom_httpx.http_handler import (
     AsyncHTTPHandler,
     HTTPHandler,
     get_async_httpx_client,
 )
-from litellm.llms.vertex_ai.gemini.vertex_and_google_ai_studio_gemini import (
+from remodl.llms.vertex_ai.gemini.vertex_and_google_ai_studio_gemini import (
     VertexAIError,
     VertexLLM,
 )
-from litellm.types.utils import EmbeddingResponse
+from remodl.types.utils import EmbeddingResponse
 
 from .transformation import VertexAIMultimodalEmbeddingConfig
 
@@ -37,7 +37,7 @@ class VertexMultimodalEmbedding(VertexLLM):
         model_response: EmbeddingResponse,
         custom_llm_provider: Literal["gemini", "vertex_ai"],
         optional_params: dict,
-        litellm_params: dict,
+        remodl_params: dict,
         logging_obj: LiteLLMLoggingObj,
         api_key: Optional[str] = None,
         api_base: Optional[str] = None,
@@ -94,7 +94,7 @@ class VertexMultimodalEmbedding(VertexLLM):
             optional_params=optional_params,
             api_key=auth_header,
             api_base=api_base,
-            litellm_params=litellm_params,
+            remodl_params=remodl_params,
         )
 
         ## LOGGING
@@ -118,7 +118,7 @@ class VertexMultimodalEmbedding(VertexLLM):
                 client=client,
                 model_response=model_response,
                 optional_params=optional_params,
-                litellm_params=litellm_params,
+                remodl_params=remodl_params,
                 logging_obj=logging_obj,
                 api_key=api_key,
             )
@@ -137,7 +137,7 @@ class VertexMultimodalEmbedding(VertexLLM):
             api_key=api_key,
             request_data=request_data,
             optional_params=optional_params,
-            litellm_params=litellm_params,
+            remodl_params=remodl_params,
         )
 
     async def async_multimodal_embedding(
@@ -145,15 +145,15 @@ class VertexMultimodalEmbedding(VertexLLM):
         model: str,
         api_base: str,
         optional_params: dict,
-        litellm_params: dict,
+        remodl_params: dict,
         data: dict,
-        model_response: litellm.EmbeddingResponse,
+        model_response: remodl.EmbeddingResponse,
         timeout: Optional[Union[float, httpx.Timeout]],
         logging_obj: LiteLLMLoggingObj,
         headers={},
         client: Optional[AsyncHTTPHandler] = None,
         api_key: Optional[str] = None,
-    ) -> litellm.EmbeddingResponse:
+    ) -> remodl.EmbeddingResponse:
         if client is None:
             _params = {}
             if timeout is not None:
@@ -161,7 +161,7 @@ class VertexMultimodalEmbedding(VertexLLM):
                     timeout = httpx.Timeout(timeout)
                 _params["timeout"] = timeout
             client = get_async_httpx_client(
-                llm_provider=litellm.LlmProviders.VERTEX_AI,
+                llm_provider=remodl.LlmProviders.VERTEX_AI,
                 params={"timeout": timeout},
             )
         else:
@@ -184,5 +184,5 @@ class VertexMultimodalEmbedding(VertexLLM):
             api_key=api_key,
             request_data=data,
             optional_params=optional_params,
-            litellm_params=litellm_params,
+            remodl_params=remodl_params,
         )

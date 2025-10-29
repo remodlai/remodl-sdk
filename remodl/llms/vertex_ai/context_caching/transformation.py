@@ -7,9 +7,9 @@ Why separate file? Make it easy to see how transformation works
 import re
 from typing import List, Optional, Tuple, Literal
 
-from litellm.types.llms.openai import AllMessageValues
-from litellm.types.llms.vertex_ai import CachedContentRequestBody
-from litellm.utils import is_cached_message
+from remodl.types.llms.openai import AllMessageValues
+from remodl.types.llms.vertex_ai import CachedContentRequestBody
+from remodl.utils import is_cached_message
 
 from ..common_utils import get_supports_system_message
 from ..gemini.transformation import (

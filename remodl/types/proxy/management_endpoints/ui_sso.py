@@ -3,7 +3,7 @@ from typing import List, Literal, Optional, Union
 from pydantic import Field
 from typing_extensions import TypedDict
 
-from litellm.types.utils import LiteLLMPydanticObjectBase
+from remodl.types.utils import LiteLLMPydanticObjectBase
 
 
 class LiteLLM_UpperboundKeyGenerateParams(LiteLLMPydanticObjectBase):

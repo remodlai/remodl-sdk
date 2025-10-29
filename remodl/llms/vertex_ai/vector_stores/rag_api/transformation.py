@@ -2,10 +2,10 @@ from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple, Union
 
 import httpx
 
-from litellm.llms.base_llm.vector_store.transformation import BaseVectorStoreConfig
-from litellm.llms.vertex_ai.vertex_llm_base import VertexBase
-from litellm.types.router import GenericLiteLLMParams
-from litellm.types.vector_stores import (
+from remodl.llms.base_llm.vector_store.transformation import BaseVectorStoreConfig
+from remodl.llms.vertex_ai.vertex_llm_base import VertexBase
+from remodl.types.router import GenericLiteLLMParams
+from remodl.types.vector_stores import (
     VectorStoreCreateOptionalRequestParams,
     VectorStoreCreateResponse,
     VectorStoreResultContent,
@@ -15,7 +15,7 @@ from litellm.types.vector_stores import (
 )
 
 if TYPE_CHECKING:
-    from litellm.litellm_core_utils.litellm_logging import Logging as _LiteLLMLoggingObj
+    from remodl.remodl_core_utils.remodl_logging import Logging as _LiteLLMLoggingObj
 
     LiteLLMLoggingObj = _LiteLLMLoggingObj
 else:
@@ -33,16 +33,16 @@ class VertexVectorStoreConfig(BaseVectorStoreConfig, VertexBase):
         super().__init__()
 
     def validate_environment(
-        self, headers: dict, litellm_params: Optional[GenericLiteLLMParams]
+        self, headers: dict, remodl_params: Optional[GenericLiteLLMParams]
     ) -> dict:
         """
         Validate and set up authentication for Vertex AI RAG API
         """
-        litellm_params = litellm_params or GenericLiteLLMParams()
+        remodl_params = remodl_params or GenericLiteLLMParams()
         
         # Get credentials and project info
-        vertex_credentials = self.get_vertex_ai_credentials(dict(litellm_params))
-        vertex_project = self.get_vertex_ai_project(dict(litellm_params))
+        vertex_credentials = self.get_vertex_ai_credentials(dict(remodl_params))
+        vertex_project = self.get_vertex_ai_project(dict(remodl_params))
         
         # Get access token using the base class method
         access_token, project_id = self._ensure_access_token(
@@ -61,13 +61,13 @@ class VertexVectorStoreConfig(BaseVectorStoreConfig, VertexBase):
     def get_complete_url(
         self,
         api_base: Optional[str],
-        litellm_params: dict,
+        remodl_params: dict,
     ) -> str:
         """
         Get the Base endpoint for Vertex AI RAG API
         """
-        vertex_location = self.get_vertex_ai_location(litellm_params)
-        vertex_project = self.get_vertex_ai_project(litellm_params)
+        vertex_location = self.get_vertex_ai_location(remodl_params)
+        vertex_project = self.get_vertex_ai_project(remodl_params)
         
         if api_base:
             return api_base.rstrip("/")
@@ -81,8 +81,8 @@ class VertexVectorStoreConfig(BaseVectorStoreConfig, VertexBase):
         query: Union[str, List[str]],
         vector_store_search_optional_params: VectorStoreSearchOptionalRequestParams,
         api_base: str,
-        litellm_logging_obj: LiteLLMLoggingObj,
-        litellm_params: dict,
+        remodl_logging_obj: LiteLLMLoggingObj,
+        remodl_params: dict,
     ) -> Tuple[str, Dict[str, Any]]:
         """
         Transform search request for Vertex AI RAG API
@@ -95,8 +95,8 @@ class VertexVectorStoreConfig(BaseVectorStoreConfig, VertexBase):
         url = f"{api_base}:retrieveContexts"
         
         # Use helper methods to get project and location, then construct full rag corpus path
-        vertex_project = self.get_vertex_ai_project(litellm_params)
-        vertex_location = self.get_vertex_ai_location(litellm_params)
+        vertex_project = self.get_vertex_ai_project(remodl_params)
+        vertex_location = self.get_vertex_ai_location(remodl_params)
         
         # Construct full rag corpus path
         full_rag_corpus = f"projects/{vertex_project}/locations/{vertex_location}/ragCorpora/{vector_store_id}"
@@ -118,7 +118,7 @@ class VertexVectorStoreConfig(BaseVectorStoreConfig, VertexBase):
         #########################################################
         # Update logging object with details of the request
         #########################################################
-        litellm_logging_obj.model_call_details["query"] = query
+        remodl_logging_obj.model_call_details["query"] = query
         
         # Add optional parameters
         max_num_results = vector_store_search_optional_params.get("max_num_results")
@@ -143,7 +143,7 @@ class VertexVectorStoreConfig(BaseVectorStoreConfig, VertexBase):
         
         return url, request_body
 
-    def transform_search_vector_store_response(self, response: httpx.Response, litellm_logging_obj: LiteLLMLoggingObj) -> VectorStoreSearchResponse:
+    def transform_search_vector_store_response(self, response: httpx.Response, remodl_logging_obj: LiteLLMLoggingObj) -> VectorStoreSearchResponse:
         """
         Transform Vertex AI RAG API response to standard vector store search response
         """
@@ -194,7 +194,7 @@ class VertexVectorStoreConfig(BaseVectorStoreConfig, VertexBase):
             
             return VectorStoreSearchResponse(
                 object="vector_store.search_results.page",
-                search_query=litellm_logging_obj.model_call_details.get("query", ""),
+                search_query=remodl_logging_obj.model_call_details.get("query", ""),
                 data=search_results
             )
             
@@ -217,7 +217,7 @@ class VertexVectorStoreConfig(BaseVectorStoreConfig, VertexBase):
         
         # Build the request body for Vertex AI RAG Corpus creation
         request_body: Dict[str, Any] = {
-            "display_name": vector_store_create_optional_params.get("name", "litellm-vector-store"),
+            "display_name": vector_store_create_optional_params.get("name", "remodl-vector-store"),
             "description": "Vector store created via LiteLLM"
         }
         

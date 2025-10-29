@@ -1,7 +1,7 @@
 from typing import Optional
 
-from litellm.llms.openai.image_edit.transformation import OpenAIImageEditConfig
-from litellm.secret_managers.main import get_secret_str
+from remodl.llms.openai.image_edit.transformation import OpenAIImageEditConfig
+from remodl.secret_managers.main import get_secret_str
 
 
 class LiteLLMProxyImageEditConfig(OpenAIImageEditConfig):
@@ -15,7 +15,7 @@ class LiteLLMProxyImageEditConfig(OpenAIImageEditConfig):
         return headers
 
     def get_complete_url(
-        self, model: str, api_base: Optional[str], litellm_params: dict
+        self, model: str, api_base: Optional[str], remodl_params: dict
     ) -> str:
         api_base = api_base or get_secret_str("LITELLM_PROXY_API_BASE")
         if api_base is None:

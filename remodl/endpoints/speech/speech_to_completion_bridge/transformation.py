@@ -1,11 +1,11 @@
 from typing import TYPE_CHECKING, Optional, Union, cast
 
-from litellm.constants import OPENAI_CHAT_COMPLETION_PARAMS
+from remodl.constants import OPENAI_CHAT_COMPLETION_PARAMS
 
 if TYPE_CHECKING:
-    from litellm import Logging as LiteLLMLoggingObj
-    from litellm.types.llms.openai import HttpxBinaryResponseContent
-    from litellm.types.utils import ModelResponse
+    from remodl import Logging as LiteLLMLoggingObj
+    from remodl.types.llms.openai import HttpxBinaryResponseContent
+    from remodl.types.utils import ModelResponse
 
 
 class SpeechToCompletionBridgeTransformationHandler:
@@ -15,9 +15,9 @@ class SpeechToCompletionBridgeTransformationHandler:
         input: str,
         voice: Optional[Union[str, dict]],
         optional_params: dict,
-        litellm_params: dict,
+        remodl_params: dict,
         headers: dict,
-        litellm_logging_obj: "LiteLLMLoggingObj",
+        remodl_logging_obj: "LiteLLMLoggingObj",
         custom_llm_provider: str,
     ) -> dict:
         passed_optional_params = {}
@@ -43,9 +43,9 @@ class SpeechToCompletionBridgeTransformationHandler:
             ],
             "modalities": ["audio"],
             **passed_optional_params,
-            **litellm_params,
+            **remodl_params,
             "headers": headers,
-            "litellm_logging_obj": litellm_logging_obj,
+            "remodl_logging_obj": remodl_logging_obj,
             "custom_llm_provider": custom_llm_provider,
         }
 
@@ -108,8 +108,8 @@ class SpeechToCompletionBridgeTransformationHandler:
 
         import httpx
 
-        from litellm.types.llms.openai import HttpxBinaryResponseContent
-        from litellm.types.utils import Choices
+        from remodl.types.llms.openai import HttpxBinaryResponseContent
+        from remodl.types.utils import Choices
 
         audio_part = cast(Choices, model_response.choices[0]).message.audio
         if audio_part is None:

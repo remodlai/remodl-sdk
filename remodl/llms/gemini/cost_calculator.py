@@ -7,7 +7,7 @@ Handles the context caching for Gemini API.
 from typing import TYPE_CHECKING, Tuple
 
 if TYPE_CHECKING:
-    from litellm.types.utils import ModelInfo, Usage
+    from remodl.types.utils import ModelInfo, Usage
 
 
 def cost_per_token(model: str, usage: "Usage") -> Tuple[float, float]:
@@ -16,7 +16,7 @@ def cost_per_token(model: str, usage: "Usage") -> Tuple[float, float]:
 
     Follows the same logic as Anthropic's cost per token calculation.
     """
-    from litellm.litellm_core_utils.llm_cost_calc.utils import generic_cost_per_token
+    from remodl.remodl_core_utils.llm_cost_calc.utils import generic_cost_per_token
 
     return generic_cost_per_token(
         model=model, usage=usage, custom_llm_provider="gemini"
@@ -27,7 +27,7 @@ def cost_per_web_search_request(usage: "Usage", model_info: "ModelInfo") -> floa
     """
     Calculates the cost per web search request for a given model, prompt tokens, and completion tokens.
     """
-    from litellm.types.utils import PromptTokensDetailsWrapper
+    from remodl.types.utils import PromptTokensDetailsWrapper
 
     # cost per web search request
     cost_per_web_search_request = 35e-3

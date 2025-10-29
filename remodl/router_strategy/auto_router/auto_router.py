@@ -3,14 +3,14 @@ Auto-Routing Strategy that works with a Semantic Router Config
 """
 from typing import TYPE_CHECKING, Any, Dict, List, Optional, Union
 
-from litellm._logging import verbose_router_logger
-from litellm.integrations.custom_logger import CustomLogger
+from remodl._logging import verbose_router_logger
+from remodl.integrations.custom_logger import CustomLogger
 
 if TYPE_CHECKING:
     from semantic_router.routers.base import Route
 
-    from litellm.router import Router
-    from litellm.types.router import PreRoutingHookResponse
+    from remodl.router import Router
+    from remodl.types.router import PreRoutingHookResponse
 else:
     Router = Any
     PreRoutingHookResponse = Any
@@ -24,7 +24,7 @@ class AutoRouter(CustomLogger):
         model_name: str,
         default_model: str,
         embedding_model: str,
-        litellm_router_instance: "Router",
+        remodl_router_instance: "Router",
         auto_router_config_path: Optional[str] = None,
         auto_router_config: Optional[str] = None,
     ):  
@@ -37,7 +37,7 @@ class AutoRouter(CustomLogger):
             auto_router_config: The config to use for the auto-router. You can either use this or auto_router_config_path, not both.
             default_model: The default model to use if no route is found.
             embedding_model: The embedding model to use for the auto-router.
-            litellm_router_instance: The instance of the LiteLLM Router.
+            remodl_router_instance: The instance of the LiteLLM Router.
         """
         from semantic_router.routers import SemanticRouter
 
@@ -48,7 +48,7 @@ class AutoRouter(CustomLogger):
         self.routelayer: Optional[SemanticRouter] = None
         self.default_model = default_model
         self.embedding_model: str = embedding_model
-        self.litellm_router_instance: "Router" = litellm_router_instance
+        self.remodl_router_instance: "Router" = remodl_router_instance
     
     def _load_semantic_routing_routes(self) -> List[Route]:
         from semantic_router.routers import SemanticRouter
@@ -92,15 +92,15 @@ class AutoRouter(CustomLogger):
         """
         This hook is called before the routing decision is made.
 
-        Used for the litellm auto-router to modify the request before the routing decision is made.
+        Used for the remodl auto-router to modify the request before the routing decision is made.
         """
         from semantic_router.routers import SemanticRouter
         from semantic_router.schema import RouteChoice
 
-        from litellm.router_strategy.auto_router.litellm_encoder import (
+        from remodl.router_strategy.auto_router.remodl_encoder import (
             LiteLLMRouterEncoder,
         )
-        from litellm.types.router import PreRoutingHookResponse
+        from remodl.types.router import PreRoutingHookResponse
         if messages is None:
             # do nothing, return same inputs
             return None
@@ -112,7 +112,7 @@ class AutoRouter(CustomLogger):
             self.routelayer = SemanticRouter(
                     routes=self.loaded_routes,
                     encoder=LiteLLMRouterEncoder(
-                        litellm_router_instance=self.litellm_router_instance,
+                        remodl_router_instance=self.remodl_router_instance,
                         model_name=self.embedding_model,
                     ),
                     auto_sync=self.auto_sync_value,

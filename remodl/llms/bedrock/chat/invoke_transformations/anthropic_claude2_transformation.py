@@ -1,7 +1,7 @@
 import types
 from typing import Optional
 
-import litellm
+import remodl
 
 from .base_invoke_transformation import AmazonInvokeConfig
 
@@ -20,7 +20,7 @@ class AmazonAnthropicConfig(AmazonInvokeConfig):
     - `anthropic_version` (string) version of anthropic for bedrock - e.g. "bedrock-2023-05-31"
     """
 
-    max_tokens_to_sample: Optional[int] = litellm.max_tokens
+    max_tokens_to_sample: Optional[int] = remodl.max_tokens
     stop_sequences: Optional[list] = None
     temperature: Optional[float] = None
     top_k: Optional[int] = None

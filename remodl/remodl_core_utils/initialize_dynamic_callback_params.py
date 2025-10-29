@@ -1,7 +1,7 @@
 from typing import Dict, Optional
 
-from litellm.secret_managers.main import get_secret_str
-from litellm.types.utils import StandardCallbackDynamicParams
+from remodl.secret_managers.main import get_secret_str
+from remodl.types.utils import StandardCallbackDynamicParams
 
 
 def initialize_standard_callback_dynamic_params(

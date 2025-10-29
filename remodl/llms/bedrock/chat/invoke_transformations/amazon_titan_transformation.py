@@ -2,9 +2,9 @@ import re
 import types
 from typing import List, Optional, Union
 
-import litellm
-from litellm.llms.base_llm.chat.transformation import BaseConfig
-from litellm.llms.bedrock.chat.invoke_transformations.base_invoke_transformation import (
+import remodl
+from remodl.llms.base_llm.chat.transformation import BaseConfig
+from remodl.llms.bedrock.chat.invoke_transformations.base_invoke_transformation import (
     AmazonInvokeConfig,
 )
 
@@ -67,10 +67,10 @@ class AmazonTitanConfig(AmazonInvokeConfig, BaseConfig):
         stop: Union[List[str], str],
     ):
         """
-        filter params to fit the required provider format, drop those that don't fit if user sets `litellm.drop_params = True`.
+        filter params to fit the required provider format, drop those that don't fit if user sets `remodl.drop_params = True`.
         """
         filtered_stop = None
-        if "stop" in supported_params and litellm.drop_params:
+        if "stop" in supported_params and remodl.drop_params:
             if provider == "bedrock" and "amazon" in model:
                 filtered_stop = []
                 if isinstance(stop, list):

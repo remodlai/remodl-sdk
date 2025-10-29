@@ -1,14 +1,14 @@
 # What is this?
-## On Success events log cost to OpenMeter - https://github.com/BerriAI/litellm/issues/1268
+## On Success events log cost to OpenMeter - https://github.com/BerriAI/remodl/issues/1268
 
 import json
 import os
 
 import httpx
 
-import litellm
-from litellm.integrations.custom_logger import CustomLogger
-from litellm.llms.custom_httpx.http_handler import (
+import remodl
+from remodl.integrations.custom_logger import CustomLogger
+from remodl.llms.custom_httpx.http_handler import (
     HTTPHandler,
     get_async_httpx_client,
     httpxSpecialProvider,
@@ -50,14 +50,14 @@ class OpenMeterLogger(CustomLogger):
             raise Exception("Missing keys={} in environment.".format(missing_keys))
 
     def _common_logic(self, kwargs: dict, response_obj):
-        call_id = response_obj.get("id", kwargs.get("litellm_call_id"))
+        call_id = response_obj.get("id", kwargs.get("remodl_call_id"))
         dt = get_utc_datetime().isoformat()
         cost = kwargs.get("response_cost", None)
         model = kwargs.get("model")
         usage = {}
         if (
-            isinstance(response_obj, litellm.ModelResponse)
-            or isinstance(response_obj, litellm.EmbeddingResponse)
+            isinstance(response_obj, remodl.ModelResponse)
+            or isinstance(response_obj, remodl.EmbeddingResponse)
         ) and hasattr(response_obj, "usage"):
             usage = {
                 "prompt_tokens": response_obj["usage"].get("prompt_tokens", 0),
@@ -70,8 +70,8 @@ class OpenMeterLogger(CustomLogger):
         # If no user provided directly, try to get it from token user_id
         if user_param is None:
             # Check if user_id is available from the API key metadata
-            litellm_params = kwargs.get("litellm_params", {})
-            metadata = litellm_params.get("metadata", {})
+            remodl_params = kwargs.get("remodl_params", {})
+            metadata = remodl_params.get("metadata", {})
             user_api_key_user_id = metadata.get("user_api_key_user_id", None)
             
             if user_api_key_user_id is not None:
@@ -84,11 +84,11 @@ class OpenMeterLogger(CustomLogger):
 
         return {
             "specversion": "1.0",
-            "type": os.getenv("OPENMETER_EVENT_TYPE", "litellm_tokens"),
+            "type": os.getenv("OPENMETER_EVENT_TYPE", "remodl_tokens"),
             "id": call_id,
             "time": dt,
             "subject": subject,
-            "source": "litellm-proxy",
+            "source": "remodl-proxy",
             "data": {"model": model, "cost": cost, **usage},
         }
 

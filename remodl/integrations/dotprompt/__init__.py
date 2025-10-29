@@ -2,10 +2,10 @@ from typing import TYPE_CHECKING, Optional
 
 if TYPE_CHECKING:
     from .prompt_manager import PromptManager, PromptTemplate
-    from litellm.types.prompts.init_prompts import PromptLiteLLMParams, PromptSpec
-    from litellm.integrations.custom_prompt_management import CustomPromptManagement
+    from remodl.types.prompts.init_prompts import PromptLiteLLMParams, PromptSpec
+    from remodl.integrations.custom_prompt_management import CustomPromptManagement
 
-from litellm.types.prompts.init_prompts import SupportedPromptIntegrations
+from remodl.types.prompts.init_prompts import SupportedPromptIntegrations
 
 from .dotprompt_manager import DotpromptManager
 
@@ -21,26 +21,26 @@ def set_global_prompt_directory(directory: str) -> None:
     Args:
         directory: Path to directory containing .prompt files
     """
-    import litellm
+    import remodl
 
-    litellm.global_prompt_directory = directory  # type: ignore
+    remodl.global_prompt_directory = directory  # type: ignore
 
 
 def prompt_initializer(
-    litellm_params: "PromptLiteLLMParams", prompt_spec: "PromptSpec"
+    remodl_params: "PromptLiteLLMParams", prompt_spec: "PromptSpec"
 ) -> "CustomPromptManagement":
     """
     Initialize a prompt from a .prompt file.
     """
-    prompt_directory = getattr(litellm_params, "prompt_directory", None)
-    prompt_data = getattr(litellm_params, "prompt_data", None)
-    prompt_id = getattr(litellm_params, "prompt_id", None)
+    prompt_directory = getattr(remodl_params, "prompt_directory", None)
+    prompt_data = getattr(remodl_params, "prompt_data", None)
+    prompt_id = getattr(remodl_params, "prompt_id", None)
     if prompt_directory:
         raise ValueError(
             "Cannot set prompt_directory when working with prompt_initializer. Needs to be a specific dotprompt file"
         )
 
-    prompt_file = getattr(litellm_params, "prompt_file", None)
+    prompt_file = getattr(remodl_params, "prompt_file", None)
 
     try:
         dot_prompt_manager = DotpromptManager(

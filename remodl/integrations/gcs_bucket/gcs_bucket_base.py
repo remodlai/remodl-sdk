@@ -2,17 +2,17 @@ import json
 import os
 from typing import TYPE_CHECKING, Any, Dict, Optional, Tuple, Union
 
-from litellm._logging import verbose_logger
-from litellm.integrations.custom_batch_logger import CustomBatchLogger
-from litellm.llms.custom_httpx.http_handler import (
+from remodl._logging import verbose_logger
+from remodl.integrations.custom_batch_logger import CustomBatchLogger
+from remodl.llms.custom_httpx.http_handler import (
     get_async_httpx_client,
     httpxSpecialProvider,
 )
-from litellm.types.integrations.gcs_bucket import *
-from litellm.types.utils import StandardCallbackDynamicParams, StandardLoggingPayload
+from remodl.types.integrations.gcs_bucket import *
+from remodl.types.utils import StandardCallbackDynamicParams, StandardLoggingPayload
 
 if TYPE_CHECKING:
-    from litellm.llms.vertex_ai.vertex_llm_base import VertexBase
+    from remodl.llms.vertex_ai.vertex_llm_base import VertexBase
 else:
     VertexBase = Any
 IAM_AUTH_KEY = "IAM_AUTH"
@@ -35,7 +35,7 @@ class GCSBucketBase(CustomBatchLogger):
         service_account_json: Optional[str],
         vertex_instance: Optional[VertexBase] = None,
     ) -> Dict[str, str]:
-        from litellm import vertex_chat_completion
+        from remodl import vertex_chat_completion
 
         if vertex_instance is None:
             vertex_instance = vertex_chat_completion
@@ -69,7 +69,7 @@ class GCSBucketBase(CustomBatchLogger):
         """
         Construct request headers for GCS API calls
         """
-        from litellm import vertex_chat_completion
+        from remodl import vertex_chat_completion
 
         # Get project_id from environment if available, otherwise None
         # This helps support use of this library to auth to pull secrets 
@@ -188,7 +188,7 @@ class GCSBucketBase(CustomBatchLogger):
         This function is used to get the Vertex instance for the GCS Bucket Logger.
         It checks if the Vertex instance is already created and cached, if not it creates a new instance and caches it.
         """
-        from litellm.llms.vertex_ai.vertex_llm_base import VertexBase
+        from remodl.llms.vertex_ai.vertex_llm_base import VertexBase
 
         _in_memory_key = self._get_in_memory_key_for_vertex_instance(credentials)
         if _in_memory_key not in self.vertex_instances:

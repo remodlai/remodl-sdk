@@ -2,8 +2,8 @@ import json
 from abc import abstractmethod
 from typing import List, Optional, Union, cast
 
-import litellm
-from litellm.types.utils import (
+import remodl
+from remodl.types.utils import (
     Choices,
     Delta,
     GenericStreamingChunk,
@@ -84,7 +84,7 @@ class BaseModelResponseIterator:
     @staticmethod
     def _string_to_dict_parser(str_line: str) -> Optional[dict]:
         stripped_json_chunk: Optional[dict] = None
-        stripped_chunk = litellm.CustomStreamWrapper._strip_sse_data_from_chunk(
+        stripped_chunk = remodl.CustomStreamWrapper._strip_sse_data_from_chunk(
             str_line
         )
         try:

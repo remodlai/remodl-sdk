@@ -10,19 +10,19 @@ import asyncio
 from datetime import datetime
 from typing import List, Optional, cast
 
-import litellm
-from litellm._logging import print_verbose, verbose_logger
-from litellm.constants import DEFAULT_S3_BATCH_SIZE, DEFAULT_S3_FLUSH_INTERVAL_SECONDS
-from litellm.integrations.s3 import get_s3_object_key
-from litellm.litellm_core_utils.safe_json_dumps import safe_dumps
-from litellm.llms.bedrock.base_aws_llm import BaseAWSLLM
-from litellm.llms.custom_httpx.http_handler import (
+import remodl
+from remodl._logging import print_verbose, verbose_logger
+from remodl.constants import DEFAULT_S3_BATCH_SIZE, DEFAULT_S3_FLUSH_INTERVAL_SECONDS
+from remodl.integrations.s3 import get_s3_object_key
+from remodl.remodl_core_utils.safe_json_dumps import safe_dumps
+from remodl.llms.bedrock.base_aws_llm import BaseAWSLLM
+from remodl.llms.custom_httpx.http_handler import (
     _get_httpx_client,
     get_async_httpx_client,
     httpxSpecialProvider,
 )
-from litellm.types.integrations.s3_v2 import s3BatchLoggingElement
-from litellm.types.utils import StandardLoggingPayload
+from remodl.types.integrations.s3_v2 import s3BatchLoggingElement
+from remodl.types.utils import StandardLoggingPayload
 
 from .custom_batch_logger import CustomBatchLogger
 
@@ -53,7 +53,7 @@ class S3Logger(CustomBatchLogger, BaseAWSLLM):
     ):
         try:
             verbose_logger.debug(
-                f"in init s3 logger - s3_callback_params {litellm.s3_callback_params}"
+                f"in init s3 logger - s3_callback_params {remodl.s3_callback_params}"
             )
 
             # IMPORTANT: We use a concurrent limit of 1 to upload to s3
@@ -128,69 +128,69 @@ class S3Logger(CustomBatchLogger, BaseAWSLLM):
         """
         Initialize the s3 params for this logging callback
         """
-        litellm.s3_callback_params = litellm.s3_callback_params or {}
+        remodl.s3_callback_params = remodl.s3_callback_params or {}
         # read in .env variables - example os.environ/AWS_BUCKET_NAME
-        for key, value in litellm.s3_callback_params.items():
+        for key, value in remodl.s3_callback_params.items():
             if isinstance(value, str) and value.startswith("os.environ/"):
-                litellm.s3_callback_params[key] = litellm.get_secret(value)
+                remodl.s3_callback_params[key] = remodl.get_secret(value)
 
         self.s3_bucket_name = (
-            litellm.s3_callback_params.get("s3_bucket_name") or s3_bucket_name
+            remodl.s3_callback_params.get("s3_bucket_name") or s3_bucket_name
         )
         self.s3_region_name = (
-            litellm.s3_callback_params.get("s3_region_name") or s3_region_name
+            remodl.s3_callback_params.get("s3_region_name") or s3_region_name
         )
         self.s3_api_version = (
-            litellm.s3_callback_params.get("s3_api_version") or s3_api_version
+            remodl.s3_callback_params.get("s3_api_version") or s3_api_version
         )
         self.s3_use_ssl = (
-            litellm.s3_callback_params.get("s3_use_ssl", True) or s3_use_ssl
+            remodl.s3_callback_params.get("s3_use_ssl", True) or s3_use_ssl
         )
-        self.s3_verify = litellm.s3_callback_params.get("s3_verify") or s3_verify
+        self.s3_verify = remodl.s3_callback_params.get("s3_verify") or s3_verify
         self.s3_endpoint_url = (
-            litellm.s3_callback_params.get("s3_endpoint_url") or s3_endpoint_url
+            remodl.s3_callback_params.get("s3_endpoint_url") or s3_endpoint_url
         )
         self.s3_aws_access_key_id = (
-            litellm.s3_callback_params.get("s3_aws_access_key_id")
+            remodl.s3_callback_params.get("s3_aws_access_key_id")
             or s3_aws_access_key_id
         )
 
         self.s3_aws_secret_access_key = (
-            litellm.s3_callback_params.get("s3_aws_secret_access_key")
+            remodl.s3_callback_params.get("s3_aws_secret_access_key")
             or s3_aws_secret_access_key
         )
 
         self.s3_aws_session_token = (
-            litellm.s3_callback_params.get("s3_aws_session_token")
+            remodl.s3_callback_params.get("s3_aws_session_token")
             or s3_aws_session_token
         )
 
         self.s3_aws_session_name = (
-            litellm.s3_callback_params.get("s3_aws_session_name") or s3_aws_session_name
+            remodl.s3_callback_params.get("s3_aws_session_name") or s3_aws_session_name
         )
 
         self.s3_aws_profile_name = (
-            litellm.s3_callback_params.get("s3_aws_profile_name") or s3_aws_profile_name
+            remodl.s3_callback_params.get("s3_aws_profile_name") or s3_aws_profile_name
         )
 
         self.s3_aws_role_name = (
-            litellm.s3_callback_params.get("s3_aws_role_name") or s3_aws_role_name
+            remodl.s3_callback_params.get("s3_aws_role_name") or s3_aws_role_name
         )
 
         self.s3_aws_web_identity_token = (
-            litellm.s3_callback_params.get("s3_aws_web_identity_token")
+            remodl.s3_callback_params.get("s3_aws_web_identity_token")
             or s3_aws_web_identity_token
         )
 
         self.s3_aws_sts_endpoint = (
-            litellm.s3_callback_params.get("s3_aws_sts_endpoint") or s3_aws_sts_endpoint
+            remodl.s3_callback_params.get("s3_aws_sts_endpoint") or s3_aws_sts_endpoint
         )
 
-        self.s3_config = litellm.s3_callback_params.get("s3_config") or s3_config
-        self.s3_path = litellm.s3_callback_params.get("s3_path") or s3_path
-        # done reading litellm.s3_callback_params
+        self.s3_config = remodl.s3_callback_params.get("s3_config") or s3_config
+        self.s3_path = remodl.s3_callback_params.get("s3_path") or s3_path
+        # done reading remodl.s3_callback_params
         self.s3_use_team_prefix = (
-            bool(litellm.s3_callback_params.get("s3_use_team_prefix", False))
+            bool(remodl.s3_callback_params.get("s3_use_team_prefix", False))
             or s3_use_team_prefix
         )
 
@@ -253,7 +253,7 @@ class S3Logger(CustomBatchLogger, BaseAWSLLM):
         except ImportError:
             raise ImportError("Missing boto3 to call bedrock. Run 'pip install boto3'.")
         try:
-            from litellm.litellm_core_utils.asyncify import asyncify
+            from remodl.remodl_core_utils.asyncify import asyncify
 
             asyncified_get_credentials = asyncify(self.get_credentials)
             credentials = await asyncified_get_credentials(
@@ -368,14 +368,14 @@ class S3Logger(CustomBatchLogger, BaseAWSLLM):
 
         team_alias_prefix = ""
         if (
-            litellm.enable_preview_features
+            remodl.enable_preview_features
             and self.s3_use_team_prefix
             and team_alias is not None
         ):
             team_alias_prefix = f"{team_alias}/"
 
         s3_file_name = (
-            litellm.utils.get_logging_id(start_time, standard_logging_payload) or ""
+            remodl.utils.get_logging_id(start_time, standard_logging_payload) or ""
         )
         s3_object_key = get_s3_object_key(
             s3_path=cast(Optional[str], self.s3_path) or "",
@@ -492,7 +492,7 @@ class S3Logger(CustomBatchLogger, BaseAWSLLM):
             raise ImportError("Missing boto3 to call S3. Run 'pip install boto3'.")
 
         try:
-            from litellm.litellm_core_utils.asyncify import asyncify
+            from remodl.remodl_core_utils.asyncify import asyncify
 
             # Get AWS credentials
             asyncified_get_credentials = asyncify(self.get_credentials)

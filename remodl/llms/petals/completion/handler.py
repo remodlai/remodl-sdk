@@ -1,17 +1,17 @@
 import time
 from typing import Callable, Optional, Union
 
-import litellm
-from litellm.litellm_core_utils.prompt_templates.factory import (
+import remodl
+from remodl.remodl_core_utils.prompt_templates.factory import (
     custom_prompt,
     prompt_factory,
 )
-from litellm.llms.custom_httpx.http_handler import (
+from remodl.llms.custom_httpx.http_handler import (
     AsyncHTTPHandler,
     HTTPHandler,
     _get_httpx_client,
 )
-from litellm.utils import ModelResponse, Usage
+from remodl.utils import ModelResponse, Usage
 
 from ..common_utils import PetalsError
 
@@ -26,21 +26,21 @@ def completion(
     logging_obj,
     optional_params: dict,
     stream=False,
-    litellm_params=None,
+    remodl_params=None,
     logger_fn=None,
     client: Optional[Union[HTTPHandler, AsyncHTTPHandler]] = None,
 ):
     ## Load Config
-    config = litellm.PetalsConfig.get_config()
+    config = remodl.PetalsConfig.get_config()
     for k, v in config.items():
         if (
             k not in optional_params
         ):  # completion(top_k=3) > petals_config(top_k=3) <- allows for dynamic variables to be passed in
             optional_params[k] = v
 
-    if model in litellm.custom_prompt_dict:
+    if model in remodl.custom_prompt_dict:
         # check if the model has a registered custom prompt
-        model_prompt_details = litellm.custom_prompt_dict[model]
+        model_prompt_details = remodl.custom_prompt_dict[model]
         prompt = custom_prompt(
             role_dict=model_prompt_details["roles"],
             initial_prompt_value=model_prompt_details["initial_prompt_value"],

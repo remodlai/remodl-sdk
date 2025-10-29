@@ -7,9 +7,9 @@ from typing import Callable, List, Literal, Optional, Tuple, Union, cast
 
 import tiktoken
 
-import litellm
-from litellm import verbose_logger
-from litellm.constants import (
+import remodl
+from remodl import verbose_logger
+from remodl.constants import (
     DEFAULT_IMAGE_HEIGHT,
     DEFAULT_IMAGE_TOKEN_COUNT,
     DEFAULT_IMAGE_WIDTH,
@@ -18,15 +18,15 @@ from litellm.constants import (
     MAX_TILE_HEIGHT,
     MAX_TILE_WIDTH,
 )
-from litellm.litellm_core_utils.default_encoding import encoding as default_encoding
-from litellm.llms.custom_httpx.http_handler import _get_httpx_client
-from litellm.types.llms.openai import (
+from remodl.remodl_core_utils.default_encoding import encoding as default_encoding
+from remodl.llms.custom_httpx.http_handler import _get_httpx_client
+from remodl.types.llms.openai import (
     AllMessageValues,
     ChatCompletionNamedToolChoiceParam,
     ChatCompletionToolParam,
     OpenAIMessageContent,
 )
-from litellm.types.utils import Message, SelectTokenizerResponse
+from remodl.types.utils import Message, SelectTokenizerResponse
 
 
 def get_modified_max_tokens(
@@ -49,9 +49,9 @@ def get_modified_max_tokens(
             return None
 
         ## MODEL INFO
-        _model_info = litellm.get_model_info(model=model)
+        _model_info = remodl.get_model_info(model=model)
 
-        max_output_tokens = litellm.get_max_tokens(
+        max_output_tokens = remodl.get_max_tokens(
             model=base_model
         )  # assume min context window is 4k tokens
 
@@ -59,7 +59,7 @@ def get_modified_max_tokens(
         if max_output_tokens is None:
             return user_max_tokens
 
-        input_tokens = litellm.token_counter(model=base_model, messages=messages)
+        input_tokens = remodl.token_counter(model=base_model, messages=messages)
 
         # token buffer
         if buffer_perc is None:
@@ -93,13 +93,13 @@ def get_modified_max_tokens(
             user_max_tokens = max_output_tokens
 
         verbose_logger.debug(
-            f"litellm.litellm_core_utils.token_counter.py::get_modified_max_tokens() - user_max_tokens: {user_max_tokens}"
+            f"remodl.remodl_core_utils.token_counter.py::get_modified_max_tokens() - user_max_tokens: {user_max_tokens}"
         )
 
         return user_max_tokens
     except Exception as e:
         verbose_logger.debug(
-            "litellm.litellm_core_utils.token_counter.py::get_modified_max_tokens() - Error while checking max token limit: {}\nmodel={}, base_model={}".format(
+            "remodl.remodl_core_utils.token_counter.py::get_modified_max_tokens() - Error while checking max token limit: {}\nmodel={}, base_model={}".format(
                 str(e), model, base_model
             )
         )
@@ -309,7 +309,7 @@ class _MessageCountParams:
         model: str,
         custom_tokenizer: Optional[Union[dict, SelectTokenizerResponse]],
     ):
-        from litellm.utils import print_verbose
+        from remodl.utils import print_verbose
 
         actual_model = _fix_model_name(model)
         if actual_model == "gpt-3.5-turbo-0301":
@@ -317,10 +317,10 @@ class _MessageCountParams:
                 4  # every message follows <|start|>{role/name}\n{content}<|end|>\n
             )
             self.tokens_per_name = -1  # if there's a name, the role is omitted
-        elif actual_model in litellm.open_ai_chat_completion_models:
+        elif actual_model in remodl.open_ai_chat_completion_models:
             self.tokens_per_message = 3
             self.tokens_per_name = 1
-        elif actual_model in litellm.azure_llms:
+        elif actual_model in remodl.azure_llms:
             self.tokens_per_message = 3
             self.tokens_per_name = 1
         else:
@@ -360,7 +360,7 @@ def token_counter(
     Returns:
     int: The number of tokens in the text.
     """
-    from litellm.utils import convert_list_message_to_dict
+    from remodl.utils import convert_list_message_to_dict
 
     #########################################################
     # Flag to disable token counter
@@ -368,7 +368,7 @@ def token_counter(
     # exposing this flag to allow users to disable
     # it to confirm if this is indeed the issue
     #########################################################
-    if litellm.disable_token_counter is True:
+    if remodl.disable_token_counter is True:
         return 0
 
     verbose_logger.debug(
@@ -507,7 +507,7 @@ def _get_count_function(
 ) -> TokenCounterFunction:
     """
     Get the function to count tokens based on the model and custom tokenizer."""
-    from litellm.utils import _select_tokenizer, print_verbose
+    from remodl.utils import _select_tokenizer, print_verbose
 
     if model is not None or custom_tokenizer is not None:
         tokenizer_json = custom_tokenizer or _select_tokenizer(model)  # type: ignore
@@ -543,10 +543,10 @@ def _get_count_function(
 
 def _fix_model_name(model: str) -> str:
     """We normalize some model names to others"""
-    if model in litellm.azure_llms:
+    if model in remodl.azure_llms:
         # azure llms use gpt-35-turbo instead of gpt-3.5-turbo 🙃
         return model.replace("-35", "-3.5")
-    elif model in litellm.open_ai_chat_completion_models:
+    elif model in remodl.open_ai_chat_completion_models:
         return model  # type: ignore
     else:
         return "gpt-3.5-turbo"

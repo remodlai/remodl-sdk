@@ -10,14 +10,14 @@ from typing import (
     cast,
 )
 
-import litellm
-from litellm.llms.anthropic.experimental_pass_through.adapters.transformation import (
+import remodl
+from remodl.llms.anthropic.experimental_pass_through.adapters.transformation import (
     AnthropicAdapter,
 )
-from litellm.types.llms.anthropic_messages.anthropic_response import (
+from remodl.types.llms.anthropic_messages.anthropic_response import (
     AnthropicMessagesResponse,
 )
-from litellm.types.utils import ModelResponse
+from remodl.types.utils import ModelResponse
 
 if TYPE_CHECKING:
     pass
@@ -47,8 +47,8 @@ class LiteLLMMessagesToCompletionTransformationHandler:
         top_p: Optional[float] = None,
         extra_kwargs: Optional[Dict[str, Any]] = None,
     ) -> Dict[str, Any]:
-        """Prepare kwargs for litellm.completion/acompletion"""
-        from litellm.litellm_core_utils.litellm_logging import (
+        """Prepare kwargs for remodl.completion/acompletion"""
+        from remodl.remodl_core_utils.remodl_logging import (
             Logging as LiteLLMLoggingObject,
         )
 
@@ -96,11 +96,11 @@ class LiteLLMMessagesToCompletionTransformationHandler:
         extra_kwargs = extra_kwargs or {}
         for key, value in extra_kwargs.items():
             if (
-                key == "litellm_logging_obj"
+                key == "remodl_logging_obj"
                 and value is not None
                 and isinstance(value, LiteLLMLoggingObject)
             ):
-                from litellm.types.utils import CallTypes
+                from remodl.types.utils import CallTypes
 
                 setattr(value, "call_type", CallTypes.completion.value)
                 setattr(
@@ -153,7 +153,7 @@ class LiteLLMMessagesToCompletionTransformationHandler:
         )
 
         try:
-            completion_response = await litellm.acompletion(**completion_kwargs)
+            completion_response = await remodl.acompletion(**completion_kwargs)
 
             if stream:
                 transformed_stream = (
@@ -176,7 +176,7 @@ class LiteLLMMessagesToCompletionTransformationHandler:
                 raise ValueError("Failed to transform response to Anthropic format")
         except Exception as e:  # noqa: BLE001
             raise ValueError(
-                f"Error calling litellm.acompletion for non-Anthropic model: {str(e)}"
+                f"Error calling remodl.acompletion for non-Anthropic model: {str(e)}"
             )
 
     @staticmethod
@@ -240,7 +240,7 @@ class LiteLLMMessagesToCompletionTransformationHandler:
         )
 
         try:
-            completion_response = litellm.completion(**completion_kwargs)
+            completion_response = remodl.completion(**completion_kwargs)
 
             if stream:
                 transformed_stream = (
@@ -263,5 +263,5 @@ class LiteLLMMessagesToCompletionTransformationHandler:
                 raise ValueError("Failed to transform response to Anthropic format")
         except Exception as e:  # noqa: BLE001
             raise ValueError(
-                f"Error calling litellm.completion for non-Anthropic model: {str(e)}"
+                f"Error calling remodl.completion for non-Anthropic model: {str(e)}"
             )

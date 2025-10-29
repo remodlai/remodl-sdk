@@ -1,16 +1,16 @@
 from enum import Enum
 from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple, Union
 
-import litellm
-from litellm._logging import verbose_router_logger
-from litellm.integrations.custom_logger import CustomLogger
-from litellm.router_utils.add_retry_fallback_headers import (
+import remodl
+from remodl._logging import verbose_router_logger
+from remodl.integrations.custom_logger import CustomLogger
+from remodl.router_utils.add_retry_fallback_headers import (
     add_fallback_headers_to_response,
 )
-from litellm.types.router import LiteLLMParamsTypedDict
+from remodl.types.router import LiteLLMParamsTypedDict
 
 if TYPE_CHECKING:
-    from litellm.router import Router as _Router
+    from remodl.router import Router as _Router
 
     LitellmRouter = _Router
 else:
@@ -30,7 +30,7 @@ def _check_stripped_model_group(model_group: str, fallback_key: str) -> bool:
     Returns:
     - True if the stripped model group == fallback_key
     """
-    for provider in litellm.provider_list:
+    for provider in remodl.provider_list:
         if isinstance(provider, Enum):
             _provider = provider.value
         else:
@@ -84,7 +84,7 @@ def get_fallback_model_group(
 
 async def run_async_fallback(
     *args: Tuple[Any],
-    litellm_router: LitellmRouter,
+    remodl_router: LitellmRouter,
     fallback_model_group: List[str],
     original_model_group: str,
     original_exception: Exception,
@@ -100,7 +100,7 @@ async def run_async_fallback(
     If all fallback model groups fail, it raises the most recent exception.
 
     Args:
-        litellm_router: The litellm router instance.
+        remodl_router: The remodl router instance.
         *args: Positional arguments.
         fallback_model_group: List[str] of fallback model groups. example: ["gpt-4", "gpt-3.5-turbo"]
         original_model_group: The original model group. example: "gpt-3.5-turbo"
@@ -124,7 +124,7 @@ async def run_async_fallback(
             continue
         try:
             # LOGGING
-            kwargs = litellm_router.log_retry(kwargs=kwargs, e=original_exception)
+            kwargs = remodl_router.log_retry(kwargs=kwargs, e=original_exception)
             verbose_router_logger.info(f"Falling back to model_group = {mg}")
             if isinstance(mg, str):
                 kwargs["model"] = mg
@@ -136,7 +136,7 @@ async def run_async_fallback(
             fallback_depth = fallback_depth + 1
             kwargs["fallback_depth"] = fallback_depth
             kwargs["max_fallbacks"] = max_fallbacks
-            response = await litellm_router.async_function_with_fallbacks(
+            response = await remodl_router.async_function_with_fallbacks(
                 *args, **kwargs
             )
             verbose_router_logger.info("Successful fallback b/w models.")
@@ -177,17 +177,17 @@ async def log_success_fallback_event(
     Note:
         Errors during logging are caught and reported but do not interrupt the process.
     """
-    from litellm.litellm_core_utils.litellm_logging import (
+    from remodl.remodl_core_utils.remodl_logging import (
         _init_custom_logger_compatible_class,
     )
 
-    for _callback in litellm.callbacks:
+    for _callback in remodl.callbacks:
         if isinstance(_callback, CustomLogger) or (
-            _callback in litellm._known_custom_logger_compatible_callbacks
+            _callback in remodl._known_custom_logger_compatible_callbacks
         ):
             try:
                 _callback_custom_logger: Optional[CustomLogger] = None
-                if _callback in litellm._known_custom_logger_compatible_callbacks:
+                if _callback in remodl._known_custom_logger_compatible_callbacks:
                     _callback_custom_logger = _init_custom_logger_compatible_class(
                         logging_integration=_callback,  # type: ignore
                         llm_router=None,
@@ -234,17 +234,17 @@ async def log_failure_fallback_event(
     Note:
         Errors during logging are caught and reported but do not interrupt the process.
     """
-    from litellm.litellm_core_utils.litellm_logging import (
+    from remodl.remodl_core_utils.remodl_logging import (
         _init_custom_logger_compatible_class,
     )
 
-    for _callback in litellm.callbacks:
+    for _callback in remodl.callbacks:
         if isinstance(_callback, CustomLogger) or (
-            _callback in litellm._known_custom_logger_compatible_callbacks
+            _callback in remodl._known_custom_logger_compatible_callbacks
         ):
             try:
                 _callback_custom_logger: Optional[CustomLogger] = None
-                if _callback in litellm._known_custom_logger_compatible_callbacks:
+                if _callback in remodl._known_custom_logger_compatible_callbacks:
                     _callback_custom_logger = _init_custom_logger_compatible_class(
                         logging_integration=_callback,  # type: ignore
                         llm_router=None,

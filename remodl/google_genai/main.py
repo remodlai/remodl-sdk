@@ -6,21 +6,21 @@ from typing import TYPE_CHECKING, Any, ClassVar, Dict, Iterator, Optional, Union
 import httpx
 from pydantic import BaseModel, ConfigDict
 
-import litellm
-from litellm.constants import request_timeout
+import remodl
+from remodl.constants import request_timeout
 
 # Import the adapter for fallback to completion format
-from litellm.google_genai.adapters.handler import GenerateContentToCompletionHandler
-from litellm.litellm_core_utils.litellm_logging import Logging as LiteLLMLoggingObj
-from litellm.llms.base_llm.google_genai.transformation import (
+from remodl.google_genai.adapters.handler import GenerateContentToCompletionHandler
+from remodl.remodl_core_utils.remodl_logging import Logging as LiteLLMLoggingObj
+from remodl.llms.base_llm.google_genai.transformation import (
     BaseGoogleGenAIGenerateContentConfig,
 )
-from litellm.llms.custom_httpx.llm_http_handler import BaseLLMHTTPHandler
-from litellm.types.router import GenericLiteLLMParams
-from litellm.utils import ProviderConfigManager, client
+from remodl.llms.custom_httpx.llm_http_handler import BaseLLMHTTPHandler
+from remodl.types.router import GenericLiteLLMParams
+from remodl.utils import ProviderConfigManager, client
 
 if TYPE_CHECKING:
-    from litellm.types.google_genai.main import (
+    from remodl.types.google_genai.main import (
         GenerateContentConfigDict,
         GenerateContentContentListUnionDict,
         GenerateContentResponse,
@@ -49,9 +49,9 @@ class GenerateContentSetupResult(BaseModel):
     custom_llm_provider: str
     generate_content_provider_config: Optional[BaseGoogleGenAIGenerateContentConfig]
     generate_content_config_dict: Dict[str, Any]
-    litellm_params: GenericLiteLLMParams
-    litellm_logging_obj: LiteLLMLoggingObj
-    litellm_call_id: Optional[str]
+    remodl_params: GenericLiteLLMParams
+    remodl_logging_obj: LiteLLMLoggingObj
+    remodl_call_id: Optional[str]
 
 
 class GenerateContentHelper:
@@ -102,19 +102,19 @@ class GenerateContentHelper:
         Returns:
             GenerateContentSetupResult containing all setup information
         """
-        litellm_logging_obj: Optional[LiteLLMLoggingObj] = kwargs.get(
-            "litellm_logging_obj"
+        remodl_logging_obj: Optional[LiteLLMLoggingObj] = kwargs.get(
+            "remodl_logging_obj"
         )
-        litellm_call_id: Optional[str] = kwargs.get("litellm_call_id", None)
+        remodl_call_id: Optional[str] = kwargs.get("remodl_call_id", None)
 
         # get llm provider logic
-        litellm_params = GenericLiteLLMParams(**kwargs)
+        remodl_params = GenericLiteLLMParams(**kwargs)
 
         ## MOCK RESPONSE LOGIC (only for non-streaming)
         if (
             not kwargs.get("stream", False)
-            and litellm_params.mock_response
-            and isinstance(litellm_params.mock_response, str)
+            and remodl_params.mock_response
+            and isinstance(remodl_params.mock_response, str)
         ):
             raise ValueError("Mock response should be handled by caller")
 
@@ -123,11 +123,11 @@ class GenerateContentHelper:
             custom_llm_provider,
             dynamic_api_key,
             dynamic_api_base,
-        ) = litellm.get_llm_provider(
+        ) = remodl.get_llm_provider(
             model=model,
             custom_llm_provider=custom_llm_provider,
-            api_base=litellm_params.api_base,
-            api_key=litellm_params.api_key,
+            api_base=remodl_params.api_base,
+            api_key=remodl_params.api_key,
         )
 
         # get provider config
@@ -135,23 +135,23 @@ class GenerateContentHelper:
             BaseGoogleGenAIGenerateContentConfig
         ] = ProviderConfigManager.get_provider_google_genai_generate_content_config(
             model=model,
-            provider=litellm.LlmProviders(custom_llm_provider),
+            provider=remodl.LlmProviders(custom_llm_provider),
         )
 
         if generate_content_provider_config is None:
             # Use adapter to transform to completion format when provider config is None
             # Signal that we should use the adapter by returning special result
-            if litellm_logging_obj is None:
-                raise ValueError("litellm_logging_obj is required, but got None")
+            if remodl_logging_obj is None:
+                raise ValueError("remodl_logging_obj is required, but got None")
             return GenerateContentSetupResult(
                 model=model,
                 custom_llm_provider=custom_llm_provider,
                 request_body={},  # Will be handled by adapter
                 generate_content_provider_config=None,  # type: ignore
                 generate_content_config_dict=dict(config or {}),
-                litellm_params=litellm_params,
-                litellm_logging_obj=litellm_logging_obj,
-                litellm_call_id=litellm_call_id,
+                remodl_params=remodl_params,
+                remodl_logging_obj=remodl_logging_obj,
+                remodl_call_id=remodl_call_id,
             )
 
         #########################################################################################
@@ -174,14 +174,14 @@ class GenerateContentHelper:
         )
 
         # Pre Call logging
-        if litellm_logging_obj is None:
-            raise ValueError("litellm_logging_obj is required, but got None")
+        if remodl_logging_obj is None:
+            raise ValueError("remodl_logging_obj is required, but got None")
 
-        litellm_logging_obj.update_environment_variables(
+        remodl_logging_obj.update_environment_variables(
             model=model,
             optional_params=dict(generate_content_config_dict),
-            litellm_params={
-                "litellm_call_id": litellm_call_id,
+            remodl_params={
+                "remodl_call_id": remodl_call_id,
             },
             custom_llm_provider=custom_llm_provider,
         )
@@ -192,9 +192,9 @@ class GenerateContentHelper:
             request_body=request_body,
             generate_content_provider_config=generate_content_provider_config,
             generate_content_config_dict=generate_content_config_dict,
-            litellm_params=litellm_params,
-            litellm_logging_obj=litellm_logging_obj,
-            litellm_call_id=litellm_call_id,
+            remodl_params=remodl_params,
+            remodl_logging_obj=remodl_logging_obj,
+            remodl_call_id=remodl_call_id,
         )
 
 
@@ -227,7 +227,7 @@ async def agenerate_content(
             config = kwargs.pop("generationConfig")
         # get custom llm provider so we can use this for mapping exceptions
         if custom_llm_provider is None:
-            _, custom_llm_provider, _, _ = litellm.get_llm_provider(
+            _, custom_llm_provider, _, _ = remodl.get_llm_provider(
                 model=model,
                 custom_llm_provider=custom_llm_provider,
             )
@@ -257,7 +257,7 @@ async def agenerate_content(
 
         return response
     except Exception as e:
-        raise litellm.exception_type(
+        raise remodl.exception_type(
             model=model,
             custom_llm_provider=custom_llm_provider,
             original_exception=e,
@@ -293,12 +293,12 @@ def generate_content(
         if "generationConfig" in kwargs and config is None:
             config = kwargs.pop("generationConfig")
         # Check for mock response first
-        litellm_params = GenericLiteLLMParams(**kwargs)
-        if litellm_params.mock_response and isinstance(
-            litellm_params.mock_response, str
+        remodl_params = GenericLiteLLMParams(**kwargs)
+        if remodl_params.mock_response and isinstance(
+            remodl_params.mock_response, str
         ):
             return GenerateContentHelper.mock_generate_content_response(
-                mock_response=litellm_params.mock_response
+                mock_response=remodl_params.mock_response
             )
 
         # Setup the call
@@ -320,7 +320,7 @@ def generate_content(
                 config=setup_result.generate_content_config_dict,
                 tools=tools,
                 _is_async=_is_async,
-                litellm_params=setup_result.litellm_params,
+                remodl_params=setup_result.remodl_params,
                 **kwargs,
             )
 
@@ -332,19 +332,19 @@ def generate_content(
             generate_content_provider_config=setup_result.generate_content_provider_config,
             generate_content_config_dict=setup_result.generate_content_config_dict,
             custom_llm_provider=setup_result.custom_llm_provider,
-            litellm_params=setup_result.litellm_params,
-            logging_obj=setup_result.litellm_logging_obj,
+            remodl_params=setup_result.remodl_params,
+            logging_obj=setup_result.remodl_logging_obj,
             extra_headers=extra_headers,
             extra_body=extra_body,
             timeout=timeout or request_timeout,
             _is_async=_is_async,
             client=kwargs.get("client"),
-            litellm_metadata=kwargs.get("litellm_metadata", {}),
+            remodl_metadata=kwargs.get("remodl_metadata", {}),
         )
 
         return response
     except Exception as e:
-        raise litellm.exception_type(
+        raise remodl.exception_type(
             model=model,
             custom_llm_provider=custom_llm_provider,
             original_exception=e,
@@ -381,7 +381,7 @@ async def agenerate_content_stream(
             config = kwargs.pop("generationConfig")
         # get custom llm provider so we can use this for mapping exceptions
         if custom_llm_provider is None:
-            _, custom_llm_provider, _, _ = litellm.get_llm_provider(
+            _, custom_llm_provider, _, _ = remodl.get_llm_provider(
                 model=model, api_base=local_vars.get("base_url", None)
             )
 
@@ -403,7 +403,7 @@ async def agenerate_content_stream(
                     model=model,
                     contents=contents,  # type: ignore
                     config=setup_result.generate_content_config_dict,
-                    litellm_params=setup_result.litellm_params,
+                    remodl_params=setup_result.remodl_params,
                     tools=tools,
                     stream=True,
                     **kwargs,
@@ -419,19 +419,19 @@ async def agenerate_content_stream(
             generate_content_config_dict=setup_result.generate_content_config_dict,
             tools=tools,
             custom_llm_provider=setup_result.custom_llm_provider,
-            litellm_params=setup_result.litellm_params,
-            logging_obj=setup_result.litellm_logging_obj,
+            remodl_params=setup_result.remodl_params,
+            logging_obj=setup_result.remodl_logging_obj,
             extra_headers=extra_headers,
             extra_body=extra_body,
             timeout=timeout or request_timeout,
             _is_async=True,
             client=kwargs.get("client"),
             stream=True,
-            litellm_metadata=kwargs.get("litellm_metadata", {}),
+            remodl_metadata=kwargs.get("remodl_metadata", {}),
         )
 
     except Exception as e:
-        raise litellm.exception_type(
+        raise remodl.exception_type(
             model=model,
             custom_llm_provider=custom_llm_provider,
             original_exception=e,
@@ -485,7 +485,7 @@ def generate_content_stream(
                 contents=contents,  # type: ignore
                 config=setup_result.generate_content_config_dict,
                 _is_async=_is_async,
-                litellm_params=setup_result.litellm_params,
+                remodl_params=setup_result.remodl_params,
                 stream=True,
                 **kwargs,
             )
@@ -498,19 +498,19 @@ def generate_content_stream(
             generate_content_config_dict=setup_result.generate_content_config_dict,
             tools=tools,
             custom_llm_provider=setup_result.custom_llm_provider,
-            litellm_params=setup_result.litellm_params,
-            logging_obj=setup_result.litellm_logging_obj,
+            remodl_params=setup_result.remodl_params,
+            logging_obj=setup_result.remodl_logging_obj,
             extra_headers=extra_headers,
             extra_body=extra_body,
             timeout=timeout or request_timeout,
             _is_async=_is_async,
             client=kwargs.get("client"),
             stream=True,
-            litellm_metadata=kwargs.get("litellm_metadata", {}),
+            remodl_metadata=kwargs.get("remodl_metadata", {}),
         )
 
     except Exception as e:
-        raise litellm.exception_type(
+        raise remodl.exception_type(
             model=model,
             custom_llm_provider=custom_llm_provider,
             original_exception=e,

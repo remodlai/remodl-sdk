@@ -1,7 +1,7 @@
 from typing import List, Optional, Tuple, Union, Dict, Literal
 
-from litellm.secret_managers.main import get_secret_str
-from litellm.types.llms.openai import (
+from remodl.secret_managers.main import get_secret_str
+from remodl.types.llms.openai import (
     AllMessageValues,
 )
 
@@ -81,7 +81,7 @@ class GradientAIConfig(OpenAILikeChatConfig):
                              model: str,
                              messages: List[AllMessageValues],
                              optional_params: dict,
-                             litellm_params: dict,
+                             remodl_params: dict,
                              api_key: Optional[str] = None,
                              api_base: Optional[str] = None):
         api_key = api_key or get_secret_str("GRADIENT_AI_API_KEY")
@@ -99,7 +99,7 @@ class GradientAIConfig(OpenAILikeChatConfig):
         api_key: Optional[str],
         model: str,
         optional_params: dict,
-        litellm_params: dict,
+        remodl_params: dict,
         stream: Optional[bool] = None,
     ) -> str:
         gradient_ai_endpoint = get_secret_str("GRADIENT_AI_AGENT_ENDPOINT")
@@ -138,7 +138,7 @@ class GradientAIConfig(OpenAILikeChatConfig):
             if param in supported_openai_params:
                 optional_params[param] = value
             elif not drop_params:
-                from litellm.utils import UnsupportedParamsError
+                from remodl.utils import UnsupportedParamsError
                 raise UnsupportedParamsError(
                     status_code=400,
                     message=f"GradientAI does not support parameter '{param}'. To drop unsupported params, set `drop_params=True`."

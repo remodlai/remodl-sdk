@@ -1,7 +1,7 @@
-from litellm.llms.anthropic.chat.guardrail_translation.handler import (
+from remodl.llms.anthropic.chat.guardrail_translation.handler import (
     AnthropicMessagesHandler,
 )
-from litellm.types.utils import CallTypes
+from remodl.types.utils import CallTypes
 
 guardrail_translation_mappings = {
     CallTypes.anthropic_messages: AnthropicMessagesHandler,

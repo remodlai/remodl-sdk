@@ -1,7 +1,7 @@
 from typing import Any
 
-import litellm
-from litellm.types.utils import ImageResponse
+import remodl
+from remodl.types.utils import ImageResponse
 
 
 def cost_calculator(
@@ -11,9 +11,9 @@ def cost_calculator(
     """
     AI/ML flux image generation cost calculator
     """
-    _model_info = litellm.get_model_info(
+    _model_info = remodl.get_model_info(
         model=model,
-        custom_llm_provider=litellm.LlmProviders.AIML.value,
+        custom_llm_provider=remodl.LlmProviders.AIML.value,
     )
     output_cost_per_image: float = _model_info.get("output_cost_per_image") or 0.0
     num_images: int = 0

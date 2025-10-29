@@ -1,25 +1,25 @@
 import json
 import time
-from litellm._uuid import uuid
+from remodl._uuid import uuid
 from typing import TYPE_CHECKING, Any, AsyncIterator, Iterator, List, Optional, Union
 
 from httpx._models import Headers, Response
 
-import litellm
-from litellm._logging import verbose_proxy_logger
-from litellm.litellm_core_utils.prompt_templates.common_utils import (
+import remodl
+from remodl._logging import verbose_proxy_logger
+from remodl.remodl_core_utils.prompt_templates.common_utils import (
     get_str_from_messages,
 )
-from litellm.litellm_core_utils.prompt_templates.factory import (
+from remodl.remodl_core_utils.prompt_templates.factory import (
     convert_to_ollama_image,
     custom_prompt,
     ollama_pt,
 )
-from litellm.llms.base_llm.base_model_iterator import BaseModelResponseIterator
-from litellm.llms.base_llm.chat.transformation import BaseConfig, BaseLLMException
-from litellm.secret_managers.main import get_secret_str
-from litellm.types.llms.openai import AllMessageValues, ChatCompletionUsageBlock
-from litellm.types.utils import (
+from remodl.llms.base_llm.base_model_iterator import BaseModelResponseIterator
+from remodl.llms.base_llm.chat.transformation import BaseConfig, BaseLLMException
+from remodl.secret_managers.main import get_secret_str
+from remodl.types.llms.openai import AllMessageValues, ChatCompletionUsageBlock
+from remodl.types.utils import (
     Delta,
     GenericStreamingChunk,
     ModelInfoBase,
@@ -32,7 +32,7 @@ from litellm.types.utils import (
 from ..common_utils import OllamaError, _convert_image
 
 if TYPE_CHECKING:
-    from litellm.litellm_core_utils.litellm_logging import Logging as _LiteLLMLoggingObj
+    from remodl.remodl_core_utils.remodl_logging import Logging as _LiteLLMLoggingObj
 
     LiteLLMLoggingObj = _LiteLLMLoggingObj
 else:
@@ -210,16 +210,16 @@ class OllamaConfig(BaseConfig):
 
     @staticmethod
     def get_api_key() -> Optional[str]:
-        """Get API key from environment variables or litellm configuration"""
+        """Get API key from environment variables or remodl configuration"""
         import os
 
-        import litellm
-        from litellm.secret_managers.main import get_secret_str
+        import remodl
+        from remodl.secret_managers.main import get_secret_str
 
         return (
             os.environ.get("OLLAMA_API_KEY")
-            or litellm.api_key
-            or litellm.openai_key
+            or remodl.api_key
+            or remodl.openai_key
             or get_secret_str("OLLAMA_API_KEY")
         )
 
@@ -236,7 +236,7 @@ class OllamaConfig(BaseConfig):
         headers = {"Authorization": f"Bearer {api_key}"} if api_key else {}
 
         try:
-            response = litellm.module_level_client.post(
+            response = remodl.module_level_client.post(
                 url=f"{api_base}/api/show",
                 json={"name": model},
                 headers=headers,
@@ -252,7 +252,7 @@ class OllamaConfig(BaseConfig):
 
         return ModelInfoBase(
             key=model,
-            litellm_provider="ollama",
+            remodl_provider="ollama",
             mode="chat",
             supports_function_calling=self._supports_function_calling(model_info),
             input_cost_per_token=0.0,
@@ -278,12 +278,12 @@ class OllamaConfig(BaseConfig):
         request_data: dict,
         messages: List[AllMessageValues],
         optional_params: dict,
-        litellm_params: dict,
+        remodl_params: dict,
         encoding: str,
         api_key: Optional[str] = None,
         json_mode: Optional[bool] = None,
     ) -> ModelResponse:
-        from litellm.litellm_core_utils.prompt_templates.common_utils import (
+        from remodl.remodl_core_utils.prompt_templates.common_utils import (
             _parse_content_for_reasoning,
         )
 
@@ -296,7 +296,7 @@ class OllamaConfig(BaseConfig):
 
             if not response_text or not response_text.strip():
                 # Handle empty response gracefully - set empty content
-                message = litellm.Message(content="")
+                message = remodl.Message(content="")
                 model_response.choices[0].message = message  # type: ignore
                 model_response.choices[0].finish_reason = "stop"
             else:
@@ -311,7 +311,7 @@ class OllamaConfig(BaseConfig):
                     ):
                         # Handle as function call (original behavior)
                         function_call = response_content
-                        message = litellm.Message(
+                        message = remodl.Message(
                             content=None,
                             tool_calls=[
                                 {
@@ -330,7 +330,7 @@ class OllamaConfig(BaseConfig):
                         model_response.choices[0].finish_reason = "tool_calls"
                     else:
                         # Handle as regular JSON (new behavior)
-                        message = litellm.Message(
+                        message = remodl.Message(
                             content=json.dumps(response_content),
                         )
                         model_response.choices[0].message = message  # type: ignore
@@ -344,7 +344,7 @@ class OllamaConfig(BaseConfig):
                         reasoning_content, content = _parse_content_for_reasoning(
                             response_text
                         )
-                    message = litellm.Message(
+                    message = remodl.Message(
                         content=content, reasoning_content=reasoning_content
                     )
                     model_response.choices[0].message = message  # type: ignore
@@ -371,7 +371,7 @@ class OllamaConfig(BaseConfig):
         setattr(
             model_response,
             "usage",
-            litellm.Usage(
+            remodl.Usage(
                 prompt_tokens=prompt_tokens,
                 completion_tokens=completion_tokens,
                 total_tokens=prompt_tokens + completion_tokens,
@@ -384,14 +384,14 @@ class OllamaConfig(BaseConfig):
         model: str,
         messages: List[AllMessageValues],
         optional_params: dict,
-        litellm_params: dict,
+        remodl_params: dict,
         headers: dict,
     ) -> dict:
         custom_prompt_dict = (
-            litellm_params.get("custom_prompt_dict") or litellm.custom_prompt_dict
+            remodl_params.get("custom_prompt_dict") or remodl.custom_prompt_dict
         )
 
-        text_completion_request = litellm_params.get("text_completion")
+        text_completion_request = remodl_params.get("text_completion")
         if model in custom_prompt_dict:
             # check if the model has a registered custom prompt
             model_prompt_details = custom_prompt_dict[model]
@@ -441,7 +441,7 @@ class OllamaConfig(BaseConfig):
         model: str,
         messages: List[AllMessageValues],
         optional_params: dict,
-        litellm_params: dict,
+        remodl_params: dict,
         api_key: Optional[str] = None,
         api_base: Optional[str] = None,
     ) -> dict:
@@ -453,7 +453,7 @@ class OllamaConfig(BaseConfig):
         api_key: Optional[str],
         model: str,
         optional_params: dict,
-        litellm_params: dict,
+        remodl_params: dict,
         stream: Optional[bool] = None,
     ) -> str:
         """

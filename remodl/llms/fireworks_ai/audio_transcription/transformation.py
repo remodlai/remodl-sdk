@@ -1,6 +1,6 @@
 from typing import List
 
-from litellm.types.llms.openai import OpenAIAudioTranscriptionOptionalParams
+from remodl.types.llms.openai import OpenAIAudioTranscriptionOptionalParams
 
 from ...openai.transcriptions.whisper_transformation import (
     OpenAIWhisperAudioTranscriptionConfig,

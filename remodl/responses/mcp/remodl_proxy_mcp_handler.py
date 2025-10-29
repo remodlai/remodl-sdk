@@ -1,16 +1,16 @@
 from typing import TYPE_CHECKING, Any, Dict, Iterable, List, Optional, Tuple, Union
 
-from litellm._logging import verbose_logger
-from litellm.responses.main import aresponses
-from litellm.responses.streaming_iterator import BaseResponsesAPIStreamingIterator
-from litellm.types.llms.openai import ResponsesAPIResponse, ToolParam
+from remodl._logging import verbose_logger
+from remodl.responses.main import aresponses
+from remodl.responses.streaming_iterator import BaseResponsesAPIStreamingIterator
+from remodl.types.llms.openai import ResponsesAPIResponse, ToolParam
 
 if TYPE_CHECKING:
     from mcp.types import Tool as MCPTool
 else:
     MCPTool = Any
 
-LITELLM_PROXY_MCP_SERVER_URL = "litellm_proxy"
+LITELLM_PROXY_MCP_SERVER_URL = "remodl_proxy"
 LITELLM_PROXY_MCP_SERVER_URL_PREFIX = f"{LITELLM_PROXY_MCP_SERVER_URL}/mcp/"
 
 
@@ -18,13 +18,13 @@ class LiteLLM_Proxy_MCP_Handler:
     """
     Helper class with static methods for MCP integration with Responses API.
 
-    This handles when a user passes mcp server_url="litellm_proxy" in their tools.
+    This handles when a user passes mcp server_url="remodl_proxy" in their tools.
     """
 
     @staticmethod
-    def _should_use_litellm_mcp_gateway(tools: Optional[Iterable[ToolParam]]) -> bool:
+    def _should_use_remodl_mcp_gateway(tools: Optional[Iterable[ToolParam]]) -> bool:
         """
-        Returns True if the user passed a MCP tool with server_url="litellm_proxy"
+        Returns True if the user passed a MCP tool with server_url="remodl_proxy"
         """
         if tools:
             for tool in tools:
@@ -41,12 +41,12 @@ class LiteLLM_Proxy_MCP_Handler:
         tools: Optional[Iterable[ToolParam]],
     ) -> Tuple[List[ToolParam], List[Any]]:
         """
-        Parse tools and separate MCP tools with litellm_proxy from other tools.
+        Parse tools and separate MCP tools with remodl_proxy from other tools.
 
         Returns:
-            Tuple of (mcp_tools_with_litellm_proxy, other_tools)
+            Tuple of (mcp_tools_with_remodl_proxy, other_tools)
         """
-        mcp_tools_with_litellm_proxy: List[ToolParam] = []
+        mcp_tools_with_remodl_proxy: List[ToolParam] = []
         other_tools: List[Any] = []
 
         if tools:
@@ -56,34 +56,34 @@ class LiteLLM_Proxy_MCP_Handler:
                     if isinstance(server_url, str) and server_url.startswith(
                         LITELLM_PROXY_MCP_SERVER_URL
                     ):
-                        mcp_tools_with_litellm_proxy.append(tool)
+                        mcp_tools_with_remodl_proxy.append(tool)
                     else:
                         other_tools.append(tool)
                 else:
                     other_tools.append(tool)
 
-        return mcp_tools_with_litellm_proxy, other_tools
+        return mcp_tools_with_remodl_proxy, other_tools
 
     @staticmethod
     async def _get_mcp_tools_from_manager(
         user_api_key_auth: Any,
-        mcp_tools_with_litellm_proxy: Optional[Iterable[ToolParam]],
+        mcp_tools_with_remodl_proxy: Optional[Iterable[ToolParam]],
     ) -> List[MCPTool]:
         """
         Get available tools from the MCP server manager.
 
         Args:
             user_api_key_auth: User authentication info for access control
-            mcp_tools_with_litellm_proxy: ToolParam objects with server_url starting with "litellm_proxy"
+            mcp_tools_with_remodl_proxy: ToolParam objects with server_url starting with "remodl_proxy"
         """
-        from litellm.proxy._experimental.mcp_server.server import (
+        from remodl.proxy._experimental.mcp_server.server import (
             _get_tools_from_mcp_servers,
         )
 
         mcp_servers: List[str] = []
-        if mcp_tools_with_litellm_proxy:
-            for _tool in mcp_tools_with_litellm_proxy:
-                # if user specifies servers as server_url: litellm_proxy/mcp/zapier,github then return zapier,github
+        if mcp_tools_with_remodl_proxy:
+            for _tool in mcp_tools_with_remodl_proxy:
+                # if user specifies servers as server_url: remodl_proxy/mcp/zapier,github then return zapier,github
                 server_url = (
                     _tool.get("server_url", "") if isinstance(_tool, dict) else ""
                 )
@@ -129,12 +129,12 @@ class LiteLLM_Proxy_MCP_Handler:
 
     @staticmethod
     def _filter_mcp_tools_by_allowed_tools(
-        mcp_tools: List[Any], mcp_tools_with_litellm_proxy: List[ToolParam]
+        mcp_tools: List[Any], mcp_tools_with_remodl_proxy: List[ToolParam]
     ) -> List[Any]:
         """Filter MCP tools based on allowed_tools parameter from the original tool configs."""
         # Collect all allowed tool names from all MCP tool configs
         allowed_tool_names = set()
-        for tool_config in mcp_tools_with_litellm_proxy:
+        for tool_config in mcp_tools_with_remodl_proxy:
             if isinstance(tool_config, dict) and "allowed_tools" in tool_config:
                 allowed_tools = tool_config.get("allowed_tools", [])
                 if isinstance(allowed_tools, list):
@@ -161,7 +161,7 @@ class LiteLLM_Proxy_MCP_Handler:
 
     @staticmethod
     async def _process_mcp_tools_to_openai_format(
-        user_api_key_auth: Any, mcp_tools_with_litellm_proxy: List[ToolParam]
+        user_api_key_auth: Any, mcp_tools_with_remodl_proxy: List[ToolParam]
     ) -> List[Any]:
         """
         Centralized method to process MCP tools through the complete pipeline:
@@ -172,25 +172,25 @@ class LiteLLM_Proxy_MCP_Handler:
 
         Args:
             user_api_key_auth: User authentication info for access control
-            mcp_tools_with_litellm_proxy: ToolParam objects with server_url starting with "litellm_proxy"
+            mcp_tools_with_remodl_proxy: ToolParam objects with server_url starting with "remodl_proxy"
 
         Returns:
             List of tools in OpenAI format ready to be sent to the LLM
         """
-        if not mcp_tools_with_litellm_proxy:
+        if not mcp_tools_with_remodl_proxy:
             return []
 
         # Step 1: Fetch MCP tools from manager
         mcp_tools_fetched = await LiteLLM_Proxy_MCP_Handler._get_mcp_tools_from_manager(
             user_api_key_auth=user_api_key_auth,
-            mcp_tools_with_litellm_proxy=mcp_tools_with_litellm_proxy,
+            mcp_tools_with_remodl_proxy=mcp_tools_with_remodl_proxy,
         )
 
         # Step 2: Filter tools based on allowed_tools parameter
         filtered_mcp_tools = (
             LiteLLM_Proxy_MCP_Handler._filter_mcp_tools_by_allowed_tools(
                 mcp_tools=mcp_tools_fetched,
-                mcp_tools_with_litellm_proxy=mcp_tools_with_litellm_proxy,
+                mcp_tools_with_remodl_proxy=mcp_tools_with_remodl_proxy,
             )
         )
 
@@ -208,7 +208,7 @@ class LiteLLM_Proxy_MCP_Handler:
 
     @staticmethod
     async def _process_mcp_tools_without_openai_transform(
-        user_api_key_auth: Any, mcp_tools_with_litellm_proxy: List[ToolParam]
+        user_api_key_auth: Any, mcp_tools_with_remodl_proxy: List[ToolParam]
     ) -> List[Any]:
         """
         Process MCP tools through filtering and deduplication pipeline without OpenAI transformation.
@@ -216,25 +216,25 @@ class LiteLLM_Proxy_MCP_Handler:
 
         Args:
             user_api_key_auth: User authentication info for access control
-            mcp_tools_with_litellm_proxy: ToolParam objects with server_url starting with "litellm_proxy"
+            mcp_tools_with_remodl_proxy: ToolParam objects with server_url starting with "remodl_proxy"
 
         Returns:
             List of filtered and deduplicated MCP tools in their original format
         """
-        if not mcp_tools_with_litellm_proxy:
+        if not mcp_tools_with_remodl_proxy:
             return []
 
         # Step 1: Fetch MCP tools from manager
         mcp_tools_fetched = await LiteLLM_Proxy_MCP_Handler._get_mcp_tools_from_manager(
             user_api_key_auth=user_api_key_auth,
-            mcp_tools_with_litellm_proxy=mcp_tools_with_litellm_proxy,
+            mcp_tools_with_remodl_proxy=mcp_tools_with_remodl_proxy,
         )
 
         # Step 2: Filter tools based on allowed_tools parameter
         filtered_mcp_tools = (
             LiteLLM_Proxy_MCP_Handler._filter_mcp_tools_by_allowed_tools(
                 mcp_tools=mcp_tools_fetched,
-                mcp_tools_with_litellm_proxy=mcp_tools_with_litellm_proxy,
+                mcp_tools_with_remodl_proxy=mcp_tools_with_remodl_proxy,
             )
         )
 
@@ -248,7 +248,7 @@ class LiteLLM_Proxy_MCP_Handler:
     @staticmethod
     def _transform_mcp_tools_to_openai(mcp_tools: List[Any]) -> List[Any]:
         """Transform MCP tools to OpenAI-compatible format."""
-        from litellm.experimental_mcp_client.tools import (
+        from remodl.experimental_mcp_client.tools import (
             transform_mcp_tool_to_openai_responses_api_tool,
         )
 
@@ -261,7 +261,7 @@ class LiteLLM_Proxy_MCP_Handler:
 
     @staticmethod
     def _should_auto_execute_tools(
-        mcp_tools_with_litellm_proxy: Union[List[Dict[str, Any]], List[ToolParam]],
+        mcp_tools_with_remodl_proxy: Union[List[Dict[str, Any]], List[ToolParam]],
     ) -> bool:
         """Check if we should auto-execute tool calls.
 
@@ -269,7 +269,7 @@ class LiteLLM_Proxy_MCP_Handler:
 
 
         """
-        for tool in mcp_tools_with_litellm_proxy:
+        for tool in mcp_tools_with_remodl_proxy:
             if isinstance(tool, dict):
                 if tool.get("require_approval") == "never":
                     return True
@@ -376,8 +376,8 @@ class LiteLLM_Proxy_MCP_Handler:
         """Execute tool calls and return results."""
         from fastapi import HTTPException
 
-        from litellm.exceptions import BlockedPiiEntityError, GuardrailRaisedException
-        from litellm.proxy._experimental.mcp_server.mcp_server_manager import (
+        from remodl.exceptions import BlockedPiiEntityError, GuardrailRaisedException
+        from remodl.proxy._experimental.mcp_server.mcp_server_manager import (
             global_mcp_server_manager,
         )
 
@@ -400,7 +400,7 @@ class LiteLLM_Proxy_MCP_Handler:
                 )
 
                 # Import here to avoid circular import
-                from litellm.proxy.proxy_server import proxy_logging_obj
+                from remodl.proxy.proxy_server import proxy_logging_obj
 
                 result = await global_mcp_server_manager.call_tool(
                     name=tool_name,
@@ -545,7 +545,7 @@ class LiteLLM_Proxy_MCP_Handler:
         input: Union[str, Any],
         model: str,
         all_tools: Optional[List[Any]],
-        mcp_tools_with_litellm_proxy: List[Any],
+        mcp_tools_with_remodl_proxy: List[Any],
         mcp_discovery_events: List[Any],
         call_params: Dict[str, Any],
         previous_response_id: Optional[str],
@@ -559,7 +559,7 @@ class LiteLLM_Proxy_MCP_Handler:
         2. Makes the LLM call and streams the response
         3. Handles tool execution and follow-up calls
         """
-        from litellm.responses.mcp.mcp_streaming_iterator import (
+        from remodl.responses.mcp.mcp_streaming_iterator import (
             MCPEnhancedStreamingIterator,
         )
 
@@ -577,7 +577,7 @@ class LiteLLM_Proxy_MCP_Handler:
         return MCPEnhancedStreamingIterator(
             base_iterator=None,  # Will be created internally
             mcp_events=mcp_discovery_events,  # Pre-generated MCP discovery events
-            mcp_tools_with_litellm_proxy=mcp_tools_with_litellm_proxy,
+            mcp_tools_with_remodl_proxy=mcp_tools_with_remodl_proxy,
             user_api_key_auth=kwargs.get("user_api_key_auth"),
             original_request_params=request_params,
         )
@@ -630,9 +630,9 @@ class LiteLLM_Proxy_MCP_Handler:
         Returns:
             List of MCP tool execution events for streaming
         """
-        from litellm._uuid import uuid
+        from remodl._uuid import uuid
 
-        from litellm.responses.mcp.mcp_streaming_iterator import create_mcp_call_events
+        from remodl.responses.mcp.mcp_streaming_iterator import create_mcp_call_events
 
         tool_execution_events: List[Any] = []
 
@@ -714,9 +714,9 @@ class LiteLLM_Proxy_MCP_Handler:
         """Add custom output elements to the final response for MCP tool execution."""
         # Import the required classes for creating output items
         import json
-        from litellm._uuid import uuid
+        from remodl._uuid import uuid
 
-        from litellm.types.responses.main import GenericResponseOutputItem, OutputText
+        from remodl.types.responses.main import GenericResponseOutputItem, OutputText
 
         # Create output element for initial MCP tools
         mcp_tools_output = GenericResponseOutputItem(

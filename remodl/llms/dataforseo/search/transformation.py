@@ -7,14 +7,14 @@ from typing import Any, Dict, List, Literal, Optional, Union
 
 import httpx
 
-from litellm.constants import DEFAULT_DATAFORSEO_LOCATION_CODE
-from litellm.litellm_core_utils.litellm_logging import Logging as LiteLLMLoggingObj
-from litellm.llms.base_llm.search.transformation import (
+from remodl.constants import DEFAULT_DATAFORSEO_LOCATION_CODE
+from remodl.remodl_core_utils.remodl_logging import Logging as LiteLLMLoggingObj
+from remodl.llms.base_llm.search.transformation import (
     BaseSearchConfig,
     SearchResponse,
     SearchResult,
 )
-from litellm.secret_managers.main import get_secret_str
+from remodl.secret_managers.main import get_secret_str
 
 
 class DataForSEOSearchConfig(BaseSearchConfig):

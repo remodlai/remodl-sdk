@@ -11,21 +11,21 @@ from typing import TYPE_CHECKING, Any, Dict, List, Optional, Union
 
 from httpx._models import Headers, Response
 
-import litellm
-from litellm.litellm_core_utils.asyncify import asyncify
-from litellm.litellm_core_utils.prompt_templates.factory import (
+import remodl
+from remodl.remodl_core_utils.asyncify import asyncify
+from remodl.remodl_core_utils.prompt_templates.factory import (
     custom_prompt,
     prompt_factory,
 )
-from litellm.llms.base_llm.chat.transformation import BaseConfig, BaseLLMException
-from litellm.types.llms.openai import AllMessageValues
-from litellm.types.utils import ModelResponse, Usage
-from litellm.utils import token_counter
+from remodl.llms.base_llm.chat.transformation import BaseConfig, BaseLLMException
+from remodl.types.llms.openai import AllMessageValues
+from remodl.types.utils import ModelResponse, Usage
+from remodl.utils import token_counter
 
 from ..common_utils import SagemakerError
 
 if TYPE_CHECKING:
-    from litellm.litellm_core_utils.litellm_logging import Logging as _LiteLLMLoggingObj
+    from remodl.remodl_core_utils.remodl_logging import Logging as _LiteLLMLoggingObj
 
     LiteLLMLoggingObj = _LiteLLMLoggingObj
 else:
@@ -158,7 +158,7 @@ class SagemakerConfig(BaseConfig):
         model: str,
         messages: List[AllMessageValues],
         optional_params: dict,
-        litellm_params: dict,
+        remodl_params: dict,
         headers: dict,
     ) -> dict:
         inference_params = optional_params.copy()
@@ -168,10 +168,10 @@ class SagemakerConfig(BaseConfig):
             data["stream"] = True
 
         custom_prompt_dict = (
-            litellm_params.get("custom_prompt_dict", None) or litellm.custom_prompt_dict
+            remodl_params.get("custom_prompt_dict", None) or remodl.custom_prompt_dict
         )
 
-        hf_model_name = litellm_params.get("hf_model_name", None)
+        hf_model_name = remodl_params.get("hf_model_name", None)
 
         prompt = self._transform_prompt(
             model=model,
@@ -188,11 +188,11 @@ class SagemakerConfig(BaseConfig):
         model: str,
         messages: List[AllMessageValues],
         optional_params: dict,
-        litellm_params: dict,
+        remodl_params: dict,
         headers: dict,
     ) -> dict:
         return await asyncify(self.transform_request)(
-            model, messages, optional_params, litellm_params, headers
+            model, messages, optional_params, remodl_params, headers
         )
 
     def transform_response(
@@ -204,7 +204,7 @@ class SagemakerConfig(BaseConfig):
         request_data: dict,
         messages: List[AllMessageValues],
         optional_params: dict,
-        litellm_params: dict,
+        remodl_params: dict,
         encoding: str,
         api_key: Optional[str] = None,
         json_mode: Optional[bool] = None,
@@ -268,7 +268,7 @@ class SagemakerConfig(BaseConfig):
         model: str,
         messages: List[AllMessageValues],
         optional_params: dict,
-        litellm_params: dict,
+        remodl_params: dict,
         api_key: Optional[str] = None,
         api_base: Optional[str] = None,
     ) -> dict:

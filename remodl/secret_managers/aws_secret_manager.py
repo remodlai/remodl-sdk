@@ -1,7 +1,7 @@
 """
 This is a file for the AWS Secret Manager Integration
 
-Relevant issue: https://github.com/BerriAI/litellm/issues/1883
+Relevant issue: https://github.com/BerriAI/remodl/issues/1883
 
 Requires:
 * `os.environ["AWS_REGION_NAME"], 
@@ -14,8 +14,8 @@ import os
 import re
 from typing import Any, Dict, Optional
 
-import litellm
-from litellm.proxy._types import KeyManagementSystem
+import remodl
+from remodl.proxy._types import KeyManagementSystem
 
 
 def validate_environment():
@@ -34,8 +34,8 @@ def load_aws_kms(use_aws_kms: Optional[bool]):
         # Create a Secrets Manager client
         kms_client = boto3.client("kms", region_name=os.getenv("AWS_REGION_NAME"))
 
-        litellm.secret_manager_client = kms_client
-        litellm._key_management_system = KeyManagementSystem.AWS_KMS
+        remodl.secret_manager_client = kms_client
+        remodl._key_management_system = KeyManagementSystem.AWS_KMS
 
     except Exception as e:
         raise e
@@ -57,13 +57,13 @@ class AWSKeyManagementService_V2:
             raise ValueError("Missing required environment variable - AWS_REGION_NAME")
 
         ## CHECK IF LICENSE IN ENV ## - premium feature
-        is_litellm_license_in_env: bool = False
+        is_remodl_license_in_env: bool = False
 
         if os.getenv("LITELLM_LICENSE", None) is not None:
-            is_litellm_license_in_env = True
+            is_remodl_license_in_env = True
         elif os.getenv("LITELLM_SECRET_AWS_KMS_LITELLM_LICENSE", None) is not None:
-            is_litellm_license_in_env = True
-        if is_litellm_license_in_env is False:
+            is_remodl_license_in_env = True
+        if is_remodl_license_in_env is False:
             raise ValueError(
                 "AWSKeyManagementService V2 is an Enterprise Feature. Please add a valid LITELLM_LICENSE to your envionment."
             )
@@ -133,11 +133,11 @@ def decrypt_env_var() -> Dict[str, Any]:
         if (
             k is not None
             and isinstance(k, str)
-            and k.lower().startswith("litellm_secret_aws_kms")
+            and k.lower().startswith("remodl_secret_aws_kms")
         ) or (v is not None and isinstance(v, str) and v.startswith("aws_kms/")):
             decrypted_value = aws_kms.decrypt_value(secret_name=k)
             # reset env var
-            k = re.sub("litellm_secret_aws_kms_", "", k, flags=re.IGNORECASE)
+            k = re.sub("remodl_secret_aws_kms_", "", k, flags=re.IGNORECASE)
             new_values[k] = decrypted_value
 
     return new_values

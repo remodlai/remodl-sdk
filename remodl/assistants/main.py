@@ -11,11 +11,11 @@ from openai import AsyncOpenAI, OpenAI
 from openai.types.beta.assistant import Assistant
 from openai.types.beta.assistant_deleted import AssistantDeleted
 
-import litellm
-from litellm.types.router import GenericLiteLLMParams
-from litellm.utils import (
+import remodl
+from remodl.types.router import GenericLiteLLMParams
+from remodl.utils import (
     exception_type,
-    get_litellm_params,
+    get_remodl_params,
     get_llm_provider,
     get_secret,
     supports_httpx_timeout,
@@ -87,7 +87,7 @@ def get_assistants(
     optional_params = GenericLiteLLMParams(
         api_key=api_key, api_base=api_base, api_version=api_version, **kwargs
     )
-    litellm_params_dict = get_litellm_params(**kwargs)
+    remodl_params_dict = get_remodl_params(**kwargs)
 
     ### TIMEOUT LOGIC ###
     timeout = optional_params.timeout or kwargs.get("request_timeout", 600) or 600
@@ -109,22 +109,22 @@ def get_assistants(
     if custom_llm_provider == "openai":
         api_base = (
             optional_params.api_base  # for deepinfra/perplexity/anyscale/groq we check in get_llm_provider and pass in the api base from there
-            or litellm.api_base
+            or remodl.api_base
             or os.getenv("OPENAI_BASE_URL")
             or os.getenv("OPENAI_API_BASE")
             or "https://api.openai.com/v1"
         )
         organization = (
             optional_params.organization
-            or litellm.organization
+            or remodl.organization
             or os.getenv("OPENAI_ORGANIZATION", None)
             or None  # default - https://github.com/openai/openai-python/blob/284c1799070c723c6a553337134148a7ab088dd8/openai/util.py#L105
         )
         # set API KEY
         api_key = (
             optional_params.api_key
-            or litellm.api_key  # for deepinfra/perplexity/anyscale we check in get_llm_provider and pass in the api key from there
-            or litellm.openai_key
+            or remodl.api_key  # for deepinfra/perplexity/anyscale we check in get_llm_provider and pass in the api key from there
+            or remodl.openai_key
             or os.getenv("OPENAI_API_KEY")
         )
 
@@ -139,19 +139,19 @@ def get_assistants(
         )  # type: ignore
     elif custom_llm_provider == "azure":
         api_base = (
-            optional_params.api_base or litellm.api_base or get_secret("AZURE_API_BASE")
+            optional_params.api_base or remodl.api_base or get_secret("AZURE_API_BASE")
         )  # type: ignore
 
         api_version = (
             optional_params.api_version
-            or litellm.api_version
+            or remodl.api_version
             or get_secret("AZURE_API_VERSION")
         )  # type: ignore
 
         api_key = (
             optional_params.api_key
-            or litellm.api_key
-            or litellm.azure_key
+            or remodl.api_key
+            or remodl.azure_key
             or get_secret("AZURE_OPENAI_API_KEY")
             or get_secret("AZURE_API_KEY")
         )  # type: ignore
@@ -172,10 +172,10 @@ def get_assistants(
             max_retries=optional_params.max_retries,
             client=client,
             aget_assistants=aget_assistants,  # type: ignore
-            litellm_params=litellm_params_dict,
+            remodl_params=remodl_params_dict,
         )
     else:
-        raise litellm.exceptions.BadRequestError(
+        raise remodl.exceptions.BadRequestError(
             message="LiteLLM doesn't support {} for 'get_assistants'. Only 'openai' is supported.".format(
                 custom_llm_provider
             ),
@@ -184,12 +184,12 @@ def get_assistants(
             response=httpx.Response(
                 status_code=400,
                 content="Unsupported provider",
-                request=httpx.Request(method="create_thread", url="https://github.com/BerriAI/litellm"),  # type: ignore
+                request=httpx.Request(method="create_thread", url="https://github.com/BerriAI/remodl"),  # type: ignore
             ),
         )
 
     if response is None:
-        raise litellm.exceptions.BadRequestError(
+        raise remodl.exceptions.BadRequestError(
             message="LiteLLM doesn't support {} for 'get_assistants'. Only 'openai' is supported.".format(
                 custom_llm_provider
             ),
@@ -198,7 +198,7 @@ def get_assistants(
             response=httpx.Response(
                 status_code=400,
                 content="Unsupported provider",
-                request=httpx.Request(method="create_thread", url="https://github.com/BerriAI/litellm"),  # type: ignore
+                request=httpx.Request(method="create_thread", url="https://github.com/BerriAI/remodl"),  # type: ignore
             ),
         )
 
@@ -274,7 +274,7 @@ def create_assistants(
     optional_params = GenericLiteLLMParams(
         api_key=api_key, api_base=api_base, api_version=api_version, **kwargs
     )
-    litellm_params_dict = get_litellm_params(**kwargs)
+    remodl_params_dict = get_remodl_params(**kwargs)
 
     ### TIMEOUT LOGIC ###
     timeout = optional_params.timeout or kwargs.get("request_timeout", 600) or 600
@@ -314,22 +314,22 @@ def create_assistants(
     if custom_llm_provider == "openai":
         api_base = (
             optional_params.api_base  # for deepinfra/perplexity/anyscale/groq we check in get_llm_provider and pass in the api base from there
-            or litellm.api_base
+            or remodl.api_base
             or os.getenv("OPENAI_BASE_URL")
             or os.getenv("OPENAI_API_BASE")
             or "https://api.openai.com/v1"
         )
         organization = (
             optional_params.organization
-            or litellm.organization
+            or remodl.organization
             or os.getenv("OPENAI_ORGANIZATION", None)
             or None  # default - https://github.com/openai/openai-python/blob/284c1799070c723c6a553337134148a7ab088dd8/openai/util.py#L105
         )
         # set API KEY
         api_key = (
             optional_params.api_key
-            or litellm.api_key  # for deepinfra/perplexity/anyscale we check in get_llm_provider and pass in the api key from there
-            or litellm.openai_key
+            or remodl.api_key  # for deepinfra/perplexity/anyscale we check in get_llm_provider and pass in the api key from there
+            or remodl.openai_key
             or os.getenv("OPENAI_API_KEY")
         )
 
@@ -345,19 +345,19 @@ def create_assistants(
         )  # type: ignore
     elif custom_llm_provider == "azure":
         api_base = (
-            optional_params.api_base or litellm.api_base or get_secret("AZURE_API_BASE")
+            optional_params.api_base or remodl.api_base or get_secret("AZURE_API_BASE")
         )  # type: ignore
 
         api_version = (
             optional_params.api_version
-            or litellm.api_version
+            or remodl.api_version
             or get_secret("AZURE_API_VERSION")
         )  # type: ignore
 
         api_key = (
             optional_params.api_key
-            or litellm.api_key
-            or litellm.azure_key
+            or remodl.api_key
+            or remodl.azure_key
             or get_secret("AZURE_OPENAI_API_KEY")
             or get_secret("AZURE_API_KEY")
         )  # type: ignore
@@ -382,10 +382,10 @@ def create_assistants(
             client=client,
             async_create_assistants=async_create_assistants,
             create_assistant_data=create_assistant_data,
-            litellm_params=litellm_params_dict,
+            remodl_params=remodl_params_dict,
         )
     else:
-        raise litellm.exceptions.BadRequestError(
+        raise remodl.exceptions.BadRequestError(
             message="LiteLLM doesn't support {} for 'create_assistants'. Only 'openai' is supported.".format(
                 custom_llm_provider
             ),
@@ -394,11 +394,11 @@ def create_assistants(
             response=httpx.Response(
                 status_code=400,
                 content="Unsupported provider",
-                request=httpx.Request(method="create_thread", url="https://github.com/BerriAI/litellm"),  # type: ignore
+                request=httpx.Request(method="create_thread", url="https://github.com/BerriAI/remodl"),  # type: ignore
             ),
         )
     if response is None:
-        raise litellm.exceptions.InternalServerError(
+        raise remodl.exceptions.InternalServerError(
             message="No response returned from 'create_assistants'",
             model=model,
             llm_provider=custom_llm_provider,
@@ -457,7 +457,7 @@ def delete_assistant(
         api_key=api_key, api_base=api_base, api_version=api_version, **kwargs
     )
 
-    litellm_params_dict = get_litellm_params(**kwargs)
+    remodl_params_dict = get_remodl_params(**kwargs)
 
     async_delete_assistants: Optional[bool] = kwargs.pop(
         "async_delete_assistants", None
@@ -491,22 +491,22 @@ def delete_assistant(
     if custom_llm_provider == "openai":
         api_base = (
             optional_params.api_base
-            or litellm.api_base
+            or remodl.api_base
             or os.getenv("OPENAI_BASE_URL")
             or os.getenv("OPENAI_API_BASE")
             or "https://api.openai.com/v1"
         )
         organization = (
             optional_params.organization
-            or litellm.organization
+            or remodl.organization
             or os.getenv("OPENAI_ORGANIZATION", None)
             or None
         )
         # set API KEY
         api_key = (
             optional_params.api_key
-            or litellm.api_key
-            or litellm.openai_key
+            or remodl.api_key
+            or remodl.openai_key
             or os.getenv("OPENAI_API_KEY")
         )
 
@@ -522,19 +522,19 @@ def delete_assistant(
         )
     elif custom_llm_provider == "azure":
         api_base = (
-            optional_params.api_base or litellm.api_base or get_secret("AZURE_API_BASE")
+            optional_params.api_base or remodl.api_base or get_secret("AZURE_API_BASE")
         )  # type: ignore
 
         api_version = (
             optional_params.api_version
-            or litellm.api_version
+            or remodl.api_version
             or get_secret("AZURE_API_VERSION")
         )  # type: ignore
 
         api_key = (
             optional_params.api_key
-            or litellm.api_key
-            or litellm.azure_key
+            or remodl.api_key
+            or remodl.azure_key
             or get_secret("AZURE_OPENAI_API_KEY")
             or get_secret("AZURE_API_KEY")
         )  # type: ignore
@@ -559,10 +559,10 @@ def delete_assistant(
             max_retries=optional_params.max_retries,
             client=client,
             async_delete_assistants=async_delete_assistants,
-            litellm_params=litellm_params_dict,
+            remodl_params=remodl_params_dict,
         )
     else:
-        raise litellm.exceptions.BadRequestError(
+        raise remodl.exceptions.BadRequestError(
             message="LiteLLM doesn't support {} for 'delete_assistant'. Only 'openai' is supported.".format(
                 custom_llm_provider
             ),
@@ -572,12 +572,12 @@ def delete_assistant(
                 status_code=400,
                 content="Unsupported provider",
                 request=httpx.Request(
-                    method="delete_assistant", url="https://github.com/BerriAI/litellm"
+                    method="delete_assistant", url="https://github.com/BerriAI/remodl"
                 ),
             ),
         )
     if response is None:
-        raise litellm.exceptions.InternalServerError(
+        raise remodl.exceptions.InternalServerError(
             message="No response returned from 'delete_assistant'",
             model="n/a",
             llm_provider=custom_llm_provider,
@@ -637,7 +637,7 @@ def create_thread(
     - pass through relevant params
 
     ```
-    from litellm import create_thread
+    from remodl import create_thread
 
     create_thread(
         custom_llm_provider="openai",
@@ -655,7 +655,7 @@ def create_thread(
     """
     acreate_thread = kwargs.get("acreate_thread", None)
     optional_params = GenericLiteLLMParams(**kwargs)
-    litellm_params_dict = get_litellm_params(**kwargs)
+    remodl_params_dict = get_remodl_params(**kwargs)
 
     ### TIMEOUT LOGIC ###
     timeout = optional_params.timeout or kwargs.get("request_timeout", 600) or 600
@@ -680,22 +680,22 @@ def create_thread(
     if custom_llm_provider == "openai":
         api_base = (
             optional_params.api_base  # for deepinfra/perplexity/anyscale/groq we check in get_llm_provider and pass in the api base from there
-            or litellm.api_base
+            or remodl.api_base
             or os.getenv("OPENAI_BASE_URL")
             or os.getenv("OPENAI_API_BASE")
             or "https://api.openai.com/v1"
         )
         organization = (
             optional_params.organization
-            or litellm.organization
+            or remodl.organization
             or os.getenv("OPENAI_ORGANIZATION", None)
             or None  # default - https://github.com/openai/openai-python/blob/284c1799070c723c6a553337134148a7ab088dd8/openai/util.py#L105
         )
         # set API KEY
         api_key = (
             optional_params.api_key
-            or litellm.api_key  # for deepinfra/perplexity/anyscale we check in get_llm_provider and pass in the api key from there
-            or litellm.openai_key
+            or remodl.api_key  # for deepinfra/perplexity/anyscale we check in get_llm_provider and pass in the api key from there
+            or remodl.openai_key
             or os.getenv("OPENAI_API_KEY")
         )
         response = openai_assistants_api.create_thread(
@@ -711,20 +711,20 @@ def create_thread(
         )
     elif custom_llm_provider == "azure":
         api_base = (
-            optional_params.api_base or litellm.api_base or get_secret("AZURE_API_BASE")
+            optional_params.api_base or remodl.api_base or get_secret("AZURE_API_BASE")
         )  # type: ignore
 
         api_key = (
             optional_params.api_key
-            or litellm.api_key
-            or litellm.azure_key
+            or remodl.api_key
+            or remodl.azure_key
             or get_secret("AZURE_OPENAI_API_KEY")
             or get_secret("AZURE_API_KEY")
         )  # type: ignore
 
         api_version: Optional[str] = (
             optional_params.api_version
-            or litellm.api_version
+            or remodl.api_version
             or get_secret("AZURE_API_VERSION")
         )  # type: ignore
 
@@ -749,10 +749,10 @@ def create_thread(
             max_retries=optional_params.max_retries,
             client=client,
             acreate_thread=acreate_thread,
-            litellm_params=litellm_params_dict,
+            remodl_params=remodl_params_dict,
         )
     else:
-        raise litellm.exceptions.BadRequestError(
+        raise remodl.exceptions.BadRequestError(
             message="LiteLLM doesn't support {} for 'create_thread'. Only 'openai' is supported.".format(
                 custom_llm_provider
             ),
@@ -761,7 +761,7 @@ def create_thread(
             response=httpx.Response(
                 status_code=400,
                 content="Unsupported provider",
-                request=httpx.Request(method="create_thread", url="https://github.com/BerriAI/litellm"),  # type: ignore
+                request=httpx.Request(method="create_thread", url="https://github.com/BerriAI/remodl"),  # type: ignore
             ),
         )
     return response  # type: ignore
@@ -814,7 +814,7 @@ def get_thread(
     """Get the thread object, given a thread_id"""
     aget_thread = kwargs.pop("aget_thread", None)
     optional_params = GenericLiteLLMParams(**kwargs)
-    litellm_params_dict = get_litellm_params(**kwargs)
+    remodl_params_dict = get_remodl_params(**kwargs)
     ### TIMEOUT LOGIC ###
     timeout = optional_params.timeout or kwargs.get("request_timeout", 600) or 600
     # set timeout for 10 minutes by default
@@ -836,22 +836,22 @@ def get_thread(
     if custom_llm_provider == "openai":
         api_base = (
             optional_params.api_base  # for deepinfra/perplexity/anyscale/groq we check in get_llm_provider and pass in the api base from there
-            or litellm.api_base
+            or remodl.api_base
             or os.getenv("OPENAI_BASE_URL")
             or os.getenv("OPENAI_API_BASE")
             or "https://api.openai.com/v1"
         )
         organization = (
             optional_params.organization
-            or litellm.organization
+            or remodl.organization
             or os.getenv("OPENAI_ORGANIZATION", None)
             or None  # default - https://github.com/openai/openai-python/blob/284c1799070c723c6a553337134148a7ab088dd8/openai/util.py#L105
         )
         # set API KEY
         api_key = (
             optional_params.api_key
-            or litellm.api_key  # for deepinfra/perplexity/anyscale we check in get_llm_provider and pass in the api key from there
-            or litellm.openai_key
+            or remodl.api_key  # for deepinfra/perplexity/anyscale we check in get_llm_provider and pass in the api key from there
+            or remodl.openai_key
             or os.getenv("OPENAI_API_KEY")
         )
 
@@ -867,19 +867,19 @@ def get_thread(
         )
     elif custom_llm_provider == "azure":
         api_base = (
-            optional_params.api_base or litellm.api_base or get_secret("AZURE_API_BASE")
+            optional_params.api_base or remodl.api_base or get_secret("AZURE_API_BASE")
         )  # type: ignore
 
         api_version: Optional[str] = (
             optional_params.api_version
-            or litellm.api_version
+            or remodl.api_version
             or get_secret("AZURE_API_VERSION")
         )  # type: ignore
 
         api_key = (
             optional_params.api_key
-            or litellm.api_key
-            or litellm.azure_key
+            or remodl.api_key
+            or remodl.azure_key
             or get_secret("AZURE_OPENAI_API_KEY")
             or get_secret("AZURE_API_KEY")
         )  # type: ignore
@@ -904,10 +904,10 @@ def get_thread(
             max_retries=optional_params.max_retries,
             client=client,
             aget_thread=aget_thread,
-            litellm_params=litellm_params_dict,
+            remodl_params=remodl_params_dict,
         )
     else:
-        raise litellm.exceptions.BadRequestError(
+        raise remodl.exceptions.BadRequestError(
             message="LiteLLM doesn't support {} for 'get_thread'. Only 'openai' is supported.".format(
                 custom_llm_provider
             ),
@@ -916,7 +916,7 @@ def get_thread(
             response=httpx.Response(
                 status_code=400,
                 content="Unsupported provider",
-                request=httpx.Request(method="create_thread", url="https://github.com/BerriAI/litellm"),  # type: ignore
+                request=httpx.Request(method="create_thread", url="https://github.com/BerriAI/remodl"),  # type: ignore
             ),
         )
     return response  # type: ignore
@@ -993,7 +993,7 @@ def add_message(
     _message_data = MessageData(
         role=role, content=content, attachments=attachments, metadata=metadata
     )
-    litellm_params_dict = get_litellm_params(**kwargs)
+    remodl_params_dict = get_remodl_params(**kwargs)
     optional_params = GenericLiteLLMParams(**kwargs)
 
     message_data = get_optional_params_add_message(
@@ -1025,22 +1025,22 @@ def add_message(
     if custom_llm_provider == "openai":
         api_base = (
             optional_params.api_base  # for deepinfra/perplexity/anyscale/groq we check in get_llm_provider and pass in the api base from there
-            or litellm.api_base
+            or remodl.api_base
             or os.getenv("OPENAI_BASE_URL")
             or os.getenv("OPENAI_API_BASE")
             or "https://api.openai.com/v1"
         )
         organization = (
             optional_params.organization
-            or litellm.organization
+            or remodl.organization
             or os.getenv("OPENAI_ORGANIZATION", None)
             or None  # default - https://github.com/openai/openai-python/blob/284c1799070c723c6a553337134148a7ab088dd8/openai/util.py#L105
         )
         # set API KEY
         api_key = (
             optional_params.api_key
-            or litellm.api_key  # for deepinfra/perplexity/anyscale we check in get_llm_provider and pass in the api key from there
-            or litellm.openai_key
+            or remodl.api_key  # for deepinfra/perplexity/anyscale we check in get_llm_provider and pass in the api key from there
+            or remodl.openai_key
             or os.getenv("OPENAI_API_KEY")
         )
         response = openai_assistants_api.add_message(
@@ -1056,19 +1056,19 @@ def add_message(
         )
     elif custom_llm_provider == "azure":
         api_base = (
-            optional_params.api_base or litellm.api_base or get_secret("AZURE_API_BASE")
+            optional_params.api_base or remodl.api_base or get_secret("AZURE_API_BASE")
         )  # type: ignore
 
         api_version: Optional[str] = (
             optional_params.api_version
-            or litellm.api_version
+            or remodl.api_version
             or get_secret("AZURE_API_VERSION")
         )  # type: ignore
 
         api_key = (
             optional_params.api_key
-            or litellm.api_key
-            or litellm.azure_key
+            or remodl.api_key
+            or remodl.azure_key
             or get_secret("AZURE_OPENAI_API_KEY")
             or get_secret("AZURE_API_KEY")
         )  # type: ignore
@@ -1091,10 +1091,10 @@ def add_message(
             max_retries=optional_params.max_retries,
             client=client,
             a_add_message=a_add_message,
-            litellm_params=litellm_params_dict,
+            remodl_params=remodl_params_dict,
         )
     else:
-        raise litellm.exceptions.BadRequestError(
+        raise remodl.exceptions.BadRequestError(
             message="LiteLLM doesn't support {} for 'create_thread'. Only 'openai' is supported.".format(
                 custom_llm_provider
             ),
@@ -1103,7 +1103,7 @@ def add_message(
             response=httpx.Response(
                 status_code=400,
                 content="Unsupported provider",
-                request=httpx.Request(method="create_thread", url="https://github.com/BerriAI/litellm"),  # type: ignore
+                request=httpx.Request(method="create_thread", url="https://github.com/BerriAI/remodl"),  # type: ignore
             ),
         )
 
@@ -1163,7 +1163,7 @@ def get_messages(
 ) -> SyncCursorPage[OpenAIMessage]:
     aget_messages = kwargs.pop("aget_messages", None)
     optional_params = GenericLiteLLMParams(**kwargs)
-    litellm_params_dict = get_litellm_params(**kwargs)
+    remodl_params_dict = get_remodl_params(**kwargs)
 
     ### TIMEOUT LOGIC ###
     timeout = optional_params.timeout or kwargs.get("request_timeout", 600) or 600
@@ -1187,22 +1187,22 @@ def get_messages(
     if custom_llm_provider == "openai":
         api_base = (
             optional_params.api_base  # for deepinfra/perplexity/anyscale/groq we check in get_llm_provider and pass in the api base from there
-            or litellm.api_base
+            or remodl.api_base
             or os.getenv("OPENAI_BASE_URL")
             or os.getenv("OPENAI_API_BASE")
             or "https://api.openai.com/v1"
         )
         organization = (
             optional_params.organization
-            or litellm.organization
+            or remodl.organization
             or os.getenv("OPENAI_ORGANIZATION", None)
             or None  # default - https://github.com/openai/openai-python/blob/284c1799070c723c6a553337134148a7ab088dd8/openai/util.py#L105
         )
         # set API KEY
         api_key = (
             optional_params.api_key
-            or litellm.api_key  # for deepinfra/perplexity/anyscale we check in get_llm_provider and pass in the api key from there
-            or litellm.openai_key
+            or remodl.api_key  # for deepinfra/perplexity/anyscale we check in get_llm_provider and pass in the api key from there
+            or remodl.openai_key
             or os.getenv("OPENAI_API_KEY")
         )
         response = openai_assistants_api.get_messages(
@@ -1217,19 +1217,19 @@ def get_messages(
         )
     elif custom_llm_provider == "azure":
         api_base = (
-            optional_params.api_base or litellm.api_base or get_secret("AZURE_API_BASE")
+            optional_params.api_base or remodl.api_base or get_secret("AZURE_API_BASE")
         )  # type: ignore
 
         api_version: Optional[str] = (
             optional_params.api_version
-            or litellm.api_version
+            or remodl.api_version
             or get_secret("AZURE_API_VERSION")
         )  # type: ignore
 
         api_key = (
             optional_params.api_key
-            or litellm.api_key
-            or litellm.azure_key
+            or remodl.api_key
+            or remodl.azure_key
             or get_secret("AZURE_OPENAI_API_KEY")
             or get_secret("AZURE_API_KEY")
         )  # type: ignore
@@ -1251,10 +1251,10 @@ def get_messages(
             max_retries=optional_params.max_retries,
             client=client,
             aget_messages=aget_messages,
-            litellm_params=litellm_params_dict,
+            remodl_params=remodl_params_dict,
         )
     else:
-        raise litellm.exceptions.BadRequestError(
+        raise remodl.exceptions.BadRequestError(
             message="LiteLLM doesn't support {} for 'get_messages'. Only 'openai' is supported.".format(
                 custom_llm_provider
             ),
@@ -1263,7 +1263,7 @@ def get_messages(
             response=httpx.Response(
                 status_code=400,
                 content="Unsupported provider",
-                request=httpx.Request(method="create_thread", url="https://github.com/BerriAI/litellm"),  # type: ignore
+                request=httpx.Request(method="create_thread", url="https://github.com/BerriAI/remodl"),  # type: ignore
             ),
         )
 
@@ -1364,7 +1364,7 @@ def run_thread(
     """Run a given thread + assistant."""
     arun_thread = kwargs.pop("arun_thread", None)
     optional_params = GenericLiteLLMParams(**kwargs)
-    litellm_params_dict = get_litellm_params(**kwargs)
+    remodl_params_dict = get_remodl_params(**kwargs)
 
     ### TIMEOUT LOGIC ###
     timeout = optional_params.timeout or kwargs.get("request_timeout", 600) or 600
@@ -1386,22 +1386,22 @@ def run_thread(
     if custom_llm_provider == "openai":
         api_base = (
             optional_params.api_base  # for deepinfra/perplexity/anyscale/groq we check in get_llm_provider and pass in the api base from there
-            or litellm.api_base
+            or remodl.api_base
             or os.getenv("OPENAI_BASE_URL")
             or os.getenv("OPENAI_API_BASE")
             or "https://api.openai.com/v1"
         )
         organization = (
             optional_params.organization
-            or litellm.organization
+            or remodl.organization
             or os.getenv("OPENAI_ORGANIZATION", None)
             or None  # default - https://github.com/openai/openai-python/blob/284c1799070c723c6a553337134148a7ab088dd8/openai/util.py#L105
         )
         # set API KEY
         api_key = (
             optional_params.api_key
-            or litellm.api_key  # for deepinfra/perplexity/anyscale we check in get_llm_provider and pass in the api key from there
-            or litellm.openai_key
+            or remodl.api_key  # for deepinfra/perplexity/anyscale we check in get_llm_provider and pass in the api key from there
+            or remodl.openai_key
             or os.getenv("OPENAI_API_KEY")
         )
 
@@ -1425,19 +1425,19 @@ def run_thread(
         )
     elif custom_llm_provider == "azure":
         api_base = (
-            optional_params.api_base or litellm.api_base or get_secret("AZURE_API_BASE")
+            optional_params.api_base or remodl.api_base or get_secret("AZURE_API_BASE")
         )  # type: ignore
 
         api_version = (
             optional_params.api_version
-            or litellm.api_version
+            or remodl.api_version
             or get_secret("AZURE_API_VERSION")
         )  # type: ignore
 
         api_key = (
             optional_params.api_key
-            or litellm.api_key
-            or litellm.azure_key
+            or remodl.api_key
+            or remodl.azure_key
             or get_secret("AZURE_OPENAI_API_KEY")
             or get_secret("AZURE_API_KEY")
         )  # type: ignore
@@ -1466,10 +1466,10 @@ def run_thread(
             max_retries=optional_params.max_retries,
             client=client,
             arun_thread=arun_thread,
-            litellm_params=litellm_params_dict,
+            remodl_params=remodl_params_dict,
         )  # type: ignore
     else:
-        raise litellm.exceptions.BadRequestError(
+        raise remodl.exceptions.BadRequestError(
             message="LiteLLM doesn't support {} for 'run_thread'. Only 'openai' is supported.".format(
                 custom_llm_provider
             ),
@@ -1478,7 +1478,7 @@ def run_thread(
             response=httpx.Response(
                 status_code=400,
                 content="Unsupported provider",
-                request=httpx.Request(method="create_thread", url="https://github.com/BerriAI/litellm"),  # type: ignore
+                request=httpx.Request(method="create_thread", url="https://github.com/BerriAI/remodl"),  # type: ignore
             ),
         )
     return response  # type: ignore

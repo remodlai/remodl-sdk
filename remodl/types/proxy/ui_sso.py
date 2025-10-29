@@ -16,7 +16,7 @@ class ReturnedUITokenObject(TypedDict):
     premium_user: bool
     auth_header_name: str
     disabled_non_admin_personal_key_creation: bool
-    server_root_path: str  # e.g. `/litellm`
+    server_root_path: str  # e.g. `/remodl`
 
 
 class ParsedOpenIDResult(TypedDict, total=False):

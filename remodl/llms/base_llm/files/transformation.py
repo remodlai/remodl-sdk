@@ -3,22 +3,22 @@ from typing import TYPE_CHECKING, Any, Dict, List, Optional, Union
 
 import httpx
 
-from litellm.proxy._types import UserAPIKeyAuth
-from litellm.types.llms.openai import (
+from remodl.proxy._types import UserAPIKeyAuth
+from remodl.types.llms.openai import (
     AllMessageValues,
     CreateFileRequest,
     OpenAICreateFileRequestOptionalParams,
     OpenAIFileObject,
     OpenAIFilesPurpose,
 )
-from litellm.types.utils import LlmProviders, ModelResponse
+from remodl.types.utils import LlmProviders, ModelResponse
 
 from ..chat.transformation import BaseConfig
 
 if TYPE_CHECKING:
-    from litellm.litellm_core_utils.litellm_logging import Logging as _LiteLLMLoggingObj
-    from litellm.router import Router as _Router
-    from litellm.types.llms.openai import HttpxBinaryResponseContent
+    from remodl.remodl_core_utils.remodl_logging import Logging as _LiteLLMLoggingObj
+    from remodl.router import Router as _Router
+    from remodl.types.llms.openai import HttpxBinaryResponseContent
 
     LiteLLMLoggingObj = _LiteLLMLoggingObj
     Span = Any
@@ -57,7 +57,7 @@ class BaseFilesConfig(BaseConfig):
         api_key: Optional[str],
         model: str,
         optional_params: dict,
-        litellm_params: dict,
+        remodl_params: dict,
         data: CreateFileRequest,
     ):
         return self.get_complete_url(
@@ -65,7 +65,7 @@ class BaseFilesConfig(BaseConfig):
             api_key=api_key,
             model=model,
             optional_params=optional_params,
-            litellm_params=litellm_params,
+            remodl_params=remodl_params,
         )
 
     @abstractmethod
@@ -74,7 +74,7 @@ class BaseFilesConfig(BaseConfig):
         model: str,
         create_file_data: CreateFileRequest,
         optional_params: dict,
-        litellm_params: dict,
+        remodl_params: dict,
     ) -> Union[dict, str, bytes]:
         pass
 
@@ -84,7 +84,7 @@ class BaseFilesConfig(BaseConfig):
         model: Optional[str],
         raw_response: httpx.Response,
         logging_obj: LiteLLMLoggingObj,
-        litellm_params: dict,
+        remodl_params: dict,
     ) -> OpenAIFileObject:
         pass
 
@@ -93,7 +93,7 @@ class BaseFilesConfig(BaseConfig):
         model: str,
         messages: List[AllMessageValues],
         optional_params: dict,
-        litellm_params: dict,
+        remodl_params: dict,
         headers: dict,
     ) -> dict:
         raise NotImplementedError(
@@ -109,7 +109,7 @@ class BaseFilesConfig(BaseConfig):
         request_data: dict,
         messages: List[AllMessageValues],
         optional_params: dict,
-        litellm_params: dict,
+        remodl_params: dict,
         encoding: Any,
         api_key: Optional[str] = None,
         json_mode: Optional[bool] = None,
@@ -126,7 +126,7 @@ class BaseFileEndpoints(ABC):
         create_file_request: CreateFileRequest,
         llm_router: Router,
         target_model_names_list: List[str],
-        litellm_parent_otel_span: Span,
+        remodl_parent_otel_span: Span,
         user_api_key_dict: UserAPIKeyAuth,
     ) -> OpenAIFileObject:
         pass
@@ -135,7 +135,7 @@ class BaseFileEndpoints(ABC):
     async def afile_retrieve(
         self,
         file_id: str,
-        litellm_parent_otel_span: Optional[Span],
+        remodl_parent_otel_span: Optional[Span],
     ) -> OpenAIFileObject:
         pass
 
@@ -143,7 +143,7 @@ class BaseFileEndpoints(ABC):
     async def afile_list(
         self,
         purpose: Optional[OpenAIFilesPurpose],
-        litellm_parent_otel_span: Optional[Span],
+        remodl_parent_otel_span: Optional[Span],
         **data: Dict,
     ) -> List[OpenAIFileObject]:
         pass
@@ -152,7 +152,7 @@ class BaseFileEndpoints(ABC):
     async def afile_delete(
         self,
         file_id: str,
-        litellm_parent_otel_span: Optional[Span],
+        remodl_parent_otel_span: Optional[Span],
         llm_router: Router,
         **data: Dict,
     ) -> OpenAIFileObject:
@@ -162,7 +162,7 @@ class BaseFileEndpoints(ABC):
     async def afile_content(
         self,
         file_id: str,
-        litellm_parent_otel_span: Optional[Span],
+        remodl_parent_otel_span: Optional[Span],
         llm_router: Router,
         **data: Dict,
     ) -> "HttpxBinaryResponseContent":

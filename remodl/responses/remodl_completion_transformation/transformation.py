@@ -7,12 +7,12 @@ from typing import Any, Dict, List, Literal, Optional, Tuple, Union, cast
 from openai.types.responses.tool_param import FunctionToolParam
 from typing_extensions import TypedDict
 
-from litellm.caching import InMemoryCache
-from litellm.litellm_core_utils.litellm_logging import Logging as LiteLLMLoggingObj
-from litellm.responses.litellm_completion_transformation.session_handler import (
+from remodl.caching import InMemoryCache
+from remodl.remodl_core_utils.remodl_logging import Logging as LiteLLMLoggingObj
+from remodl.responses.remodl_completion_transformation.session_handler import (
     ResponsesSessionHandler,
 )
-from litellm.types.llms.openai import (
+from remodl.types.llms.openai import (
     AllMessageValues,
     ChatCompletionImageObject,
     ChatCompletionImageUrlObject,
@@ -35,13 +35,13 @@ from litellm.types.llms.openai import (
     ResponsesAPIResponse,
     ResponsesAPIStatus,
 )
-from litellm.types.responses.main import (
+from remodl.types.responses.main import (
     GenericResponseOutputItem,
     GenericResponseOutputItemContentAnnotation,
     OutputFunctionToolCall,
     OutputText,
 )
-from litellm.types.utils import (
+from remodl.types.utils import (
     ChatCompletionAnnotation,
     ChatCompletionMessageToolCall,
     Choices,
@@ -65,7 +65,7 @@ class ChatCompletionSession(TypedDict, total=False):
             Message,
         ]
     ]
-    litellm_session_id: Optional[str]
+    remodl_session_id: Optional[str]
 
 
 ########### End of Initialize Classes used for Responses API  ###########
@@ -118,7 +118,7 @@ class LiteLLMCompletionResponsesConfig:
                 text_param
             )
 
-        litellm_completion_request: dict = {
+        remodl_completion_request: dict = {
             "messages": LiteLLMCompletionResponsesConfig.transform_responses_api_input_to_messages(
                 input=input,
                 responses_api_request=responses_api_request,
@@ -136,29 +136,29 @@ class LiteLLMCompletionResponsesConfig:
             "service_tier": kwargs.get("service_tier"),
             "web_search_options": web_search_options,
             "response_format": response_format,
-            # litellm specific params
+            # remodl specific params
             "custom_llm_provider": custom_llm_provider,
             "extra_headers": extra_headers,
         }
 
-        # Responses API `Completed` events require usage, we pass `stream_options` to litellm.completion to include usage
+        # Responses API `Completed` events require usage, we pass `stream_options` to remodl.completion to include usage
         if stream is True:
             stream_options = {
                 "include_usage": True,
             }
-            litellm_completion_request["stream_options"] = stream_options
-            litellm_logging_obj: Optional[LiteLLMLoggingObj] = kwargs.get(
-                "litellm_logging_obj"
+            remodl_completion_request["stream_options"] = stream_options
+            remodl_logging_obj: Optional[LiteLLMLoggingObj] = kwargs.get(
+                "remodl_logging_obj"
             )
-            if litellm_logging_obj:
-                litellm_logging_obj.stream_options = stream_options
+            if remodl_logging_obj:
+                remodl_logging_obj.stream_options = stream_options
 
         # only pass non-None values
-        litellm_completion_request = {
-            k: v for k, v in litellm_completion_request.items() if v is not None
+        remodl_completion_request = {
+            k: v for k, v in remodl_completion_request.items() if v is not None
         }
 
-        return litellm_completion_request
+        return remodl_completion_request
 
     @staticmethod
     def transform_responses_api_input_to_messages(
@@ -203,25 +203,25 @@ class LiteLLMCompletionResponsesConfig:
     @staticmethod
     async def async_responses_api_session_handler(
         previous_response_id: str,
-        litellm_completion_request: dict,
+        remodl_completion_request: dict,
     ) -> dict:
         """
         Async hook to get the chain of previous input and output pairs and return a list of Chat Completion messages
         """
         chat_completion_session = ChatCompletionSession(
-            messages=[], litellm_session_id=None
+            messages=[], remodl_session_id=None
         )
         if previous_response_id:
             chat_completion_session = await ResponsesSessionHandler.get_chat_completion_message_history_for_previous_response_id(
                 previous_response_id=previous_response_id
             )
-        _messages = litellm_completion_request.get("messages") or []
+        _messages = remodl_completion_request.get("messages") or []
         session_messages = chat_completion_session.get("messages") or []
-        litellm_completion_request["messages"] = session_messages + _messages
-        litellm_completion_request[
-            "litellm_trace_id"
-        ] = chat_completion_session.get("litellm_session_id")
-        return litellm_completion_request
+        remodl_completion_request["messages"] = session_messages + _messages
+        remodl_completion_request[
+            "remodl_trace_id"
+        ] = chat_completion_session.get("remodl_session_id")
+        return remodl_completion_request
 
     @staticmethod
     def _transform_response_input_param_to_chat_completion_message(

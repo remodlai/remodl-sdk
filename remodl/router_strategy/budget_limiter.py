@@ -22,21 +22,21 @@ import asyncio
 from datetime import datetime, timedelta, timezone
 from typing import Any, Dict, List, Optional, Tuple, Union
 
-import litellm
-from litellm._logging import verbose_router_logger
-from litellm.caching.caching import DualCache
-from litellm.caching.redis_cache import RedisPipelineIncrementOperation
-from litellm.integrations.custom_logger import CustomLogger, Span
-from litellm.litellm_core_utils.duration_parser import duration_in_seconds
-from litellm.router_strategy.tag_based_routing import _get_tags_from_request_kwargs
-from litellm.router_utils.cooldown_callbacks import (
+import remodl
+from remodl._logging import verbose_router_logger
+from remodl.caching.caching import DualCache
+from remodl.caching.redis_cache import RedisPipelineIncrementOperation
+from remodl.integrations.custom_logger import CustomLogger, Span
+from remodl.remodl_core_utils.duration_parser import duration_in_seconds
+from remodl.router_strategy.tag_based_routing import _get_tags_from_request_kwargs
+from remodl.router_utils.cooldown_callbacks import (
     _get_prometheus_logger_from_callbacks,
 )
-from litellm.types.llms.openai import AllMessageValues
-from litellm.types.router import DeploymentTypedDict, LiteLLM_Params, RouterErrors
-from litellm.types.utils import BudgetConfig
-from litellm.types.utils import BudgetConfig as GenericBudgetInfo
-from litellm.types.utils import GenericBudgetConfigType, StandardLoggingPayload
+from remodl.types.llms.openai import AllMessageValues
+from remodl.types.router import DeploymentTypedDict, LiteLLM_Params, RouterErrors
+from remodl.types.utils import BudgetConfig
+from remodl.types.utils import BudgetConfig as GenericBudgetInfo
+from remodl.types.utils import GenericBudgetConfigType, StandardLoggingPayload
 
 DEFAULT_REDIS_SYNC_INTERVAL = 1
 
@@ -62,9 +62,9 @@ class RouterBudgetLimiting(CustomLogger):
         self._init_deployment_budgets(model_list=model_list)
         self._init_tag_budgets()
 
-        # Add self to litellm callbacks if it's a list
-        if isinstance(litellm.callbacks, list):
-            litellm.logging_callback_manager.add_litellm_callback(self)  # type: ignore
+        # Add self to remodl callbacks if it's a list
+        if isinstance(remodl.callbacks, list):
+            remodl.logging_callback_manager.add_remodl_callback(self)  # type: ignore
 
     async def async_filter_deployments(
         self,
@@ -189,8 +189,8 @@ class RouterBudgetLimiting(CustomLogger):
             # Check deployment budget
             if self.deployment_budget_config and is_within_budget:
                 _model_name = deployment.get("model_name")
-                _litellm_params = deployment.get("litellm_params") or {}
-                _litellm_model_name = _litellm_params.get("model")
+                _remodl_params = deployment.get("remodl_params") or {}
+                _remodl_model_name = _remodl_params.get("model")
                 model_id = deployment.get("model_info", {}).get("id")
                 if model_id in deployment_configs:
                     config = deployment_configs[model_id]
@@ -198,7 +198,7 @@ class RouterBudgetLimiting(CustomLogger):
                         f"deployment_spend:{model_id}:{config.budget_duration}", 0.0
                     )
                     if config.max_budget and current_spend >= config.max_budget:
-                        debug_msg = f"Exceeded budget for deployment model_name: {_model_name}, litellm_params.model: {_litellm_model_name}, model_id: {model_id}: {current_spend} >= {config.budget_duration}"
+                        debug_msg = f"Exceeded budget for deployment model_name: {_model_name}, remodl_params.model: {_remodl_model_name}, model_id: {model_id}: {current_spend} >= {config.budget_duration}"
                         verbose_router_logger.debug(debug_msg)
                         deployment_above_budget_info += f"{debug_msg}\n"
                         is_within_budget = False
@@ -361,7 +361,7 @@ class RouterBudgetLimiting(CustomLogger):
 
         response_cost: float = standard_logging_payload.get("response_cost", 0)
         model_id: str = str(standard_logging_payload.get("model_id", ""))
-        custom_llm_provider: str = kwargs.get("litellm_params", {}).get(
+        custom_llm_provider: str = kwargs.get("remodl_params", {}).get(
             "custom_llm_provider", None
         )
         if custom_llm_provider is None:
@@ -597,12 +597,12 @@ class RouterBudgetLimiting(CustomLogger):
 
     def _get_llm_provider_for_deployment(self, deployment: Dict) -> Optional[str]:
         try:
-            _litellm_params: LiteLLM_Params = LiteLLM_Params(
-                **deployment.get("litellm_params", {"model": ""})
+            _remodl_params: LiteLLM_Params = LiteLLM_Params(
+                **deployment.get("remodl_params", {"model": ""})
             )
-            _, custom_llm_provider, _, _ = litellm.get_llm_provider(
-                model=_litellm_params.model,
-                litellm_params=_litellm_params,
+            _, custom_llm_provider, _, _ = remodl.get_llm_provider(
+                model=_remodl_params.model,
+                remodl_params=_remodl_params,
             )
         except Exception:
             verbose_router_logger.error(
@@ -719,17 +719,17 @@ class RouterBudgetLimiting(CustomLogger):
         if provider_budget_config is not None:
             return True
 
-        if litellm.tag_budget_config is not None:
+        if remodl.tag_budget_config is not None:
             return True
 
         if model_list is None:
             return False
 
         for _model in model_list:
-            _litellm_params = _model.get("litellm_params", {})
+            _remodl_params = _model.get("remodl_params", {})
             if (
-                _litellm_params.get("max_budget")
-                or _litellm_params.get("budget_duration") is not None
+                _remodl_params.get("max_budget")
+                or _remodl_params.get("budget_duration") is not None
             ):
                 return True
         return False
@@ -768,11 +768,11 @@ class RouterBudgetLimiting(CustomLogger):
         if model_list is None:
             return
         for _model in model_list:
-            _litellm_params = _model.get("litellm_params", {})
+            _remodl_params = _model.get("remodl_params", {})
             _model_info: Dict = _model.get("model_info") or {}
             _model_id = _model_info.get("id")
-            _max_budget = _litellm_params.get("max_budget")
-            _budget_duration = _litellm_params.get("budget_duration")
+            _max_budget = _remodl_params.get("max_budget")
+            _budget_duration = _remodl_params.get("budget_duration")
 
             verbose_router_logger.debug(
                 f"Init Deployment Budget: max_budget: {_max_budget}, budget_duration: {_budget_duration}, model_id: {_model_id}"
@@ -795,9 +795,9 @@ class RouterBudgetLimiting(CustomLogger):
         )
 
     def _init_tag_budgets(self):
-        if litellm.tag_budget_config is None:
+        if remodl.tag_budget_config is None:
             return
-        from litellm.proxy.proxy_server import CommonProxyErrors, premium_user
+        from remodl.proxy.proxy_server import CommonProxyErrors, premium_user
 
         if premium_user is not True:
             raise ValueError(
@@ -807,7 +807,7 @@ class RouterBudgetLimiting(CustomLogger):
         if self.tag_budget_config is None:
             self.tag_budget_config = {}
 
-        for _tag, _tag_budget_config in litellm.tag_budget_config.items():
+        for _tag, _tag_budget_config in remodl.tag_budget_config.items():
             if isinstance(_tag_budget_config, dict):
                 _tag_budget_config = BudgetConfig(**_tag_budget_config)
             _generic_budget_config = GenericBudgetInfo(

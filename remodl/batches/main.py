@@ -18,27 +18,27 @@ from typing import Any, Coroutine, Dict, Literal, Optional, Union, cast
 
 import httpx
 
-import litellm
-from litellm._logging import verbose_logger
-from litellm.litellm_core_utils.litellm_logging import Logging as LiteLLMLoggingObj
-from litellm.llms.azure.batches.handler import AzureBatchesAPI
-from litellm.llms.custom_httpx.http_handler import AsyncHTTPHandler, HTTPHandler
-from litellm.llms.custom_httpx.llm_http_handler import BaseLLMHTTPHandler
-from litellm.llms.openai.openai import OpenAIBatchesAPI
-from litellm.llms.vertex_ai.batches.handler import VertexAIBatchPrediction
-from litellm.secret_managers.main import get_secret_str
-from litellm.types.llms.openai import (
+import remodl
+from remodl._logging import verbose_logger
+from remodl.remodl_core_utils.remodl_logging import Logging as LiteLLMLoggingObj
+from remodl.llms.azure.batches.handler import AzureBatchesAPI
+from remodl.llms.custom_httpx.http_handler import AsyncHTTPHandler, HTTPHandler
+from remodl.llms.custom_httpx.llm_http_handler import BaseLLMHTTPHandler
+from remodl.llms.openai.openai import OpenAIBatchesAPI
+from remodl.llms.vertex_ai.batches.handler import VertexAIBatchPrediction
+from remodl.secret_managers.main import get_secret_str
+from remodl.types.llms.openai import (
     Batch,
     CancelBatchRequest,
     CreateBatchRequest,
     RetrieveBatchRequest,
 )
-from litellm.types.router import GenericLiteLLMParams
-from litellm.types.utils import LiteLLMBatch, LlmProviders
-from litellm.utils import (
+from remodl.types.router import GenericLiteLLMParams
+from remodl.types.utils import LiteLLMBatch, LlmProviders
+from remodl.utils import (
     ProviderConfigManager,
     client,
-    get_litellm_params,
+    get_remodl_params,
     get_llm_provider,
     supports_httpx_timeout,
 )
@@ -160,7 +160,7 @@ def create_batch(
     """
     try:
         optional_params = GenericLiteLLMParams(**kwargs)
-        litellm_call_id = kwargs.get("litellm_call_id", None)
+        remodl_call_id = kwargs.get("remodl_call_id", None)
         proxy_server_request = kwargs.get("proxy_server_request", None)
         model_info = kwargs.get("model_info", None)
         model: Optional[str] = kwargs.get("model", None)
@@ -172,22 +172,22 @@ def create_batch(
                 )
         except Exception as e:
             verbose_logger.exception(
-                f"litellm.batches.main.py::create_batch() - Error inferring custom_llm_provider - {str(e)}"
+                f"remodl.batches.main.py::create_batch() - Error inferring custom_llm_provider - {str(e)}"
             )
 
         _is_async = kwargs.pop("acreate_batch", False) is True
-        litellm_params = dict(GenericLiteLLMParams(**kwargs))
-        litellm_logging_obj: LiteLLMLoggingObj = cast(
-            LiteLLMLoggingObj, kwargs.get("litellm_logging_obj", None)
+        remodl_params = dict(GenericLiteLLMParams(**kwargs))
+        remodl_logging_obj: LiteLLMLoggingObj = cast(
+            LiteLLMLoggingObj, kwargs.get("remodl_logging_obj", None)
         )
         ### TIMEOUT LOGIC ###
         timeout = _resolve_timeout(optional_params, kwargs, custom_llm_provider)
-        litellm_logging_obj.update_environment_variables(
+        remodl_logging_obj.update_environment_variables(
             model=model,
             user=None,
             optional_params=optional_params.model_dump(),
-            litellm_params={
-                "litellm_call_id": litellm_call_id,
+            remodl_params={
+                "remodl_call_id": remodl_call_id,
                 "proxy_server_request": proxy_server_request,
                 "model_info": model_info,
                 "metadata": metadata,
@@ -216,12 +216,12 @@ def create_batch(
         if provider_config is not None:
             response = base_llm_http_handler.create_batch(
                 provider_config=provider_config,
-                litellm_params=litellm_params,
+                remodl_params=remodl_params,
                 create_batch_data=_create_batch_request,
                 headers=extra_headers or {},
                 api_base=optional_params.api_base,
                 api_key=optional_params.api_key,
-                logging_obj=litellm_logging_obj,
+                logging_obj=remodl_logging_obj,
                 _is_async=_is_async,
                 client=client
                 if client is not None
@@ -236,22 +236,22 @@ def create_batch(
             # for deepinfra/perplexity/anyscale/groq we check in get_llm_provider and pass in the api base from there
             api_base = (
                 optional_params.api_base
-                or litellm.api_base
+                or remodl.api_base
                 or os.getenv("OPENAI_BASE_URL")
                 or os.getenv("OPENAI_API_BASE")
                 or "https://api.openai.com/v1"
             )
             organization = (
                 optional_params.organization
-                or litellm.organization
+                or remodl.organization
                 or os.getenv("OPENAI_ORGANIZATION", None)
                 or None  # default - https://github.com/openai/openai-python/blob/284c1799070c723c6a553337134148a7ab088dd8/openai/util.py#L105
             )
             # set API KEY
             api_key = (
                 optional_params.api_key
-                or litellm.api_key  # for deepinfra/perplexity/anyscale we check in get_llm_provider and pass in the api key from there
-                or litellm.openai_key
+                or remodl.api_key  # for deepinfra/perplexity/anyscale we check in get_llm_provider and pass in the api key from there
+                or remodl.openai_key
                 or os.getenv("OPENAI_API_KEY")
             )
 
@@ -267,19 +267,19 @@ def create_batch(
         elif custom_llm_provider == "azure":
             api_base = (
                 optional_params.api_base
-                or litellm.api_base
+                or remodl.api_base
                 or get_secret_str("AZURE_API_BASE")
             )
             api_version = (
                 optional_params.api_version
-                or litellm.api_version
+                or remodl.api_version
                 or get_secret_str("AZURE_API_VERSION")
             )
 
             api_key = (
                 optional_params.api_key
-                or litellm.api_key
-                or litellm.azure_key
+                or remodl.api_key
+                or remodl.azure_key
                 or get_secret_str("AZURE_OPENAI_API_KEY")
                 or get_secret_str("AZURE_API_KEY")
             )
@@ -298,18 +298,18 @@ def create_batch(
                 timeout=timeout,
                 max_retries=optional_params.max_retries,
                 create_batch_data=_create_batch_request,
-                litellm_params=litellm_params,
+                remodl_params=remodl_params,
             )
         elif custom_llm_provider == "vertex_ai":
             api_base = optional_params.api_base or ""
             vertex_ai_project = (
                 optional_params.vertex_project
-                or litellm.vertex_project
+                or remodl.vertex_project
                 or get_secret_str("VERTEXAI_PROJECT")
             )
             vertex_ai_location = (
                 optional_params.vertex_location
-                or litellm.vertex_location
+                or remodl.vertex_location
                 or get_secret_str("VERTEXAI_LOCATION")
             )
             vertex_credentials = optional_params.vertex_credentials or get_secret_str(
@@ -327,7 +327,7 @@ def create_batch(
                 create_batch_data=_create_batch_request,
             )
         else:
-            raise litellm.exceptions.BadRequestError(
+            raise remodl.exceptions.BadRequestError(
                 message="LiteLLM doesn't support custom_llm_provider={} for 'create_batch'".format(
                     custom_llm_provider
                 ),
@@ -336,7 +336,7 @@ def create_batch(
                 response=httpx.Response(
                     status_code=400,
                     content="Unsupported provider",
-                    request=httpx.Request(method="create_batch", url="https://github.com/BerriAI/litellm"),  # type: ignore
+                    request=httpx.Request(method="create_batch", url="https://github.com/BerriAI/remodl"),  # type: ignore
                 ),
             )
         return response
@@ -390,7 +390,7 @@ def _handle_retrieve_batch_providers_without_provider_config(
     batch_id: str,
     optional_params: GenericLiteLLMParams,
     timeout: Union[float, httpx.Timeout],
-    litellm_params: dict,
+    remodl_params: dict,
     _retrieve_batch_request: RetrieveBatchRequest,
     _is_async: bool,
     custom_llm_provider: Literal["openai", "azure", "vertex_ai", "bedrock"] = "openai",
@@ -400,22 +400,22 @@ def _handle_retrieve_batch_providers_without_provider_config(
         # for deepinfra/perplexity/anyscale/groq we check in get_llm_provider and pass in the api base from there
         api_base = (
             optional_params.api_base
-            or litellm.api_base
+            or remodl.api_base
             or os.getenv("OPENAI_BASE_URL")
             or os.getenv("OPENAI_API_BASE")
             or "https://api.openai.com/v1"
         )
         organization = (
             optional_params.organization
-            or litellm.organization
+            or remodl.organization
             or os.getenv("OPENAI_ORGANIZATION", None)
             or None  # default - https://github.com/openai/openai-python/blob/284c1799070c723c6a553337134148a7ab088dd8/openai/util.py#L105
         )
         # set API KEY
         api_key = (
             optional_params.api_key
-            or litellm.api_key  # for deepinfra/perplexity/anyscale we check in get_llm_provider and pass in the api key from there
-            or litellm.openai_key
+            or remodl.api_key  # for deepinfra/perplexity/anyscale we check in get_llm_provider and pass in the api key from there
+            or remodl.openai_key
             or os.getenv("OPENAI_API_KEY")
         )
 
@@ -431,19 +431,19 @@ def _handle_retrieve_batch_providers_without_provider_config(
     elif custom_llm_provider == "azure":
         api_base = (
             optional_params.api_base
-            or litellm.api_base
+            or remodl.api_base
             or get_secret_str("AZURE_API_BASE")
         )
         api_version = (
             optional_params.api_version
-            or litellm.api_version
+            or remodl.api_version
             or get_secret_str("AZURE_API_VERSION")
         )
 
         api_key = (
             optional_params.api_key
-            or litellm.api_key
-            or litellm.azure_key
+            or remodl.api_key
+            or remodl.azure_key
             or get_secret_str("AZURE_OPENAI_API_KEY")
             or get_secret_str("AZURE_API_KEY")
         )
@@ -462,18 +462,18 @@ def _handle_retrieve_batch_providers_without_provider_config(
             timeout=timeout,
             max_retries=optional_params.max_retries,
             retrieve_batch_data=_retrieve_batch_request,
-            litellm_params=litellm_params,
+            remodl_params=remodl_params,
         )
     elif custom_llm_provider == "vertex_ai":
         api_base = optional_params.api_base or ""
         vertex_ai_project = (
             optional_params.vertex_project
-            or litellm.vertex_project
+            or remodl.vertex_project
             or get_secret_str("VERTEXAI_PROJECT")
         )
         vertex_ai_location = (
             optional_params.vertex_location
-            or litellm.vertex_location
+            or remodl.vertex_location
             or get_secret_str("VERTEXAI_LOCATION")
         )
         vertex_credentials = optional_params.vertex_credentials or get_secret_str(
@@ -491,7 +491,7 @@ def _handle_retrieve_batch_providers_without_provider_config(
             max_retries=optional_params.max_retries,
         )
     else:
-        raise litellm.exceptions.BadRequestError(
+        raise remodl.exceptions.BadRequestError(
             message="LiteLLM doesn't support {} for 'create_batch'. Only 'openai' is supported.".format(
                 custom_llm_provider
             ),
@@ -500,7 +500,7 @@ def _handle_retrieve_batch_providers_without_provider_config(
             response=httpx.Response(
                 status_code=400,
                 content="Unsupported provider",
-                request=httpx.Request(method="create_thread", url="https://github.com/BerriAI/litellm"),  # type: ignore
+                request=httpx.Request(method="create_thread", url="https://github.com/BerriAI/remodl"),  # type: ignore
             ),
         )
     return response
@@ -522,21 +522,21 @@ def retrieve_batch(
     """
     try:
         optional_params = GenericLiteLLMParams(**kwargs)
-        litellm_logging_obj: Optional[LiteLLMLoggingObj] = kwargs.get(
-            "litellm_logging_obj", None
+        remodl_logging_obj: Optional[LiteLLMLoggingObj] = kwargs.get(
+            "remodl_logging_obj", None
         )
         ### TIMEOUT LOGIC ###
         timeout = optional_params.timeout or kwargs.get("request_timeout", 600) or 600
-        litellm_params = get_litellm_params(
+        remodl_params = get_remodl_params(
             custom_llm_provider=custom_llm_provider,
             **kwargs,
         )
-        if litellm_logging_obj is not None:
-            litellm_logging_obj.update_environment_variables(
+        if remodl_logging_obj is not None:
+            remodl_logging_obj.update_environment_variables(
                 model=None,
                 user=None,
                 optional_params=optional_params.model_dump(),
-                litellm_params=litellm_params,
+                remodl_params=remodl_params,
                 custom_llm_provider=custom_llm_provider,
             )
 
@@ -576,7 +576,7 @@ def retrieve_batch(
             return _handle_async_invoke_status(
                 batch_id=batch_id,
                 aws_region_name=kwargs.get("aws_region_name", "us-east-1"),
-                logging_obj=litellm_logging_obj,
+                logging_obj=remodl_logging_obj,
                 **async_kwargs,
             )
 
@@ -594,18 +594,18 @@ def retrieve_batch(
             response = base_llm_http_handler.retrieve_batch(
                 batch_id=batch_id,
                 provider_config=provider_config,
-                litellm_params=litellm_params,
+                remodl_params=remodl_params,
                 headers=extra_headers or {},
                 api_base=optional_params.api_base,
                 api_key=optional_params.api_key,
-                logging_obj=litellm_logging_obj
+                logging_obj=remodl_logging_obj
                 or LiteLLMLoggingObj(
                     model=model or "bedrock/unknown",
                     messages=[],
                     stream=False,
                     call_type="batch_retrieve",
                     start_time=None,
-                    litellm_call_id="batch_retrieve_" + batch_id,
+                    remodl_call_id="batch_retrieve_" + batch_id,
                     function_id="batch_retrieve",
                 ),
                 _is_async=_is_async,
@@ -625,7 +625,7 @@ def retrieve_batch(
             batch_id=batch_id,
             custom_llm_provider=custom_llm_provider,
             optional_params=optional_params,
-            litellm_params=litellm_params,
+            remodl_params=remodl_params,
             _retrieve_batch_request=_retrieve_batch_request,
             _is_async=_is_async,
             timeout=timeout,
@@ -695,14 +695,14 @@ def list_batches(
     try:
         # set API KEY
         optional_params = GenericLiteLLMParams(**kwargs)
-        litellm_params = get_litellm_params(
+        remodl_params = get_remodl_params(
             custom_llm_provider=custom_llm_provider,
             **kwargs,
         )
         api_key = (
             optional_params.api_key
-            or litellm.api_key  # for deepinfra/perplexity/anyscale we check in get_llm_provider and pass in the api key from there
-            or litellm.openai_key
+            or remodl.api_key  # for deepinfra/perplexity/anyscale we check in get_llm_provider and pass in the api key from there
+            or remodl.openai_key
             or os.getenv("OPENAI_API_KEY")
         )
         ### TIMEOUT LOGIC ###
@@ -726,14 +726,14 @@ def list_batches(
             # for deepinfra/perplexity/anyscale/groq we check in get_llm_provider and pass in the api base from there
             api_base = (
                 optional_params.api_base
-                or litellm.api_base
+                or remodl.api_base
                 or os.getenv("OPENAI_BASE_URL")
                 or os.getenv("OPENAI_API_BASE")
                 or "https://api.openai.com/v1"
             )
             organization = (
                 optional_params.organization
-                or litellm.organization
+                or remodl.organization
                 or os.getenv("OPENAI_ORGANIZATION", None)
                 or None  # default - https://github.com/openai/openai-python/blob/284c1799070c723c6a553337134148a7ab088dd8/openai/util.py#L105
             )
@@ -749,17 +749,17 @@ def list_batches(
                 max_retries=optional_params.max_retries,
             )
         elif custom_llm_provider == "azure":
-            api_base = optional_params.api_base or litellm.api_base or get_secret_str("AZURE_API_BASE")  # type: ignore
+            api_base = optional_params.api_base or remodl.api_base or get_secret_str("AZURE_API_BASE")  # type: ignore
             api_version = (
                 optional_params.api_version
-                or litellm.api_version
+                or remodl.api_version
                 or get_secret_str("AZURE_API_VERSION")
             )
 
             api_key = (
                 optional_params.api_key
-                or litellm.api_key
-                or litellm.azure_key
+                or remodl.api_key
+                or remodl.azure_key
                 or get_secret_str("AZURE_OPENAI_API_KEY")
                 or get_secret_str("AZURE_API_KEY")
             )
@@ -777,10 +777,10 @@ def list_batches(
                 api_version=api_version,
                 timeout=timeout,
                 max_retries=optional_params.max_retries,
-                litellm_params=litellm_params,
+                remodl_params=remodl_params,
             )
         else:
-            raise litellm.exceptions.BadRequestError(
+            raise remodl.exceptions.BadRequestError(
                 message="LiteLLM doesn't support {} for 'list_batch'. Only 'openai' is supported.".format(
                     custom_llm_provider
                 ),
@@ -789,7 +789,7 @@ def list_batches(
                 response=httpx.Response(
                     status_code=400,
                     content="Unsupported provider",
-                    request=httpx.Request(method="create_thread", url="https://github.com/BerriAI/litellm"),  # type: ignore
+                    request=httpx.Request(method="create_thread", url="https://github.com/BerriAI/remodl"),  # type: ignore
                 ),
             )
         return response
@@ -853,7 +853,7 @@ def cancel_batch(
     """
     try:
         optional_params = GenericLiteLLMParams(**kwargs)
-        litellm_params = get_litellm_params(
+        remodl_params = get_remodl_params(
             custom_llm_provider=custom_llm_provider,
             **kwargs,
         )
@@ -884,21 +884,21 @@ def cancel_batch(
         if custom_llm_provider == "openai":
             api_base = (
                 optional_params.api_base
-                or litellm.api_base
+                or remodl.api_base
                 or os.getenv("OPENAI_BASE_URL")
                 or os.getenv("OPENAI_API_BASE")
                 or "https://api.openai.com/v1"
             )
             organization = (
                 optional_params.organization
-                or litellm.organization
+                or remodl.organization
                 or os.getenv("OPENAI_ORGANIZATION", None)
                 or None
             )
             api_key = (
                 optional_params.api_key
-                or litellm.api_key
-                or litellm.openai_key
+                or remodl.api_key
+                or remodl.openai_key
                 or os.getenv("OPENAI_API_KEY")
             )
 
@@ -914,19 +914,19 @@ def cancel_batch(
         elif custom_llm_provider == "azure":
             api_base = (
                 optional_params.api_base
-                or litellm.api_base
+                or remodl.api_base
                 or get_secret_str("AZURE_API_BASE")
             )
             api_version = (
                 optional_params.api_version
-                or litellm.api_version
+                or remodl.api_version
                 or get_secret_str("AZURE_API_VERSION")
             )
 
             api_key = (
                 optional_params.api_key
-                or litellm.api_key
-                or litellm.azure_key
+                or remodl.api_key
+                or remodl.azure_key
                 or get_secret_str("AZURE_OPENAI_API_KEY")
                 or get_secret_str("AZURE_API_KEY")
             )
@@ -945,10 +945,10 @@ def cancel_batch(
                 timeout=timeout,
                 max_retries=optional_params.max_retries,
                 cancel_batch_data=_cancel_batch_request,
-                litellm_params=litellm_params,
+                remodl_params=remodl_params,
             )
         else:
-            raise litellm.exceptions.BadRequestError(
+            raise remodl.exceptions.BadRequestError(
                 message="LiteLLM doesn't support {} for 'cancel_batch'. Only 'openai' and 'azure' are supported.".format(
                     custom_llm_provider
                 ),
@@ -957,7 +957,7 @@ def cancel_batch(
                 response=httpx.Response(
                     status_code=400,
                     content="Unsupported provider",
-                    request=httpx.Request(method="cancel_batch", url="https://github.com/BerriAI/litellm"),  # type: ignore
+                    request=httpx.Request(method="cancel_batch", url="https://github.com/BerriAI/remodl"),  # type: ignore
                 ),
             )
         return response
@@ -981,7 +981,7 @@ def _handle_async_invoke_status(
     """
     import asyncio
 
-    from litellm.llms.bedrock.embed.embedding import BedrockEmbedding
+    from remodl.llms.bedrock.embed.embedding import BedrockEmbedding
 
     async def _async_get_status():
         # Create embedding handler instance
@@ -996,7 +996,7 @@ def _handle_async_invoke_status(
         )
 
         # Transform response to a LiteLLMBatch object
-        from litellm.types.utils import LiteLLMBatch
+        from remodl.types.utils import LiteLLMBatch
 
         result = LiteLLMBatch(
             id=status_response["invocationArn"],

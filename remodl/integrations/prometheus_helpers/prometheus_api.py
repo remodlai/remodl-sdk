@@ -6,9 +6,9 @@ import time
 from datetime import datetime, timedelta
 from typing import Optional
 
-from litellm import get_secret
-from litellm._logging import verbose_logger
-from litellm.llms.custom_httpx.http_handler import (
+from remodl import get_secret
+from remodl._logging import verbose_logger
+from remodl.llms.custom_httpx.http_handler import (
     get_async_httpx_client,
     httpxSpecialProvider,
 )
@@ -46,8 +46,8 @@ async def get_fallback_metric_from_prometheus():
     """
     response_message = ""
     relevant_metrics = [
-        "litellm_deployment_successful_fallbacks_total",
-        "litellm_deployment_failed_fallbacks_total",
+        "remodl_deployment_successful_fallbacks_total",
+        "remodl_deployment_failed_fallbacks_total",
     ]
     for metric in relevant_metrics:
         response_json = await get_metric_from_prometheus(
@@ -107,10 +107,10 @@ async def get_daily_spend_from_prometheus(api_key: Optional[str]):
     url = f"{PROMETHEUS_URL}/api/v1/query_range"
 
     if api_key is None:
-        query = "sum(delta(litellm_spend_metric_total[1d]))"
+        query = "sum(delta(remodl_spend_metric_total[1d]))"
     else:
         query = (
-            f'sum(delta(litellm_spend_metric_total{{hashed_api_key="{api_key}"}}[1d]))'
+            f'sum(delta(remodl_spend_metric_total{{hashed_api_key="{api_key}"}}[1d]))'
         )
 
     params = {

@@ -1,8 +1,8 @@
 from typing import Any, AsyncIterator, Coroutine, Dict, List, Optional, Union, cast
 
-import litellm
-from litellm.types.router import GenericLiteLLMParams
-from litellm.types.utils import ModelResponse
+import remodl
+from remodl.types.router import GenericLiteLLMParams
+from remodl.types.utils import ModelResponse
 
 from .transformation import GoogleGenAIAdapter
 
@@ -19,10 +19,10 @@ class GenerateContentToCompletionHandler:
         contents: Union[List[Dict[str, Any]], Dict[str, Any]],
         config: Optional[Dict[str, Any]] = None,
         stream: bool = False,
-        litellm_params: Optional[GenericLiteLLMParams] = None,
+        remodl_params: Optional[GenericLiteLLMParams] = None,
         extra_kwargs: Optional[Dict[str, Any]] = None,
     ) -> Dict[str, Any]:
-        """Prepare kwargs for litellm.completion/acompletion"""
+        """Prepare kwargs for remodl.completion/acompletion"""
 
         # Transform generate_content request to completion format
         completion_request = (
@@ -30,7 +30,7 @@ class GenerateContentToCompletionHandler:
                 model=model,
                 contents=contents,
                 config=config,
-                litellm_params=litellm_params,
+                remodl_params=remodl_params,
                 **(extra_kwargs or {}),
             )
         )
@@ -50,7 +50,7 @@ class GenerateContentToCompletionHandler:
     async def async_generate_content_handler(
         model: str,
         contents: Union[List[Dict[str, Any]], Dict[str, Any]],
-        litellm_params: GenericLiteLLMParams,
+        remodl_params: GenericLiteLLMParams,
         config: Optional[Dict[str, Any]] = None,
         stream: bool = False,
         **kwargs,
@@ -63,13 +63,13 @@ class GenerateContentToCompletionHandler:
                 contents=contents,
                 config=config,
                 stream=stream,
-                litellm_params=litellm_params,
+                remodl_params=remodl_params,
                 extra_kwargs=kwargs,
             )
         )
 
         try:
-            completion_response = await litellm.acompletion(**completion_kwargs)
+            completion_response = await remodl.acompletion(**completion_kwargs)
 
             if stream:
                 # Check if completion_response is actually a stream or a ModelResponse
@@ -101,14 +101,14 @@ class GenerateContentToCompletionHandler:
 
         except Exception as e:
             raise ValueError(
-                f"Error calling litellm.acompletion for generate_content: {str(e)}"
+                f"Error calling remodl.acompletion for generate_content: {str(e)}"
             )
 
     @staticmethod
     def generate_content_handler(
         model: str,
         contents: Union[List[Dict[str, Any]], Dict[str, Any]],
-        litellm_params: GenericLiteLLMParams,
+        remodl_params: GenericLiteLLMParams,
         config: Optional[Dict[str, Any]] = None,
         stream: bool = False,
         _is_async: bool = False,
@@ -126,7 +126,7 @@ class GenerateContentToCompletionHandler:
                 contents=contents,
                 config=config,
                 stream=stream,
-                litellm_params=litellm_params,
+                remodl_params=remodl_params,
                 **kwargs,
             )
 
@@ -136,13 +136,13 @@ class GenerateContentToCompletionHandler:
                 contents=contents,
                 config=config,
                 stream=stream,
-                litellm_params=litellm_params,
+                remodl_params=remodl_params,
                 extra_kwargs=kwargs,
             )
         )
 
         try:
-            completion_response = litellm.completion(**completion_kwargs)
+            completion_response = remodl.completion(**completion_kwargs)
 
             if stream:
                 # Check if completion_response is actually a stream or a ModelResponse
@@ -174,5 +174,5 @@ class GenerateContentToCompletionHandler:
 
         except Exception as e:
             raise ValueError(
-                f"Error calling litellm.completion for generate_content: {str(e)}"
+                f"Error calling remodl.completion for generate_content: {str(e)}"
             )

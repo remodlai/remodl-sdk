@@ -4,14 +4,14 @@ Helper utilities for tracking the cost of built-in tools.
 
 from typing import Any, Dict, List, Literal, Optional, Tuple
 
-import litellm
-from litellm.constants import OPENAI_FILE_SEARCH_COST_PER_1K_CALLS
-from litellm.types.llms.openai import (
+import remodl
+from remodl.constants import OPENAI_FILE_SEARCH_COST_PER_1K_CALLS
+from remodl.types.llms.openai import (
     FileSearchTool,
     ResponsesAPIResponse,
     WebSearchOptions,
 )
-from litellm.types.utils import (
+from remodl.types.utils import (
     Message,
     ModelInfo,
     ModelResponse,
@@ -84,14 +84,14 @@ class StandardBuiltInToolCostTracking:
         standard_built_in_tools_params: StandardBuiltInToolsParams,
     ) -> float:
         """Handle web search cost calculation."""
-        from litellm.llms import get_cost_for_web_search_request
+        from remodl.llms import get_cost_for_web_search_request
 
         model_info = StandardBuiltInToolCostTracking._safe_get_model_info(
             model=model, custom_llm_provider=custom_llm_provider
         )
 
         if custom_llm_provider is None and model_info is not None:
-            custom_llm_provider = model_info["litellm_provider"]
+            custom_llm_provider = model_info["remodl_provider"]
 
         if (
             model_info is not None
@@ -310,7 +310,7 @@ class StandardBuiltInToolCostTracking:
         - Chat Completion Response (ModelResponse)
         - ResponsesAPIResponse (streaming + non-streaming)
         """
-        from litellm.types.utils import PromptTokensDetailsWrapper
+        from remodl.types.utils import PromptTokensDetailsWrapper
 
         if isinstance(response_object, ModelResponse):
             # chat completions only include url_citation annotations when a web search call is made
@@ -423,7 +423,7 @@ class StandardBuiltInToolCostTracking:
         model: str, custom_llm_provider: Optional[str] = None
     ) -> Optional[ModelInfo]:
         try:
-            return litellm.get_model_info(
+            return remodl.get_model_info(
                 model=model, custom_llm_provider=custom_llm_provider
             )
         except Exception:
@@ -506,7 +506,7 @@ class StandardBuiltInToolCostTracking:
 
         # Azure has storage-based pricing for file search
         if provider == "azure":
-            from litellm.constants import AZURE_FILE_SEARCH_COST_PER_GB_PER_DAY
+            from remodl.constants import AZURE_FILE_SEARCH_COST_PER_GB_PER_DAY
 
             if storage_gb and days:
                 return storage_gb * days * AZURE_FILE_SEARCH_COST_PER_GB_PER_DAY
@@ -539,7 +539,7 @@ class StandardBuiltInToolCostTracking:
 
         # Azure has different pricing structure for vector store
         if provider == "azure":
-            from litellm.constants import AZURE_VECTOR_STORE_COST_PER_GB_PER_DAY
+            from remodl.constants import AZURE_VECTOR_STORE_COST_PER_GB_PER_DAY
 
             return storage_gb * days * AZURE_VECTOR_STORE_COST_PER_GB_PER_DAY
 
@@ -576,7 +576,7 @@ class StandardBuiltInToolCostTracking:
                     return total_cost
 
             # Azure default pricing
-            from litellm.constants import (
+            from remodl.constants import (
                 AZURE_COMPUTER_USE_INPUT_COST_PER_1K_TOKENS,
                 AZURE_COMPUTER_USE_OUTPUT_COST_PER_1K_TOKENS,
             )
@@ -615,7 +615,7 @@ class StandardBuiltInToolCostTracking:
 
         # Azure pricing for code interpreter
         if provider == "azure":
-            from litellm.constants import AZURE_CODE_INTERPRETER_COST_PER_SESSION
+            from remodl.constants import AZURE_CODE_INTERPRETER_COST_PER_SESSION
 
             return sessions * AZURE_CODE_INTERPRETER_COST_PER_SESSION
 

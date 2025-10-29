@@ -1,8 +1,8 @@
 from typing import Optional, Tuple, Union
 
-import litellm
-from litellm.llms.openai.chat.gpt_transformation import OpenAIGPTConfig
-from litellm.secret_managers.main import get_secret_str
+import remodl
+from remodl.llms.openai.chat.gpt_transformation import OpenAIGPTConfig
+from remodl.secret_managers.main import get_secret_str
 
 
 class FeatherlessAIConfig(OpenAIGPTConfig):
@@ -82,11 +82,11 @@ class FeatherlessAIConfig(OpenAIGPTConfig):
                     optional_params[param] = value
                 else:  # https://featherless.ai/docs/completions
                     ## UNSUPPORTED TOOL CHOICE VALUE
-                    if litellm.drop_params is True or drop_params is True:
+                    if remodl.drop_params is True or drop_params is True:
                         value = None
                     else:
-                        error_message = f"Featherless AI doesn't support {param}={value}. To drop unsupported openai params from the call, set `litellm.drop_params = True`"
-                        raise litellm.utils.UnsupportedParamsError(
+                        error_message = f"Featherless AI doesn't support {param}={value}. To drop unsupported openai params from the call, set `remodl.drop_params = True`"
+                        raise remodl.utils.UnsupportedParamsError(
                             message=error_message,
                             status_code=400,
                         )
@@ -115,7 +115,7 @@ class FeatherlessAIConfig(OpenAIGPTConfig):
         model: str,
         messages: list,
         optional_params: dict,
-        litellm_params: dict,
+        remodl_params: dict,
         api_key: Optional[str] = None,
         api_base: Optional[str] = None,
     ) -> dict:

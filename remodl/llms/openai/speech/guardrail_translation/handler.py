@@ -7,12 +7,12 @@ The handler processes the 'input' text parameter (output is audio, so no text to
 
 from typing import TYPE_CHECKING, Any
 
-from litellm._logging import verbose_proxy_logger
-from litellm.llms.base_llm.guardrail_translation.base_translation import BaseTranslation
+from remodl._logging import verbose_proxy_logger
+from remodl.llms.base_llm.guardrail_translation.base_translation import BaseTranslation
 
 if TYPE_CHECKING:
-    from litellm.integrations.custom_guardrail import CustomGuardrail
-    from litellm.types.llms.openai import HttpxBinaryResponseContent
+    from remodl.integrations.custom_guardrail import CustomGuardrail
+    from remodl.types.llms.openai import HttpxBinaryResponseContent
 
 
 class OpenAITextToSpeechHandler(BaseTranslation):

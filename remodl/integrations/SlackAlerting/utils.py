@@ -5,12 +5,12 @@ Utils used for slack alerting
 import asyncio
 from typing import TYPE_CHECKING, Any, Dict, List, Optional, Union
 
-import litellm
-from litellm.proxy._types import AlertType
-from litellm.secret_managers.main import get_secret
+import remodl
+from remodl.proxy._types import AlertType
+from remodl.secret_managers.main import get_secret
 
 if TYPE_CHECKING:
-    from litellm.litellm_core_utils.litellm_logging import Logging as _Logging
+    from remodl.remodl_core_utils.remodl_logging import Logging as _Logging
 
     Logging = _Logging
 else:
@@ -68,9 +68,9 @@ async def _add_langfuse_trace_id_to_alert(
     - check:
     -> existing_trace_id
     -> trace_id
-    -> litellm_call_id
+    -> remodl_call_id
     """
-    if "langfuse" not in litellm.logging_callback_manager._get_all_callbacks():
+    if "langfuse" not in remodl.logging_callback_manager._get_all_callbacks():
         return None
     #########################################################
     # Only run if langfuse is added as a callback
@@ -78,18 +78,18 @@ async def _add_langfuse_trace_id_to_alert(
 
     if (
         request_data is not None
-        and request_data.get("litellm_logging_obj", None) is not None
+        and request_data.get("remodl_logging_obj", None) is not None
     ):
         trace_id: Optional[str] = None
-        litellm_logging_obj: Logging = request_data["litellm_logging_obj"]
+        remodl_logging_obj: Logging = request_data["remodl_logging_obj"]
 
         for _ in range(3):
-            trace_id = litellm_logging_obj._get_trace_id(service_name="langfuse")
+            trace_id = remodl_logging_obj._get_trace_id(service_name="langfuse")
             if trace_id is not None:
                 break
             await asyncio.sleep(3)  # wait 3s before retrying for trace id
         #########################################################
-        langfuse_object = litellm_logging_obj._get_callback_object(
+        langfuse_object = remodl_logging_obj._get_callback_object(
             service_name="langfuse"
         )
         if langfuse_object is not None:

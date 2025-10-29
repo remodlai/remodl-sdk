@@ -1,21 +1,21 @@
 from datetime import datetime
 from typing import Any, Dict, List, Optional, Type, Union, get_args
 
-from litellm._logging import verbose_logger
-from litellm.caching import DualCache
-from litellm.integrations.custom_logger import CustomLogger
-from litellm.types.guardrails import (
+from remodl._logging import verbose_logger
+from remodl.caching import DualCache
+from remodl.integrations.custom_logger import CustomLogger
+from remodl.types.guardrails import (
     DynamicGuardrailParams,
     GuardrailEventHooks,
     LitellmParams,
     Mode,
     PiiEntityType,
 )
-from litellm.types.llms.openai import (
+from remodl.types.llms.openai import (
     AllMessageValues,
 )
-from litellm.types.proxy.guardrails.guardrail_hooks.base import GuardrailConfigModel
-from litellm.types.utils import (
+from remodl.types.proxy.guardrails.guardrail_hooks.base import GuardrailConfigModel
+from remodl.types.utils import (
     CallTypes,
     GuardrailStatus,
     LLMResponseTypes,
@@ -123,7 +123,7 @@ class CustomGuardrail(CustomLogger):
         """
         if "guardrails" in data:
             return data["guardrails"]
-        metadata = data.get("litellm_metadata") or data.get("metadata", {})
+        metadata = data.get("remodl_metadata") or data.get("metadata", {})
         return metadata.get("guardrails") or []
 
     def _guardrail_is_in_requested_guardrails(
@@ -147,11 +147,11 @@ class CustomGuardrail(CustomLogger):
         self, kwargs: Dict[str, Any], call_type: Optional[CallTypes]
     ) -> Optional[dict]:
 
-        from litellm.proxy._types import UserAPIKeyAuth
+        from remodl.proxy._types import UserAPIKeyAuth
 
         # should run guardrail
-        litellm_guardrails = kwargs.get("guardrails")
-        if litellm_guardrails is None or not isinstance(litellm_guardrails, list):
+        remodl_guardrails = kwargs.get("guardrails")
+        if remodl_guardrails is None or not isinstance(remodl_guardrails, list):
             return kwargs
 
         if (
@@ -193,11 +193,11 @@ class CustomGuardrail(CustomLogger):
         """
         Allow modifying / reviewing the response just after it's received from the deployment.
         """
-        from litellm.proxy._types import UserAPIKeyAuth
+        from remodl.proxy._types import UserAPIKeyAuth
 
         # should run guardrail
-        litellm_guardrails = request_data.get("guardrails")
-        if litellm_guardrails is None or not isinstance(litellm_guardrails, list):
+        remodl_guardrails = request_data.get("guardrails")
+        if remodl_guardrails is None or not isinstance(remodl_guardrails, list):
             return response
 
         if (
@@ -247,12 +247,12 @@ class CustomGuardrail(CustomLogger):
             if self._event_hook_is_event_type(event_type):
                 if isinstance(self.event_hook, Mode):
                     try:
-                        from litellm_enterprise.integrations.custom_guardrail import (
+                        from remodl_enterprise.integrations.custom_guardrail import (
                             EnterpriseCustomGuardrailHelper,
                         )
                     except ImportError:
                         raise ImportError(
-                            "Setting tag-based guardrails is only available in litellm-enterprise. You must be a premium user to use this feature."
+                            "Setting tag-based guardrails is only available in remodl-enterprise. You must be a premium user to use this feature."
                         )
                     result = EnterpriseCustomGuardrailHelper._should_run_if_mode_by_tag(
                         data, self.event_hook
@@ -274,12 +274,12 @@ class CustomGuardrail(CustomLogger):
 
         if isinstance(self.event_hook, Mode):
             try:
-                from litellm_enterprise.integrations.custom_guardrail import (
+                from remodl_enterprise.integrations.custom_guardrail import (
                     EnterpriseCustomGuardrailHelper,
                 )
             except ImportError:
                 raise ImportError(
-                    "Setting tag-based guardrails is only available in litellm-enterprise. You must be a premium user to use this feature."
+                    "Setting tag-based guardrails is only available in remodl-enterprise. You must be a premium user to use this feature."
                 )
             result = EnterpriseCustomGuardrailHelper._should_run_if_mode_by_tag(
                 data, self.event_hook
@@ -343,7 +343,7 @@ class CustomGuardrail(CustomLogger):
         """
         Returns True if the user is a premium user
         """
-        from litellm.proxy.proxy_server import CommonProxyErrors, premium_user
+        from remodl.proxy.proxy_server import CommonProxyErrors, premium_user
 
         if premium_user is not True:
             verbose_logger.warning(
@@ -368,7 +368,7 @@ class CustomGuardrail(CustomLogger):
         """
         if isinstance(guardrail_json_response, Exception):
             guardrail_json_response = str(guardrail_json_response)
-        from litellm.types.utils import GuardrailMode
+        from remodl.types.utils import GuardrailMode
 
         slg = StandardLoggingGuardrailInformation(
             guardrail_name=self.guardrail_name,
@@ -389,8 +389,8 @@ class CustomGuardrail(CustomLogger):
             if request_data["metadata"] is None:
                 request_data["metadata"] = {}
             request_data["metadata"]["standard_logging_guardrail_information"] = slg
-        elif "litellm_metadata" in request_data:
-            request_data["litellm_metadata"][
+        elif "remodl_metadata" in request_data:
+            request_data["remodl_metadata"][
                 "standard_logging_guardrail_information"
             ] = slg
         else:
@@ -489,11 +489,11 @@ class CustomGuardrail(CustomLogger):
         # Mask the content
         return content_string[:start_index] + mask_string + content_string[end_index:]
 
-    def update_in_memory_litellm_params(self, litellm_params: LitellmParams) -> None:
+    def update_in_memory_remodl_params(self, remodl_params: LitellmParams) -> None:
         """
-        Update the guardrails litellm params in memory
+        Update the guardrails remodl params in memory
         """
-        for key, value in vars(litellm_params).items():
+        for key, value in vars(remodl_params).items():
             setattr(self, key, value)
     
     def get_guardrails_messages_for_call_type(self, call_type: CallTypes, data: Optional[dict] = None) -> Optional[List[AllMessageValues]]:
@@ -513,12 +513,12 @@ class CustomGuardrail(CustomLogger):
         
         #########################################################
         # /responses 
-        # User/System messages are stored in the "input" key, use litellm transformation to get the messages
+        # User/System messages are stored in the "input" key, use remodl transformation to get the messages
         #########################################################
         if call_type == CallTypes.responses.value or call_type == CallTypes.aresponses.value:
             from typing import cast
 
-            from litellm.responses.litellm_completion_transformation.transformation import (
+            from remodl.responses.remodl_completion_transformation.transformation import (
                 LiteLLMCompletionResponsesConfig,
             )
             

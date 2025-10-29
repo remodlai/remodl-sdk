@@ -3,18 +3,18 @@ import contextvars
 from functools import partial
 from typing import Any, Coroutine, Dict, List, Literal, Optional, Union
 
-import litellm
-from litellm._logging import verbose_logger
-from litellm.litellm_core_utils.litellm_logging import Logging as LiteLLMLoggingObj
-from litellm.llms.base_llm.rerank.transformation import BaseRerankConfig
-from litellm.llms.bedrock.rerank.handler import BedrockRerankHandler
-from litellm.llms.custom_httpx.llm_http_handler import BaseLLMHTTPHandler
-from litellm.llms.together_ai.rerank.handler import TogetherAIRerank
-from litellm.rerank_api.rerank_utils import get_optional_rerank_params
-from litellm.secret_managers.main import get_secret, get_secret_str
-from litellm.types.rerank import RerankResponse
-from litellm.types.router import *
-from litellm.utils import ProviderConfigManager, client, exception_type
+import remodl
+from remodl._logging import verbose_logger
+from remodl.remodl_core_utils.remodl_logging import Logging as LiteLLMLoggingObj
+from remodl.llms.base_llm.rerank.transformation import BaseRerankConfig
+from remodl.llms.bedrock.rerank.handler import BedrockRerankHandler
+from remodl.llms.custom_httpx.llm_http_handler import BaseLLMHTTPHandler
+from remodl.llms.together_ai.rerank.handler import TogetherAIRerank
+from remodl.rerank_api.rerank_utils import get_optional_rerank_params
+from remodl.secret_managers.main import get_secret, get_secret_str
+from remodl.types.rerank import RerankResponse
+from remodl.types.router import *
+from remodl.utils import ProviderConfigManager, client, exception_type
 
 ####### ENVIRONMENT VARIABLES ###################
 # Initialize any necessary instances or variables here
@@ -80,7 +80,7 @@ def rerank(  # noqa: PLR0915
             "together_ai",
             "azure_ai",
             "infinity",
-            "litellm_proxy",
+            "remodl_proxy",
             "hosted_vllm",
             "deepinfra",
         ]
@@ -96,8 +96,8 @@ def rerank(  # noqa: PLR0915
     Reranks a list of documents based on their relevance to the query
     """
     headers: Optional[dict] = kwargs.get("headers")  # type: ignore
-    litellm_logging_obj: LiteLLMLoggingObj = kwargs.get("litellm_logging_obj")  # type: ignore
-    litellm_call_id: Optional[str] = kwargs.get("litellm_call_id", None)
+    remodl_logging_obj: LiteLLMLoggingObj = kwargs.get("remodl_logging_obj")  # type: ignore
+    remodl_call_id: Optional[str] = kwargs.get("remodl_call_id", None)
     proxy_server_request = kwargs.get("proxy_server_request", None)
     model_info = kwargs.get("model_info", None)
     metadata = kwargs.get("metadata", {})
@@ -120,7 +120,7 @@ def rerank(  # noqa: PLR0915
             _custom_llm_provider,
             dynamic_api_key,
             dynamic_api_base,
-        ) = litellm.get_llm_provider(
+        ) = remodl.get_llm_provider(
             model=model,
             custom_llm_provider=custom_llm_provider,
             api_base=optional_params.api_base,
@@ -130,7 +130,7 @@ def rerank(  # noqa: PLR0915
         rerank_provider_config: BaseRerankConfig = (
             ProviderConfigManager.get_provider_rerank_config(
                 model=model,
-                provider=litellm.LlmProviders(_custom_llm_provider),
+                provider=remodl.LlmProviders(_custom_llm_provider),
                 api_base=optional_params.api_base,
                 present_version_params=present_version_params,
             )
@@ -139,7 +139,7 @@ def rerank(  # noqa: PLR0915
         optional_rerank_params: Dict = get_optional_rerank_params(
             rerank_provider_config=rerank_provider_config,
             model=model,
-            drop_params=kwargs.get("drop_params") or litellm.drop_params or False,
+            drop_params=kwargs.get("drop_params") or remodl.drop_params or False,
             query=query,
             documents=documents,
             custom_llm_provider=_custom_llm_provider,
@@ -156,12 +156,12 @@ def rerank(  # noqa: PLR0915
 
         model_response = RerankResponse()
 
-        litellm_logging_obj.update_environment_variables(
+        remodl_logging_obj.update_environment_variables(
             model=model,
             user=user,
             optional_params=dict(optional_rerank_params),
-            litellm_params={
-                "litellm_call_id": litellm_call_id,
+            remodl_params={
+                "remodl_call_id": remodl_call_id,
                 "proxy_server_request": proxy_server_request,
                 "model_info": model_info,
                 "metadata": metadata,
@@ -173,16 +173,16 @@ def rerank(  # noqa: PLR0915
         )
 
         # Implement rerank logic here based on the custom_llm_provider
-        if _custom_llm_provider == litellm.LlmProviders.COHERE or _custom_llm_provider == litellm.LlmProviders.LITELLM_PROXY:
+        if _custom_llm_provider == remodl.LlmProviders.COHERE or _custom_llm_provider == remodl.LlmProviders.LITELLM_PROXY:
             # Implement Cohere rerank logic
             api_key: Optional[str] = (
-                dynamic_api_key or optional_params.api_key or litellm.api_key
+                dynamic_api_key or optional_params.api_key or remodl.api_key
             )
 
             api_base: Optional[str] = (
                 dynamic_api_base
                 or optional_params.api_base
-                or litellm.api_base
+                or remodl.api_base
                 or get_secret("COHERE_API_BASE")  # type: ignore
                 or "https://api.cohere.com"
             )
@@ -196,20 +196,20 @@ def rerank(  # noqa: PLR0915
                 custom_llm_provider=_custom_llm_provider,
                 provider_config=rerank_provider_config,
                 optional_rerank_params=optional_rerank_params,
-                logging_obj=litellm_logging_obj,
+                logging_obj=remodl_logging_obj,
                 timeout=optional_params.timeout,
                 api_key=api_key,
                 api_base=api_base,
                 _is_async=_is_async,
-                headers=headers or litellm.headers or {},
+                headers=headers or remodl.headers or {},
                 client=client,
                 model_response=model_response,
             )
-        elif _custom_llm_provider == litellm.LlmProviders.AZURE_AI:
+        elif _custom_llm_provider == remodl.LlmProviders.AZURE_AI:
             api_base = (
                 dynamic_api_base  # for deepinfra/perplexity/anyscale/groq/friendliai we check in get_llm_provider and pass in the api base from there
                 or optional_params.api_base
-                or litellm.api_base
+                or remodl.api_base
                 or get_secret("AZURE_AI_API_BASE")  # type: ignore
             )
             response = base_llm_http_handler.rerank(
@@ -217,23 +217,23 @@ def rerank(  # noqa: PLR0915
                 custom_llm_provider=_custom_llm_provider,
                 optional_rerank_params=optional_rerank_params,
                 provider_config=rerank_provider_config,
-                logging_obj=litellm_logging_obj,
+                logging_obj=remodl_logging_obj,
                 timeout=optional_params.timeout,
                 api_key=dynamic_api_key or optional_params.api_key,
                 api_base=api_base,
                 _is_async=_is_async,
-                headers=headers or litellm.headers or {},
+                headers=headers or remodl.headers or {},
                 client=client,
                 model_response=model_response,
             )
-        elif _custom_llm_provider == litellm.LlmProviders.INFINITY:
+        elif _custom_llm_provider == remodl.LlmProviders.INFINITY:
             # Implement Infinity rerank logic
-            api_key = dynamic_api_key or optional_params.api_key or litellm.api_key
+            api_key = dynamic_api_key or optional_params.api_key or remodl.api_key
 
             api_base = (
                 dynamic_api_base
                 or optional_params.api_base
-                or litellm.api_base
+                or remodl.api_base
                 or get_secret_str("INFINITY_API_BASE")
             )
 
@@ -247,23 +247,23 @@ def rerank(  # noqa: PLR0915
                 custom_llm_provider=_custom_llm_provider,
                 provider_config=rerank_provider_config,
                 optional_rerank_params=optional_rerank_params,
-                logging_obj=litellm_logging_obj,
+                logging_obj=remodl_logging_obj,
                 timeout=optional_params.timeout,
                 api_key=dynamic_api_key or optional_params.api_key,
                 api_base=api_base,
                 _is_async=_is_async,
-                headers=headers or litellm.headers or {},
+                headers=headers or remodl.headers or {},
                 client=client,
                 model_response=model_response,
             )
-        elif _custom_llm_provider == litellm.LlmProviders.TOGETHER_AI:
+        elif _custom_llm_provider == remodl.LlmProviders.TOGETHER_AI:
             # Implement Together AI rerank logic
             api_key = (
                 dynamic_api_key
                 or optional_params.api_key
-                or litellm.togetherai_api_key
+                or remodl.togetherai_api_key
                 or get_secret("TOGETHERAI_API_KEY")  # type: ignore
-                or litellm.api_key
+                or remodl.api_key
             )
 
             if api_key is None:
@@ -282,7 +282,7 @@ def rerank(  # noqa: PLR0915
                 api_key=api_key,
                 _is_async=_is_async,
             )
-        elif _custom_llm_provider == litellm.LlmProviders.JINA_AI:
+        elif _custom_llm_provider == remodl.LlmProviders.JINA_AI:
             if dynamic_api_key is None:
                 raise ValueError(
                     "Jina AI API key is required, please set 'JINA_AI_API_KEY' in your environment"
@@ -291,7 +291,7 @@ def rerank(  # noqa: PLR0915
             api_base = (
                 dynamic_api_base
                 or optional_params.api_base
-                or litellm.api_base
+                or remodl.api_base
                 or get_secret("BEDROCK_API_BASE")  # type: ignore
             )
 
@@ -299,17 +299,17 @@ def rerank(  # noqa: PLR0915
                 model=model,
                 custom_llm_provider=_custom_llm_provider,
                 optional_rerank_params=optional_rerank_params,
-                logging_obj=litellm_logging_obj,
+                logging_obj=remodl_logging_obj,
                 provider_config=rerank_provider_config,
                 timeout=optional_params.timeout,
                 api_key=dynamic_api_key or optional_params.api_key,
                 api_base=api_base,
                 _is_async=_is_async,
-                headers=headers or litellm.headers or {},
+                headers=headers or remodl.headers or {},
                 client=client,
                 model_response=model_response,
             )
-        elif _custom_llm_provider == litellm.LlmProviders.NVIDIA_NIM:
+        elif _custom_llm_provider == remodl.LlmProviders.NVIDIA_NIM:
             if dynamic_api_key is None:
                 raise ValueError(
                     "Nvidia NIM API key is required, please set 'NVIDIA_NIM_API_KEY' in your environment"
@@ -327,21 +327,21 @@ def rerank(  # noqa: PLR0915
                 model=model,
                 custom_llm_provider=_custom_llm_provider,
                 optional_rerank_params=optional_rerank_params,
-                logging_obj=litellm_logging_obj,
+                logging_obj=remodl_logging_obj,
                 provider_config=rerank_provider_config,
                 timeout=optional_params.timeout,
                 api_key=dynamic_api_key or optional_params.api_key,
                 api_base=api_base,
                 _is_async=_is_async,
-                headers=headers or litellm.headers or {},
+                headers=headers or remodl.headers or {},
                 client=client,
                 model_response=model_response,
             )
-        elif _custom_llm_provider == litellm.LlmProviders.BEDROCK:
+        elif _custom_llm_provider == remodl.LlmProviders.BEDROCK:
             api_base = (
                 dynamic_api_base
                 or optional_params.api_base
-                or litellm.api_base
+                or remodl.api_base
                 or get_secret("BEDROCK_API_BASE")  # type: ignore
             )
 
@@ -356,10 +356,10 @@ def rerank(  # noqa: PLR0915
                 _is_async=_is_async,
                 optional_params=optional_params.model_dump(exclude_unset=True),
                 api_base=api_base,
-                logging_obj=litellm_logging_obj,
+                logging_obj=remodl_logging_obj,
                 client=client,
             )
-        elif _custom_llm_provider == litellm.LlmProviders.HOSTED_VLLM:
+        elif _custom_llm_provider == remodl.LlmProviders.HOSTED_VLLM:
             # Implement Hosted VLLM rerank logic
             api_key = (
                 dynamic_api_key
@@ -383,17 +383,17 @@ def rerank(  # noqa: PLR0915
                 custom_llm_provider=_custom_llm_provider,
                 provider_config=rerank_provider_config,
                 optional_rerank_params=optional_rerank_params,
-                logging_obj=litellm_logging_obj,
+                logging_obj=remodl_logging_obj,
                 timeout=optional_params.timeout,
                 api_key=api_key,
                 api_base=api_base,
                 _is_async=_is_async,
-                headers=headers or litellm.headers or {},
+                headers=headers or remodl.headers or {},
                 client=client,
                 model_response=model_response,
             )
 
-        elif _custom_llm_provider == litellm.LlmProviders.DEEPINFRA:
+        elif _custom_llm_provider == remodl.LlmProviders.DEEPINFRA:
             api_key = (
                 dynamic_api_key
                 or optional_params.api_key
@@ -416,12 +416,12 @@ def rerank(  # noqa: PLR0915
                 custom_llm_provider=_custom_llm_provider,
                 provider_config=rerank_provider_config,
                 optional_rerank_params=optional_rerank_params,
-                logging_obj=litellm_logging_obj,
+                logging_obj=remodl_logging_obj,
                 timeout=optional_params.timeout,
                 api_key=api_key,
                 api_base=api_base,
                 _is_async=_is_async,
-                headers=headers or litellm.headers or {},
+                headers=headers or remodl.headers or {},
                 client=client,
                 model_response=model_response,
             )
@@ -431,15 +431,15 @@ def rerank(  # noqa: PLR0915
             # is handled in the respective transformation configs
 
             # Check if the provider is actually supported
-            # If rerank_provider_config is a default CohereRerankConfig but the provider is not Cohere or litellm_proxy,
+            # If rerank_provider_config is a default CohereRerankConfig but the provider is not Cohere or remodl_proxy,
             # it means the provider is not supported
             if (
                 (
-                    isinstance(rerank_provider_config, litellm.CohereRerankConfig)
-                    or isinstance(rerank_provider_config, litellm.CohereRerankV2Config)
+                    isinstance(rerank_provider_config, remodl.CohereRerankConfig)
+                    or isinstance(rerank_provider_config, remodl.CohereRerankV2Config)
                 )
                 and _custom_llm_provider != "cohere"
-                and _custom_llm_provider != "litellm_proxy"
+                and _custom_llm_provider != "remodl_proxy"
             ):
                 raise ValueError(f"Unsupported provider: {_custom_llm_provider}")
 
@@ -448,12 +448,12 @@ def rerank(  # noqa: PLR0915
                 custom_llm_provider=_custom_llm_provider,
                 provider_config=rerank_provider_config,
                 optional_rerank_params=optional_rerank_params,
-                logging_obj=litellm_logging_obj,
+                logging_obj=remodl_logging_obj,
                 timeout=optional_params.timeout,
                 api_key=dynamic_api_key or optional_params.api_key,
                 api_base=dynamic_api_base or optional_params.api_base,
                 _is_async=_is_async,
-                headers=headers or litellm.headers or {},
+                headers=headers or remodl.headers or {},
                 client=client,
                 model_response=model_response,
             )

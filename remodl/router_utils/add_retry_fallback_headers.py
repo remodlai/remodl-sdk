@@ -2,7 +2,7 @@ from typing import Any, Optional, Union
 
 from pydantic import BaseModel
 
-from litellm.types.utils import HiddenParams
+from remodl.types.utils import HiddenParams
 
 
 def _add_headers_to_response(response: Any, headers: dict) -> Any:

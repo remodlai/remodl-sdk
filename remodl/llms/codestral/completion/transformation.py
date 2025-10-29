@@ -1,9 +1,9 @@
 import json
 from typing import Optional
 
-import litellm
-from litellm.llms.openai.completion.transformation import OpenAITextCompletionConfig
-from litellm.types.llms.databricks import GenericStreamingChunk
+import remodl
+from remodl.llms.openai.completion.transformation import OpenAITextCompletionConfig
+from remodl.types.llms.databricks import GenericStreamingChunk
 
 
 class CodestralTextCompletionConfig(OpenAITextCompletionConfig):
@@ -84,7 +84,7 @@ class CodestralTextCompletionConfig(OpenAITextCompletionConfig):
         logprobs = None
 
         chunk_data = (
-            litellm.CustomStreamWrapper._strip_sse_data_from_chunk(chunk_data) or ""
+            remodl.CustomStreamWrapper._strip_sse_data_from_chunk(chunk_data) or ""
         )
         chunk_data = chunk_data.strip()
         if len(chunk_data) == 0 or chunk_data == "[DONE]":
@@ -102,7 +102,7 @@ class CodestralTextCompletionConfig(OpenAITextCompletionConfig):
                 "finish_reason": finish_reason,
             }
 
-        original_chunk = litellm.ModelResponse(**chunk_data_dict, stream=True)
+        original_chunk = remodl.ModelResponse(**chunk_data_dict, stream=True)
         _choices = chunk_data_dict.get("choices", []) or []
         if len(_choices) == 0:
             return {

@@ -4,19 +4,19 @@ from typing import Any, Coroutine, Optional, Tuple, Union
 
 import httpx
 
-from litellm import LlmProviders
-from litellm.integrations.gcs_bucket.gcs_bucket_base import (
+from remodl import LlmProviders
+from remodl.integrations.gcs_bucket.gcs_bucket_base import (
     GCSBucketBase,
     GCSLoggingConfig,
 )
-from litellm.llms.custom_httpx.http_handler import get_async_httpx_client
-from litellm.types.llms.openai import (
+from remodl.llms.custom_httpx.http_handler import get_async_httpx_client
+from remodl.types.llms.openai import (
     CreateFileRequest,
     FileContentRequest,
     HttpxBinaryResponseContent,
     OpenAIFileObject,
 )
-from litellm.types.llms.vertex_ai import VERTEX_CREDENTIALS_TYPES
+from remodl.types.llms.vertex_ai import VERTEX_CREDENTIALS_TYPES
 
 from .transformation import VertexAIJsonlFilesTransformation
 
@@ -86,7 +86,7 @@ class VertexAIFilesHandler(GCSBucketBase):
         """
         Creates a file on VertexAI GCS Bucket
 
-        Only supported for Async litellm.acreate_file
+        Only supported for Async remodl.acreate_file
         """
 
         if _is_async:

@@ -2,16 +2,16 @@ from typing import List, Optional, Union
 
 from openai import OpenAI
 
-import litellm
-from litellm.llms.custom_httpx.http_handler import (
+import remodl
+from remodl.llms.custom_httpx.http_handler import (
     AsyncHTTPHandler,
     HTTPHandler,
     get_async_httpx_client,
 )
-from litellm.llms.openai.openai import OpenAIChatCompletion
-from litellm.types.llms.azure_ai import ImageEmbeddingRequest
-from litellm.types.utils import EmbeddingResponse
-from litellm.utils import convert_to_model_response_object
+from remodl.llms.openai.openai import OpenAIChatCompletion
+from remodl.types.llms.azure_ai import ImageEmbeddingRequest
+from remodl.types.utils import EmbeddingResponse
+from remodl.utils import convert_to_model_response_object
 
 from .cohere_transformation import AzureAICohereConfig
 
@@ -58,7 +58,7 @@ class AzureAIEmbedding(OpenAIChatCompletion):
         data: ImageEmbeddingRequest,
         timeout: float,
         logging_obj,
-        model_response: litellm.EmbeddingResponse,
+        model_response: remodl.EmbeddingResponse,
         optional_params: dict,
         api_key: Optional[str],
         api_base: Optional[str],
@@ -66,7 +66,7 @@ class AzureAIEmbedding(OpenAIChatCompletion):
     ) -> EmbeddingResponse:
         if client is None or not isinstance(client, AsyncHTTPHandler):
             client = get_async_httpx_client(
-                llm_provider=litellm.LlmProviders.AZURE_AI,
+                llm_provider=remodl.LlmProviders.AZURE_AI,
                 params={"timeout": timeout},
             )
 
@@ -138,7 +138,7 @@ class AzureAIEmbedding(OpenAIChatCompletion):
         input: List,
         timeout: float,
         logging_obj,
-        model_response: litellm.EmbeddingResponse,
+        model_response: remodl.EmbeddingResponse,
         optional_params: dict,
         api_key: Optional[str] = None,
         api_base: Optional[str] = None,

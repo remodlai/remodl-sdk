@@ -2,14 +2,14 @@ from typing import Any, List, Optional, Union
 
 from httpx import Headers, Response
 
-import litellm
-from litellm.llms.base_llm.chat.transformation import (
+import remodl
+from remodl.llms.base_llm.chat.transformation import (
     BaseConfig,
     BaseLLMException,
     LiteLLMLoggingObj,
 )
-from litellm.types.llms.openai import AllMessageValues
-from litellm.types.utils import ModelResponse
+from remodl.types.llms.openai import AllMessageValues
+from remodl.types.utils import ModelResponse
 
 from ..common_utils import PetalsError
 
@@ -39,7 +39,7 @@ class PetalsConfig(BaseConfig):
     max_length: Optional[int] = None
     max_new_tokens: Optional[
         int
-    ] = litellm.max_tokens  # petals requires max tokens to be set
+    ] = remodl.max_tokens  # petals requires max tokens to be set
     do_sample: Optional[bool] = None
     temperature: Optional[float] = None
     top_k: Optional[int] = None
@@ -51,7 +51,7 @@ class PetalsConfig(BaseConfig):
         max_length: Optional[int] = None,
         max_new_tokens: Optional[
             int
-        ] = litellm.max_tokens,  # petals requires max tokens to be set
+        ] = remodl.max_tokens,  # petals requires max tokens to be set
         do_sample: Optional[bool] = None,
         temperature: Optional[float] = None,
         top_k: Optional[int] = None,
@@ -100,7 +100,7 @@ class PetalsConfig(BaseConfig):
         model: str,
         messages: List[AllMessageValues],
         optional_params: dict,
-        litellm_params: dict,
+        remodl_params: dict,
         headers: dict,
     ) -> dict:
         raise NotImplementedError(
@@ -116,7 +116,7 @@ class PetalsConfig(BaseConfig):
         request_data: dict,
         messages: List[AllMessageValues],
         optional_params: dict,
-        litellm_params: dict,
+        remodl_params: dict,
         encoding: Any,
         api_key: Optional[str] = None,
         json_mode: Optional[bool] = None,
@@ -131,7 +131,7 @@ class PetalsConfig(BaseConfig):
         model: str,
         messages: List[AllMessageValues],
         optional_params: dict,
-        litellm_params: dict,
+        remodl_params: dict,
         api_key: Optional[str] = None,
         api_base: Optional[str] = None,
     ) -> dict:

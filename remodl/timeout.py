@@ -1,7 +1,7 @@
 # +-----------------------------------------------+
 # |                                               |
 # |           Give Feedback / Get Help            |
-# | https://github.com/BerriAI/litellm/issues/new |
+# | https://github.com/BerriAI/remodl/issues/new |
 # |                                               |
 # +-----------------------------------------------+
 #
@@ -17,7 +17,7 @@ from functools import wraps
 from inspect import iscoroutinefunction
 from threading import Thread
 
-from litellm.exceptions import Timeout
+from remodl.exceptions import Timeout
 
 
 def timeout(timeout_duration: float = 0.0, exception_to_raise=Timeout):

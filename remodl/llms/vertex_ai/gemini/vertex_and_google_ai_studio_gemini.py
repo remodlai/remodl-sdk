@@ -20,12 +20,12 @@ from typing import (
 
 import httpx  # type: ignore
 
-import litellm
-import litellm.litellm_core_utils
-import litellm.litellm_core_utils.litellm_logging
-from litellm import verbose_logger
-from litellm._uuid import uuid
-from litellm.constants import (
+import remodl
+import remodl.remodl_core_utils
+import remodl.remodl_core_utils.remodl_logging
+from remodl import verbose_logger
+from remodl._uuid import uuid
+from remodl.constants import (
     DEFAULT_REASONING_EFFORT_DISABLE_THINKING_BUDGET,
     DEFAULT_REASONING_EFFORT_HIGH_THINKING_BUDGET,
     DEFAULT_REASONING_EFFORT_LOW_THINKING_BUDGET,
@@ -35,16 +35,16 @@ from litellm.constants import (
     DEFAULT_REASONING_EFFORT_MINIMAL_THINKING_BUDGET_GEMINI_2_5_FLASH_LITE,
     DEFAULT_REASONING_EFFORT_MINIMAL_THINKING_BUDGET_GEMINI_2_5_PRO,
 )
-from litellm.llms.base_llm.chat.transformation import BaseConfig, BaseLLMException
-from litellm.llms.custom_httpx.http_handler import (
+from remodl.llms.base_llm.chat.transformation import BaseConfig, BaseLLMException
+from remodl.llms.custom_httpx.http_handler import (
     AsyncHTTPHandler,
     HTTPHandler,
     _get_httpx_client,
     get_async_httpx_client,
 )
-from litellm.types.llms.anthropic import AnthropicThinkingParam
-from litellm.types.llms.gemini import BidiGenerateContentServerMessage
-from litellm.types.llms.openai import (
+from remodl.types.llms.anthropic import AnthropicThinkingParam
+from remodl.types.llms.gemini import BidiGenerateContentServerMessage
+from remodl.types.llms.openai import (
     AllMessageValues,
     ChatCompletionAnnotation,
     ChatCompletionAnnotationURLCitation,
@@ -57,7 +57,7 @@ from litellm.types.llms.openai import (
     ImageURLObject,
     OpenAIChatCompletionFinishReason,
 )
-from litellm.types.llms.vertex_ai import (
+from remodl.types.llms.vertex_ai import (
     VERTEX_CREDENTIALS_TYPES,
     Candidates,
     ContentType,
@@ -72,7 +72,7 @@ from litellm.types.llms.vertex_ai import (
     UsageMetadata,
     VertexToolName,
 )
-from litellm.types.utils import (
+from remodl.types.utils import (
     ChatCompletionAudioResponse,
     ChatCompletionTokenLogprob,
     ChoiceLogprobs,
@@ -81,7 +81,7 @@ from litellm.types.utils import (
     TopLogprob,
     Usage,
 )
-from litellm.utils import (
+from remodl.utils import (
     CustomStreamWrapper,
     ModelResponse,
     is_base64_encoded,
@@ -98,8 +98,8 @@ from .transformation import (
 )
 
 if TYPE_CHECKING:
-    from litellm.litellm_core_utils.litellm_logging import Logging as LiteLLMLoggingObj
-    from litellm.types.utils import ModelResponseStream, StreamingChoices
+    from remodl.remodl_core_utils.remodl_logging import Logging as LiteLLMLoggingObj
+    from remodl.types.utils import ModelResponseStream, StreamingChoices
 
     LoggingClass = LiteLLMLoggingObj
 else:
@@ -276,8 +276,8 @@ class VertexGeminiConfig(VertexAIBaseConfig, BaseConfig):
                 )
             )
         else:
-            raise litellm.utils.UnsupportedParamsError(
-                message="VertexAI doesn't support tool_choice={}. Supported tool_choice values=['auto', 'required', json object]. To drop it from the call, set `litellm.drop_params = True.".format(
+            raise remodl.utils.UnsupportedParamsError(
+                message="VertexAI doesn't support tool_choice={}. Supported tool_choice values=['auto', 'required', json object]. To drop it from the call, set `remodl.drop_params = True.".format(
                     tool_choice
                 ),
                 status_code=400,
@@ -414,7 +414,7 @@ class VertexGeminiConfig(VertexAIBaseConfig, BaseConfig):
             elif "name" in tool:  # functions list
                 openai_function_object = ChatCompletionToolParamFunctionChunk(**tool)  # type: ignore
 
-            # Handle tools with 'type' field (OpenAI spec compliance) Ignore this field -> https://github.com/BerriAI/litellm/issues/14644#issuecomment-3342061838
+            # Handle tools with 'type' field (OpenAI spec compliance) Ignore this field -> https://github.com/BerriAI/remodl/issues/14644#issuecomment-3342061838
             if "type" in tool:
                 tool = {k: tool[k] for k in tool if k != "type"}
 
@@ -459,7 +459,7 @@ class VertexGeminiConfig(VertexAIBaseConfig, BaseConfig):
             else:
                 # assume it's a provider-specific param
                 verbose_logger.warning(
-                    "Invalid tool={}. Use `litellm.set_verbose` or `litellm --detailed_debug` to see raw request."
+                    "Invalid tool={}. Use `remodl.set_verbose` or `remodl --detailed_debug` to see raw request."
                 )
 
         # Only include function_declarations if there are actual functions
@@ -610,11 +610,11 @@ class VertexGeminiConfig(VertexAIBaseConfig, BaseConfig):
         tools = non_default_params.get("tools", non_default_params.get("functions"))
         num_function_declarations = len(tools) if isinstance(tools, list) else 0
         if num_function_declarations > 1:
-            raise litellm.utils.UnsupportedParamsError(
+            raise remodl.utils.UnsupportedParamsError(
                 message=(
                     "`parallel_tool_calls=False` is not supported by Gemini when multiple tools are "
                     "provided. Specify a single tool, or set "
-                    "`parallel_tool_calls=True`. If you want to drop this param, set `litellm.drop_params = True` or pass in `(.., drop_params=True)` in the requst - https://docs.litellm.ai/docs/completion/drop_params"
+                    "`parallel_tool_calls=True`. If you want to drop this param, set `remodl.drop_params = True` or pass in `(.., drop_params=True)` in the requst - https://docs.remodl.ai/docs/completion/drop_params"
                 ),
                 status_code=400,
             )
@@ -636,7 +636,7 @@ class VertexGeminiConfig(VertexAIBaseConfig, BaseConfig):
             }
         }
         """
-        from litellm.types.llms.vertex_ai import (
+        from remodl.types.llms.vertex_ai import (
             PrebuiltVoiceConfig,
             SpeechConfig,
             VoiceConfig,
@@ -724,7 +724,7 @@ class VertexGeminiConfig(VertexAIBaseConfig, BaseConfig):
                     optional_params["tool_choice"] = _tool_choice_value
             elif param == "parallel_tool_calls":
                 if value is False and not (
-                    drop_params or litellm.drop_params
+                    drop_params or remodl.drop_params
                 ):  # if drop params is True, then we should just ignore this
                     self.validate_parallel_tool_calls(value, non_default_params)
                 else:
@@ -751,8 +751,8 @@ class VertexGeminiConfig(VertexAIBaseConfig, BaseConfig):
                 optional_params = self._add_tools_to_optional_params(
                     optional_params, [_tools]
                 )
-        if litellm.vertex_ai_safety_settings is not None:
-            optional_params["safety_settings"] = litellm.vertex_ai_safety_settings
+        if remodl.vertex_ai_safety_settings is not None:
+            optional_params["safety_settings"] = remodl.vertex_ai_safety_settings
 
         # if audio param is set, ensure responseModalities is set to AUDIO
         audio_param = optional_params.get("speechConfig")
@@ -1090,7 +1090,7 @@ class VertexGeminiConfig(VertexAIBaseConfig, BaseConfig):
             "content": None,
         }
 
-        choice = litellm.Choices(
+        choice = remodl.Choices(
             finish_reason="content_filter",
             index=0,
             message=chat_completion_message,  # type: ignore
@@ -1128,7 +1128,7 @@ class VertexGeminiConfig(VertexAIBaseConfig, BaseConfig):
             "content": None,
         }
 
-        choice = litellm.Choices(
+        choice = remodl.Choices(
             finish_reason="content_filter",
             index=0,
             message=_chat_completion_message,
@@ -1162,7 +1162,7 @@ class VertexGeminiConfig(VertexAIBaseConfig, BaseConfig):
 
         else the candidate token count is exclusive of the thinking token count
 
-        Addresses - https://github.com/BerriAI/litellm/pull/10141#discussion_r2052272035
+        Addresses - https://github.com/BerriAI/remodl/pull/10141#discussion_r2052272035
         """
         if usage_metadata.get("promptTokenCount", 0) + usage_metadata.get(
             "candidatesTokenCount", 0
@@ -1298,7 +1298,7 @@ class VertexGeminiConfig(VertexAIBaseConfig, BaseConfig):
         """
         Helper method to create a streaming choice object for Vertex AI
         """
-        from litellm.types.utils import Delta, StreamingChoices
+        from remodl.types.utils import Delta, StreamingChoices
 
         annotations = chat_completion_message.get("annotations")  # type: ignore
         # create a streaming choice object
@@ -1432,10 +1432,10 @@ class VertexGeminiConfig(VertexAIBaseConfig, BaseConfig):
             safety_ratings: List
             citation_metadata: List
         """
-        from litellm.litellm_core_utils.prompt_templates.common_utils import (
+        from remodl.remodl_core_utils.prompt_templates.common_utils import (
             is_function_call,
         )
-        from litellm.types.utils import ModelResponseStream
+        from remodl.types.utils import ModelResponseStream
 
         grounding_metadata: List[dict] = []
         url_context_metadata: List[dict] = []
@@ -1550,7 +1550,7 @@ class VertexGeminiConfig(VertexAIBaseConfig, BaseConfig):
                 )
                 model_response.choices.append(choice)
             elif isinstance(model_response, ModelResponse):
-                choice = litellm.Choices(
+                choice = remodl.Choices(
                     finish_reason=VertexGeminiConfig._check_finish_reason(
                         chat_completion_message, candidate.get("finishReason")
                     ),
@@ -1577,7 +1577,7 @@ class VertexGeminiConfig(VertexAIBaseConfig, BaseConfig):
         request_data: Dict,
         messages: List[AllMessageValues],
         optional_params: Dict,
-        litellm_params: Dict,
+        remodl_params: Dict,
         encoding: Any,
         api_key: Optional[str] = None,
         json_mode: Optional[bool] = None,
@@ -1595,7 +1595,7 @@ class VertexGeminiConfig(VertexAIBaseConfig, BaseConfig):
             completion_response = GenerateContentResponseBody(**raw_response.json())  # type: ignore
         except Exception as e:
             raise VertexAIError(
-                message="Received={}, Error converting to valid response block={}. File an issue if litellm error - https://github.com/BerriAI/litellm/issues".format(
+                message="Received={}, Error converting to valid response block={}. File an issue if remodl error - https://github.com/BerriAI/remodl/issues".format(
                     raw_response.text, str(e)
                 ),
                 status_code=422,
@@ -1703,7 +1703,7 @@ class VertexGeminiConfig(VertexAIBaseConfig, BaseConfig):
 
         except Exception as e:
             raise VertexAIError(
-                message="Received={}, Error converting to valid response block={}. File an issue if litellm error - https://github.com/BerriAI/litellm/issues".format(
+                message="Received={}, Error converting to valid response block={}. File an issue if remodl error - https://github.com/BerriAI/remodl/issues".format(
                     completion_response, str(e)
                 ),
                 status_code=422,
@@ -1729,7 +1729,7 @@ class VertexGeminiConfig(VertexAIBaseConfig, BaseConfig):
         model: str,
         messages: List[AllMessageValues],
         optional_params: Dict,
-        litellm_params: Dict,
+        remodl_params: Dict,
         headers: Dict,
     ) -> Dict:
         raise NotImplementedError(
@@ -1742,7 +1742,7 @@ class VertexGeminiConfig(VertexAIBaseConfig, BaseConfig):
         model: str,
         messages: List[AllMessageValues],
         optional_params: Dict,
-        litellm_params: Dict,
+        remodl_params: Dict,
         api_key: Optional[str] = None,
         api_base: Optional[str] = None,
     ) -> Dict:
@@ -1768,7 +1768,7 @@ async def make_call(
 ):
     if client is None:
         client = get_async_httpx_client(
-            llm_provider=litellm.LlmProviders.VERTEX_AI,
+            llm_provider=remodl.LlmProviders.VERTEX_AI,
         )
 
     try:
@@ -1864,7 +1864,7 @@ class VertexLLM(VertexBase):
         logging_obj,
         stream,
         optional_params: dict,
-        litellm_params: dict,
+        remodl_params: dict,
         logger_fn=None,
         api_base: Optional[str] = None,
         client: Optional[AsyncHTTPHandler] = None,
@@ -1904,7 +1904,7 @@ class VertexLLM(VertexBase):
             model=model,
             messages=messages,
             optional_params=optional_params,
-            litellm_params=litellm_params,
+            remodl_params=remodl_params,
         )
 
         request_body = await async_transform_request_body(
@@ -1959,7 +1959,7 @@ class VertexLLM(VertexBase):
         logging_obj,
         stream,
         optional_params: dict,
-        litellm_params: dict,
+        remodl_params: dict,
         logger_fn=None,
         api_base: Optional[str] = None,
         client: Optional[AsyncHTTPHandler] = None,
@@ -1998,7 +1998,7 @@ class VertexLLM(VertexBase):
             model=model,
             messages=messages,
             optional_params=optional_params,
-            litellm_params=litellm_params,
+            remodl_params=remodl_params,
         )
 
         request_body = await async_transform_request_body(
@@ -2012,7 +2012,7 @@ class VertexLLM(VertexBase):
             _async_client_params["timeout"] = timeout
         if client is None or not isinstance(client, AsyncHTTPHandler):
             client = get_async_httpx_client(
-                params=_async_client_params, llm_provider=litellm.LlmProviders.VERTEX_AI
+                params=_async_client_params, llm_provider=remodl.LlmProviders.VERTEX_AI
             )
         else:
             client = client  # type: ignore
@@ -2055,7 +2055,7 @@ class VertexLLM(VertexBase):
             request_data=cast(dict, request_body),
             messages=messages,
             optional_params=optional_params,
-            litellm_params=litellm_params,
+            remodl_params=remodl_params,
             encoding=encoding,
         )
 
@@ -2077,7 +2077,7 @@ class VertexLLM(VertexBase):
         vertex_location: Optional[str],
         vertex_credentials: Optional[VERTEX_CREDENTIALS_TYPES],
         gemini_api_key: Optional[str],
-        litellm_params: dict,
+        remodl_params: dict,
         logger_fn=None,
         extra_headers: Optional[dict] = None,
         client: Optional[Union[AsyncHTTPHandler, HTTPHandler]] = None,
@@ -2096,7 +2096,7 @@ class VertexLLM(VertexBase):
             "optional_params": optional_params,
             "logging_obj": logging_obj,
             "custom_llm_provider": custom_llm_provider,
-            "litellm_params": litellm_params,
+            "remodl_params": remodl_params,
         }
 
         ### ROUTING (ASYNC, STREAMING, SYNC)
@@ -2113,7 +2113,7 @@ class VertexLLM(VertexBase):
                     logging_obj=logging_obj,
                     optional_params=optional_params,
                     stream=stream,
-                    litellm_params=litellm_params,
+                    remodl_params=remodl_params,
                     logger_fn=logger_fn,
                     timeout=timeout,
                     client=client,  # type: ignore
@@ -2137,7 +2137,7 @@ class VertexLLM(VertexBase):
                 logging_obj=logging_obj,
                 optional_params=optional_params,
                 stream=stream,
-                litellm_params=litellm_params,
+                remodl_params=remodl_params,
                 logger_fn=logger_fn,
                 timeout=timeout,
                 client=client,  # type: ignore
@@ -2177,7 +2177,7 @@ class VertexLLM(VertexBase):
             model=model,
             messages=messages,
             optional_params=optional_params,
-            litellm_params=litellm_params,
+            remodl_params=remodl_params,
         )
 
         ## TRANSFORMATION ##
@@ -2258,7 +2258,7 @@ class VertexLLM(VertexBase):
             model_response=model_response,
             logging_obj=logging_obj,
             optional_params=optional_params,
-            litellm_params=litellm_params,
+            remodl_params=remodl_params,
             api_key="",
             request_data=data,  # type: ignore
             messages=messages,
@@ -2270,7 +2270,7 @@ class ModelResponseIterator:
     def __init__(
         self, streaming_response, sync_stream: bool, logging_obj: LoggingClass
     ):
-        from litellm.litellm_core_utils.prompt_templates.common_utils import (
+        from remodl.remodl_core_utils.prompt_templates.common_utils import (
             check_is_function_call,
         )
 
@@ -2284,7 +2284,7 @@ class ModelResponseIterator:
     def chunk_parser(self, chunk: dict) -> Optional["ModelResponseStream"]:
         try:
             verbose_logger.debug(f"RAW GEMINI CHUNK: {chunk}")
-            from litellm.types.utils import ModelResponseStream
+            from remodl.types.utils import ModelResponseStream
 
             processed_chunk = GenerateContentResponseBody(**chunk)  # type: ignore
             response_id = processed_chunk.get("responseId")
@@ -2357,7 +2357,7 @@ class ModelResponseIterator:
     def handle_accumulated_json_chunk(
         self, chunk: str
     ) -> Optional["ModelResponseStream"]:
-        chunk = litellm.CustomStreamWrapper._strip_sse_data_from_chunk(chunk) or ""
+        chunk = remodl.CustomStreamWrapper._strip_sse_data_from_chunk(chunk) or ""
         message = chunk.replace("\n\n", "")
 
         # Accumulate JSON data
@@ -2376,7 +2376,7 @@ class ModelResponseIterator:
         self, chunk: str
     ) -> Optional["ModelResponseStream"]:
         try:
-            chunk = litellm.CustomStreamWrapper._strip_sse_data_from_chunk(chunk) or ""
+            chunk = remodl.CustomStreamWrapper._strip_sse_data_from_chunk(chunk) or ""
             if len(chunk) > 0:
                 """
                 Check if initial chunk valid json

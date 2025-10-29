@@ -4,8 +4,8 @@ Google AI Image Generation Cost Calculator
 
 from typing import Any
 
-import litellm
-from litellm.types.utils import ImageResponse
+import remodl
+from remodl.types.utils import ImageResponse
 
 
 def cost_calculator(
@@ -15,7 +15,7 @@ def cost_calculator(
     """
     Vertex AI Image Generation Cost Calculator
     """
-    _model_info = litellm.get_model_info(
+    _model_info = remodl.get_model_info(
         model=model,
         custom_llm_provider="gemini",
     )

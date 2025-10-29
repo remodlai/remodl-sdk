@@ -17,12 +17,12 @@ class DiskCache(BaseCache):
             import diskcache as dc
         except ModuleNotFoundError as e:
             raise ModuleNotFoundError(
-                "Please install litellm with `litellm[caching]` to use disk caching."
+                "Please install remodl with `remodl[caching]` to use disk caching."
             ) from e
 
-        # if users don't provider one, use the default litellm cache
+        # if users don't provider one, use the default remodl cache
         if disk_cache_dir is None:
-            self.disk_cache = dc.Cache(".litellm_cache")
+            self.disk_cache = dc.Cache(".remodl_cache")
         else:
             self.disk_cache = dc.Cache(disk_cache_dir)
 

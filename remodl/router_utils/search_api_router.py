@@ -10,7 +10,7 @@ import traceback
 from functools import partial
 from typing import Any, Callable
 
-from litellm._logging import verbose_router_logger
+from remodl._logging import verbose_router_logger
 
 
 class SearchAPIRouter:
@@ -32,7 +32,7 @@ class SearchAPIRouter:
             search_tools: List of search tool configurations from the database
         """
         try:
-            from litellm.types.router import SearchToolTypedDict
+            from remodl.types.router import SearchToolTypedDict
             
             verbose_router_logger.debug(f"Adding {len(search_tools)} search tools to router")
             
@@ -43,7 +43,7 @@ class SearchAPIRouter:
                 router_search_tool: SearchToolTypedDict = {  # type: ignore
                     "search_tool_id": tool.get("search_tool_id"),
                     "search_tool_name": tool.get("search_tool_name"),
-                    "litellm_params": tool.get("litellm_params", {}),
+                    "remodl_params": tool.get("remodl_params", {}),
                     "search_tool_info": tool.get("search_tool_info"),
                 }
                 router_search_tools.append(router_search_tool)
@@ -101,7 +101,7 @@ class SearchAPIRouter:
         
         Args:
             router_instance: The Router instance
-            original_function: The original litellm.asearch function
+            original_function: The original remodl.asearch function
             **kwargs: Search parameters including search_tool_name, query, etc.
             
         Returns:
@@ -124,7 +124,7 @@ class SearchAPIRouter:
             
             # Update kwargs before fallbacks (for logging, metadata, etc)
             router_instance._update_kwargs_before_fallbacks(
-                model=search_tool_name, kwargs=kwargs, metadata_variable_name="litellm_metadata"
+                model=search_tool_name, kwargs=kwargs, metadata_variable_name="remodl_metadata"
             )
             
             verbose_router_logger.debug(
@@ -136,11 +136,11 @@ class SearchAPIRouter:
             return response
             
         except Exception as e:
-            from litellm.router_utils.handle_error import send_llm_exception_alert
+            from remodl.router_utils.handle_error import send_llm_exception_alert
             
             asyncio.create_task(
                 send_llm_exception_alert(
-                    litellm_router_instance=router_instance,
+                    remodl_router_instance=router_instance,
                     request_kwargs=kwargs,
                     error_traceback_str=traceback.format_exc(),
                     original_exception=e,
@@ -162,7 +162,7 @@ class SearchAPIRouter:
         Args:
             router_instance: The Router instance
             model: The search tool name (passed as model for compatibility)
-            original_generic_function: The original litellm.asearch function
+            original_generic_function: The original remodl.asearch function
             **kwargs: Search parameters
             
         Returns:
@@ -181,14 +181,14 @@ class SearchAPIRouter:
             # For search tools, we use simple random choice since they don't have TPM/RPM constraints
             selected_tool = random.choice(matching_tools)
             
-            # Extract search provider and other params from litellm_params
-            litellm_params = selected_tool.get("litellm_params", {})
-            search_provider = litellm_params.get("search_provider")
-            api_key = litellm_params.get("api_key")
-            api_base = litellm_params.get("api_base")
+            # Extract search provider and other params from remodl_params
+            remodl_params = selected_tool.get("remodl_params", {})
+            search_provider = remodl_params.get("search_provider")
+            api_key = remodl_params.get("api_key")
+            api_base = remodl_params.get("api_base")
             
             if not search_provider:
-                raise ValueError(f"search_provider not found in litellm_params for search tool '{search_tool_name}'")
+                raise ValueError(f"search_provider not found in remodl_params for search tool '{search_tool_name}'")
             
             verbose_router_logger.debug(
                 f"Selected search tool with provider: {search_provider}"

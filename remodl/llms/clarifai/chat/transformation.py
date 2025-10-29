@@ -2,18 +2,18 @@ from typing import TYPE_CHECKING, Any, List, Optional, Tuple, Union
 
 import httpx
 
-from litellm.secret_managers.main import get_secret_str
-from litellm.types.utils import ModelResponse
-from litellm.types.llms.openai import (
+from remodl.secret_managers.main import get_secret_str
+from remodl.types.utils import ModelResponse
+from remodl.types.llms.openai import (
     AllMessageValues,
 )
-from litellm.llms.openai.common_utils import OpenAIError
-from litellm.llms.base_llm.chat.transformation import BaseLLMException
+from remodl.llms.openai.common_utils import OpenAIError
+from remodl.llms.base_llm.chat.transformation import BaseLLMException
 
 from ...openai.chat.gpt_transformation import OpenAIGPTConfig
 
 if TYPE_CHECKING:
-    from litellm.litellm_core_utils.litellm_logging import Logging as _LiteLLMLoggingObj
+    from remodl.remodl_core_utils.remodl_logging import Logging as _LiteLLMLoggingObj
 
     LiteLLMLoggingObj = _LiteLLMLoggingObj
 else:
@@ -73,9 +73,9 @@ class ClarifaiConfig(OpenAIGPTConfig):
         dynamic_api_key = api_key or get_secret_str("CLARIFAI_API_KEY") or ""
         return api_base, dynamic_api_key
     
-    def transform_request(self, model, messages, optional_params, litellm_params, headers):
+    def transform_request(self, model, messages, optional_params, remodl_params, headers):
         model = self.get_base_model(model) or model
-        return super().transform_request(model, messages, optional_params, litellm_params, headers)
+        return super().transform_request(model, messages, optional_params, remodl_params, headers)
     
     def transform_response(
         self,
@@ -86,7 +86,7 @@ class ClarifaiConfig(OpenAIGPTConfig):
         request_data: dict,
         messages: List[AllMessageValues],
         optional_params: dict,
-        litellm_params: dict,
+        remodl_params: dict,
         encoding: Any,
         api_key: Optional[str] = None,
         json_mode: Optional[bool] = None,

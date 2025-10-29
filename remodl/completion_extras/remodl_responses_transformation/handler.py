@@ -1,5 +1,5 @@
 """
-Handler for transforming /chat/completions api requests to litellm.responses requests
+Handler for transforming /chat/completions api requests to remodl.responses requests
 """
 
 from typing import TYPE_CHECKING, Any, Coroutine, Union
@@ -7,14 +7,14 @@ from typing import TYPE_CHECKING, Any, Coroutine, Union
 from typing_extensions import TypedDict
 
 if TYPE_CHECKING:
-    from litellm import CustomStreamWrapper, LiteLLMLoggingObj, ModelResponse
+    from remodl import CustomStreamWrapper, LiteLLMLoggingObj, ModelResponse
 
 
 class ResponsesToCompletionBridgeHandlerInputKwargs(TypedDict):
     model: str
     messages: list
     optional_params: dict
-    litellm_params: dict
+    remodl_params: dict
     headers: dict
     model_response: "ModelResponse"
     logging_obj: "LiteLLMLoggingObj"
@@ -31,8 +31,8 @@ class ResponsesToCompletionBridgeHandler:
     def validate_input_kwargs(
         self, kwargs: dict
     ) -> ResponsesToCompletionBridgeHandlerInputKwargs:
-        from litellm import LiteLLMLoggingObj
-        from litellm.types.utils import ModelResponse
+        from remodl import LiteLLMLoggingObj
+        from remodl.types.utils import ModelResponse
 
         model = kwargs.get("model")
         if model is None or not isinstance(model, str):
@@ -50,9 +50,9 @@ class ResponsesToCompletionBridgeHandler:
         if optional_params is None or not isinstance(optional_params, dict):
             raise ValueError("optional_params is required")
 
-        litellm_params = kwargs.get("litellm_params")
-        if litellm_params is None or not isinstance(litellm_params, dict):
-            raise ValueError("litellm_params is required")
+        remodl_params = kwargs.get("remodl_params")
+        if remodl_params is None or not isinstance(remodl_params, dict):
+            raise ValueError("remodl_params is required")
 
         headers = kwargs.get("headers")
         if headers is None or not isinstance(headers, dict):
@@ -70,7 +70,7 @@ class ResponsesToCompletionBridgeHandler:
             model=model,
             messages=messages,
             optional_params=optional_params,
-            litellm_params=litellm_params,
+            remodl_params=remodl_params,
             headers=headers,
             model_response=model_response,
             logging_obj=logging_obj,
@@ -85,15 +85,15 @@ class ResponsesToCompletionBridgeHandler:
         if kwargs.get("acompletion") is True:
             return self.acompletion(**kwargs)
 
-        from litellm import responses
-        from litellm.litellm_core_utils.streaming_handler import CustomStreamWrapper
-        from litellm.types.llms.openai import ResponsesAPIResponse
+        from remodl import responses
+        from remodl.remodl_core_utils.streaming_handler import CustomStreamWrapper
+        from remodl.types.llms.openai import ResponsesAPIResponse
 
         validated_kwargs = self.validate_input_kwargs(kwargs)
         model = validated_kwargs["model"]
         messages = validated_kwargs["messages"]
         optional_params = validated_kwargs["optional_params"]
-        litellm_params = validated_kwargs["litellm_params"]
+        remodl_params = validated_kwargs["remodl_params"]
         headers = validated_kwargs["headers"]
         model_response = validated_kwargs["model_response"]
         logging_obj = validated_kwargs["logging_obj"]
@@ -103,9 +103,9 @@ class ResponsesToCompletionBridgeHandler:
             model=model,
             messages=messages,
             optional_params=optional_params,
-            litellm_params=litellm_params,
+            remodl_params=remodl_params,
             headers=headers,
-            litellm_logging_obj=logging_obj,
+            remodl_logging_obj=logging_obj,
             client=kwargs.get("client"),
         )
 
@@ -122,7 +122,7 @@ class ResponsesToCompletionBridgeHandler:
                 request_data=request_data,
                 messages=messages,
                 optional_params=optional_params,
-                litellm_params=litellm_params,
+                remodl_params=remodl_params,
                 encoding=kwargs.get("encoding"),
                 api_key=kwargs.get("api_key"),
                 json_mode=kwargs.get("json_mode"),
@@ -144,15 +144,15 @@ class ResponsesToCompletionBridgeHandler:
     async def acompletion(
         self, *args, **kwargs
     ) -> Union["ModelResponse", "CustomStreamWrapper"]:
-        from litellm import aresponses
-        from litellm.litellm_core_utils.streaming_handler import CustomStreamWrapper
-        from litellm.types.llms.openai import ResponsesAPIResponse
+        from remodl import aresponses
+        from remodl.remodl_core_utils.streaming_handler import CustomStreamWrapper
+        from remodl.types.llms.openai import ResponsesAPIResponse
 
         validated_kwargs = self.validate_input_kwargs(kwargs)
         model = validated_kwargs["model"]
         messages = validated_kwargs["messages"]
         optional_params = validated_kwargs["optional_params"]
-        litellm_params = validated_kwargs["litellm_params"]
+        remodl_params = validated_kwargs["remodl_params"]
         headers = validated_kwargs["headers"]
         model_response = validated_kwargs["model_response"]
         logging_obj = validated_kwargs["logging_obj"]
@@ -163,9 +163,9 @@ class ResponsesToCompletionBridgeHandler:
                 model=model,
                 messages=messages,
                 optional_params=optional_params,
-                litellm_params=litellm_params,
+                remodl_params=remodl_params,
                 headers=headers,
-                litellm_logging_obj=logging_obj,
+                remodl_logging_obj=logging_obj,
             )
         except Exception as e:
             raise e
@@ -184,7 +184,7 @@ class ResponsesToCompletionBridgeHandler:
                 request_data=request_data,
                 messages=messages,
                 optional_params=optional_params,
-                litellm_params=litellm_params,
+                remodl_params=remodl_params,
                 encoding=kwargs.get("encoding"),
                 api_key=kwargs.get("api_key"),
                 json_mode=kwargs.get("json_mode"),

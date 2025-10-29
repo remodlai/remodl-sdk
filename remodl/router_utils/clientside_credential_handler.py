@@ -21,17 +21,17 @@ def is_clientside_credential(request_kwargs: dict) -> bool:
     return any(key in request_kwargs for key in clientside_credential_keys)
 
 
-def get_dynamic_litellm_params(litellm_params: dict, request_kwargs: dict) -> dict:
+def get_dynamic_remodl_params(remodl_params: dict, request_kwargs: dict) -> dict:
     """
     Generate a unique model_id for the deployment.
 
     Returns
-    - litellm_params: dict
+    - remodl_params: dict
 
     for generating a unique model_id.
     """
-    # update litellm_params with clientside credentials
+    # update remodl_params with clientside credentials
     for key in clientside_credential_keys:
         if key in request_kwargs:
-            litellm_params[key] = request_kwargs[key]
-    return litellm_params
+            remodl_params[key] = request_kwargs[key]
+    return remodl_params

@@ -1,29 +1,29 @@
 import os
-from litellm._uuid import uuid
-from litellm.integrations.custom_logger import CustomLogger
-from litellm.integrations.deepeval.api import Api, Endpoints, HttpMethods
-from litellm.integrations.deepeval.types import (
+from remodl._uuid import uuid
+from remodl.integrations.custom_logger import CustomLogger
+from remodl.integrations.deepeval.api import Api, Endpoints, HttpMethods
+from remodl.integrations.deepeval.types import (
     BaseApiSpan,
     SpanApiType,
     TraceApi,
     TraceSpanApiStatus,
 )
-from litellm.integrations.deepeval.utils import (
+from remodl.integrations.deepeval.utils import (
     to_zod_compatible_iso,
     validate_environment,
 )
-from litellm._logging import verbose_logger
+from remodl._logging import verbose_logger
 
 
 # This file includes the custom callbacks for LiteLLM Proxy
 # Once defined, these can be passed in proxy_config.yaml
 class DeepEvalLogger(CustomLogger):
-    """Logs litellm traces to DeepEval's platform."""
+    """Logs remodl traces to DeepEval's platform."""
 
     def __init__(self, *args, **kwargs):
         api_key = os.getenv("CONFIDENT_API_KEY")
-        self.litellm_environment = os.getenv("LITELM_ENVIRONMENT", "development")
-        validate_environment(self.litellm_environment)
+        self.remodl_environment = os.getenv("LITELM_ENVIRONMENT", "development")
+        validate_environment(self.remodl_environment)
         if not api_key:
             raise ValueError(
                 "Please set 'CONFIDENT_API_KEY=<>' in your environment variables."
@@ -73,7 +73,7 @@ class DeepEvalLogger(CustomLogger):
             standard_logging_object=_standard_logging_object,
             start_time=_start_time,
             end_time=_end_time,
-            litellm_environment=self.litellm_environment,
+            remodl_environment=self.remodl_environment,
         )
 
         body = {}
@@ -136,7 +136,7 @@ class DeepEvalLogger(CustomLogger):
         return BaseApiSpan(
             uuid=standard_logging_object.get("id", uuid.uuid4()),
             name=(
-                "litellm_success_callback" if is_success else "litellm_failure_callback"
+                "remodl_success_callback" if is_success else "remodl_failure_callback"
             ),
             status=(
                 TraceSpanApiStatus.SUCCESS if is_success else TraceSpanApiStatus.ERRORED
@@ -160,7 +160,7 @@ class DeepEvalLogger(CustomLogger):
         standard_logging_object,
         start_time,
         end_time,
-        litellm_environment,
+        remodl_environment,
     ):
         return TraceApi(
             uuid=standard_logging_object.get("trace_id", uuid.uuid4()),
@@ -171,5 +171,5 @@ class DeepEvalLogger(CustomLogger):
             toolSpans=[],
             startTime=str(start_time),
             endTime=str(end_time),
-            environment=litellm_environment,
+            environment=remodl_environment,
         )

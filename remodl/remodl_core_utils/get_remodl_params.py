@@ -1,7 +1,7 @@
 from typing import Optional
 
 
-def _get_base_model_from_litellm_call_metadata(
+def _get_base_model_from_remodl_call_metadata(
     metadata: Optional[dict],
 ) -> Optional[str]:
     if metadata is None:
@@ -17,7 +17,7 @@ def _get_base_model_from_litellm_call_metadata(
     return None
 
 
-def get_litellm_params(
+def get_remodl_params(
     api_key: Optional[str] = None,
     force_timeout=600,
     azure=False,
@@ -28,7 +28,7 @@ def get_litellm_params(
     together_ai=False,
     custom_llm_provider: Optional[str] = None,
     api_base: Optional[str] = None,
-    litellm_call_id=None,
+    remodl_call_id=None,
     model_alias_map=None,
     completion_call_id=None,
     metadata: Optional[dict] = None,
@@ -47,11 +47,11 @@ def get_litellm_params(
     azure_ad_token_provider=None,
     user_continue_message=None,
     base_model: Optional[str] = None,
-    litellm_trace_id: Optional[str] = None,
-    litellm_session_id: Optional[str] = None,
+    remodl_trace_id: Optional[str] = None,
+    remodl_session_id: Optional[str] = None,
     hf_model_name: Optional[str] = None,
     custom_prompt_dict: Optional[dict] = None,
-    litellm_metadata: Optional[dict] = None,
+    remodl_metadata: Optional[dict] = None,
     disable_add_transform_inline_image_block: Optional[bool] = None,
     drop_params: Optional[bool] = None,
     prompt_id: Optional[str] = None,
@@ -59,13 +59,13 @@ def get_litellm_params(
     async_call: Optional[bool] = None,
     ssl_verify: Optional[bool] = None,
     merge_reasoning_content_in_choices: Optional[bool] = None,
-    use_litellm_proxy: Optional[bool] = None,
+    use_remodl_proxy: Optional[bool] = None,
     api_version: Optional[str] = None,
     max_retries: Optional[int] = None,
-    litellm_request_debug: Optional[bool] = None,
+    remodl_request_debug: Optional[bool] = None,
     **kwargs,
 ) -> dict:
-    litellm_params = {
+    remodl_params = {
         "acompletion": acompletion,
         "api_key": api_key,
         "force_timeout": force_timeout,
@@ -73,7 +73,7 @@ def get_litellm_params(
         "verbose": verbose,
         "custom_llm_provider": custom_llm_provider,
         "api_base": api_base,
-        "litellm_call_id": litellm_call_id,
+        "remodl_call_id": remodl_call_id,
         "model_alias_map": model_alias_map,
         "completion_call_id": completion_call_id,
         "aembedding": aembedding,
@@ -82,7 +82,7 @@ def get_litellm_params(
         "proxy_server_request": proxy_server_request,
         "preset_cache_key": preset_cache_key,
         "no-log": no_log or kwargs.get("no-log"),
-        "stream_response": {},  # litellm_call_id: ModelResponse Dict
+        "stream_response": {},  # remodl_call_id: ModelResponse Dict
         "input_cost_per_token": input_cost_per_token,
         "input_cost_per_second": input_cost_per_second,
         "output_cost_per_token": output_cost_per_token,
@@ -92,12 +92,12 @@ def get_litellm_params(
         "azure_ad_token_provider": azure_ad_token_provider,
         "user_continue_message": user_continue_message,
         "base_model": base_model
-        or _get_base_model_from_litellm_call_metadata(metadata=metadata),
-        "litellm_trace_id": litellm_trace_id,
-        "litellm_session_id": litellm_session_id,
+        or _get_base_model_from_remodl_call_metadata(metadata=metadata),
+        "remodl_trace_id": remodl_trace_id,
+        "remodl_session_id": remodl_session_id,
         "hf_model_name": hf_model_name,
         "custom_prompt_dict": custom_prompt_dict,
-        "litellm_metadata": litellm_metadata,
+        "remodl_metadata": remodl_metadata,
         "disable_add_transform_inline_image_block": disable_add_transform_inline_image_block,
         "drop_params": drop_params,
         "prompt_id": prompt_id,
@@ -118,7 +118,7 @@ def get_litellm_params(
         "bucket_name": kwargs.get("bucket_name"),
         "vertex_credentials": kwargs.get("vertex_credentials"),
         "vertex_project": kwargs.get("vertex_project"),
-        "use_litellm_proxy": use_litellm_proxy,
-        "litellm_request_debug": litellm_request_debug,
+        "use_remodl_proxy": use_remodl_proxy,
+        "remodl_request_debug": remodl_request_debug,
     }
-    return litellm_params
+    return remodl_params

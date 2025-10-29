@@ -1,5 +1,5 @@
 """
-Pulls the cost + context window + provider route for known models from https://github.com/BerriAI/litellm/blob/main/model_prices_and_context_window.json
+Pulls the cost + context window + provider route for known models from https://github.com/BerriAI/remodl/blob/main/model_prices_and_context_window.json
 
 This can be disabled by setting the LITELLM_LOCAL_MODEL_COST_MAP environment variable to True.
 
@@ -22,7 +22,7 @@ def get_model_cost_map(url: str) -> dict:
         import json
 
         with importlib.resources.open_text(
-            "litellm", "model_prices_and_context_window_backup.json"
+            "remodl", "model_prices_and_context_window_backup.json"
         ) as f:
             content = json.load(f)
             return content
@@ -39,7 +39,7 @@ def get_model_cost_map(url: str) -> dict:
         import json
 
         with importlib.resources.open_text(
-            "litellm", "model_prices_and_context_window_backup.json"
+            "remodl", "model_prices_and_context_window_backup.json"
         ) as f:
             content = json.load(f)
             return content

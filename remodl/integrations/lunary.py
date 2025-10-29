@@ -107,9 +107,9 @@ class LunaryLogger:
             print_verbose(f"Lunary Logging - Logging request for model {model}")
 
             template_id = None
-            litellm_params = kwargs.get("litellm_params", {})
+            remodl_params = kwargs.get("remodl_params", {})
             optional_params = kwargs.get("optional_params", {})
-            metadata = litellm_params.get("metadata", {}) or {}
+            metadata = remodl_params.get("metadata", {}) or {}
 
             if optional_params:
                 extra = {**extra, **optional_params}
@@ -158,7 +158,7 @@ class LunaryLogger:
                 timestamp=start_time.astimezone(timezone.utc).isoformat(),
                 template_id=template_id,
                 metadata=metadata,
-                runtime="litellm",
+                runtime="remodl",
                 tags=tags,
                 params=extra,
             )
@@ -168,7 +168,7 @@ class LunaryLogger:
                 event,
                 run_id,
                 timestamp=end_time.astimezone(timezone.utc).isoformat(),
-                runtime="litellm",
+                runtime="remodl",
                 error=error_obj,
                 output=parse_messages(output),
                 token_usage=usage,

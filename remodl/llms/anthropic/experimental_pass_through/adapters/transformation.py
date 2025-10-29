@@ -13,7 +13,7 @@ from typing import (
 
 from openai.types.chat.chat_completion_chunk import Choice as OpenAIStreamingChoice
 
-from litellm.types.llms.anthropic import (
+from remodl.types.llms.anthropic import (
     AllAnthropicToolsValues,
     AnthopicMessagesAssistantMessageParam,
     AnthropicFinishReason,
@@ -33,11 +33,11 @@ from litellm.types.llms.anthropic import (
     MessageDelta,
     UsageDelta,
 )
-from litellm.types.llms.anthropic_messages.anthropic_response import (
+from remodl.types.llms.anthropic_messages.anthropic_response import (
     AnthropicMessagesResponse,
     AnthropicUsage,
 )
-from litellm.types.llms.openai import (
+from remodl.types.llms.openai import (
     AllMessageValues,
     ChatCompletionAssistantMessage,
     ChatCompletionAssistantToolCall,
@@ -57,12 +57,12 @@ from litellm.types.llms.openai import (
     ChatCompletionToolParamFunctionChunk,
     ChatCompletionUserMessage,
 )
-from litellm.types.utils import Choices, ModelResponse, StreamingChoices, Usage
+from remodl.types.utils import Choices, ModelResponse, StreamingChoices, Usage
 
 from .streaming_iterator import AnthropicStreamWrapper
 
 if TYPE_CHECKING:
-    from litellm.types.llms.anthropic import ContentBlockContentBlockDict
+    from remodl.types.llms.anthropic import ContentBlockContentBlockDict
 
 
 class AnthropicAdapter:
@@ -377,10 +377,10 @@ class LiteLLMAnthropicMessagesAdapter:
             if metadata and "user_id" in metadata:
                 new_kwargs["user"] = metadata["user_id"]
 
-        # Pass litellm proxy specific metadata
-        if "litellm_metadata" in anthropic_message_request:
-            # metadata will be passed to litellm.acompletion(), it's a litellm_param
-            new_kwargs["metadata"] = anthropic_message_request.pop("litellm_metadata")
+        # Pass remodl proxy specific metadata
+        if "remodl_metadata" in anthropic_message_request:
+            # metadata will be passed to remodl.acompletion(), it's a remodl_param
+            new_kwargs["metadata"] = anthropic_message_request.pop("remodl_metadata")
 
         ## CONVERT TOOL CHOICE
         if "tool_choice" in anthropic_message_request:
@@ -508,8 +508,8 @@ class LiteLLMAnthropicMessagesAdapter:
         Literal["text", "tool_use", "thinking"],
         "ContentBlockContentBlockDict",
     ]:
-        from litellm._uuid import uuid
-        from litellm.types.llms.anthropic import TextBlock, ToolUseBlock
+        from remodl._uuid import uuid
+        from remodl.types.llms.anthropic import TextBlock, ToolUseBlock
 
         for choice in choices:
             if choice.delta.content is not None and len(choice.delta.content) > 0:
@@ -612,18 +612,18 @@ class LiteLLMAnthropicMessagesAdapter:
                 ),
             )
             if getattr(response, "usage", None) is not None:
-                litellm_usage_chunk: Optional[Usage] = response.usage  # type: ignore
+                remodl_usage_chunk: Optional[Usage] = response.usage  # type: ignore
             elif (
                 hasattr(response, "_hidden_params")
                 and "usage" in response._hidden_params
             ):
-                litellm_usage_chunk = response._hidden_params["usage"]
+                remodl_usage_chunk = response._hidden_params["usage"]
             else:
-                litellm_usage_chunk = None
-            if litellm_usage_chunk is not None:
+                remodl_usage_chunk = None
+            if remodl_usage_chunk is not None:
                 usage_delta = UsageDelta(
-                    input_tokens=litellm_usage_chunk.prompt_tokens or 0,
-                    output_tokens=litellm_usage_chunk.completion_tokens or 0,
+                    input_tokens=remodl_usage_chunk.prompt_tokens or 0,
+                    output_tokens=remodl_usage_chunk.completion_tokens or 0,
                 )
             else:
                 usage_delta = UsageDelta(input_tokens=0, output_tokens=0)

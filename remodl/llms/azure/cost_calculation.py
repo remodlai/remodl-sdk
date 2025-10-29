@@ -5,9 +5,9 @@ Helper util for handling azure openai-specific cost calculation
 
 from typing import Optional, Tuple
 
-from litellm._logging import verbose_logger
-from litellm.types.utils import Usage
-from litellm.utils import get_model_info
+from remodl._logging import verbose_logger
+from remodl.types.utils import Usage
+from remodl.utils import get_model_info
 
 
 def cost_per_token(

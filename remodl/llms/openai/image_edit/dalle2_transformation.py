@@ -3,16 +3,16 @@ from typing import TYPE_CHECKING, Any, Dict, List, Tuple, cast
 
 from httpx._types import RequestFiles
 
-import litellm
-from litellm.images.utils import ImageEditRequestUtils
-from litellm.types.images.main import ImageEditRequestParams
-from litellm.types.llms.openai import FileTypes
-from litellm.types.router import GenericLiteLLMParams
+import remodl
+from remodl.images.utils import ImageEditRequestUtils
+from remodl.types.images.main import ImageEditRequestParams
+from remodl.types.llms.openai import FileTypes
+from remodl.types.router import GenericLiteLLMParams
 
 from .transformation import OpenAIImageEditConfig
 
 if TYPE_CHECKING:
-    from litellm.litellm_core_utils.litellm_logging import Logging as _LiteLLMLoggingObj
+    from remodl.remodl_core_utils.remodl_logging import Logging as _LiteLLMLoggingObj
 
     LiteLLMLoggingObj = _LiteLLMLoggingObj
 else:
@@ -33,7 +33,7 @@ class DallE2ImageEditConfig(OpenAIImageEditConfig):
         prompt: str,
         image: FileTypes,
         image_edit_optional_request_params: Dict,
-        litellm_params: GenericLiteLLMParams,
+        remodl_params: GenericLiteLLMParams,
         headers: dict,
     ) -> Tuple[Dict, RequestFiles]:
         """
@@ -67,7 +67,7 @@ class DallE2ImageEditConfig(OpenAIImageEditConfig):
 
             # Validate only one image is provided
             if len(image_list) > 1:
-                raise litellm.BadRequestError(
+                raise remodl.BadRequestError(
                     message="DALL-E-2 only supports editing a single image. Please provide one image.",
                     model=model,
                     llm_provider="openai",

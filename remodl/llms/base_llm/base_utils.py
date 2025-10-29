@@ -10,9 +10,9 @@ from typing import Any, Dict, List, Optional, Type, Union
 from openai.lib import _parsing, _pydantic
 from pydantic import BaseModel
 
-from litellm._logging import verbose_logger
-from litellm.types.llms.openai import AllMessageValues, ChatCompletionToolCallChunk
-from litellm.types.utils import Message, ProviderSpecificModelInfo, TokenCountResponse
+from remodl._logging import verbose_logger
+from remodl.types.llms.openai import AllMessageValues, ChatCompletionToolCallChunk
+from remodl.types.utils import Message, ProviderSpecificModelInfo, TokenCountResponse
 
 
 class BaseTokenCounter(ABC):
@@ -76,7 +76,7 @@ class BaseLLMModelInfo(ABC):
         model: str,
         messages: List[AllMessageValues],
         optional_params: dict,
-        litellm_params: dict,
+        remodl_params: dict,
         api_key: Optional[str] = None,
         api_base: Optional[str] = None,
     ) -> dict:
@@ -121,7 +121,7 @@ def _convert_tool_response_to_message(
                 return _message
             else:
                 # a lot of the times the `values` key is not present in the tool response
-                # relevant issue: https://github.com/BerriAI/litellm/issues/6741
+                # relevant issue: https://github.com/BerriAI/remodl/issues/6741
                 _message = Message(content=json.dumps(args))
                 return _message
     except json.JSONDecodeError:

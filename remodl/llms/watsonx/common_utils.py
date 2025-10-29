@@ -2,14 +2,14 @@ from typing import Dict, List, Optional, Union, cast
 
 import httpx
 
-import litellm
-from litellm import verbose_logger
-from litellm.caching import InMemoryCache
-from litellm.litellm_core_utils.prompt_templates import factory as ptf
-from litellm.llms.base_llm.chat.transformation import BaseLLMException
-from litellm.secret_managers.main import get_secret_str
-from litellm.types.llms.openai import AllMessageValues
-from litellm.types.llms.watsonx import WatsonXAPIParams, WatsonXCredentials
+import remodl
+from remodl import verbose_logger
+from remodl.caching import InMemoryCache
+from remodl.remodl_core_utils.prompt_templates import factory as ptf
+from remodl.llms.base_llm.chat.transformation import BaseLLMException
+from remodl.secret_managers.main import get_secret_str
+from remodl.types.llms.openai import AllMessageValues
+from remodl.types.llms.watsonx import WatsonXAPIParams, WatsonXCredentials
 
 
 class WatsonXAIError(BaseLLMException):
@@ -57,7 +57,7 @@ def generate_iam_token(api_key=None, **params) -> str:
             headers,
             data,
         )
-        response = litellm.module_level_client.post(
+        response = remodl.module_level_client.post(
             url=iam_token_url, data=data, headers=headers
         )
         response.raise_for_status()
@@ -139,7 +139,7 @@ async def _aconvert_watsonx_messages_core(
     apply_template_fn,
 ) -> str:
     """Async core logic for converting watsonx messages to prompt"""
-    from litellm.types.llms.watsonx import WatsonXModelPattern
+    from remodl.types.llms.watsonx import WatsonXModelPattern
 
     # handle anthropic prompts and amazon titan prompts
     if model in custom_prompt_dict:
@@ -173,7 +173,7 @@ def _convert_watsonx_messages_core(
     apply_template_fn,
 ) -> str:
     """Sync core logic for converting watsonx messages to prompt"""
-    from litellm.types.llms.watsonx import WatsonXModelPattern
+    from remodl.types.llms.watsonx import WatsonXModelPattern
 
     # handle anthropic prompts and amazon titan prompts
     if model in custom_prompt_dict:
@@ -203,7 +203,7 @@ async def aconvert_watsonx_messages_to_prompt(
     model: str, messages: List[AllMessageValues], provider: str, custom_prompt_dict: Dict
 ) -> str:
     """Async version of convert_watsonx_messages_to_prompt"""
-    from litellm.llms.watsonx.chat.transformation import IBMWatsonXChatConfig
+    from remodl.llms.watsonx.chat.transformation import IBMWatsonXChatConfig
 
     return await _aconvert_watsonx_messages_core(
         model=model,
@@ -218,7 +218,7 @@ def convert_watsonx_messages_to_prompt(
     model: str, messages: List[AllMessageValues], provider: str, custom_prompt_dict: Dict
 ) -> str:
     """Sync version of convert_watsonx_messages_to_prompt"""
-    from litellm.llms.watsonx.chat.transformation import IBMWatsonXChatConfig
+    from remodl.llms.watsonx.chat.transformation import IBMWatsonXChatConfig
 
     return _convert_watsonx_messages_core(
         model=model,
@@ -237,7 +237,7 @@ class IBMWatsonXMixin:
         model: str,
         messages: List[AllMessageValues],
         optional_params: Dict,
-        litellm_params: dict,
+        remodl_params: dict,
         api_key: Optional[str] = None,
         api_base: Optional[str] = None,
     ) -> Dict:
@@ -279,7 +279,7 @@ class IBMWatsonXMixin:
         return url
 
     def _add_api_version_to_url(self, url: str, api_version: Optional[str]) -> str:
-        api_version = api_version or litellm.WATSONX_DEFAULT_API_VERSION
+        api_version = api_version or remodl.WATSONX_DEFAULT_API_VERSION
         url = url + f"?version={api_version}"
 
         return url

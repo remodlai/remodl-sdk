@@ -19,8 +19,8 @@ from typing import (
     cast,
 )
 
-from litellm.router_utils.batch_utils import InMemoryFile
-from litellm.types.llms.openai import (
+from remodl.router_utils.batch_utils import InMemoryFile
+from remodl.types.llms.openai import (
     AllMessageValues,
     ChatCompletionAssistantMessage,
     ChatCompletionFileObject,
@@ -28,7 +28,7 @@ from litellm.types.llms.openai import (
     ChatCompletionToolParam,
     ChatCompletionUserMessage,
 )
-from litellm.types.utils import (
+from remodl.types.utils import (
     Choices,
     ExtractedFileData,
     FileTypes,
@@ -38,7 +38,7 @@ from litellm.types.utils import (
 )
 
 if TYPE_CHECKING:  # newer pattern to avoid importing pydantic objects on __init__.py
-    from litellm.types.llms.openai import ChatCompletionImageObject
+    from remodl.types.llms.openai import ChatCompletionImageObject
 
 DEFAULT_USER_CONTINUE_MESSAGE = ChatCompletionUserMessage(
     content="Please continue.", role="user"
@@ -49,7 +49,7 @@ DEFAULT_ASSISTANT_CONTINUE_MESSAGE = ChatCompletionAssistantMessage(
 )
 
 if TYPE_CHECKING:
-    from litellm.litellm_core_utils.litellm_logging import Logging as LoggingClass
+    from remodl.remodl_core_utils.remodl_logging import Logging as LoggingClass
 
 
 def handle_any_messages_to_chat_completion_str_messages_conversion(
@@ -58,7 +58,7 @@ def handle_any_messages_to_chat_completion_str_messages_conversion(
     """
     Handles any messages to chat completion str messages conversion
 
-    Relevant Issue: https://github.com/BerriAI/litellm/issues/9494
+    Relevant Issue: https://github.com/BerriAI/remodl/issues/9494
     """
     import json
 
@@ -361,10 +361,10 @@ def get_format_from_file_id(file_id: Optional[str]) -> Optional[str]:
     """
     Gets format from file id
 
-    unified_file_id = litellm_proxy:{};unified_id,{}
+    unified_file_id = remodl_proxy:{};unified_id,{}
     If not a unified file id, returns 'file' as default format
     """
-    from litellm.proxy.openai_files_endpoints.common_utils import (
+    from remodl.proxy.openai_files_endpoints.common_utils import (
         convert_b64_uid_to_unified_uid,
     )
 
@@ -396,7 +396,7 @@ def update_messages_with_model_file_ids(
     Updates messages with model file ids.
 
     model_file_id_mapping: Dict[str, Dict[str, str]] = {
-        "litellm_proxy/file_id": {
+        "remodl_proxy/file_id": {
             "model_id": "provider_file_id"
         }
     }
@@ -698,7 +698,7 @@ def get_file_ids_from_messages(messages: List[AllMessageValues]) -> List[str]:
 
 
 def check_is_function_call(logging_obj: "LoggingClass") -> bool:
-    from litellm.litellm_core_utils.prompt_templates.common_utils import (
+    from remodl.remodl_core_utils.prompt_templates.common_utils import (
         is_function_call,
     )
 
@@ -717,7 +717,7 @@ def filter_value_from_dict(dictionary: dict, key: str, depth: int = 0) -> Any:
 
     Goes through the nested dict and removes the key if it exists
     """
-    from litellm.constants import DEFAULT_MAX_RECURSE_DEPTH
+    from remodl.constants import DEFAULT_MAX_RECURSE_DEPTH
 
     if depth > DEFAULT_MAX_RECURSE_DEPTH:
         return dictionary
@@ -743,7 +743,7 @@ def migrate_file_to_image_url(
     """
     Migrate file to image_url
     """
-    from litellm.types.llms.openai import (
+    from remodl.types.llms.openai import (
         ChatCompletionImageObject,
         ChatCompletionImageUrlObject,
     )
@@ -776,7 +776,7 @@ def get_last_user_message(messages: List[AllMessageValues]) -> Optional[str]:
     ]
     get_user_prompt(messages) -> "What is the weather in Tokyo?"
     """
-    from litellm.litellm_core_utils.prompt_templates.common_utils import (
+    from remodl.remodl_core_utils.prompt_templates.common_utils import (
         convert_content_list_to_str,
     )
 

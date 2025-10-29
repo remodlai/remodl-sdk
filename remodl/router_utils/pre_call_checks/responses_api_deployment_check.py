@@ -12,9 +12,9 @@ If previous_response_id is provided, route to the deployment that returned the p
 
 from typing import List, Optional
 
-from litellm.integrations.custom_logger import CustomLogger, Span
-from litellm.responses.utils import ResponsesAPIRequestUtils
-from litellm.types.llms.openai import AllMessageValues
+from remodl.integrations.custom_logger import CustomLogger, Span
+from remodl.responses.utils import ResponsesAPIRequestUtils
+from remodl.types.llms.openai import AllMessageValues
 
 
 class ResponsesApiDeploymentCheck(CustomLogger):

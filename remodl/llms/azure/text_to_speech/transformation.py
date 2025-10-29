@@ -9,16 +9,16 @@ from urllib.parse import urlparse
 
 import httpx
 
-import litellm
-from litellm.llms.base_llm.text_to_speech.transformation import (
+import remodl
+from remodl.llms.base_llm.text_to_speech.transformation import (
     BaseTextToSpeechConfig,
     TextToSpeechRequestData,
 )
-from litellm.secret_managers.main import get_secret_str
+from remodl.secret_managers.main import get_secret_str
 
 if TYPE_CHECKING:
-    from litellm.litellm_core_utils.litellm_logging import Logging as LiteLLMLoggingObj
-    from litellm.types.llms.openai import HttpxBinaryResponseContent
+    from remodl.remodl_core_utils.remodl_logging import Logging as LiteLLMLoggingObj
+    from remodl.types.llms.openai import HttpxBinaryResponseContent
 else:
     LiteLLMLoggingObj = Any
     HttpxBinaryResponseContent = Any
@@ -63,7 +63,7 @@ class AzureAVATextToSpeechConfig(BaseTextToSpeechConfig):
         input: str,
         voice: Optional[Union[str, Dict]],
         optional_params: Dict,
-        litellm_params_dict: Dict,
+        remodl_params_dict: Dict,
         logging_obj: "LiteLLMLoggingObj",
         timeout: Union[float, httpx.Timeout],
         extra_headers: Optional[Dict[str, Any]],
@@ -87,17 +87,17 @@ class AzureAVATextToSpeechConfig(BaseTextToSpeechConfig):
         # Resolve api_base from multiple sources
         api_base = (
             api_base
-            or litellm_params_dict.get("api_base")
-            or litellm.api_base
+            or remodl_params_dict.get("api_base")
+            or remodl.api_base
             or get_secret_str("AZURE_API_BASE")
         )
         
         # Resolve api_key from multiple sources (Azure-specific)
         api_key = (
             api_key
-            or litellm_params_dict.get("api_key")
-            or litellm.api_key
-            or litellm.azure_key
+            or remodl_params_dict.get("api_key")
+            or remodl.api_key
+            or remodl.azure_key
             or get_secret_str("AZURE_OPENAI_API_KEY")
             or get_secret_str("AZURE_API_KEY")
         )
@@ -110,7 +110,7 @@ class AzureAVATextToSpeechConfig(BaseTextToSpeechConfig):
             # Extract voice name from dict if needed
             voice_str = voice.get("name") if voice else None
         
-        litellm_params_dict.update({
+        remodl_params_dict.update({
             "api_key": api_key,
             "api_base": api_base,
         })
@@ -122,7 +122,7 @@ class AzureAVATextToSpeechConfig(BaseTextToSpeechConfig):
             text_to_speech_provider_config=self,
             text_to_speech_optional_params=optional_params,
             custom_llm_provider="azure",
-            litellm_params=litellm_params_dict,
+            remodl_params=remodl_params_dict,
             logging_obj=logging_obj,
             timeout=timeout,
             extra_headers=extra_headers,
@@ -305,7 +305,7 @@ class AzureAVATextToSpeechConfig(BaseTextToSpeechConfig):
         validated_headers["Content-Type"] = "application/ssml+xml"
         
         # User-Agent
-        validated_headers["User-Agent"] = "litellm"
+        validated_headers["User-Agent"] = "remodl"
         
         return validated_headers
 
@@ -313,7 +313,7 @@ class AzureAVATextToSpeechConfig(BaseTextToSpeechConfig):
         self,
         model: str,
         api_base: Optional[str],
-        litellm_params: dict,
+        remodl_params: dict,
     ) -> str:
         """
         Get the complete URL for Azure AVA TTS request
@@ -388,7 +388,7 @@ class AzureAVATextToSpeechConfig(BaseTextToSpeechConfig):
         input: str,
         voice: Optional[str],
         optional_params: Dict,
-        litellm_params: Dict,
+        remodl_params: Dict,
         headers: dict,
     ) -> TextToSpeechRequestData:
         """
@@ -479,7 +479,7 @@ class AzureAVATextToSpeechConfig(BaseTextToSpeechConfig):
         
         Azure returns the audio data directly in the response body
         """
-        from litellm.types.llms.openai import HttpxBinaryResponseContent
+        from remodl.types.llms.openai import HttpxBinaryResponseContent
 
         # Azure returns audio data directly in the response body
         # Wrap it in HttpxBinaryResponseContent for consistent return type

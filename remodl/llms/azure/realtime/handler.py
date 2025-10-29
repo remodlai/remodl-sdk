@@ -6,10 +6,10 @@ This requires websockets, and is currently only supported on LiteLLM Proxy.
 
 from typing import Any, Optional, cast
 
-from litellm.constants import REALTIME_WEBSOCKET_MAX_MESSAGE_SIZE_BYTES
+from remodl.constants import REALTIME_WEBSOCKET_MAX_MESSAGE_SIZE_BYTES
 
-from ....litellm_core_utils.litellm_logging import Logging as LiteLLMLogging
-from ....litellm_core_utils.realtime_streaming import RealTimeStreaming
+from ....remodl_core_utils.remodl_logging import Logging as LiteLLMLogging
+from ....remodl_core_utils.realtime_streaming import RealTimeStreaming
 from ..azure import AzureChatCompletion
 
 # BACKEND_WS_URL = "ws://localhost:8080/v1/realtime?model=gpt-4o-realtime-preview-2024-10-01"

@@ -1,6 +1,6 @@
 from typing import Any, Dict, cast, get_type_hints
 
-from litellm.types.vector_stores import (
+from remodl.types.vector_stores import (
     VectorStoreCreateOptionalRequestParams,
     VectorStoreSearchOptionalRequestParams,
 )

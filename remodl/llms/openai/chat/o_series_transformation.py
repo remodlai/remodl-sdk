@@ -13,11 +13,11 @@ Translations handled by LiteLLM:
 
 from typing import Any, Coroutine, List, Literal, Optional, Union, cast, overload
 
-import litellm
-from litellm import verbose_logger
-from litellm.litellm_core_utils.get_llm_provider_logic import get_llm_provider
-from litellm.types.llms.openai import AllMessageValues, ChatCompletionUserMessage
-from litellm.utils import (
+import remodl
+from remodl import verbose_logger
+from remodl.remodl_core_utils.get_llm_provider_logic import get_llm_provider
+from remodl.types.llms.openai import AllMessageValues, ChatCompletionUserMessage
+from remodl.utils import (
     supports_function_calling,
     supports_parallel_function_calling,
     supports_response_schema,
@@ -115,11 +115,11 @@ class OpenAIOSeriesConfig(OpenAIGPTConfig):
                     optional_params["temperature"] = temperature_value
                 else:
                     ## UNSUPPORTED TOOL CHOICE VALUE
-                    if litellm.drop_params is True or drop_params is True:
+                    if remodl.drop_params is True or drop_params is True:
                         pass
                     else:
-                        raise litellm.utils.UnsupportedParamsError(
-                            message="O-series models don't support temperature={}. Only temperature=1 is supported. To drop unsupported openai params from the call, set `litellm.drop_params = True`".format(
+                        raise remodl.utils.UnsupportedParamsError(
+                            message="O-series models don't support temperature={}. Only temperature=1 is supported. To drop unsupported openai params from the call, set `remodl.drop_params = True`".format(
                                 temperature_value
                             ),
                             status_code=400,
@@ -131,7 +131,7 @@ class OpenAIOSeriesConfig(OpenAIGPTConfig):
 
     def is_model_o_series_model(self, model: str) -> bool:
         model = model.split("/")[-1]  # could be "openai/o3" or "o3"
-        return model in litellm.open_ai_chat_completion_models and any(
+        return model in remodl.open_ai_chat_completion_models and any(
             model.startswith(pfx) for pfx in ("o1", "o3", "o4")
         )
 

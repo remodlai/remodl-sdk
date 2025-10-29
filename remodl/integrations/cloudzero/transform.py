@@ -89,7 +89,7 @@ class CBFTransformer:
         total_tokens = prompt_tokens + completion_tokens
 
         # Create CloudZero Resource Name (CZRN) as resource_id
-        resource_id = self.czrn_generator.create_from_litellm_data(row)
+        resource_id = self.czrn_generator.create_from_remodl_data(row)
 
         # Build dimensions for CloudZero
         model = str(row.get('model', ''))
@@ -135,7 +135,7 @@ class CBFTransformer:
             'usage/units': 'tokens',  # Description of token units
 
             # CBF fields that correspond to CZRN components
-            'resource/service': service_type,  # Maps to CZRN service-type (litellm)
+            'resource/service': service_type,  # Maps to CZRN service-type (remodl)
             'resource/account': owner_account_id,  # Maps to CZRN owner-account-id (entity_id)
             'resource/region': region,  # Maps to CZRN region (cross-region)
             'resource/usage_family': resource_type,  # Maps to CZRN resource-type (llm-usage)

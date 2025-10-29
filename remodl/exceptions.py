@@ -1,7 +1,7 @@
 # +-----------------------------------------------+
 # |                                               |
 # |           Give Feedback / Get Help            |
-# | https://github.com/BerriAI/litellm/issues/new |
+# | https://github.com/BerriAI/remodl/issues/new |
 # |                                               |
 # +-----------------------------------------------+
 #
@@ -14,7 +14,7 @@ from typing import Optional
 import httpx
 import openai
 
-from litellm.types.utils import LiteLLMCommonStrings
+from remodl.types.utils import LiteLLMCommonStrings
 
 
 class AuthenticationError(openai.AuthenticationError):  # type: ignore
@@ -24,21 +24,21 @@ class AuthenticationError(openai.AuthenticationError):  # type: ignore
         llm_provider,
         model,
         response: Optional[httpx.Response] = None,
-        litellm_debug_info: Optional[str] = None,
+        remodl_debug_info: Optional[str] = None,
         max_retries: Optional[int] = None,
         num_retries: Optional[int] = None,
     ):
         self.status_code = 401
-        self.message = "litellm.AuthenticationError: {}".format(message)
+        self.message = "remodl.AuthenticationError: {}".format(message)
         self.llm_provider = llm_provider
         self.model = model
-        self.litellm_debug_info = litellm_debug_info
+        self.remodl_debug_info = remodl_debug_info
         self.max_retries = max_retries
         self.num_retries = num_retries
         self.response = response or httpx.Response(
             status_code=self.status_code,
             request=httpx.Request(
-                method="GET", url="https://litellm.ai"
+                method="GET", url="https://remodl.ai"
             ),  # mock request object
         )
         super().__init__(
@@ -70,21 +70,21 @@ class NotFoundError(openai.NotFoundError):  # type: ignore
         model,
         llm_provider,
         response: Optional[httpx.Response] = None,
-        litellm_debug_info: Optional[str] = None,
+        remodl_debug_info: Optional[str] = None,
         max_retries: Optional[int] = None,
         num_retries: Optional[int] = None,
     ):
         self.status_code = 404
-        self.message = "litellm.NotFoundError: {}".format(message)
+        self.message = "remodl.NotFoundError: {}".format(message)
         self.model = model
         self.llm_provider = llm_provider
-        self.litellm_debug_info = litellm_debug_info
+        self.remodl_debug_info = remodl_debug_info
         self.max_retries = max_retries
         self.num_retries = num_retries
         self.response = response or httpx.Response(
             status_code=self.status_code,
             request=httpx.Request(
-                method="GET", url="https://litellm.ai"
+                method="GET", url="https://remodl.ai"
             ),  # mock request object
         )
         super().__init__(
@@ -115,20 +115,20 @@ class BadRequestError(openai.BadRequestError):  # type: ignore
         model,
         llm_provider,
         response: Optional[httpx.Response] = None,
-        litellm_debug_info: Optional[str] = None,
+        remodl_debug_info: Optional[str] = None,
         max_retries: Optional[int] = None,
         num_retries: Optional[int] = None,
         body: Optional[dict] = None,
     ):
         self.status_code = 400
-        self.message = "litellm.BadRequestError: {}".format(message)
+        self.message = "remodl.BadRequestError: {}".format(message)
         self.model = model
         self.llm_provider = llm_provider
-        self.litellm_debug_info = litellm_debug_info
+        self.remodl_debug_info = remodl_debug_info
         response = httpx.Response(
             status_code=self.status_code,
             request=httpx.Request(
-                method="GET", url="https://litellm.ai"
+                method="GET", url="https://remodl.ai"
             ),  # mock request object
         )
         self.max_retries = max_retries
@@ -161,7 +161,7 @@ class ImageFetchError(BadRequestError):
         model=None,
         llm_provider=None,
         response: Optional[httpx.Response] = None,
-        litellm_debug_info: Optional[str] = None,
+        remodl_debug_info: Optional[str] = None,
         max_retries: Optional[int] = None,
         num_retries: Optional[int] = None,
         body: Optional[dict] = None,
@@ -171,7 +171,7 @@ class ImageFetchError(BadRequestError):
             model=model,
             llm_provider=llm_provider,
             response=response,
-            litellm_debug_info=litellm_debug_info,
+            remodl_debug_info=remodl_debug_info,
             max_retries=max_retries,
             num_retries=num_retries,
             body=body,
@@ -185,15 +185,15 @@ class UnprocessableEntityError(openai.UnprocessableEntityError):  # type: ignore
         model,
         llm_provider,
         response: httpx.Response,
-        litellm_debug_info: Optional[str] = None,
+        remodl_debug_info: Optional[str] = None,
         max_retries: Optional[int] = None,
         num_retries: Optional[int] = None,
     ):
         self.status_code = 422
-        self.message = "litellm.UnprocessableEntityError: {}".format(message)
+        self.message = "remodl.UnprocessableEntityError: {}".format(message)
         self.model = model
         self.llm_provider = llm_provider
-        self.litellm_debug_info = litellm_debug_info
+        self.remodl_debug_info = remodl_debug_info
         self.max_retries = max_retries
         self.num_retries = num_retries
         super().__init__(
@@ -223,7 +223,7 @@ class Timeout(openai.APITimeoutError):  # type: ignore
         message,
         model,
         llm_provider,
-        litellm_debug_info: Optional[str] = None,
+        remodl_debug_info: Optional[str] = None,
         max_retries: Optional[int] = None,
         num_retries: Optional[int] = None,
         headers: Optional[dict] = None,
@@ -237,10 +237,10 @@ class Timeout(openai.APITimeoutError):  # type: ignore
             request=request
         )  # Call the base class constructor with the parameters it needs
         self.status_code = exception_status_code or 408
-        self.message = "litellm.Timeout: {}".format(message)
+        self.message = "remodl.Timeout: {}".format(message)
         self.model = model
         self.llm_provider = llm_provider
-        self.litellm_debug_info = litellm_debug_info
+        self.remodl_debug_info = remodl_debug_info
         self.max_retries = max_retries
         self.num_retries = num_retries
         self.headers = headers
@@ -270,15 +270,15 @@ class PermissionDeniedError(openai.PermissionDeniedError):  # type:ignore
         llm_provider,
         model,
         response: httpx.Response,
-        litellm_debug_info: Optional[str] = None,
+        remodl_debug_info: Optional[str] = None,
         max_retries: Optional[int] = None,
         num_retries: Optional[int] = None,
     ):
         self.status_code = 403
-        self.message = "litellm.PermissionDeniedError: {}".format(message)
+        self.message = "remodl.PermissionDeniedError: {}".format(message)
         self.llm_provider = llm_provider
         self.model = model
-        self.litellm_debug_info = litellm_debug_info
+        self.remodl_debug_info = remodl_debug_info
         self.max_retries = max_retries
         self.num_retries = num_retries
         super().__init__(
@@ -309,15 +309,15 @@ class RateLimitError(openai.RateLimitError):  # type: ignore
         llm_provider,
         model,
         response: Optional[httpx.Response] = None,
-        litellm_debug_info: Optional[str] = None,
+        remodl_debug_info: Optional[str] = None,
         max_retries: Optional[int] = None,
         num_retries: Optional[int] = None,
     ):
         self.status_code = 429
-        self.message = "litellm.RateLimitError: {}".format(message)
+        self.message = "remodl.RateLimitError: {}".format(message)
         self.llm_provider = llm_provider
         self.model = model
-        self.litellm_debug_info = litellm_debug_info
+        self.remodl_debug_info = remodl_debug_info
         self.max_retries = max_retries
         self.num_retries = num_retries
         _response_headers = (
@@ -362,12 +362,12 @@ class ContextWindowExceededError(BadRequestError):  # type: ignore
         model,
         llm_provider,
         response: Optional[httpx.Response] = None,
-        litellm_debug_info: Optional[str] = None,
+        remodl_debug_info: Optional[str] = None,
     ):
         self.status_code = 400
         self.model = model
         self.llm_provider = llm_provider
-        self.litellm_debug_info = litellm_debug_info
+        self.remodl_debug_info = remodl_debug_info
         request = httpx.Request(method="POST", url="https://api.openai.com/v1")
         self.response = httpx.Response(status_code=400, request=request)
         super().__init__(
@@ -375,11 +375,11 @@ class ContextWindowExceededError(BadRequestError):  # type: ignore
             model=self.model,  # type: ignore
             llm_provider=self.llm_provider,  # type: ignore
             response=self.response,
-            litellm_debug_info=self.litellm_debug_info,
+            remodl_debug_info=self.remodl_debug_info,
         )  # Call the base class constructor with the parameters it needs
 
         # set after, to make it clear the raised error is a context window exceeded error
-        self.message = "litellm.ContextWindowExceededError: {}".format(self.message)
+        self.message = "remodl.ContextWindowExceededError: {}".format(self.message)
 
     def __str__(self):
         _message = self.message
@@ -406,13 +406,13 @@ class RejectedRequestError(BadRequestError):  # type: ignore
         model,
         llm_provider,
         request_data: dict,
-        litellm_debug_info: Optional[str] = None,
+        remodl_debug_info: Optional[str] = None,
     ):
         self.status_code = 400
-        self.message = "litellm.RejectedRequestError: {}".format(message)
+        self.message = "remodl.RejectedRequestError: {}".format(message)
         self.model = model
         self.llm_provider = llm_provider
-        self.litellm_debug_info = litellm_debug_info
+        self.remodl_debug_info = remodl_debug_info
         self.request_data = request_data
         request = httpx.Request(method="POST", url="https://api.openai.com/v1")
         response = httpx.Response(status_code=400, request=request)
@@ -421,7 +421,7 @@ class RejectedRequestError(BadRequestError):  # type: ignore
             model=self.model,  # type: ignore
             llm_provider=self.llm_provider,  # type: ignore
             response=response,
-            litellm_debug_info=self.litellm_debug_info,
+            remodl_debug_info=self.remodl_debug_info,
         )  # Call the base class constructor with the parameters it needs
 
     def __str__(self):
@@ -449,13 +449,13 @@ class ContentPolicyViolationError(BadRequestError):  # type: ignore
         model,
         llm_provider,
         response: Optional[httpx.Response] = None,
-        litellm_debug_info: Optional[str] = None,
+        remodl_debug_info: Optional[str] = None,
     ):
         self.status_code = 400
-        self.message = "litellm.ContentPolicyViolationError: {}".format(message)
+        self.message = "remodl.ContentPolicyViolationError: {}".format(message)
         self.model = model
         self.llm_provider = llm_provider
-        self.litellm_debug_info = litellm_debug_info
+        self.remodl_debug_info = remodl_debug_info
         request = httpx.Request(method="POST", url="https://api.openai.com/v1")
         self.response = httpx.Response(status_code=400, request=request)
         super().__init__(
@@ -463,7 +463,7 @@ class ContentPolicyViolationError(BadRequestError):  # type: ignore
             model=self.model,  # type: ignore
             llm_provider=self.llm_provider,  # type: ignore
             response=self.response,
-            litellm_debug_info=self.litellm_debug_info,
+            remodl_debug_info=self.remodl_debug_info,
         )  # Call the base class constructor with the parameters it needs
 
     def __str__(self):
@@ -490,15 +490,15 @@ class ServiceUnavailableError(openai.APIStatusError):  # type: ignore
         llm_provider,
         model,
         response: Optional[httpx.Response] = None,
-        litellm_debug_info: Optional[str] = None,
+        remodl_debug_info: Optional[str] = None,
         max_retries: Optional[int] = None,
         num_retries: Optional[int] = None,
     ):
         self.status_code = 503
-        self.message = "litellm.ServiceUnavailableError: {}".format(message)
+        self.message = "remodl.ServiceUnavailableError: {}".format(message)
         self.llm_provider = llm_provider
         self.model = model
-        self.litellm_debug_info = litellm_debug_info
+        self.remodl_debug_info = remodl_debug_info
         self.max_retries = max_retries
         self.num_retries = num_retries
         self.response = httpx.Response(
@@ -536,15 +536,15 @@ class InternalServerError(openai.InternalServerError):  # type: ignore
         llm_provider,
         model,
         response: Optional[httpx.Response] = None,
-        litellm_debug_info: Optional[str] = None,
+        remodl_debug_info: Optional[str] = None,
         max_retries: Optional[int] = None,
         num_retries: Optional[int] = None,
     ):
         self.status_code = 500
-        self.message = "litellm.InternalServerError: {}".format(message)
+        self.message = "remodl.InternalServerError: {}".format(message)
         self.llm_provider = llm_provider
         self.model = model
-        self.litellm_debug_info = litellm_debug_info
+        self.remodl_debug_info = remodl_debug_info
         self.max_retries = max_retries
         self.num_retries = num_retries
         self.response = httpx.Response(
@@ -584,15 +584,15 @@ class APIError(openai.APIError):  # type: ignore
         llm_provider,
         model,
         request: Optional[httpx.Request] = None,
-        litellm_debug_info: Optional[str] = None,
+        remodl_debug_info: Optional[str] = None,
         max_retries: Optional[int] = None,
         num_retries: Optional[int] = None,
     ):
         self.status_code = status_code
-        self.message = "litellm.APIError: {}".format(message)
+        self.message = "remodl.APIError: {}".format(message)
         self.llm_provider = llm_provider
         self.model = model
-        self.litellm_debug_info = litellm_debug_info
+        self.remodl_debug_info = remodl_debug_info
         self.max_retries = max_retries
         self.num_retries = num_retries
         if request is None:
@@ -624,15 +624,15 @@ class APIConnectionError(openai.APIConnectionError):  # type: ignore
         llm_provider,
         model,
         request: Optional[httpx.Request] = None,
-        litellm_debug_info: Optional[str] = None,
+        remodl_debug_info: Optional[str] = None,
         max_retries: Optional[int] = None,
         num_retries: Optional[int] = None,
     ):
-        self.message = "litellm.APIConnectionError: {}".format(message)
+        self.message = "remodl.APIConnectionError: {}".format(message)
         self.llm_provider = llm_provider
         self.model = model
         self.status_code = 500
-        self.litellm_debug_info = litellm_debug_info
+        self.remodl_debug_info = remodl_debug_info
         self.request = httpx.Request(method="POST", url="https://api.openai.com/v1")
         self.max_retries = max_retries
         self.num_retries = num_retries
@@ -662,16 +662,16 @@ class APIResponseValidationError(openai.APIResponseValidationError):  # type: ig
         message,
         llm_provider,
         model,
-        litellm_debug_info: Optional[str] = None,
+        remodl_debug_info: Optional[str] = None,
         max_retries: Optional[int] = None,
         num_retries: Optional[int] = None,
     ):
-        self.message = "litellm.APIResponseValidationError: {}".format(message)
+        self.message = "remodl.APIResponseValidationError: {}".format(message)
         self.llm_provider = llm_provider
         self.model = model
         request = httpx.Request(method="POST", url="https://api.openai.com/v1")
         response = httpx.Response(status_code=500, request=request)
-        self.litellm_debug_info = litellm_debug_info
+        self.remodl_debug_info = remodl_debug_info
         self.max_retries = max_retries
         self.num_retries = num_retries
         super().__init__(response=response, body=None, message=message)
@@ -700,7 +700,7 @@ class JSONSchemaValidationError(APIResponseValidationError):
         self.raw_response = raw_response
         self.schema = schema
         self.model = model
-        message = "litellm.JSONSchemaValidationError: model={}, returned an invalid response={}, for schema={}.\nAccess raw response with `e.raw_response`".format(
+        message = "remodl.JSONSchemaValidationError: model={}, returned an invalid response={}, for schema={}.\nAccess raw response with `e.raw_response`".format(
             model, raw_response, schema
         )
         self.message = message
@@ -721,19 +721,19 @@ class UnsupportedParamsError(BadRequestError):
         model: Optional[str] = None,
         status_code: int = 400,
         response: Optional[httpx.Response] = None,
-        litellm_debug_info: Optional[str] = None,
+        remodl_debug_info: Optional[str] = None,
         max_retries: Optional[int] = None,
         num_retries: Optional[int] = None,
     ):
         self.status_code = 400
-        self.message = "litellm.UnsupportedParamsError: {}".format(message)
+        self.message = "remodl.UnsupportedParamsError: {}".format(message)
         self.model = model
         self.llm_provider = llm_provider
-        self.litellm_debug_info = litellm_debug_info
+        self.remodl_debug_info = remodl_debug_info
         response = response or httpx.Response(
             status_code=self.status_code,
             request=httpx.Request(
-                method="GET", url="https://litellm.ai"
+                method="GET", url="https://remodl.ai"
             ),  # mock request object
         )
         self.max_retries = max_retries
@@ -787,7 +787,7 @@ class InvalidRequestError(openai.BadRequestError):  # type: ignore
         self.response = httpx.Response(
             status_code=400,
             request=httpx.Request(
-                method="GET", url="https://litellm.ai"
+                method="GET", url="https://remodl.ai"
             ),  # mock request object
         )
         super().__init__(
@@ -804,15 +804,15 @@ class MockException(openai.APIError):
         llm_provider,
         model,
         request: Optional[httpx.Request] = None,
-        litellm_debug_info: Optional[str] = None,
+        remodl_debug_info: Optional[str] = None,
         max_retries: Optional[int] = None,
         num_retries: Optional[int] = None,
     ):
         self.status_code = status_code
-        self.message = "litellm.MockException: {}".format(message)
+        self.message = "remodl.MockException: {}".format(message)
         self.llm_provider = llm_provider
         self.model = model
-        self.litellm_debug_info = litellm_debug_info
+        self.remodl_debug_info = remodl_debug_info
         self.max_retries = max_retries
         self.num_retries = num_retries
         if request is None:
@@ -863,18 +863,18 @@ class MidStreamFallbackError(ServiceUnavailableError):  # type: ignore
         llm_provider: str,
         original_exception: Optional[Exception] = None,
         response: Optional[httpx.Response] = None,
-        litellm_debug_info: Optional[str] = None,
+        remodl_debug_info: Optional[str] = None,
         max_retries: Optional[int] = None,
         num_retries: Optional[int] = None,
         generated_content: str = "",
         is_pre_first_chunk: bool = False,
     ):
         self.status_code = 503  # Service Unavailable
-        self.message = f"litellm.MidStreamFallbackError: {message}"
+        self.message = f"remodl.MidStreamFallbackError: {message}"
         self.model = model
         self.llm_provider = llm_provider
         self.original_exception = original_exception
-        self.litellm_debug_info = litellm_debug_info
+        self.remodl_debug_info = remodl_debug_info
         self.max_retries = max_retries
         self.num_retries = num_retries
         self.generated_content = generated_content
@@ -898,7 +898,7 @@ class MidStreamFallbackError(ServiceUnavailableError):  # type: ignore
             llm_provider=llm_provider,
             model=model,
             response=self.response,
-            litellm_debug_info=self.litellm_debug_info,
+            remodl_debug_info=self.remodl_debug_info,
             max_retries=self.max_retries,
             num_retries=self.num_retries,
         )

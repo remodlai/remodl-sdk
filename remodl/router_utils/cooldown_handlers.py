@@ -10,14 +10,14 @@ import asyncio
 import math
 from typing import TYPE_CHECKING, Any, List, Optional, Union
 
-import litellm
-from litellm._logging import verbose_router_logger
-from litellm.constants import (
+import remodl
+from remodl._logging import verbose_router_logger
+from remodl.constants import (
     DEFAULT_COOLDOWN_TIME_SECONDS,
     DEFAULT_FAILURE_THRESHOLD_PERCENT,
     SINGLE_DEPLOYMENT_TRAFFIC_FAILURE_THRESHOLD,
 )
-from litellm.router_utils.cooldown_callbacks import router_cooldown_event_callback
+from remodl.router_utils.cooldown_callbacks import router_cooldown_event_callback
 
 from .router_callbacks.track_deployment_metrics import (
     get_deployment_failures_for_current_minute,
@@ -27,7 +27,7 @@ from .router_callbacks.track_deployment_metrics import (
 if TYPE_CHECKING:
     from opentelemetry.trace import Span as _Span
 
-    from litellm.router import Router as _Router
+    from remodl.router import Router as _Router
 
     LitellmRouter = _Router
     Span = Union[_Span, Any]
@@ -37,7 +37,7 @@ else:
 
 
 def _is_cooldown_required(
-    litellm_router_instance: LitellmRouter,
+    remodl_router_instance: LitellmRouter,
     model_id: str,
     exception_status: Union[str, int],
     exception_str: Optional[str] = None,
@@ -56,7 +56,7 @@ def _is_cooldown_required(
         ignored_strings = ["APIConnectionError"]
         if (
             exception_str is not None
-        ):  # don't cooldown on litellm api connection errors errors
+        ):  # don't cooldown on remodl api connection errors errors
             for ignored_string in ignored_strings:
                 if ignored_string in exception_str:
                     return False
@@ -95,7 +95,7 @@ def _is_cooldown_required(
 
 
 def _should_run_cooldown_logic(
-    litellm_router_instance: LitellmRouter,
+    remodl_router_instance: LitellmRouter,
     deployment: Optional[str],
     exception_status: Union[str, int],
     original_exception: Any,
@@ -109,12 +109,12 @@ def _should_run_cooldown_logic(
     - router.disable_cooldowns is True
     - deployment is None
     - _is_cooldown_required() returns False
-    - deployment is in litellm_router_instance.provider_default_deployment_ids
+    - deployment is in remodl_router_instance.provider_default_deployment_ids
     - exception_status is not one that should be immediately retried (e.g. 401)
     """
     if (
         deployment is None
-        or litellm_router_instance.get_model_group(id=deployment) is None
+        or remodl_router_instance.get_model_group(id=deployment) is None
     ):
         verbose_router_logger.debug(
             "Should Not Run Cooldown Logic: deployment id is none or model group can't be found."
@@ -132,7 +132,7 @@ def _should_run_cooldown_logic(
         )
         return False
 
-    if litellm_router_instance.disable_cooldowns:
+    if remodl_router_instance.disable_cooldowns:
         verbose_router_logger.debug(
             "Should Not Run Cooldown Logic: disable_cooldowns is True"
         )
@@ -143,7 +143,7 @@ def _should_run_cooldown_logic(
         return False
 
     if not _is_cooldown_required(
-        litellm_router_instance=litellm_router_instance,
+        remodl_router_instance=remodl_router_instance,
         model_id=deployment,
         exception_status=exception_status,
         exception_str=str(original_exception),
@@ -153,7 +153,7 @@ def _should_run_cooldown_logic(
         )
         return False
 
-    if deployment in litellm_router_instance.provider_default_deployment_ids:
+    if deployment in remodl_router_instance.provider_default_deployment_ids:
         verbose_router_logger.debug(
             "Should Not Run Cooldown Logic: deployment is in provider_default_deployment_ids"
         )
@@ -163,7 +163,7 @@ def _should_run_cooldown_logic(
 
 
 def _should_cooldown_deployment(
-    litellm_router_instance: LitellmRouter,
+    remodl_router_instance: LitellmRouter,
     deployment: str,
     exception_status: Union[str, int],
     original_exception: Any,
@@ -180,29 +180,29 @@ def _should_cooldown_deployment(
     cooldown if:
         - got a 429 error from LLM API
         - if %fails/%(successes + fails) > ALLOWED_FAILURE_RATE_PER_MINUTE
-        - got 401 Auth error, 404 NotFounder - checked by litellm._should_retry()
+        - got 401 Auth error, 404 NotFounder - checked by remodl._should_retry()
 
 
 
     - v1 logic (Legacy): if allowed fails or allowed fail policy set, coolsdown if num fails in this minute > allowed fails
     """
     ## BASE CASE - single deployment
-    model_group = litellm_router_instance.get_model_group(id=deployment)
+    model_group = remodl_router_instance.get_model_group(id=deployment)
     is_single_deployment_model_group = False
     if model_group is not None and len(model_group) == 1:
         is_single_deployment_model_group = True
     if (
-        litellm_router_instance.allowed_fails_policy is None
+        remodl_router_instance.allowed_fails_policy is None
         and _is_allowed_fails_set_on_router(
-            litellm_router_instance=litellm_router_instance
+            remodl_router_instance=remodl_router_instance
         )
         is False
     ):
         num_successes_this_minute = get_deployment_successes_for_current_minute(
-            litellm_router_instance=litellm_router_instance, deployment_id=deployment
+            remodl_router_instance=remodl_router_instance, deployment_id=deployment
         )
         num_fails_this_minute = get_deployment_failures_for_current_minute(
-            litellm_router_instance=litellm_router_instance, deployment_id=deployment
+            remodl_router_instance=remodl_router_instance, deployment_id=deployment
         )
 
         total_requests_this_minute = num_successes_this_minute + num_fails_this_minute
@@ -236,7 +236,7 @@ def _should_cooldown_deployment(
             return True
 
         elif (
-            litellm._should_retry(
+            remodl._should_retry(
                 status_code=cast_exception_status_to_int(exception_status)
             )
             is False
@@ -246,7 +246,7 @@ def _should_cooldown_deployment(
         return False
     else:
         return should_cooldown_based_on_allowed_fails_policy(
-            litellm_router_instance=litellm_router_instance,
+            remodl_router_instance=remodl_router_instance,
             deployment=deployment,
             original_exception=original_exception,
         )
@@ -255,7 +255,7 @@ def _should_cooldown_deployment(
 
 
 def _set_cooldown_deployments(
-    litellm_router_instance: LitellmRouter,
+    remodl_router_instance: LitellmRouter,
     original_exception: Any,
     exception_status: Union[str, int],
     deployment: Optional[str] = None,
@@ -276,7 +276,7 @@ def _set_cooldown_deployments(
 
     if (
         _should_run_cooldown_logic(
-            litellm_router_instance=litellm_router_instance,
+            remodl_router_instance=remodl_router_instance,
             deployment=deployment,
             exception_status=exception_status,
             original_exception=original_exception,
@@ -292,12 +292,12 @@ def _set_cooldown_deployments(
     verbose_router_logger.debug(f"Attempting to add {deployment} to cooldown list")
 
     if _should_cooldown_deployment(
-        litellm_router_instance=litellm_router_instance,
+        remodl_router_instance=remodl_router_instance,
         deployment=deployment,
         exception_status=exception_status,
         original_exception=original_exception,
     ):
-        litellm_router_instance.cooldown_cache.add_deployment_to_cooldown(
+        remodl_router_instance.cooldown_cache.add_deployment_to_cooldown(
             model_id=deployment,
             original_exception=original_exception,
             exception_status=exception_status_int,
@@ -307,7 +307,7 @@ def _set_cooldown_deployments(
         # Trigger cooldown callback handler
         asyncio.create_task(
             router_cooldown_event_callback(
-                litellm_router_instance=litellm_router_instance,
+                remodl_router_instance=remodl_router_instance,
                 deployment_id=deployment,
                 exception_status=exception_status,
                 cooldown_time=time_to_cooldown,
@@ -318,15 +318,15 @@ def _set_cooldown_deployments(
 
 
 async def _async_get_cooldown_deployments(
-    litellm_router_instance: LitellmRouter,
+    remodl_router_instance: LitellmRouter,
     parent_otel_span: Optional[Span],
 ) -> List[str]:
     """
     Async implementation of '_get_cooldown_deployments'
     """
-    model_ids = litellm_router_instance.get_model_ids()
+    model_ids = remodl_router_instance.get_model_ids()
     cooldown_models = (
-        await litellm_router_instance.cooldown_cache.async_get_active_cooldowns(
+        await remodl_router_instance.cooldown_cache.async_get_active_cooldowns(
             model_ids=model_ids,
             parent_otel_span=parent_otel_span,
         )
@@ -346,15 +346,15 @@ async def _async_get_cooldown_deployments(
 
 
 async def _async_get_cooldown_deployments_with_debug_info(
-    litellm_router_instance: LitellmRouter,
+    remodl_router_instance: LitellmRouter,
     parent_otel_span: Optional[Span],
 ) -> List[tuple]:
     """
     Async implementation of '_get_cooldown_deployments'
     """
-    model_ids = litellm_router_instance.get_model_ids()
+    model_ids = remodl_router_instance.get_model_ids()
     cooldown_models = (
-        await litellm_router_instance.cooldown_cache.async_get_active_cooldowns(
+        await remodl_router_instance.cooldown_cache.async_get_active_cooldowns(
             model_ids=model_ids, parent_otel_span=parent_otel_span
         )
     )
@@ -364,7 +364,7 @@ async def _async_get_cooldown_deployments_with_debug_info(
 
 
 def _get_cooldown_deployments(
-    litellm_router_instance: LitellmRouter, parent_otel_span: Optional[Span]
+    remodl_router_instance: LitellmRouter, parent_otel_span: Optional[Span]
 ) -> List[str]:
     """
     Get the list of models being cooled down for this minute
@@ -374,9 +374,9 @@ def _get_cooldown_deployments(
     # ----------------------
     # Return cooldown models
     # ----------------------
-    model_ids = litellm_router_instance.get_model_ids()
+    model_ids = remodl_router_instance.get_model_ids()
 
-    cooldown_models = litellm_router_instance.cooldown_cache.get_active_cooldowns(
+    cooldown_models = remodl_router_instance.cooldown_cache.get_active_cooldowns(
         model_ids=model_ids, parent_otel_span=parent_otel_span
     )
 
@@ -393,7 +393,7 @@ def _get_cooldown_deployments(
 
 
 def should_cooldown_based_on_allowed_fails_policy(
-    litellm_router_instance: LitellmRouter,
+    remodl_router_instance: LitellmRouter,
     deployment: str,
     original_exception: Any,
 ) -> bool:
@@ -405,22 +405,22 @@ def should_cooldown_based_on_allowed_fails_policy(
     - False if fails are within the allowed limit (should not cooldown)
     """
     allowed_fails = (
-        litellm_router_instance.get_allowed_fails_from_policy(
+        remodl_router_instance.get_allowed_fails_from_policy(
             exception=original_exception,
         )
-        or litellm_router_instance.allowed_fails
+        or remodl_router_instance.allowed_fails
     )
     cooldown_time = (
-        litellm_router_instance.cooldown_time or DEFAULT_COOLDOWN_TIME_SECONDS
+        remodl_router_instance.cooldown_time or DEFAULT_COOLDOWN_TIME_SECONDS
     )
 
-    current_fails = litellm_router_instance.failed_calls.get_cache(key=deployment) or 0
+    current_fails = remodl_router_instance.failed_calls.get_cache(key=deployment) or 0
     updated_fails = current_fails + 1
 
     if updated_fails > allowed_fails:
         return True
     else:
-        litellm_router_instance.failed_calls.set_cache(
+        remodl_router_instance.failed_calls.set_cache(
             key=deployment, value=updated_fails, ttl=cooldown_time
         )
 
@@ -428,7 +428,7 @@ def should_cooldown_based_on_allowed_fails_policy(
 
 
 def _is_allowed_fails_set_on_router(
-    litellm_router_instance: LitellmRouter,
+    remodl_router_instance: LitellmRouter,
 ) -> bool:
     """
     Check if Router.allowed_fails is set or is Non-default Value
@@ -437,9 +437,9 @@ def _is_allowed_fails_set_on_router(
     - True if Router.allowed_fails is set or is Non-default Value
     - False if Router.allowed_fails is None or is Default Value
     """
-    if litellm_router_instance.allowed_fails is None:
+    if remodl_router_instance.allowed_fails is None:
         return False
-    if litellm_router_instance.allowed_fails != litellm.allowed_fails:
+    if remodl_router_instance.allowed_fails != remodl.allowed_fails:
         return True
     return False
 

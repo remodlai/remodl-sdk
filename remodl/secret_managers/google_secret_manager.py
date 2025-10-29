@@ -2,13 +2,13 @@ import base64
 import os
 from typing import Optional
 
-import litellm
-from litellm._logging import verbose_logger
-from litellm.caching.caching import InMemoryCache
-from litellm.constants import SECRET_MANAGER_REFRESH_INTERVAL
-from litellm.integrations.gcs_bucket.gcs_bucket_base import GCSBucketBase
-from litellm.llms.custom_httpx.http_handler import _get_httpx_client
-from litellm.proxy._types import CommonProxyErrors, KeyManagementSystem
+import remodl
+from remodl._logging import verbose_logger
+from remodl.caching.caching import InMemoryCache
+from remodl.constants import SECRET_MANAGER_REFRESH_INTERVAL
+from remodl.integrations.gcs_bucket.gcs_bucket_base import GCSBucketBase
+from remodl.llms.custom_httpx.http_handler import _get_httpx_client
+from remodl.proxy._types import CommonProxyErrors, KeyManagementSystem
 
 
 class GoogleSecretManager(GCSBucketBase):
@@ -22,7 +22,7 @@ class GoogleSecretManager(GCSBucketBase):
             refresh_interval (int, optional): The refresh interval in seconds. Defaults to 86400. (24 hours)
             always_read_secret_manager (bool, optional): Whether to always read from the secret manager. Defaults to False. Since we do want to cache values
         """
-        from litellm.proxy.proxy_server import premium_user
+        from remodl.proxy.proxy_server import premium_user
 
         if premium_user is not True:
             raise ValueError(
@@ -35,8 +35,8 @@ class GoogleSecretManager(GCSBucketBase):
                 "Google Secret Manager requires a project ID, please set 'GOOGLE_SECRET_MANAGER_PROJECT_ID' in your .env"
             )
         self.sync_httpx_client = _get_httpx_client()
-        litellm.secret_manager_client = self
-        litellm._key_management_system = KeyManagementSystem.GOOGLE_SECRET_MANAGER
+        remodl.secret_manager_client = self
+        remodl._key_management_system = KeyManagementSystem.GOOGLE_SECRET_MANAGER
         _refresh_interval = os.environ.get(
             "GOOGLE_SECRET_MANAGER_REFRESH_INTERVAL", refresh_interval
         )

@@ -2,14 +2,14 @@ import asyncio
 from datetime import datetime
 from typing import TYPE_CHECKING, Any, List, Optional
 
-from litellm.litellm_core_utils.litellm_logging import Logging as LiteLLMLoggingObj
-from litellm.proxy.pass_through_endpoints.success_handler import (
+from remodl.remodl_core_utils.remodl_logging import Logging as LiteLLMLoggingObj
+from remodl.proxy.pass_through_endpoints.success_handler import (
     PassThroughEndpointLogging,
 )
-from litellm.types.passthrough_endpoints.pass_through_endpoints import EndpointType
+from remodl.types.passthrough_endpoints.pass_through_endpoints import EndpointType
 
 if TYPE_CHECKING:
-    from litellm.llms.base_llm.google_genai.transformation import (
+    from remodl.llms.base_llm.google_genai.transformation import (
         BaseGoogleGenAIGenerateContentConfig,
     )
 else:
@@ -25,11 +25,11 @@ class BaseGoogleGenAIGenerateContentStreamingIterator:
 
     def __init__(
         self,
-        litellm_logging_obj: LiteLLMLoggingObj,
+        remodl_logging_obj: LiteLLMLoggingObj,
         request_body: dict,
         model: str,
     ):
-        self.litellm_logging_obj = litellm_logging_obj
+        self.remodl_logging_obj = remodl_logging_obj
         self.request_body = request_body
         self.start_time = datetime.now()
         self.collected_chunks: List[bytes] = []
@@ -39,13 +39,13 @@ class BaseGoogleGenAIGenerateContentStreamingIterator:
         self,
     ):
         """Handle the logging after all chunks have been collected."""
-        from litellm.proxy.pass_through_endpoints.streaming_handler import (
+        from remodl.proxy.pass_through_endpoints.streaming_handler import (
             PassThroughStreamingHandler,
         )
         end_time = datetime.now()
         asyncio.create_task(
             PassThroughStreamingHandler._route_streaming_logging_to_handler(
-                litellm_logging_obj=self.litellm_logging_obj,
+                remodl_logging_obj=self.remodl_logging_obj,
                 passthrough_success_handler_obj=GLOBAL_PASS_THROUGH_SUCCESS_HANDLER_OBJ,
                 url_route="/v1/generateContent",
                 request_body=self.request_body or {},
@@ -69,19 +69,19 @@ class GoogleGenAIGenerateContentStreamingIterator(BaseGoogleGenAIGenerateContent
         model: str,
         logging_obj: LiteLLMLoggingObj,
         generate_content_provider_config: BaseGoogleGenAIGenerateContentConfig,
-        litellm_metadata: dict,
+        remodl_metadata: dict,
         custom_llm_provider: str,
         request_body: Optional[dict] = None,
     ):
         super().__init__(
-            litellm_logging_obj=logging_obj,
+            remodl_logging_obj=logging_obj,
             request_body=request_body or {},
             model=model,
         )
         self.response = response
         self.model = model
         self.generate_content_provider_config = generate_content_provider_config
-        self.litellm_metadata = litellm_metadata
+        self.remodl_metadata = remodl_metadata
         self.custom_llm_provider = custom_llm_provider
         # Store the iterator once to avoid multiple stream consumption
         self.stream_iterator = response.iter_bytes()
@@ -119,19 +119,19 @@ class AsyncGoogleGenAIGenerateContentStreamingIterator(BaseGoogleGenAIGenerateCo
         model: str,
         logging_obj: LiteLLMLoggingObj,
         generate_content_provider_config: BaseGoogleGenAIGenerateContentConfig,
-        litellm_metadata: dict,
+        remodl_metadata: dict,
         custom_llm_provider: str,
         request_body: Optional[dict] = None,
     ):
         super().__init__(
-            litellm_logging_obj=logging_obj,
+            remodl_logging_obj=logging_obj,
             request_body=request_body or {},
             model=model,
         )
         self.response = response
         self.model = model
         self.generate_content_provider_config = generate_content_provider_config
-        self.litellm_metadata = litellm_metadata
+        self.remodl_metadata = remodl_metadata
         self.custom_llm_provider = custom_llm_provider
         # Store the async iterator once to avoid multiple stream consumption
         self.stream_iterator = response.aiter_bytes()

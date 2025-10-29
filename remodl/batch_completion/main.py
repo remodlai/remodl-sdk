@@ -1,9 +1,9 @@
 from concurrent.futures import FIRST_COMPLETED, ThreadPoolExecutor, wait
 from typing import List, Optional
 
-import litellm
-from litellm._logging import print_verbose
-from litellm.utils import get_optional_params
+import remodl
+from remodl._logging import print_verbose
+from remodl.utils import get_optional_params
 
 from ..llms.vllm.completion import handler as vllm_handler
 
@@ -32,7 +32,7 @@ def batch_completion(
     **kwargs,
 ):
     """
-    Batch litellm.completion function for a given model.
+    Batch remodl.completion function for a given model.
 
     Args:
         model (str): The model to use for generating completions.
@@ -62,7 +62,7 @@ def batch_completion(
     completions = []
     model = model
     custom_llm_provider = None
-    if model.split("/", 1)[0] in litellm.provider_list:
+    if model.split("/", 1)[0] in remodl.provider_list:
         custom_llm_provider = model.split("/", 1)[0]
         model = model.split("/", 1)[1]
     if custom_llm_provider == "vllm":
@@ -86,7 +86,7 @@ def batch_completion(
         results = vllm_handler.batch_completions(
             model=model,
             messages=batch_messages,
-            custom_prompt_dict=litellm.custom_prompt_dict,
+            custom_prompt_dict=remodl.custom_prompt_dict,
             optional_params=optional_params,
         )
     # all non VLLM models for batch completion models
@@ -107,7 +107,7 @@ def batch_completion(
                     if "kwargs" in kwargs_modified:
                         original_kwargs = kwargs_modified.pop("kwargs")
                     future = executor.submit(
-                        litellm.completion, **kwargs_modified, **original_kwargs
+                        remodl.completion, **kwargs_modified, **original_kwargs
                     )
                     completions.append(future)
 
@@ -154,7 +154,7 @@ def batch_completion_models(*args, **kwargs):
         with ThreadPoolExecutor(max_workers=len(models)) as executor:
             for model in models:
                 futures[model] = executor.submit(
-                    litellm.completion, *args, model=model, **kwargs
+                    remodl.completion, *args, model=model, **kwargs
                 )
 
             for model, future in sorted(
@@ -177,7 +177,7 @@ def batch_completion_models(*args, **kwargs):
                         deployment[key] = kwargs[key]
                 kwargs = {**deployment, **nested_kwargs}
                 futures[deployment["model"]] = executor.submit(
-                    litellm.completion, **kwargs
+                    remodl.completion, **kwargs
                 )
 
             while futures:
@@ -246,7 +246,7 @@ def batch_completion_models_all_responses(*args, **kwargs):
 
     with concurrent.futures.ThreadPoolExecutor(max_workers=len(models)) as executor:
         for idx, model in enumerate(models):
-            future = executor.submit(litellm.completion, *args, model=model, **kwargs)
+            future = executor.submit(remodl.completion, *args, model=model, **kwargs)
             if future.result() is not None:
                 responses.append(future.result())
 

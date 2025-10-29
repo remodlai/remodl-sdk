@@ -2,7 +2,7 @@ from typing import Any, Dict, List, Optional
 
 from pydantic import BaseModel, ConfigDict
 
-from litellm.proxy._types import MCPAuthType, MCPTransportType
+from remodl.proxy._types import MCPAuthType, MCPTransportType
 
 # MCPInfo now allows arbitrary additional fields for custom metadata
 MCPInfo = Dict[str, Any]

@@ -10,14 +10,14 @@ Translations handled by LiteLLM:
 
 from typing import TYPE_CHECKING, Any, Dict
 
-from litellm._logging import verbose_logger
-from litellm.types.llms.openai import ResponsesAPIOptionalRequestParams
-from litellm.utils import supports_reasoning
+from remodl._logging import verbose_logger
+from remodl.types.llms.openai import ResponsesAPIOptionalRequestParams
+from remodl.utils import supports_reasoning
 
 from .transformation import AzureOpenAIResponsesAPIConfig
 
 if TYPE_CHECKING:
-    from litellm.litellm_core_utils.litellm_logging import Logging as _LiteLLMLoggingObj
+    from remodl.remodl_core_utils.remodl_logging import Logging as _LiteLLMLoggingObj
 
     LiteLLMLoggingObj = _LiteLLMLoggingObj
 else:

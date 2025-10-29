@@ -31,14 +31,14 @@ Output: response.output is List[GenericResponseOutputItem] where each has:
 import asyncio
 from typing import TYPE_CHECKING, Any, Coroutine, List, Optional, Tuple, Union, cast
 
-from litellm._logging import verbose_proxy_logger
-from litellm.llms.base_llm.guardrail_translation.base_translation import BaseTranslation
-from litellm.types.responses.main import GenericResponseOutputItem, OutputText
+from remodl._logging import verbose_proxy_logger
+from remodl.llms.base_llm.guardrail_translation.base_translation import BaseTranslation
+from remodl.types.responses.main import GenericResponseOutputItem, OutputText
 
 if TYPE_CHECKING:
-    from litellm.integrations.custom_guardrail import CustomGuardrail
-    from litellm.types.llms.openai import ResponseInputParam
-    from litellm.types.utils import ResponsesAPIResponse
+    from remodl.integrations.custom_guardrail import CustomGuardrail
+    from remodl.types.llms.openai import ResponseInputParam
+    from remodl.types.utils import ResponsesAPIResponse
 
 
 class OpenAIResponsesHandler(BaseTranslation):

@@ -4,9 +4,9 @@
 from datetime import datetime
 from typing import Optional, cast
 
-import litellm
-from litellm._logging import print_verbose, verbose_logger
-from litellm.types.utils import StandardLoggingPayload
+import remodl
+from remodl._logging import print_verbose, verbose_logger
+from remodl.types.utils import StandardLoggingPayload
 
 
 class S3Logger:
@@ -30,37 +30,37 @@ class S3Logger:
 
         try:
             verbose_logger.debug(
-                f"in init s3 logger - s3_callback_params {litellm.s3_callback_params}"
+                f"in init s3 logger - s3_callback_params {remodl.s3_callback_params}"
             )
 
             s3_use_team_prefix = False
 
-            if litellm.s3_callback_params is not None:
+            if remodl.s3_callback_params is not None:
                 # read in .env variables - example os.environ/AWS_BUCKET_NAME
-                for key, value in litellm.s3_callback_params.items():
+                for key, value in remodl.s3_callback_params.items():
                     if isinstance(value, str) and value.startswith("os.environ/"):
-                        litellm.s3_callback_params[key] = litellm.get_secret(value)
-                # now set s3 params from litellm.s3_logger_params
-                s3_bucket_name = litellm.s3_callback_params.get("s3_bucket_name")
-                s3_region_name = litellm.s3_callback_params.get("s3_region_name")
-                s3_api_version = litellm.s3_callback_params.get("s3_api_version")
-                s3_use_ssl = litellm.s3_callback_params.get("s3_use_ssl", True)
-                s3_verify = litellm.s3_callback_params.get("s3_verify")
-                s3_endpoint_url = litellm.s3_callback_params.get("s3_endpoint_url")
-                s3_aws_access_key_id = litellm.s3_callback_params.get(
+                        remodl.s3_callback_params[key] = remodl.get_secret(value)
+                # now set s3 params from remodl.s3_logger_params
+                s3_bucket_name = remodl.s3_callback_params.get("s3_bucket_name")
+                s3_region_name = remodl.s3_callback_params.get("s3_region_name")
+                s3_api_version = remodl.s3_callback_params.get("s3_api_version")
+                s3_use_ssl = remodl.s3_callback_params.get("s3_use_ssl", True)
+                s3_verify = remodl.s3_callback_params.get("s3_verify")
+                s3_endpoint_url = remodl.s3_callback_params.get("s3_endpoint_url")
+                s3_aws_access_key_id = remodl.s3_callback_params.get(
                     "s3_aws_access_key_id"
                 )
-                s3_aws_secret_access_key = litellm.s3_callback_params.get(
+                s3_aws_secret_access_key = remodl.s3_callback_params.get(
                     "s3_aws_secret_access_key"
                 )
-                s3_aws_session_token = litellm.s3_callback_params.get(
+                s3_aws_session_token = remodl.s3_callback_params.get(
                     "s3_aws_session_token"
                 )
-                s3_config = litellm.s3_callback_params.get("s3_config")
-                s3_path = litellm.s3_callback_params.get("s3_path")
-                # done reading litellm.s3_callback_params
+                s3_config = remodl.s3_callback_params.get("s3_config")
+                s3_path = remodl.s3_callback_params.get("s3_path")
+                # done reading remodl.s3_callback_params
                 s3_use_team_prefix = bool(
-                    litellm.s3_callback_params.get("s3_use_team_prefix", False)
+                    remodl.s3_callback_params.get("s3_use_team_prefix", False)
                 )
             self.s3_use_team_prefix = s3_use_team_prefix
             self.bucket_name = s3_bucket_name
@@ -97,18 +97,18 @@ class S3Logger:
 
             # construct payload to send to s3
             # follows the same params as langfuse.py
-            litellm_params = kwargs.get("litellm_params", {})
+            remodl_params = kwargs.get("remodl_params", {})
             metadata = (
-                litellm_params.get("metadata", {}) or {}
-            )  # if litellm_params['metadata'] == None
+                remodl_params.get("metadata", {}) or {}
+            )  # if remodl_params['metadata'] == None
 
             # Clean Metadata before logging - never log raw metadata
             # the raw metadata can contain circular references which leads to infinite recursion
-            # we clean out all extra litellm metadata params before logging
+            # we clean out all extra remodl metadata params before logging
             clean_metadata = {}
             if isinstance(metadata, dict):
                 for key, value in metadata.items():
-                    # clean litellm metadata before logging
+                    # clean remodl metadata before logging
                     if key in [
                         "headers",
                         "endpoint",
@@ -132,13 +132,13 @@ class S3Logger:
 
             team_alias_prefix = ""
             if (
-                litellm.enable_preview_features
+                remodl.enable_preview_features
                 and self.s3_use_team_prefix
                 and team_alias is not None
             ):
                 team_alias_prefix = f"{team_alias}/"
 
-            s3_file_name = litellm.utils.get_logging_id(start_time, payload) or ""
+            s3_file_name = remodl.utils.get_logging_id(start_time, payload) or ""
             s3_object_key = get_s3_object_key(
                 cast(Optional[str], self.s3_path) or "",
                 team_alias_prefix,
@@ -154,7 +154,7 @@ class S3Logger:
                 + ".json"
             )
 
-            from litellm.litellm_core_utils.safe_json_dumps import safe_dumps
+            from remodl.remodl_core_utils.safe_json_dumps import safe_dumps
 
             payload_str = safe_dumps(payload)
 

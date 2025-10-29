@@ -8,16 +8,16 @@ import os
 from datetime import datetime
 from typing import TYPE_CHECKING, Any, Optional, Union
 
-from litellm.integrations.arize import _utils
-from litellm.integrations.opentelemetry import OpenTelemetry
-from litellm.types.integrations.arize import ArizeConfig
-from litellm.types.services import ServiceLoggerPayload
-from litellm.types.utils import StandardCallbackDynamicParams
+from remodl.integrations.arize import _utils
+from remodl.integrations.opentelemetry import OpenTelemetry
+from remodl.types.integrations.arize import ArizeConfig
+from remodl.types.services import ServiceLoggerPayload
+from remodl.types.utils import StandardCallbackDynamicParams
 
 if TYPE_CHECKING:
     from opentelemetry.trace import Span as _Span
 
-    from litellm.types.integrations.arize import Protocol as _Protocol
+    from remodl.types.integrations.arize import Protocol as _Protocol
 
     Protocol = _Protocol
     Span = Union[_Span, Any]
@@ -96,7 +96,7 @@ class ArizeLogger(OpenTelemetry):
         """Arize is used mainly for LLM I/O tracing, sending router+caching metrics adds bloat to arize logs"""
         pass
 
-    def create_litellm_proxy_request_started_span(
+    def create_remodl_proxy_request_started_span(
         self,
         start_time: datetime,
         headers: dict,

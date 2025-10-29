@@ -126,10 +126,10 @@ DEFAULT_SSL_CIPHERS = os.getenv(
 )
 
 ########### v2 Architecture constants for managing writing updates to the database ###########
-REDIS_UPDATE_BUFFER_KEY = "litellm_spend_update_buffer"
-REDIS_DAILY_SPEND_UPDATE_BUFFER_KEY = "litellm_daily_spend_update_buffer"
-REDIS_DAILY_TEAM_SPEND_UPDATE_BUFFER_KEY = "litellm_daily_team_spend_update_buffer"
-REDIS_DAILY_TAG_SPEND_UPDATE_BUFFER_KEY = "litellm_daily_tag_spend_update_buffer"
+REDIS_UPDATE_BUFFER_KEY = "remodl_spend_update_buffer"
+REDIS_DAILY_SPEND_UPDATE_BUFFER_KEY = "remodl_daily_spend_update_buffer"
+REDIS_DAILY_TEAM_SPEND_UPDATE_BUFFER_KEY = "remodl_daily_team_spend_update_buffer"
+REDIS_DAILY_TAG_SPEND_UPDATE_BUFFER_KEY = "remodl_daily_tag_spend_update_buffer"
 MAX_REDIS_BUFFER_DEQUEUE_COUNT = int(os.getenv("MAX_REDIS_BUFFER_DEQUEUE_COUNT", 100))
 MAX_SIZE_IN_MEMORY_QUEUE = int(os.getenv("MAX_SIZE_IN_MEMORY_QUEUE", 10000))
 MAX_IN_MEMORY_QUEUE_FLUSH_COUNT = int(
@@ -340,7 +340,7 @@ LITELLM_CHAT_PROVIDERS = [
     "empower",
     "github",
     "custom",
-    "litellm_proxy",
+    "remodl_proxy",
     "hosted_vllm",
     "remodlai",
     "llamafile",
@@ -528,7 +528,7 @@ openai_compatible_providers: List = [
     "friendliai",
     "azure_ai",
     "github",
-    "litellm_proxy",
+    "remodl_proxy",
     "hosted_vllm",
     "remodlai",
     "llamafile",
@@ -645,7 +645,7 @@ huggingface_models: set = set(
         "meta-llama/Llama-2-70b",
         "meta-llama/Llama-2-70b-chat",
     ]
-)  # these have been tested on extensively. But by default all text2text-generation and text-generation models are supported by liteLLM. - https://docs.litellm.ai/docs/providers
+)  # these have been tested on extensively. But by default all text2text-generation and text-generation models are supported by liteLLM. - https://docs.remodl.ai/docs/providers
 empower_models = set(
     [
         "empower/empower-functions",
@@ -978,9 +978,9 @@ MAXIMUM_TRACEBACK_LINES_TO_LOG = int(os.getenv("MAXIMUM_TRACEBACK_LINES_TO_LOG",
 
 # Headers to control callbacks
 X_LITELLM_DISABLE_CALLBACKS = "x-remodl-disable-callbacks"
-LITELLM_METADATA_FIELD = "litellm_metadata"
+LITELLM_METADATA_FIELD = "remodl_metadata"
 OLD_LITELLM_METADATA_FIELD = "metadata"
-LITELLM_TRUNCATED_PAYLOAD_FIELD = "litellm_truncated"
+LITELLM_TRUNCATED_PAYLOAD_FIELD = "remodl_truncated"
 
 ########################### LiteLLM Proxy Specific Constants ###########################
 ########################################################################################
@@ -989,8 +989,8 @@ MAX_SPENDLOG_ROWS_TO_QUERY = int(
 )  # if spendLogs has more than 1M rows, do not query the DB
 DEFAULT_SOFT_BUDGET = float(
     os.getenv("DEFAULT_SOFT_BUDGET", 50.0)
-)  # by default all litellm proxy keys have a soft budget of 50.0
-# makes it clear this is a rate limit error for a litellm virtual key
+)  # by default all remodl proxy keys have a soft budget of 50.0
+# makes it clear this is a rate limit error for a remodl virtual key
 RATE_LIMIT_ERROR_MESSAGE_FOR_VIRTUAL_KEY = "LiteLLM Virtual Key user_api_key_hash"
 
 # Python garbage collection threshold configuration
@@ -1019,19 +1019,19 @@ BATCH_STATUS_POLL_MAX_ATTEMPTS = int(
 HEALTH_CHECK_TIMEOUT_SECONDS = int(
     os.getenv("HEALTH_CHECK_TIMEOUT_SECONDS", 60)
 )  # 60 seconds
-LITTELM_INTERNAL_HEALTH_SERVICE_ACCOUNT_NAME = "litellm-internal-health-check"
-LITTELM_CLI_SERVICE_ACCOUNT_NAME = "litellm-cli"
-LITELLM_INTERNAL_JOBS_SERVICE_ACCOUNT_NAME = "litellm_internal_jobs"
+LITTELM_INTERNAL_HEALTH_SERVICE_ACCOUNT_NAME = "remodl-internal-health-check"
+LITTELM_CLI_SERVICE_ACCOUNT_NAME = "remodl-cli"
+LITELLM_INTERNAL_JOBS_SERVICE_ACCOUNT_NAME = "remodl_internal_jobs"
 
 # Key Rotation Constants
 LITELLM_KEY_ROTATION_ENABLED = os.getenv("LITELLM_KEY_ROTATION_ENABLED", "false")
 LITELLM_KEY_ROTATION_CHECK_INTERVAL_SECONDS = int(os.getenv("LITELLM_KEY_ROTATION_CHECK_INTERVAL_SECONDS", 86400))  # 24 hours default
-UI_SESSION_TOKEN_TEAM_ID = "litellm-dashboard"
+UI_SESSION_TOKEN_TEAM_ID = "remodl-dashboard"
 LITELLM_PROXY_ADMIN_NAME = "default_user_id"
 
 ########################### CLI SSO AUTHENTICATION CONSTANTS ###########################
-LITELLM_CLI_SOURCE_IDENTIFIER = "litellm-cli"
-LITELLM_CLI_SESSION_TOKEN_PREFIX = "litellm-session-token"
+LITELLM_CLI_SOURCE_IDENTIFIER = "remodl-cli"
+LITELLM_CLI_SESSION_TOKEN_PREFIX = "remodl-session-token"
 
 ########################### DB CRON JOB NAMES ###########################
 DB_SPEND_UPDATE_JOB_NAME = "db_spend_update_job"

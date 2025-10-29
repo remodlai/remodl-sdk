@@ -1,12 +1,12 @@
-from litellm._uuid import uuid
+from remodl._uuid import uuid
 from typing import Any, Coroutine, Optional, Union
 
 from openai import AsyncAzureOpenAI, AzureOpenAI
 from pydantic import BaseModel
 
-from litellm.litellm_core_utils.audio_utils.utils import get_audio_file_name
-from litellm.types.utils import FileTypes
-from litellm.utils import (
+from remodl.remodl_core_utils.audio_utils.utils import get_audio_file_name
+from remodl.types.utils import FileTypes
+from remodl.utils import (
     TranscriptionResponse,
     convert_to_model_response_object,
     extract_duration_from_srt_or_vtt,
@@ -32,7 +32,7 @@ class AzureAudioTranscription(AzureChatCompletion):
         client=None,
         azure_ad_token: Optional[str] = None,
         atranscription: bool = False,
-        litellm_params: Optional[dict] = None,
+        remodl_params: Optional[dict] = None,
     ) -> Union[TranscriptionResponse, Coroutine[Any, Any, TranscriptionResponse]]:
         data = {"model": model, "file": audio_file, **optional_params}
 
@@ -48,7 +48,7 @@ class AzureAudioTranscription(AzureChatCompletion):
                 max_retries=max_retries,
                 logging_obj=logging_obj,
                 model=model,
-                litellm_params=litellm_params,
+                remodl_params=remodl_params,
             )
 
         azure_client = self.get_azure_openai_client(
@@ -58,7 +58,7 @@ class AzureAudioTranscription(AzureChatCompletion):
             model=model,
             _is_async=False,
             client=client,
-            litellm_params=litellm_params,
+            remodl_params=remodl_params,
         )
         if not isinstance(azure_client, AzureOpenAI):
             raise AzureOpenAIError(
@@ -111,7 +111,7 @@ class AzureAudioTranscription(AzureChatCompletion):
         api_base: Optional[str] = None,
         client=None,
         max_retries=None,
-        litellm_params: Optional[dict] = None,
+        remodl_params: Optional[dict] = None,
     ) -> TranscriptionResponse:
         response = None
         try:
@@ -122,7 +122,7 @@ class AzureAudioTranscription(AzureChatCompletion):
                 model=model,
                 _is_async=True,
                 client=client,
-                litellm_params=litellm_params,
+                remodl_params=remodl_params,
             )
             if not isinstance(async_azure_client, AsyncAzureOpenAI):
                 raise AzureOpenAIError(

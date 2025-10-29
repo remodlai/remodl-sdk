@@ -3,14 +3,14 @@ from typing import Optional, Union
 import httpx
 from typing_extensions import TypedDict
 
-import litellm
-from litellm.llms.custom_httpx.http_handler import (
+import remodl
+from remodl.llms.custom_httpx.http_handler import (
     _get_httpx_client,
     get_async_httpx_client,
 )
-from litellm.llms.openai.openai import HttpxBinaryResponseContent
-from litellm.llms.vertex_ai.gemini.vertex_and_google_ai_studio_gemini import VertexLLM
-from litellm.types.llms.vertex_ai import VERTEX_CREDENTIALS_TYPES
+from remodl.llms.openai.openai import HttpxBinaryResponseContent
+from remodl.llms.vertex_ai.gemini.vertex_and_google_ai_studio_gemini import VertexLLM
+from remodl.types.llms.vertex_ai import VERTEX_CREDENTIALS_TYPES
 
 
 class VertexInput(TypedDict, total=False):
@@ -181,7 +181,7 @@ class VertexTextToSpeechAPI(VertexLLM):
         import base64
 
         async_handler = get_async_httpx_client(
-            llm_provider=litellm.LlmProviders.VERTEX_AI
+            llm_provider=remodl.LlmProviders.VERTEX_AI
         )
 
         response = await async_handler.post(

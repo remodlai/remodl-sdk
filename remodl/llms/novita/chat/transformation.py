@@ -19,7 +19,7 @@ class NovitaConfig(OpenAIGPTConfig):
         model: str,
         messages: List[AllMessageValues],
         optional_params: dict,
-        litellm_params: dict,
+        remodl_params: dict,
         api_key: Optional[str] = None,
         api_base: Optional[str] = None,
     ) -> dict:
@@ -29,5 +29,5 @@ class NovitaConfig(OpenAIGPTConfig):
             )
         headers["Authorization"] = f"Bearer {api_key}"
         headers["Content-Type"] = "application/json"
-        headers["X-Novita-Source"] = "litellm"
+        headers["X-Novita-Source"] = "remodl"
         return headers

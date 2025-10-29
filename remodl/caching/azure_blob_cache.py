@@ -12,7 +12,7 @@ import asyncio
 import json
 from contextlib import suppress
 
-from litellm._logging import print_verbose, verbose_logger
+from remodl._logging import print_verbose, verbose_logger
 
 from .base_cache import BaseCache
 

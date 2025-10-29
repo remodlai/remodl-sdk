@@ -4,10 +4,10 @@ Translates from Cohere's `/v1/rerank` input format to Bedrock's `/rerank` input 
 Why separate file? Make it easy to see how transformation works
 """
 
-from litellm._uuid import uuid
+from remodl._uuid import uuid
 from typing import List, Optional, Union
 
-from litellm.types.llms.bedrock import (
+from remodl.types.llms.bedrock import (
     BedrockRerankBedrockRerankingConfiguration,
     BedrockRerankConfiguration,
     BedrockRerankInlineDocumentSource,
@@ -18,7 +18,7 @@ from litellm.types.llms.bedrock import (
     BedrockRerankTextDocument,
     BedrockRerankTextQuery,
 )
-from litellm.types.rerank import (
+from remodl.types.rerank import (
     RerankBilledUnits,
     RerankRequest,
     RerankResponse,

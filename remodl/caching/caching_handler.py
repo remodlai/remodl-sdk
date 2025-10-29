@@ -33,19 +33,19 @@ from typing import (
 
 from pydantic import BaseModel
 
-import litellm
-from litellm._logging import print_verbose, verbose_logger
-from litellm.caching import InMemoryCache
-from litellm.caching.caching import S3Cache
-from litellm.litellm_core_utils.llm_response_utils.response_metadata import (
+import remodl
+from remodl._logging import print_verbose, verbose_logger
+from remodl.caching import InMemoryCache
+from remodl.caching.caching import S3Cache
+from remodl.remodl_core_utils.llm_response_utils.response_metadata import (
     update_response_metadata,
 )
-from litellm.litellm_core_utils.logging_utils import (
+from remodl.remodl_core_utils.logging_utils import (
     _assemble_complete_response_from_streaming_chunks,
 )
-from litellm.types.caching import CachedEmbedding
-from litellm.types.rerank import RerankResponse
-from litellm.types.utils import (
+from remodl.types.caching import CachedEmbedding
+from remodl.types.rerank import RerankResponse
+from remodl.types.utils import (
     CachingDetails,
     CallTypes,
     Embedding,
@@ -57,15 +57,15 @@ from litellm.types.utils import (
 )
 
 if TYPE_CHECKING:
-    from litellm.litellm_core_utils.litellm_logging import Logging as LiteLLMLoggingObj
+    from remodl.remodl_core_utils.remodl_logging import Logging as LiteLLMLoggingObj
 else:
     LiteLLMLoggingObj = Any
 
 
-from litellm.litellm_core_utils.core_helpers import (
+from remodl.remodl_core_utils.core_helpers import (
     _get_parent_otel_span_from_kwargs,
 )
-from litellm.litellm_core_utils.streaming_handler import CustomStreamWrapper
+from remodl.remodl_core_utils.streaming_handler import CustomStreamWrapper
 
 
 class CachingHandlerResponse(BaseModel):
@@ -92,16 +92,16 @@ class LLMCachingHandler:
         request_kwargs: Dict[str, Any],
         start_time: datetime.datetime,
     ):
-        from litellm.caching import DualCache, RedisCache
+        from remodl.caching import DualCache, RedisCache
 
         self.async_streaming_chunks: List[ModelResponse] = []
         self.sync_streaming_chunks: List[ModelResponse] = []
         self.request_kwargs = request_kwargs
         self.original_function = original_function
         self.start_time = start_time
-        if litellm.cache is not None and isinstance(litellm.cache.cache, RedisCache):
+        if remodl.cache is not None and isinstance(remodl.cache.cache, RedisCache):
             self.dual_cache: Optional[DualCache] = DualCache(
-                redis_cache=litellm.cache.cache,
+                redis_cache=remodl.cache.cache,
                 in_memory_cache=in_memory_cache_obj,
             )
         else:
@@ -140,7 +140,7 @@ class LLMCachingHandler:
         """
         # Check if caching should be performed BEFORE doing expensive operations
         if (
-            (kwargs.get("caching", None) is None and litellm.cache is not None)
+            (kwargs.get("caching", None) is None and remodl.cache is not None)
             or kwargs.get("caching", False) is True
         ) and (
             kwargs.get("cache", {}).get("no-cache", False) is not True
@@ -159,7 +159,7 @@ class LLMCachingHandler:
             parent_otel_span = _get_parent_otel_span_from_kwargs(kwargs)
             kwargs["parent_otel_span"] = parent_otel_span
             
-            if litellm.cache is not None and self._is_call_type_supported_by_cache(
+            if remodl.cache is not None and self._is_call_type_supported_by_cache(
                 original_function=original_function
             ):
                 verbose_logger.debug("Checking Async Cache")
@@ -174,14 +174,14 @@ class LLMCachingHandler:
                     verbose_logger.debug("Cache Hit!")
                     cache_hit = True
                     end_time = datetime.datetime.now()
-                    model, custom_llm_provider, _, _ = litellm.get_llm_provider(
+                    model, custom_llm_provider, _, _ = remodl.get_llm_provider(
                         model=model,
                         custom_llm_provider=kwargs.get("custom_llm_provider", None),
                         api_base=kwargs.get("api_base", None),
                         api_key=kwargs.get("api_key", None),
                     )
                     cache_duration_ms = (cache_check_end_time - cache_check_start_time) * 1000
-                    self._update_litellm_logging_obj_environment(
+                    self._update_remodl_logging_obj_environment(
                         logging_obj=logging_obj,
                         model=model,
                         kwargs=kwargs,
@@ -212,7 +212,7 @@ class LLMCachingHandler:
                             end_time=end_time,
                             cache_hit=cache_hit,
                         )
-                    cache_key = litellm.cache.get_cache_key(**kwargs)
+                    cache_key = remodl.cache.get_cache_key(**kwargs)
                     if (
                         isinstance(cached_result, BaseModel)
                         or isinstance(cached_result, CustomStreamWrapper)
@@ -223,9 +223,9 @@ class LLMCachingHandler:
                     call_type == CallTypes.aembedding.value
                     and cached_result is not None
                     and isinstance(cached_result, list)
-                    and litellm.cache is not None
+                    and remodl.cache is not None
                     and not isinstance(
-                        litellm.cache.cache, S3Cache
+                        remodl.cache.cache, S3Cache
                     )  # s3 doesn't support bulk writing. Exclude.
                 ):
                     (
@@ -262,13 +262,13 @@ class LLMCachingHandler:
         kwargs: Dict[str, Any],
         args: Optional[Tuple[Any, ...]] = None,
     ) -> CachingHandlerResponse:
-        from litellm.utils import CustomStreamWrapper
+        from remodl.utils import CustomStreamWrapper
 
 
         cached_result: Optional[Any] = None
         
         # Check if caching should be performed BEFORE doing expensive kwargs copy
-        if litellm.cache is not None and self._is_call_type_supported_by_cache(
+        if remodl.cache is not None and self._is_call_type_supported_by_cache(
             original_function=original_function
         ):
             args = args or ()
@@ -281,7 +281,7 @@ class LLMCachingHandler:
                 )
             )
             print_verbose("Checking Sync Cache")
-            cached_result = litellm.cache.get_cache(**new_kwargs)
+            cached_result = remodl.cache.get_cache(**new_kwargs)
             if cached_result is not None:
                 if "detail" in cached_result:
                     # implies an error occurred
@@ -306,13 +306,13 @@ class LLMCachingHandler:
                         custom_llm_provider,
                         dynamic_api_key,
                         api_base,
-                    ) = litellm.get_llm_provider(
+                    ) = remodl.get_llm_provider(
                         model=model or "",
                         custom_llm_provider=kwargs.get("custom_llm_provider", None),
                         api_base=kwargs.get("api_base", None),
                         api_key=kwargs.get("api_key", None),
                     )
-                    self._update_litellm_logging_obj_environment(
+                    self._update_remodl_logging_obj_environment(
                         logging_obj=logging_obj,
                         model=model,
                         kwargs=kwargs,
@@ -326,7 +326,7 @@ class LLMCachingHandler:
                         end_time=end_time,
                         cache_hit=cache_hit
                     )
-                    cache_key = litellm.cache.get_cache_key(**kwargs)
+                    cache_key = remodl.cache.get_cache_key(**kwargs)
                     if (
                         isinstance(cached_result, BaseModel)
                         or isinstance(cached_result, CustomStreamWrapper)
@@ -425,7 +425,7 @@ class LLMCachingHandler:
                             object="embedding",
                         )
                     if isinstance(kwargs_input_as_list[idx], str):
-                        from litellm.utils import token_counter
+                        from remodl.utils import token_counter
 
                         prompt_tokens += token_counter(
                             text=kwargs_input_as_list[idx], count_response_tokens=True
@@ -447,14 +447,14 @@ class LLMCachingHandler:
                 custom_llm_provider,
                 dynamic_api_key,
                 api_base,
-            ) = litellm.get_llm_provider(
+            ) = remodl.get_llm_provider(
                 model=model,
                 custom_llm_provider=kwargs.get("custom_llm_provider", None),
                 api_base=kwargs.get("api_base", None),
                 api_key=kwargs.get("api_key", None),
             )
 
-            self._update_litellm_logging_obj_environment(
+            self._update_remodl_logging_obj_environment(
                 logging_obj=logging_obj,
                 model=model,
                 kwargs=kwargs,
@@ -549,7 +549,7 @@ class LLMCachingHandler:
             end_time (datetime): The end time of the operation.
             cache_hit (bool): Whether it was a cache hit.
         """
-        from litellm.litellm_core_utils.logging_worker import GLOBAL_LOGGING_WORKER
+        from remodl.remodl_core_utils.logging_worker import GLOBAL_LOGGING_WORKER
 
         GLOBAL_LOGGING_WORKER.ensure_initialized_and_enqueue(
             async_coroutine=logging_obj.async_success_handler(
@@ -581,7 +581,7 @@ class LLMCachingHandler:
         Raises:
             None
         """
-        if litellm.cache is None:
+        if remodl.cache is None:
             return None
 
         new_kwargs = kwargs.copy()
@@ -599,11 +599,11 @@ class LLMCachingHandler:
                 raise ValueError("input must be a string or a list")
             tasks = []
             for idx, i in enumerate(new_kwargs["input"]):
-                preset_cache_key = litellm.cache.get_cache_key(
+                preset_cache_key = remodl.cache.get_cache_key(
                     **{**new_kwargs, "input": i}
                 )
                 tasks.append(
-                    litellm.cache.async_get_cache(
+                    remodl.cache.async_get_cache(
                         cache_key=preset_cache_key,
                         dynamic_cache_object=self.dual_cache,
                     )
@@ -615,13 +615,13 @@ class LLMCachingHandler:
                 if all(result is None for result in cached_result):
                     cached_result = None
         else:
-            if litellm.cache._supports_async() is True:
+            if remodl.cache._supports_async() is True:
                 ## check if dual cache is supported ##
-                cached_result = await litellm.cache.async_get_cache(
+                cached_result = await remodl.cache.async_get_cache(
                     dynamic_cache_object=self.dual_cache, **new_kwargs
                 )
             else:  # fallback for caches that don't support async
-                cached_result = litellm.cache.get_cache(
+                cached_result = remodl.cache.get_cache(
                     dynamic_cache_object=self.dual_cache, **new_kwargs
                 )
         return cached_result
@@ -663,7 +663,7 @@ class LLMCachingHandler:
         Returns:
             Optional[Any]:
         """
-        from litellm.utils import convert_to_model_response_object
+        from remodl.utils import convert_to_model_response_object
 
         if (
             call_type == CallTypes.acompletion.value
@@ -755,7 +755,7 @@ class LLMCachingHandler:
         logging_obj: LiteLLMLoggingObj,
         model: str,
     ) -> CustomStreamWrapper:
-        from litellm.utils import (
+        from remodl.utils import (
             CustomStreamWrapper,
             convert_to_streaming_response,
             convert_to_streaming_response_async,
@@ -801,11 +801,11 @@ class LLMCachingHandler:
         Raises:
             None
         """
-        from litellm.litellm_core_utils.core_helpers import (
+        from remodl.remodl_core_utils.core_helpers import (
             _get_parent_otel_span_from_kwargs,
         )
 
-        if litellm.cache is None:
+        if remodl.cache is None:
             return
 
         new_kwargs = kwargs.copy()
@@ -822,33 +822,33 @@ class LLMCachingHandler:
             original_function=original_function, kwargs=new_kwargs
         ):
             if (
-                isinstance(result, litellm.ModelResponse)
-                or isinstance(result, litellm.EmbeddingResponse)
+                isinstance(result, remodl.ModelResponse)
+                or isinstance(result, remodl.EmbeddingResponse)
                 or isinstance(result, TranscriptionResponse)
                 or isinstance(result, RerankResponse)
             ):
                 if (
                     isinstance(result, EmbeddingResponse)
-                    and litellm.cache is not None
+                    and remodl.cache is not None
                     and not isinstance(
-                        litellm.cache.cache, S3Cache
+                        remodl.cache.cache, S3Cache
                     )  # s3 doesn't support bulk writing. Exclude.
                 ):
                     asyncio.create_task(
-                        litellm.cache.async_add_cache_pipeline(
+                        remodl.cache.async_add_cache_pipeline(
                             result, dynamic_cache_object=self.dual_cache, **new_kwargs
                         )
                     )
                 else:
                     asyncio.create_task(
-                        litellm.cache.async_add_cache(
+                        remodl.cache.async_add_cache(
                             result.model_dump_json(),
                             dynamic_cache_object=self.dual_cache,
                             **new_kwargs,
                         )
                     )
             else:
-                asyncio.create_task(litellm.cache.async_add_cache(result, **new_kwargs))
+                asyncio.create_task(remodl.cache.async_add_cache(result, **new_kwargs))
 
     def sync_set_cache(
         self,
@@ -867,13 +867,13 @@ class LLMCachingHandler:
                 args,
             )
         )
-        if litellm.cache is None:
+        if remodl.cache is None:
             return
 
         if self._should_store_result_in_cache(
             original_function=self.original_function, kwargs=new_kwargs
         ):
-            litellm.cache.add_cache(result, **new_kwargs)
+            remodl.cache.add_cache(result, **new_kwargs)
 
         return
 
@@ -887,9 +887,9 @@ class LLMCachingHandler:
             bool: True if the result should be stored in the cache, False otherwise.
         """
         return (
-            (litellm.cache is not None)
-            and litellm.cache.supported_call_types is not None
-            and (str(original_function.__name__) in litellm.cache.supported_call_types)
+            (remodl.cache is not None)
+            and remodl.cache.supported_call_types is not None
+            and (str(original_function.__name__) in remodl.cache.supported_call_types)
             and (kwargs.get("cache", {}).get("no-store", False) is not True)
         )
 
@@ -902,15 +902,15 @@ class LLMCachingHandler:
 
         call types are acompletion, aembedding, atext_completion, atranscription, arerank
 
-        Defined on `litellm.types.utils.CallTypes`
+        Defined on `remodl.types.utils.CallTypes`
 
         Returns:
             bool: True if the call type is supported by the cache, False otherwise.
         """
         if (
-            litellm.cache is not None
-            and litellm.cache.supported_call_types is not None
-            and str(original_function.__name__) in litellm.cache.supported_call_types
+            remodl.cache is not None
+            and remodl.cache.supported_call_types is not None
+            and str(original_function.__name__) in remodl.cache.supported_call_types
         ):
             return True
         return False
@@ -920,7 +920,7 @@ class LLMCachingHandler:
         Internal method to add the streaming response to the cache
 
 
-        - If 'streaming_chunk' has a 'finish_reason' then assemble a litellm.ModelResponse object
+        - If 'streaming_chunk' has a 'finish_reason' then assemble a remodl.ModelResponse object
         - Else append the chunk to self.async_streaming_chunks
 
         """
@@ -965,7 +965,7 @@ class LLMCachingHandler:
                 kwargs=self.request_kwargs,
             )
 
-    def _update_litellm_logging_obj_environment(
+    def _update_remodl_logging_obj_environment(
         self,
         logging_obj: LiteLLMLoggingObj,
         model: str,
@@ -991,7 +991,7 @@ class LLMCachingHandler:
         Returns:
             None
         """
-        litellm_params = {
+        remodl_params = {
             "logger_fn": kwargs.get("logger_fn", None),
             "acompletion": is_async,
             "api_base": kwargs.get("api_base", ""),
@@ -1002,18 +1002,18 @@ class LLMCachingHandler:
             "custom_llm_provider": custom_llm_provider,
         }
 
-        if litellm.cache is not None:
-            litellm_params["preset_cache_key"] = (
-                litellm.cache._get_preset_cache_key_from_kwargs(**kwargs)
+        if remodl.cache is not None:
+            remodl_params["preset_cache_key"] = (
+                remodl.cache._get_preset_cache_key_from_kwargs(**kwargs)
             )
         else:
-            litellm_params["preset_cache_key"] = None
+            remodl_params["preset_cache_key"] = None
 
         logging_obj.update_environment_variables(
             model=model,
             user=kwargs.get("user", None),
             optional_params={},
-            litellm_params=litellm_params,
+            remodl_params=remodl_params,
             input=(
                 kwargs.get("messages", "")
                 if not is_embedding

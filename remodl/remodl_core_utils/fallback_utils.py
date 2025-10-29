@@ -1,9 +1,9 @@
-from litellm._uuid import uuid
+from remodl._uuid import uuid
 from typing import Optional
 
-import litellm
-from litellm._logging import verbose_logger
-from litellm.litellm_core_utils.core_helpers import safe_deep_copy
+import remodl
+from remodl._logging import verbose_logger
+from remodl.remodl_core_utils.core_helpers import safe_deep_copy
 
 from .asyncify import run_async_function
 
@@ -30,12 +30,12 @@ async def async_completion_with_fallbacks(**kwargs):
     model = original_model
     fallbacks = [original_model] + nested_kwargs.pop("fallbacks", [])
     kwargs.pop("acompletion", None)  # Remove to prevent keyword conflicts
-    litellm_call_id = str(uuid.uuid4())
-    base_kwargs = {**kwargs, **nested_kwargs, "litellm_call_id": litellm_call_id}
+    remodl_call_id = str(uuid.uuid4())
+    base_kwargs = {**kwargs, **nested_kwargs, "remodl_call_id": remodl_call_id}
 
     # fields to remove
     base_kwargs.pop("model", None)  # Remove model as it will be set per fallback
-    litellm_logging_obj = base_kwargs.pop("litellm_logging_obj", None)
+    remodl_logging_obj = base_kwargs.pop("remodl_logging_obj", None)
 
     # Try each fallback model
     most_recent_exception_str: Optional[str] = None
@@ -49,10 +49,10 @@ async def async_completion_with_fallbacks(**kwargs):
             else:
                 model = fallback
 
-            response = await litellm.acompletion(
+            response = await remodl.acompletion(
                 **completion_kwargs,
                 model=model,
-                litellm_logging_obj=litellm_logging_obj,
+                remodl_logging_obj=remodl_logging_obj,
             )
 
             if response is not None:
@@ -66,7 +66,7 @@ async def async_completion_with_fallbacks(**kwargs):
             continue
 
     raise Exception(
-        f"{most_recent_exception_str}. All fallback attempts failed. Enable verbose logging with `litellm.set_verbose=True` for details."
+        f"{most_recent_exception_str}. All fallback attempts failed. Enable verbose logging with `remodl.set_verbose=True` for details."
     )
 
 

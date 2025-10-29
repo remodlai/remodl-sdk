@@ -14,9 +14,9 @@ from openai import AsyncAzureOpenAI, AsyncOpenAI, AzureOpenAI, OpenAI
 if TYPE_CHECKING:
     from aiohttp import ClientSession
 
-import litellm
-from litellm.llms.base_llm.chat.transformation import BaseLLMException
-from litellm.llms.custom_httpx.http_handler import (
+import remodl
+from remodl.llms.base_llm.chat.transformation import BaseLLMException
+from remodl.llms.custom_httpx.http_handler import (
     _DEFAULT_TTL_FOR_HTTPX_CLIENTS,
     AsyncHTTPHandler,
     get_ssl_configuration,
@@ -120,7 +120,7 @@ class BaseOpenAILLM:
             client_initialization_params=client_initialization_params,
             client_type=client_type,
         )
-        _cached_client = litellm.in_memory_llm_clients_cache.get_cache(_cache_key)
+        _cached_client = remodl.in_memory_llm_clients_cache.get_cache(_cache_key)
         return _cached_client
 
     @staticmethod
@@ -134,7 +134,7 @@ class BaseOpenAILLM:
             client_initialization_params=client_initialization_params,
             client_type=client_type,
         )
-        litellm.in_memory_llm_clients_cache.set_cache(
+        remodl.in_memory_llm_clients_cache.set_cache(
             key=_cache_key,
             value=openai_client,
             ttl=_DEFAULT_TTL_FOR_HTTPX_CLIENTS,
@@ -200,8 +200,8 @@ class BaseOpenAILLM:
     def _get_async_http_client(
         shared_session: Optional["ClientSession"] = None,
     ) -> Optional[httpx.AsyncClient]:
-        if litellm.aclient_session is not None:
-            return litellm.aclient_session
+        if remodl.aclient_session is not None:
+            return remodl.aclient_session
 
         # Get unified SSL configuration
         ssl_config = get_ssl_configuration()
@@ -220,8 +220,8 @@ class BaseOpenAILLM:
 
     @staticmethod
     def _get_sync_http_client() -> Optional[httpx.Client]:
-        if litellm.client_session is not None:
-            return litellm.client_session
+        if remodl.client_session is not None:
+            return remodl.client_session
 
         # Get unified SSL configuration
         ssl_config = get_ssl_configuration()

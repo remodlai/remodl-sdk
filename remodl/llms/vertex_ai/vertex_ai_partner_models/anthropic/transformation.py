@@ -4,10 +4,10 @@ from typing import Any, List, Optional
 
 import httpx
 
-import litellm
-from litellm.llms.base_llm.chat.transformation import LiteLLMLoggingObj
-from litellm.types.llms.openai import AllMessageValues
-from litellm.types.utils import ModelResponse
+import remodl
+from remodl.llms.base_llm.chat.transformation import LiteLLMLoggingObj
+from remodl.types.llms.openai import AllMessageValues
+from remodl.types.utils import ModelResponse
 
 from ....anthropic.chat.transformation import AnthropicConfig
 
@@ -56,14 +56,14 @@ class VertexAIAnthropicConfig(AnthropicConfig):
         model: str,
         messages: List[AllMessageValues],
         optional_params: dict,
-        litellm_params: dict,
+        remodl_params: dict,
         headers: dict,
     ) -> dict:
         data = super().transform_request(
             model=model,
             messages=messages,
             optional_params=optional_params,
-            litellm_params=litellm_params,
+            remodl_params=remodl_params,
             headers=headers,
         )
 
@@ -79,7 +79,7 @@ class VertexAIAnthropicConfig(AnthropicConfig):
         request_data: dict,
         messages: List[AllMessageValues],
         optional_params: dict,
-        litellm_params: dict,
+        remodl_params: dict,
         encoding: Any,
         api_key: Optional[str] = None,
         json_mode: Optional[bool] = None,
@@ -92,7 +92,7 @@ class VertexAIAnthropicConfig(AnthropicConfig):
             request_data,
             messages,
             optional_params,
-            litellm_params,
+            remodl_params,
             encoding,
             api_key,
             json_mode,
@@ -113,6 +113,6 @@ class VertexAIAnthropicConfig(AnthropicConfig):
             return False
         if "claude" in model.lower():
             return True
-        elif model in litellm.vertex_anthropic_models:
+        elif model in remodl.vertex_anthropic_models:
             return True
         return False

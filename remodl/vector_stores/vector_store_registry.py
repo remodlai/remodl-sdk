@@ -1,18 +1,18 @@
-# litellm/proxy/vector_stores/vector_store_registry.py
+# remodl/proxy/vector_stores/vector_store_registry.py
 import json
 from datetime import datetime, timezone
 from typing import TYPE_CHECKING, Any, Dict, List, Optional
 
-from litellm._logging import verbose_logger
-from litellm.litellm_core_utils.core_helpers import remove_items_at_indices
-from litellm.types.vector_stores import (
+from remodl._logging import verbose_logger
+from remodl.remodl_core_utils.core_helpers import remove_items_at_indices
+from remodl.types.vector_stores import (
     LiteLLM_ManagedVectorStore,
     LiteLLM_ManagedVectorStoreListResponse,
     LiteLLM_VectorStoreConfig,
 )
 
 if TYPE_CHECKING:
-    from litellm.proxy.utils import PrismaClient
+    from remodl.proxy.utils import PrismaClient
 else:
     PrismaClient = Any
 
@@ -128,7 +128,7 @@ class VectorStoreRegistry:
                     return vector_store
         return None
 
-    def get_litellm_managed_vector_store_from_registry(
+    def get_remodl_managed_vector_store_from_registry(
         self, vector_store_id: str
     ) -> Optional[LiteLLM_ManagedVectorStore]:
         """
@@ -171,44 +171,44 @@ class VectorStoreRegistry:
 
     def load_vector_stores_from_config(self, vector_stores_config: List[Dict]):
         """
-        Loads vector stores from the litellm proxy config.yaml
+        Loads vector stores from the remodl proxy config.yaml
         """
         for vector_store_config in vector_stores_config:
             # cast to VectorStoreConfig
-            litellm_vector_store_config = LiteLLM_VectorStoreConfig(
+            remodl_vector_store_config = LiteLLM_VectorStoreConfig(
                 **vector_store_config
             )
-            vector_store_name = litellm_vector_store_config.get("vector_store_name")
-            vector_store_litellm_params: Dict[str, Any] = (
-                litellm_vector_store_config.get("litellm_params") or {}
+            vector_store_name = remodl_vector_store_config.get("vector_store_name")
+            vector_store_remodl_params: Dict[str, Any] = (
+                remodl_vector_store_config.get("remodl_params") or {}
             )
 
-            vector_store_id = vector_store_litellm_params.get("vector_store_id")
+            vector_store_id = vector_store_remodl_params.get("vector_store_id")
             if vector_store_id is None:
                 raise ValueError(
                     f"vector_store_id is required for initializing vector store, got vector_store_id={vector_store_id}"
                 )
-            custom_llm_provider = vector_store_litellm_params.get("custom_llm_provider")
+            custom_llm_provider = vector_store_remodl_params.get("custom_llm_provider")
             if custom_llm_provider is None:
                 raise ValueError(
                     f"custom_llm_provider is required for initializing vector store, got custom_llm_provider={custom_llm_provider}"
                 )
 
-            litellm_managed_vector_store = LiteLLM_ManagedVectorStore(
+            remodl_managed_vector_store = LiteLLM_ManagedVectorStore(
                 vector_store_id=vector_store_id,
                 custom_llm_provider=custom_llm_provider,
-                litellm_params=vector_store_litellm_params,
+                remodl_params=vector_store_remodl_params,
                 vector_store_name=vector_store_name,
-                vector_store_description=vector_store_litellm_params.get(
+                vector_store_description=vector_store_remodl_params.get(
                     "vector_store_description"
                 ),
-                vector_store_metadata=vector_store_litellm_params.get(
+                vector_store_metadata=vector_store_remodl_params.get(
                     "vector_store_metadata"
                 ),
                 created_at=datetime.now(timezone.utc),
                 updated_at=datetime.now(timezone.utc),
             )
-            self.vector_stores.append(litellm_managed_vector_store)
+            self.vector_stores.append(remodl_managed_vector_store)
 
         verbose_logger.debug(
             "all loaded vector stores = %s",
@@ -279,16 +279,16 @@ class VectorStoreRegistry:
         vector_stores_from_db: List[LiteLLM_ManagedVectorStore] = []
         if prisma_client is not None:
             _vector_stores_from_db = (
-                await prisma_client.db.litellm_managedvectorstorestable.find_many(
+                await prisma_client.db.remodl_managedvectorstorestable.find_many(
                     order={"created_at": "desc"},
                 )
             )
             for vector_store in _vector_stores_from_db:
                 _dict_vector_store = dict(vector_store)
-                _litellm_managed_vector_store = LiteLLM_ManagedVectorStore(
+                _remodl_managed_vector_store = LiteLLM_ManagedVectorStore(
                     **_dict_vector_store
                 )
-                vector_stores_from_db.append(_litellm_managed_vector_store)
+                vector_stores_from_db.append(_remodl_managed_vector_store)
         return vector_stores_from_db
 
     def get_credentials_for_vector_store(self, vector_store_id: str) -> Dict[str, Any]:
@@ -297,11 +297,11 @@ class VectorStoreRegistry:
 
         Returns a dictionary of unpacked credentials for the vector store to use for the request
         """
-        from litellm.litellm_core_utils.credential_accessor import CredentialAccessor
+        from remodl.remodl_core_utils.credential_accessor import CredentialAccessor
 
         for vector_store in self.vector_stores:
             if vector_store.get("vector_store_id") == vector_store_id:
-                credentials = vector_store.get("litellm_credential_name")
+                credentials = vector_store.get("remodl_credential_name")
                 if credentials:
                     return CredentialAccessor.get_credential_values(credentials)
         return {}

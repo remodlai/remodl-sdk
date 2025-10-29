@@ -1,9 +1,9 @@
 from typing import TYPE_CHECKING, Any, Dict, List, Optional, Union, cast
 
-from litellm._logging import verbose_logger
-from litellm._uuid import uuid
-from litellm.responses.streaming_iterator import BaseResponsesAPIStreamingIterator
-from litellm.types.llms.openai import (
+from remodl._logging import verbose_logger
+from remodl._uuid import uuid
+from remodl.responses.streaming_iterator import BaseResponsesAPIStreamingIterator
+from remodl.types.llms.openai import (
     BaseLiteLLMOpenAIResponseObject,
     MCPCallArgumentsDeltaEvent,
     MCPCallArgumentsDoneEvent,
@@ -26,7 +26,7 @@ else:
 
 
 async def create_mcp_list_tools_events(
-    mcp_tools_with_litellm_proxy: List[ToolParam],
+    mcp_tools_with_remodl_proxy: List[ToolParam],
     user_api_key_auth: Any,
     base_item_id: str,
     pre_processed_mcp_tools: List[Any],
@@ -38,11 +38,11 @@ async def create_mcp_list_tools_events(
     try:
         # Extract MCP server names
         mcp_servers = []
-        for tool in mcp_tools_with_litellm_proxy:
+        for tool in mcp_tools_with_remodl_proxy:
             if isinstance(tool, dict) and "server_url" in tool:
                 server_url = tool.get("server_url")
                 if isinstance(server_url, str) and server_url.startswith(
-                    "litellm_proxy/mcp/"
+                    "remodl_proxy/mcp/"
                 ):
                     server_name = server_url.split("/")[-1]
                     mcp_servers.append(server_name)
@@ -80,12 +80,12 @@ async def create_mcp_list_tools_events(
         events.append(completed_event)
 
         # Add output_item.done event with the actual tools list (matching OpenAI format)
-        from litellm.types.llms.openai import OutputItemDoneEvent
+        from remodl.types.llms.openai import OutputItemDoneEvent
 
         # Extract server label from the first MCP tool config
         server_label = ""
-        if mcp_tools_with_litellm_proxy:
-            first_tool = mcp_tools_with_litellm_proxy[0]
+        if mcp_tools_with_remodl_proxy:
+            first_tool = mcp_tools_with_remodl_proxy[0]
             if isinstance(first_tool, dict):
                 server_label_value = first_tool.get("server_label", "")
                 server_label = (
@@ -142,7 +142,7 @@ async def create_mcp_list_tools_events(
         events.append(failed_event)
 
         # Still emit output_item.done event even on failure (with empty tools list)
-        from litellm.types.llms.openai import OutputItemDoneEvent
+        from remodl.types.llms.openai import OutputItemDoneEvent
 
         output_item_done_event = OutputItemDoneEvent(
             type=ResponsesAPIStreamEvents.OUTPUT_ITEM_DONE,
@@ -213,7 +213,7 @@ def create_mcp_call_events(
         events.append(completed_event)
 
         # Add output_item.done event with the tool call result
-        from litellm.types.llms.openai import OutputItemDoneEvent
+        from remodl.types.llms.openai import OutputItemDoneEvent
 
         output_item_done_event = OutputItemDoneEvent(
             type=ResponsesAPIStreamEvents.OUTPUT_ITEM_DONE,
@@ -227,7 +227,7 @@ def create_mcp_call_events(
                     "error": None,
                     "name": tool_name,
                     "output": result,
-                    "server_label": "litellm",
+                    "server_label": "remodl",
                 }
             ),
         )
@@ -257,12 +257,12 @@ class MCPEnhancedStreamingIterator(BaseResponsesAPIStreamingIterator):
         self,
         base_iterator: Any,  # Can be None - will be created internally
         mcp_events: List[ResponsesAPIStreamingResponse],
-        mcp_tools_with_litellm_proxy: Optional[List[Any]] = None,
+        mcp_tools_with_remodl_proxy: Optional[List[Any]] = None,
         user_api_key_auth: Any = None,
         original_request_params: Optional[Dict[str, Any]] = None,
     ):
         # MCP setup
-        self.mcp_tools_with_litellm_proxy = mcp_tools_with_litellm_proxy or []
+        self.mcp_tools_with_remodl_proxy = mcp_tools_with_remodl_proxy or []
         self.user_api_key_auth = user_api_key_auth
         self.original_request_params = original_request_params or {}
         self.should_auto_execute = self._should_auto_execute_tools()
@@ -292,7 +292,7 @@ class MCPEnhancedStreamingIterator(BaseResponsesAPIStreamingIterator):
 
         # Set up model metadata (will be updated when we get the real iterator)
         self.model = self.original_request_params.get("model", "unknown")
-        self.litellm_metadata = {}
+        self.remodl_metadata = {}
         self.custom_llm_provider = self.original_request_params.get(
             "custom_llm_provider", None
         )
@@ -302,12 +302,12 @@ class MCPEnhancedStreamingIterator(BaseResponsesAPIStreamingIterator):
 
     def _should_auto_execute_tools(self) -> bool:
         """Check if tools should be auto-executed"""
-        from litellm.responses.mcp.litellm_proxy_mcp_handler import (
+        from remodl.responses.mcp.remodl_proxy_mcp_handler import (
             LiteLLM_Proxy_MCP_Handler,
         )
 
         return LiteLLM_Proxy_MCP_Handler._should_auto_execute_tools(
-            self.mcp_tools_with_litellm_proxy
+            self.mcp_tools_with_remodl_proxy
         )
 
     def __aiter__(self):
@@ -413,7 +413,7 @@ class MCPEnhancedStreamingIterator(BaseResponsesAPIStreamingIterator):
 
     def _is_response_completed(self, chunk: ResponsesAPIStreamingResponse) -> bool:
         """Check if this chunk indicates the response is completed"""
-        from litellm.types.llms.openai import ResponsesAPIStreamEvents
+        from remodl.types.llms.openai import ResponsesAPIStreamEvents
 
         return (
             getattr(chunk, "type", None) == ResponsesAPIStreamEvents.RESPONSE_COMPLETED
@@ -423,7 +423,7 @@ class MCPEnhancedStreamingIterator(BaseResponsesAPIStreamingIterator):
         """Create the initial response iterator by making the first LLM call"""
         try:
             # Import the core aresponses function that doesn't have MCP logic
-            from litellm.responses.main import aresponses
+            from remodl.responses.main import aresponses
 
             # Make the initial response API call - but avoid the MCP wrapper
             params = self.original_request_params.copy()
@@ -449,7 +449,7 @@ class MCPEnhancedStreamingIterator(BaseResponsesAPIStreamingIterator):
                 self.base_iterator = response
                 # Copy metadata from the real iterator
                 self.model = getattr(response, "model", self.model)
-                self.litellm_metadata = getattr(response, "litellm_metadata", {})
+                self.remodl_metadata = getattr(response, "remodl_metadata", {})
                 self.custom_llm_provider = getattr(
                     response, "custom_llm_provider", self.custom_llm_provider
                 )
@@ -474,7 +474,7 @@ class MCPEnhancedStreamingIterator(BaseResponsesAPIStreamingIterator):
         """Generate tool execution events and execute tools"""
         if not self.collected_response:
             return
-        from litellm.responses.mcp.litellm_proxy_mcp_handler import (
+        from remodl.responses.mcp.remodl_proxy_mcp_handler import (
             LiteLLM_Proxy_MCP_Handler,
         )
 
@@ -538,7 +538,7 @@ class MCPEnhancedStreamingIterator(BaseResponsesAPIStreamingIterator):
                 self.tool_execution_events.append(completed_event)
 
                 # Create output_item.done event with the tool call result
-                from litellm.types.llms.openai import OutputItemDoneEvent
+                from remodl.types.llms.openai import OutputItemDoneEvent
 
                 output_item_done_event = OutputItemDoneEvent(
                     type=ResponsesAPIStreamEvents.OUTPUT_ITEM_DONE,
@@ -552,7 +552,7 @@ class MCPEnhancedStreamingIterator(BaseResponsesAPIStreamingIterator):
                             "error": None,
                             "name": tool_name,
                             "output": result_text,
-                            "server_label": "litellm",  # or extract from tool config
+                            "server_label": "remodl",  # or extract from tool config
                         }
                     ),
                 )
@@ -573,8 +573,8 @@ class MCPEnhancedStreamingIterator(BaseResponsesAPIStreamingIterator):
         if not self.collected_response or not hasattr(self, "tool_results"):
             return
 
-        from litellm.responses.main import aresponses
-        from litellm.responses.mcp.litellm_proxy_mcp_handler import (
+        from remodl.responses.main import aresponses
+        from remodl.responses.mcp.remodl_proxy_mcp_handler import (
             LiteLLM_Proxy_MCP_Handler,
         )
 

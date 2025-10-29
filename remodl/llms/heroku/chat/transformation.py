@@ -6,11 +6,11 @@ this is OpenAI compatible - no translation needed / occurs
 import os
 
 from typing import Optional, List, Tuple, Union, Coroutine, Any, Literal, overload
-from litellm.litellm_core_utils.prompt_templates.common_utils import (
+from remodl.remodl_core_utils.prompt_templates.common_utils import (
     handle_messages_with_content_list_to_str_conversion,
 )
-from litellm.types.llms.openai import AllMessageValues
-from litellm.llms.openai.chat.gpt_transformation import OpenAIGPTConfig
+from remodl.types.llms.openai import AllMessageValues
+from remodl.llms.openai.chat.gpt_transformation import OpenAIGPTConfig
 
 # Base error class for Heroku
 class HerokuError(Exception):
@@ -55,7 +55,7 @@ class HerokuChatConfig(OpenAIGPTConfig):
             
         return api_base, api_key
 
-    def get_complete_url(self, api_base: Optional[str], api_key: Optional[str], model: str, optional_params: dict, litellm_params: dict, stream: Optional[bool] = None) -> str:
+    def get_complete_url(self, api_base: Optional[str], api_key: Optional[str], model: str, optional_params: dict, remodl_params: dict, stream: Optional[bool] = None) -> str:
         api_base, _ = self._get_openai_compatible_provider_info(api_base, api_key)
 
         if not api_base:

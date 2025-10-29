@@ -4,11 +4,11 @@ Translates from OpenAI's `/v1/chat/completions` to Moonshot AI's `/v1/chat/compl
 
 from typing import Any, Coroutine, List, Literal, Optional, Tuple, Union, overload
 
-from litellm.litellm_core_utils.prompt_templates.common_utils import (
+from remodl.remodl_core_utils.prompt_templates.common_utils import (
     handle_messages_with_content_list_to_str_conversion,
 )
-from litellm.secret_managers.main import get_secret_str
-from litellm.types.llms.openai import AllMessageValues
+from remodl.secret_managers.main import get_secret_str
+from remodl.types.llms.openai import AllMessageValues
 
 from ...openai.chat.gpt_transformation import OpenAIGPTConfig
 
@@ -62,7 +62,7 @@ class MoonshotChatConfig(OpenAIGPTConfig):
         api_key: Optional[str],
         model: str,
         optional_params: dict,
-        litellm_params: dict,
+        remodl_params: dict,
         stream: Optional[bool] = None,
     ) -> str:
         """
@@ -139,7 +139,7 @@ class MoonshotChatConfig(OpenAIGPTConfig):
         model: str,
         messages: List[AllMessageValues],
         optional_params: dict,
-        litellm_params: dict,
+        remodl_params: dict,
         headers: dict,
     ) -> dict:
         """
@@ -159,7 +159,7 @@ class MoonshotChatConfig(OpenAIGPTConfig):
             model=model,
             messages=messages,
             optional_params=optional_params,
-            litellm_params=litellm_params,
+            remodl_params=remodl_params,
             headers=headers,
         )
     

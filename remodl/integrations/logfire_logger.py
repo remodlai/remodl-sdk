@@ -3,14 +3,14 @@
 
 import os
 import traceback
-from litellm._uuid import uuid
+from remodl._uuid import uuid
 from enum import Enum
 from typing import Any, Dict, NamedTuple
 
 from typing_extensions import LiteralString
 
-from litellm._logging import print_verbose, verbose_logger
-from litellm.litellm_core_utils.redact_messages import redact_user_api_key_info
+from remodl._logging import print_verbose, verbose_logger
+from remodl.remodl_core_utils.redact_messages import redact_user_api_key_info
 
 
 class SpanConfig(NamedTuple):
@@ -104,10 +104,10 @@ class LogfireLogger:
 
             if not response_obj:
                 response_obj = {}
-            litellm_params = kwargs.get("litellm_params", {})
+            remodl_params = kwargs.get("remodl_params", {})
             metadata = (
-                litellm_params.get("metadata", {}) or {}
-            )  # if litellm_params['metadata'] == None
+                remodl_params.get("metadata", {}) or {}
+            )  # if remodl_params['metadata'] == None
             messages = kwargs.get("messages")
             optional_params = kwargs.get("optional_params", {})
             call_type = kwargs.get("call_type", "completion")
@@ -121,11 +121,11 @@ class LogfireLogger:
 
             # Clean Metadata before logging - never log raw metadata
             # the raw metadata can contain circular references which leads to infinite recursion
-            # we clean out all extra litellm metadata params before logging
+            # we clean out all extra remodl metadata params before logging
             clean_metadata = {}
             if isinstance(metadata, dict):
                 for key, value in metadata.items():
-                    # clean litellm metadata before logging
+                    # clean remodl metadata before logging
                     if key in [
                         "endpoint",
                         "caching_groups",

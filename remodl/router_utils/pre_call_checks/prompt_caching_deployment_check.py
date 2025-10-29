@@ -6,12 +6,12 @@ Route to previously cached model id, if valid
 
 from typing import List, Optional, cast
 
-from litellm import verbose_logger
-from litellm.caching.dual_cache import DualCache
-from litellm.integrations.custom_logger import CustomLogger, Span
-from litellm.types.llms.openai import AllMessageValues
-from litellm.types.utils import CallTypes, StandardLoggingPayload
-from litellm.utils import is_prompt_caching_valid_prompt
+from remodl import verbose_logger
+from remodl.caching.dual_cache import DualCache
+from remodl.integrations.custom_logger import CustomLogger, Span
+from remodl.types.llms.openai import AllMessageValues
+from remodl.types.utils import CallTypes, StandardLoggingPayload
+from remodl.utils import is_prompt_caching_valid_prompt
 
 from ..prompt_caching_cache import PromptCachingCache
 
@@ -63,7 +63,7 @@ class PromptCachingDeploymentCheck(CustomLogger):
             and call_type != CallTypes.acompletion.value
         ):  # only use prompt caching for completion calls
             verbose_logger.debug(
-                "litellm.router_utils.pre_call_checks.prompt_caching_deployment_check: skipping adding model id to prompt caching cache, CALL TYPE IS NOT COMPLETION"
+                "remodl.router_utils.pre_call_checks.prompt_caching_deployment_check: skipping adding model id to prompt caching cache, CALL TYPE IS NOT COMPLETION"
             )
             return
 
@@ -73,12 +73,12 @@ class PromptCachingDeploymentCheck(CustomLogger):
 
         if messages is None or not isinstance(messages, list):
             verbose_logger.debug(
-                "litellm.router_utils.pre_call_checks.prompt_caching_deployment_check: skipping adding model id to prompt caching cache, MESSAGES IS NOT A LIST"
+                "remodl.router_utils.pre_call_checks.prompt_caching_deployment_check: skipping adding model id to prompt caching cache, MESSAGES IS NOT A LIST"
             )
             return
         if model_id is None:
             verbose_logger.debug(
-                "litellm.router_utils.pre_call_checks.prompt_caching_deployment_check: skipping adding model id to prompt caching cache, MODEL ID IS NONE"
+                "remodl.router_utils.pre_call_checks.prompt_caching_deployment_check: skipping adding model id to prompt caching cache, MODEL ID IS NONE"
             )
             return
 

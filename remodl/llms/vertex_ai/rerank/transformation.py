@@ -8,12 +8,12 @@ from typing import Any, Dict, List, Optional, Union
 
 import httpx
 
-import litellm
-from litellm.litellm_core_utils.litellm_logging import Logging as LiteLLMLoggingObj
-from litellm.llms.base_llm.rerank.transformation import BaseRerankConfig
-from litellm.llms.vertex_ai.vertex_llm_base import VertexBase
-from litellm.secret_managers.main import get_secret_str
-from litellm.types.rerank import RerankResponse, RerankResponseMeta, RerankBilledUnits, RerankResponseResult
+import remodl
+from remodl.remodl_core_utils.remodl_logging import Logging as LiteLLMLoggingObj
+from remodl.llms.base_llm.rerank.transformation import BaseRerankConfig
+from remodl.llms.vertex_ai.vertex_llm_base import VertexBase
+from remodl.secret_managers.main import get_secret_str
+from remodl.types.rerank import RerankResponse, RerankResponseMeta, RerankBilledUnits, RerankResponseResult
 
 
 
@@ -31,15 +31,15 @@ class VertexAIRerankConfig(BaseRerankConfig, VertexBase):
         """
         Get the complete URL for the Vertex AI Discovery Engine ranking API
         """
-        # Get project ID from environment or litellm config
+        # Get project ID from environment or remodl config
         project_id = (
             get_secret_str("VERTEXAI_PROJECT") 
-            or litellm.vertex_project
+            or remodl.vertex_project
         )
         
         if not project_id:
             raise ValueError(
-                "Vertex AI project ID is required. Please set 'VERTEXAI_PROJECT' or 'litellm.vertex_project'"
+                "Vertex AI project ID is required. Please set 'VERTEXAI_PROJECT' or 'remodl.vertex_project'"
             )
         
         return f"https://discoveryengine.googleapis.com/v1/projects/{project_id}/locations/global/rankingConfigs/default_ranking_config:rank"
@@ -137,7 +137,7 @@ class VertexAIRerankConfig(BaseRerankConfig, VertexBase):
         api_key: Optional[str] = None,
         request_data: dict = {},
         optional_params: dict = {},
-        litellm_params: dict = {},
+        remodl_params: dict = {},
     ) -> RerankResponse:
         """
         Transform Vertex AI Discovery Engine response to Cohere format

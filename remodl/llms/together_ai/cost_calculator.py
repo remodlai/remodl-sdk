@@ -4,7 +4,7 @@ Handles calculating cost for together ai models
 
 import re
 
-from litellm.constants import (
+from remodl.constants import (
     TOGETHER_AI_4_B,
     TOGETHER_AI_8_B,
     TOGETHER_AI_21_B,
@@ -14,7 +14,7 @@ from litellm.constants import (
     TOGETHER_AI_EMBEDDING_150_M,
     TOGETHER_AI_EMBEDDING_350_M,
 )
-from litellm.types.utils import CallTypes
+from remodl.types.utils import CallTypes
 
 
 # Extract the number of billion parameters from the model name

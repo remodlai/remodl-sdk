@@ -13,17 +13,17 @@ from typing import (
 
 from pydantic import BaseModel
 
-import litellm
-from litellm._logging import verbose_logger
-from litellm.llms.base_llm.responses.transformation import BaseResponsesAPIConfig
-from litellm.types.llms.openai import (
+import remodl
+from remodl._logging import verbose_logger
+from remodl.llms.base_llm.responses.transformation import BaseResponsesAPIConfig
+from remodl.types.llms.openai import (
     ResponseAPIUsage,
     ResponsesAPIOptionalRequestParams,
     ResponsesAPIResponse,
     ResponseText,
 )
-from litellm.types.responses.main import DecodedResponseId
-from litellm.types.utils import PromptTokensDetails, SpecialEnums, Usage
+from remodl.types.responses.main import DecodedResponseId
+from remodl.types.utils import PromptTokensDetails, SpecialEnums, Usage
 
 
 class ResponsesAPIRequestUtils:
@@ -44,14 +44,14 @@ class ResponsesAPIRequestUtils:
             if k not in supported_params:
                 unsupported_params[k] = non_default_params[k]
         if unsupported_params:
-            if litellm.drop_params is True or (
+            if remodl.drop_params is True or (
                 drop_params is not None and drop_params is True
             ):
                 pass
             else:
-                raise litellm.UnsupportedParamsError(
+                raise remodl.UnsupportedParamsError(
                     status_code=500,
-                    message=f"{custom_llm_provider} does not support parameters: {unsupported_params}, for model={model}. To drop these, set `litellm.drop_params=True` or for proxy:\n\n`litellm_settings:\n drop_params: true`\n",
+                    message=f"{custom_llm_provider} does not support parameters: {unsupported_params}, for model={model}. To drop these, set `remodl.drop_params=True` or for proxy:\n\n`remodl_settings:\n drop_params: true`\n",
                 )
 
     @staticmethod
@@ -72,7 +72,7 @@ class ResponsesAPIRequestUtils:
         Returns:
             A dictionary of supported parameters for the responses API
         """
-        from litellm.utils import _apply_openai_param_overrides
+        from remodl.utils import _apply_openai_param_overrides
 
         # Remove None values and internal parameters
         # Get supported parameters for the model
@@ -85,7 +85,7 @@ class ResponsesAPIRequestUtils:
         ResponsesAPIRequestUtils._check_valid_arg(
             supported_params=supported_params + (allowed_openai_params or []),
             non_default_params=non_default_params,
-            drop_params=litellm.drop_params,
+            drop_params=remodl.drop_params,
             custom_llm_provider=responses_api_provider_config.custom_llm_provider,
             model=model,
         )
@@ -94,7 +94,7 @@ class ResponsesAPIRequestUtils:
         mapped_params = responses_api_provider_config.map_openai_params(
             response_api_optional_params=response_api_optional_params,
             model=model,
-            drop_params=litellm.drop_params,
+            drop_params=remodl.drop_params,
         )
 
         # add any allowed_openai_params to the mapped_params
@@ -119,7 +119,7 @@ class ResponsesAPIRequestUtils:
         Returns:
             ResponsesAPIOptionalRequestParams instance with only the valid parameters
         """
-        from litellm.utils import PreProcessNonDefaultParams
+        from remodl.utils import PreProcessNonDefaultParams
 
         valid_keys = get_type_hints(ResponsesAPIOptionalRequestParams).keys()
         custom_llm_provider = params.pop("custom_llm_provider", None)
@@ -137,7 +137,7 @@ class ResponsesAPIRequestUtils:
             )
         )
 
-        # decode previous_response_id if it's a litellm encoded id
+        # decode previous_response_id if it's a remodl encoded id
         if "previous_response_id" in non_default_params:
             decoded_previous_response_id = ResponsesAPIRequestUtils.decode_previous_response_id_to_original_previous_response_id(
                 non_default_params["previous_response_id"]
@@ -145,7 +145,7 @@ class ResponsesAPIRequestUtils:
             non_default_params["previous_response_id"] = decoded_previous_response_id
 
         if "metadata" in non_default_params:
-            from litellm.utils import add_openai_metadata
+            from remodl.utils import add_openai_metadata
 
             non_default_params["metadata"] = add_openai_metadata(
                 non_default_params["metadata"]
@@ -159,7 +159,7 @@ class ResponsesAPIRequestUtils:
     def _update_responses_api_response_id_with_model_id(
         responses_api_response: ResponsesAPIResponse,
         custom_llm_provider: Optional[str],
-        litellm_metadata: Optional[Dict[str, Any]] = None,
+        remodl_metadata: Optional[Dict[str, Any]] = None,
     ) -> ResponsesAPIResponse: 
         ...
 
@@ -168,7 +168,7 @@ class ResponsesAPIRequestUtils:
     def _update_responses_api_response_id_with_model_id(
         responses_api_response: Dict[str, Any],
         custom_llm_provider: Optional[str],
-        litellm_metadata: Optional[Dict[str, Any]] = None,
+        remodl_metadata: Optional[Dict[str, Any]] = None,
     ) -> Dict[str, Any]: 
         ...
 
@@ -178,15 +178,15 @@ class ResponsesAPIRequestUtils:
     def _update_responses_api_response_id_with_model_id(
         responses_api_response: Union[ResponsesAPIResponse, Dict[str, Any]],
         custom_llm_provider: Optional[str],
-        litellm_metadata: Optional[Dict[str, Any]] = None,
+        remodl_metadata: Optional[Dict[str, Any]] = None,
     ) -> Union[ResponsesAPIResponse, Dict[str, Any]]:
         """Update the responses_api_response_id with model_id and custom_llm_provider.
 
         Handles both ``ResponsesAPIResponse`` objects and plain dictionaries returned
         by some streaming providers.
         """
-        litellm_metadata = litellm_metadata or {}
-        model_info: Dict[str, Any] = litellm_metadata.get("model_info", {}) or {}
+        remodl_metadata = remodl_metadata or {}
+        model_info: Dict[str, Any] = remodl_metadata.get("model_info", {}) or {}
         model_id = model_info.get("id")
 
         # access the response id based on the object type
@@ -248,7 +248,7 @@ class ResponsesAPIRequestUtils:
 
             parts = decoded_id.split(";")
 
-            # Format: litellm:custom_llm_provider:{};model_id:{};response_id:{}
+            # Format: remodl:custom_llm_provider:{};model_id:{};response_id:{}
             custom_llm_provider = None
             model_id = None
 
@@ -260,7 +260,7 @@ class ResponsesAPIRequestUtils:
                 response_part = parts[2]
 
                 custom_llm_provider = custom_llm_provider_part.replace(
-                    "litellm:custom_llm_provider:", ""
+                    "remodl:custom_llm_provider:", ""
                 )
                 model_id = model_id_part.replace("model_id:", "")
                 decoded_response_id = response_part.replace("response_id:", "")
@@ -299,7 +299,7 @@ class ResponsesAPIRequestUtils:
 
         Why?
             - LiteLLM encodes the `custom_llm_provider` and `model_id` into the `previous_response_id` this helps with maintaining session consistency when load balancing multiple deployments of the same model.
-            - We cannot send the litellm encoded b64 to the upstream llm api, hence we decode it to the original `previous_response_id`
+            - We cannot send the remodl encoded b64 to the upstream llm api, hence we decode it to the original `previous_response_id`
 
         Args:
             previous_response_id: The previous_response_id to decode
@@ -330,7 +330,7 @@ class ResponsesAPIRequestUtils:
             ResponseText object with the converted format, or None if conversion fails
         """
         if text_format is not None and text is None:
-            from litellm.llms.base_llm.base_utils import type_to_response_format_param
+            from remodl.llms.base_llm.base_utils import type_to_response_format_param
 
             # Convert Pydantic model to response format
             response_format = type_to_response_format_param(text_format)

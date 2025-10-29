@@ -7,14 +7,14 @@ In the Huggingface TGI format.
 from typing import TYPE_CHECKING, Any, List, Optional, Union
 
 if TYPE_CHECKING:
-    from litellm.types.llms.openai import AllEmbeddingInputValues
+    from remodl.types.llms.openai import AllEmbeddingInputValues
 
 from httpx._models import Headers, Response
 
-from litellm.llms.base_llm.embedding.transformation import BaseEmbeddingConfig
-from litellm.llms.base_llm.chat.transformation import BaseLLMException
-from litellm.types.utils import Usage, EmbeddingResponse
-from litellm.llms.voyage.embedding.transformation import VoyageEmbeddingConfig
+from remodl.llms.base_llm.embedding.transformation import BaseEmbeddingConfig
+from remodl.llms.base_llm.chat.transformation import BaseLLMException
+from remodl.types.utils import Usage, EmbeddingResponse
+from remodl.llms.voyage.embedding.transformation import VoyageEmbeddingConfig
 
 from ..common_utils import SagemakerError
 
@@ -89,7 +89,7 @@ class SagemakerEmbeddingConfig(BaseEmbeddingConfig):
         api_key: Optional[str] = None,
         request_data: dict = {},
         optional_params: dict = {},
-        litellm_params: dict = {},
+        remodl_params: dict = {},
     ) -> "EmbeddingResponse":
         """
         Transform embedding response for Hugging Face models on SageMaker
@@ -144,7 +144,7 @@ class SagemakerEmbeddingConfig(BaseEmbeddingConfig):
         model: str,
         messages: List[Any],
         optional_params: dict,
-        litellm_params: dict,
+        remodl_params: dict,
         api_key: Optional[str] = None,
         api_base: Optional[str] = None,
     ) -> dict:

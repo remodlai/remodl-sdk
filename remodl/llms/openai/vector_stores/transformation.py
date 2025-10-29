@@ -2,11 +2,11 @@ from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple, Union, cast
 
 import httpx
 
-import litellm
-from litellm.llms.base_llm.vector_store.transformation import BaseVectorStoreConfig
-from litellm.secret_managers.main import get_secret_str
-from litellm.types.router import GenericLiteLLMParams
-from litellm.types.vector_stores import (
+import remodl
+from remodl.llms.base_llm.vector_store.transformation import BaseVectorStoreConfig
+from remodl.secret_managers.main import get_secret_str
+from remodl.types.router import GenericLiteLLMParams
+from remodl.types.vector_stores import (
     VectorStoreCreateOptionalRequestParams,
     VectorStoreCreateRequest,
     VectorStoreCreateResponse,
@@ -14,10 +14,10 @@ from litellm.types.vector_stores import (
     VectorStoreSearchRequest,
     VectorStoreSearchResponse,
 )
-from litellm.utils import add_openai_metadata
+from remodl.utils import add_openai_metadata
 
 if TYPE_CHECKING:
-    from litellm.litellm_core_utils.litellm_logging import Logging as _LiteLLMLoggingObj
+    from remodl.remodl_core_utils.remodl_logging import Logging as _LiteLLMLoggingObj
 
     LiteLLMLoggingObj = _LiteLLMLoggingObj
 else:
@@ -28,13 +28,13 @@ class OpenAIVectorStoreConfig(BaseVectorStoreConfig):
     ASSISTANTS_HEADER_VALUE = "assistants=v2"
 
     def validate_environment(
-        self, headers: dict, litellm_params: Optional[GenericLiteLLMParams]
+        self, headers: dict, remodl_params: Optional[GenericLiteLLMParams]
     ) -> dict:
-        litellm_params = litellm_params or GenericLiteLLMParams()
+        remodl_params = remodl_params or GenericLiteLLMParams()
         api_key = (
-            litellm_params.api_key
-            or litellm.api_key
-            or litellm.openai_key
+            remodl_params.api_key
+            or remodl.api_key
+            or remodl.openai_key
             or get_secret_str("OPENAI_API_KEY")
         )
         headers.update(
@@ -59,14 +59,14 @@ class OpenAIVectorStoreConfig(BaseVectorStoreConfig):
     def get_complete_url(
         self,
         api_base: Optional[str],
-        litellm_params: dict,
+        remodl_params: dict,
     ) -> str:
         """
         Get the Base endpoint for OpenAI Vector Stores API
         """
         api_base = (
             api_base
-            or litellm.api_base
+            or remodl.api_base
             or get_secret_str("OPENAI_BASE_URL")
             or get_secret_str("OPENAI_API_BASE")
             or "https://api.openai.com/v1"
@@ -84,8 +84,8 @@ class OpenAIVectorStoreConfig(BaseVectorStoreConfig):
         query: Union[str, List[str]],
         vector_store_search_optional_params: VectorStoreSearchOptionalRequestParams,
         api_base: str,
-        litellm_logging_obj: LiteLLMLoggingObj,
-        litellm_params: dict,
+        remodl_logging_obj: LiteLLMLoggingObj,
+        remodl_params: dict,
     ) -> Tuple[str, Dict]:
         url = f"{api_base}/{vector_store_id}/search"
         typed_request_body = VectorStoreSearchRequest(
@@ -101,7 +101,7 @@ class OpenAIVectorStoreConfig(BaseVectorStoreConfig):
     
 
 
-    def transform_search_vector_store_response(self, response: httpx.Response, litellm_logging_obj: LiteLLMLoggingObj) -> VectorStoreSearchResponse:
+    def transform_search_vector_store_response(self, response: httpx.Response, remodl_logging_obj: LiteLLMLoggingObj) -> VectorStoreSearchResponse:
         try:
             response_json = response.json()
             return VectorStoreSearchResponse(

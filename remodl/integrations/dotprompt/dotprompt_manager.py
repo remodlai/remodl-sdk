@@ -6,10 +6,10 @@ Builds on top of PromptManagementBase to provide .prompt file support.
 import json
 from typing import Any, Dict, List, Optional, Tuple, Union
 
-from litellm.integrations.custom_prompt_management import CustomPromptManagement
-from litellm.integrations.prompt_management_base import PromptManagementClient
-from litellm.types.llms.openai import AllMessageValues
-from litellm.types.utils import StandardCallbackDynamicParams
+from remodl.integrations.custom_prompt_management import CustomPromptManagement
+from remodl.integrations.prompt_management_base import PromptManagementClient
+from remodl.types.llms.openai import AllMessageValues
+from remodl.types.utils import StandardCallbackDynamicParams
 
 from .prompt_manager import PromptManager, PromptTemplate
 
@@ -18,15 +18,15 @@ class DotpromptManager(CustomPromptManagement):
     """
     Dotprompt manager that integrates with LiteLLM's prompt management system.
 
-    This class enables using .prompt files with the litellm completion() function
+    This class enables using .prompt files with the remodl completion() function
     by implementing the PromptManagementBase interface.
 
     Usage:
         # Set global prompt directory
-        litellm.prompt_directory = "path/to/prompts"
+        remodl.prompt_directory = "path/to/prompts"
 
         # Use with completion
-        response = litellm.completion(
+        response = remodl.completion(
             model="dotprompt/gpt-4",
             prompt_id="my_prompt",
             prompt_variables={"variable": "value"},
@@ -41,9 +41,9 @@ class DotpromptManager(CustomPromptManagement):
         prompt_data: Optional[Union[dict, str]] = None,
         prompt_id: Optional[str] = None,
     ):
-        import litellm
+        import remodl
 
-        self.prompt_directory = prompt_directory or litellm.global_prompt_directory
+        self.prompt_directory = prompt_directory or remodl.global_prompt_directory
         # Support for JSON-based prompts stored in memory/database
         if isinstance(prompt_data, str):
             self.prompt_data = json.loads(prompt_data)
@@ -70,7 +70,7 @@ class DotpromptManager(CustomPromptManagement):
             ):
                 raise ValueError(
                     "Either prompt_directory or prompt_data must be set before using dotprompt manager. "
-                    "Set litellm.global_prompt_directory, initialize with prompt_directory parameter, or provide prompt_data."
+                    "Set remodl.global_prompt_directory, initialize with prompt_directory parameter, or provide prompt_data."
                 )
             self._prompt_manager = PromptManager(
                 prompt_directory=self.prompt_directory,
@@ -156,7 +156,7 @@ class DotpromptManager(CustomPromptManagement):
         prompt_version: Optional[int] = None,
     ) -> Tuple[str, List[AllMessageValues], dict]:
 
-        from litellm.integrations.prompt_management_base import PromptManagementBase
+        from remodl.integrations.prompt_management_base import PromptManagementBase
 
         return PromptManagementBase.get_chat_completion_prompt(
             self,

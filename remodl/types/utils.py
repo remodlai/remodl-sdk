@@ -31,15 +31,15 @@ from openai.types.moderation_create_response import Moderation, ModerationCreate
 from pydantic import BaseModel, ConfigDict, Field, PrivateAttr, model_validator
 from typing_extensions import Callable, Dict, Required, TypedDict, override
 
-import litellm
-from litellm._uuid import uuid
-from litellm.types.llms.base import (
+import remodl
+from remodl._uuid import uuid
+from remodl.types.llms.base import (
     BaseLiteLLMOpenAIResponseObject,
     LiteLLMPydanticObjectBase,
 )
-from litellm.types.mcp import MCPServerCostInfo
+from remodl.types.mcp import MCPServerCostInfo
 
-from ..litellm_core_utils.core_helpers import map_finish_reason
+from ..remodl_core_utils.core_helpers import map_finish_reason
 from .guardrails import GuardrailEventHooks
 from .llms.anthropic_messages.anthropic_response import AnthropicMessagesResponse
 from .llms.base import HiddenParams
@@ -72,8 +72,8 @@ def _generate_id():  # private helper function
 
 
 class LiteLLMCommonStrings(Enum):
-    redacted_by_litellm = "redacted by litellm. 'litellm.turn_off_message_logging=True'"
-    llm_provider_not_provided = "Unmapped LLM provider for this endpoint. You passed model={model}, custom_llm_provider={custom_llm_provider}. Check supported provider and route: https://docs.litellm.ai/docs/providers"
+    redacted_by_remodl = "redacted by remodl. 'remodl.turn_off_message_logging=True'"
+    llm_provider_not_provided = "Unmapped LLM provider for this endpoint. You passed model={model}, custom_llm_provider={custom_llm_provider}. Check supported provider and route: https://docs.remodl.ai/docs/providers"
 
 
 SupportedCacheControls = ["ttl", "s-maxage", "no-cache", "no-store"]
@@ -118,7 +118,7 @@ class SearchContextCostPerQuery(TypedDict, total=False):
 
 
 class ModelInfoBase(ProviderSpecificModelInfo, total=False):
-    key: Required[str]  # the key in litellm.model_cost which is returned
+    key: Required[str]  # the key in remodl.model_cost which is returned
 
     max_tokens: Required[Optional[int]]
     max_input_tokens: Required[Optional[int]]
@@ -184,7 +184,7 @@ class ModelInfoBase(ProviderSpecificModelInfo, total=False):
     tiered_pricing: Optional[
         List[Dict[str, Any]]
     ]  # Tiered pricing structure for models like Dashscope
-    litellm_provider: Required[str]
+    remodl_provider: Required[str]
     mode: Required[
         Literal[
             "completion",
@@ -201,7 +201,7 @@ class ModelInfoBase(ProviderSpecificModelInfo, total=False):
 
 class ModelInfo(ModelInfoBase, total=False):
     """
-    Model info for a given model, this is information found in litellm.model_prices_and_context_window.json
+    Model info for a given model, this is information found in remodl.model_prices_and_context_window.json
     """
 
     supported_openai_params: Required[Optional[List[str]]]
@@ -1128,7 +1128,7 @@ class StreamingChoices(OpenAIObject):
         **params,
     ):
         # Fix Perplexity return both delta and message cause OpenWebUI repect text
-        # https://github.com/BerriAI/litellm/issues/8455
+        # https://github.com/BerriAI/remodl/issues/8455
         params.pop("message", None)
         super(StreamingChoices, self).__init__(**params)
         if finish_reason:
@@ -1715,7 +1715,7 @@ class ImageResponse(OpenAIImageResponse, BaseLiteLLMOpenAIResponseObject):
 
     usage: Optional[ImageUsage] = None  # type: ignore
     """
-    Users might use litellm with older python versions, we don't want this to break for them.
+    Users might use remodl with older python versions, we don't want this to break for them.
     Happens when their OpenAIImageResponse has the old OpenAI usage class.
     """
 
@@ -1835,7 +1835,7 @@ class LoggedLiteLLMParams(TypedDict, total=False):
     force_timeout: Optional[float]
     custom_llm_provider: Optional[str]
     api_base: Optional[str]
-    litellm_call_id: Optional[str]
+    remodl_call_id: Optional[str]
     model_alias_map: Optional[dict]
     metadata: Optional[dict]
     model_info: Optional[dict]
@@ -1884,7 +1884,7 @@ class AdapterCompletionStreamWrapper:
 
 
 class StandardLoggingUserAPIKeyMetadata(TypedDict):
-    user_api_key_hash: Optional[str]  # hash of the litellm virtual key used
+    user_api_key_hash: Optional[str]  # hash of the remodl virtual key used
     user_api_key_alias: Optional[str]
     user_api_key_spend: Optional[float]
     user_api_key_max_budget: Optional[float]
@@ -1922,7 +1922,7 @@ class StandardLoggingMCPToolCall(TypedDict, total=False):
     """
     Optional logo URL of the MCP server that the tool call was made to
 
-    (this is to render the logo on the logs page on litellm ui)
+    (this is to render the logo on the logs page on remodl ui)
     """
 
     namespaced_tool_name: Optional[str]
@@ -2030,10 +2030,10 @@ class StandardLoggingHiddenParams(TypedDict):
     cache_key: Optional[str]
     api_base: Optional[str]
     response_cost: Optional[str]
-    litellm_overhead_time_ms: Optional[float]
+    remodl_overhead_time_ms: Optional[float]
     additional_headers: Optional[StandardLoggingAdditionalHeaders]
     batch_models: Optional[List[str]]
-    litellm_model_name: Optional[str]  # the model name sent to the provider by litellm
+    remodl_model_name: Optional[str]  # the model name sent to the provider by remodl
     usage_object: Optional[dict]
 
 
@@ -2259,7 +2259,7 @@ class StandardCallbackDynamicParams(TypedDict, total=False):
 
     # Logging settings
     turn_off_message_logging: Optional[bool]  # when true will not log messages
-    litellm_disabled_callbacks: Optional[List[str]]
+    remodl_disabled_callbacks: Optional[List[str]]
 
 
 class CustomPricingLiteLLMParams(BaseModel):
@@ -2272,7 +2272,7 @@ class CustomPricingLiteLLMParams(BaseModel):
     output_cost_per_pixel: Optional[float] = None
 
     # Include all ModelInfoBase fields as optional
-    # This allows any model_info parameter to be set in litellm_params
+    # This allows any model_info parameter to be set in remodl_params
     input_cost_per_token_flex: Optional[float] = None
     input_cost_per_token_priority: Optional[float] = None
     cache_creation_input_token_cost: Optional[float] = None
@@ -2317,12 +2317,12 @@ class CustomPricingLiteLLMParams(BaseModel):
     tiered_pricing: Optional[List[Dict[str, Any]]] = None
 
 
-all_litellm_params = (
+all_remodl_params = (
     [
         "metadata",
-        "litellm_metadata",
-        "litellm_trace_id",
-        "litellm_request_debug",
+        "remodl_metadata",
+        "remodl_trace_id",
+        "remodl_request_debug",
         "guardrails",
         "tags",
         "acompletion",
@@ -2333,7 +2333,7 @@ all_litellm_params = (
         "mock_response",
         "mock_timeout",
         "disable_add_transform_inline_image_block",
-        "litellm_proxy_rate_limit_response",
+        "remodl_proxy_rate_limit_response",
         "api_key",
         "api_version",
         "prompt_id",
@@ -2346,8 +2346,8 @@ all_litellm_params = (
         "verbose",
         "custom_llm_provider",
         "model_file_id_mapping",
-        "litellm_logging_obj",
-        "litellm_call_id",
+        "remodl_logging_obj",
+        "remodl_call_id",
         "use_client",
         "id",
         "fallbacks",
@@ -2411,10 +2411,10 @@ all_litellm_params = (
         "budget_duration",
         "use_in_pass_through",
         "merge_reasoning_content_in_choices",
-        "litellm_credential_name",
+        "remodl_credential_name",
         "allowed_openai_params",
-        "litellm_session_id",
-        "use_litellm_proxy",
+        "remodl_session_id",
+        "use_remodl_proxy",
         "prompt_label",
         "shared_session",
     ]
@@ -2531,7 +2531,7 @@ class LlmProviders(str, Enum):
     GITHUB = "github"
     COMPACTIFAI = "compactifai"
     CUSTOM = "custom"
-    LITELLM_PROXY = "litellm_proxy"
+    LITELLM_PROXY = "remodl_proxy"
     HOSTED_VLLM = "hosted_vllm"
     REMODL_AI = "remodlai"
     LLAMAFILE = "llamafile"
@@ -2582,6 +2582,7 @@ class SearchProviders(str, Enum):
     EXA_AI = "exa_ai"
     GOOGLE_PSE = "google_pse"
     DATAFORSEO = "dataforseo"
+    WEB_SEARCH = "web-search"  # RemodlAI custom alias for Tavily
 
 
 # Create a set of all search provider values for quick lookup
@@ -2755,20 +2756,20 @@ class ExtractedFileData(TypedDict):
 
 
 class SpecialEnums(Enum):
-    LITELM_MANAGED_FILE_ID_PREFIX = "litellm_proxy"
-    LITELLM_MANAGED_FILE_COMPLETE_STR = "litellm_proxy:{};unified_id,{};target_model_names,{};llm_output_file_id,{};llm_output_file_model_id,{}"
+    LITELM_MANAGED_FILE_ID_PREFIX = "remodl_proxy"
+    LITELLM_MANAGED_FILE_COMPLETE_STR = "remodl_proxy:{};unified_id,{};target_model_names,{};llm_output_file_id,{};llm_output_file_model_id,{}"
 
     LITELLM_MANAGED_RESPONSE_COMPLETE_STR = (
-        "litellm:custom_llm_provider:{};model_id:{};response_id:{}"
+        "remodl:custom_llm_provider:{};model_id:{};response_id:{}"
     )
 
-    LITELLM_MANAGED_BATCH_COMPLETE_STR = "litellm_proxy;model_id:{};llm_batch_id:{}"
+    LITELLM_MANAGED_BATCH_COMPLETE_STR = "remodl_proxy;model_id:{};llm_batch_id:{}"
 
     LITELLM_MANAGED_RESPONSE_API_RESPONSE_ID_COMPLETE_STR = (
-        "litellm_proxy:responses_api:response_id:{};user_id:{};team_id:{}"
+        "remodl_proxy:responses_api:response_id:{};user_id:{};team_id:{}"
     )
 
-    LITELLM_MANAGED_GENERIC_RESPONSE_COMPLETE_STR = "litellm_proxy;model_id:{};generic_response_id:{}"  # generic implementation of 'managed batches' - used for finetuning and any future work.
+    LITELLM_MANAGED_GENERIC_RESPONSE_COMPLETE_STR = "remodl_proxy;model_id:{};generic_response_id:{}"  # generic implementation of 'managed batches' - used for finetuning and any future work.
 
 
 class ServiceTier(Enum):
@@ -2823,7 +2824,7 @@ class PriorityReservationDict(TypedDict, total=False):
     """
     Dictionary format for priority reservation values.
     
-    Used in litellm.priority_reservation to specify how much capacity to reserve
+    Used in remodl.priority_reservation to specify how much capacity to reserve
     for each priority level. Supports three formats:
     1. Percentage-based: {"type": "percent", "value": 0.9} -> 90% of capacity
     2. RPM-based: {"type": "rpm", "value": 900} -> 900 requests per minute
@@ -2843,12 +2844,12 @@ class PriorityReservationSettings(BaseModel):
     Settings for priority-based rate limiting reservation.
 
     Defines what priority to assign to keys without explicit priority metadata.
-    The priority_reservation mapping is configured separately via litellm.priority_reservation.
+    The priority_reservation mapping is configured separately via remodl.priority_reservation.
     """
 
     default_priority: float = Field(
         default=0.25,
-        description="Priority level to assign to API keys without explicit priority metadata. Should match a key in litellm.priority_reservation.",
+        description="Priority level to assign to API keys without explicit priority metadata. Should match a key in remodl.priority_reservation.",
     )
 
     saturation_threshold: float = Field(

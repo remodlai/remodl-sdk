@@ -5,21 +5,21 @@ from typing import Any, Coroutine, Dict, List, Literal, Optional, Union, cast, o
 
 import httpx
 
-import litellm
-from litellm import Logging, client, exception_type, get_litellm_params
-from litellm.constants import DEFAULT_IMAGE_ENDPOINT_MODEL
-from litellm.constants import request_timeout as DEFAULT_REQUEST_TIMEOUT
-from litellm.exceptions import LiteLLMUnknownProvider
-from litellm.litellm_core_utils.litellm_logging import Logging as LiteLLMLoggingObj
-from litellm.litellm_core_utils.mock_functions import mock_image_generation
-from litellm.llms.base_llm import BaseImageEditConfig, BaseImageGenerationConfig
-from litellm.llms.custom_httpx.http_handler import AsyncHTTPHandler, HTTPHandler
-from litellm.llms.custom_httpx.llm_http_handler import BaseLLMHTTPHandler
-from litellm.llms.custom_llm import CustomLLM
+import remodl
+from remodl import Logging, client, exception_type, get_remodl_params
+from remodl.constants import DEFAULT_IMAGE_ENDPOINT_MODEL
+from remodl.constants import request_timeout as DEFAULT_REQUEST_TIMEOUT
+from remodl.exceptions import LiteLLMUnknownProvider
+from remodl.remodl_core_utils.remodl_logging import Logging as LiteLLMLoggingObj
+from remodl.remodl_core_utils.mock_functions import mock_image_generation
+from remodl.llms.base_llm import BaseImageEditConfig, BaseImageGenerationConfig
+from remodl.llms.custom_httpx.http_handler import AsyncHTTPHandler, HTTPHandler
+from remodl.llms.custom_httpx.llm_http_handler import BaseLLMHTTPHandler
+from remodl.llms.custom_llm import CustomLLM
 
 #################### Initialize provider clients ####################
 llm_http_handler: BaseLLMHTTPHandler = BaseLLMHTTPHandler()
-from litellm.main import (
+from remodl.main import (
     azure_chat_completions,
     base_llm_aiohttp_handler,
     base_llm_http_handler,
@@ -30,17 +30,17 @@ from litellm.main import (
 )
 
 ###########################################
-from litellm.secret_managers.main import get_secret_str
-from litellm.types.images.main import ImageEditOptionalRequestParams
-from litellm.types.llms.openai import ImageGenerationRequestQuality
-from litellm.types.router import GenericLiteLLMParams
-from litellm.types.utils import (
+from remodl.secret_managers.main import get_secret_str
+from remodl.types.images.main import ImageEditOptionalRequestParams
+from remodl.types.llms.openai import ImageGenerationRequestQuality
+from remodl.types.router import GenericLiteLLMParams
+from remodl.types.utils import (
     LITELLM_IMAGE_VARIATION_PROVIDERS,
     FileTypes,
     LlmProviders,
-    all_litellm_params,
+    all_remodl_params,
 )
-from litellm.utils import (
+from remodl.utils import (
     ImageResponse,
     ProviderConfigManager,
     get_llm_provider,
@@ -187,21 +187,21 @@ def image_generation(  # noqa: PLR0915
     try:
         args = locals()
         aimg_generation = kwargs.get("aimg_generation", False)
-        litellm_call_id = kwargs.get("litellm_call_id", None)
+        remodl_call_id = kwargs.get("remodl_call_id", None)
         logger_fn = kwargs.get("logger_fn", None)
         mock_response: Optional[str] = kwargs.get("mock_response", None)  # type: ignore
         proxy_server_request = kwargs.get("proxy_server_request", None)
         azure_ad_token_provider = kwargs.get("azure_ad_token_provider", None)
         model_info = kwargs.get("model_info", None)
         metadata = kwargs.get("metadata", {})
-        litellm_logging_obj: LiteLLMLoggingObj = kwargs.get("litellm_logging_obj")  # type: ignore
+        remodl_logging_obj: LiteLLMLoggingObj = kwargs.get("remodl_logging_obj")  # type: ignore
         client = kwargs.get("client", None)
         extra_headers = kwargs.get("extra_headers", None)
         headers: dict = kwargs.get("headers", None) or {}
         base_model = kwargs.get("base_model", None)
         if extra_headers is not None:
             headers.update(extra_headers)
-        model_response: ImageResponse = litellm.utils.ImageResponse()
+        model_response: ImageResponse = remodl.utils.ImageResponse()
         dynamic_api_key: Optional[str] = None
         if model is not None or custom_llm_provider is not None:
             model, custom_llm_provider, dynamic_api_key, api_base = get_llm_provider(
@@ -230,8 +230,8 @@ def image_generation(  # noqa: PLR0915
             "size",
             "style",
         ]
-        litellm_params = all_litellm_params
-        default_params = openai_params + litellm_params
+        remodl_params = all_remodl_params
+        default_params = openai_params + remodl_params
         non_default_params = {
             k: v for k, v in kwargs.items() if k not in default_params
         }  # model-specific params - pass them straight to the model/provider
@@ -261,17 +261,17 @@ def image_generation(  # noqa: PLR0915
             **non_default_params,
         )
 
-        litellm_params_dict = get_litellm_params(**kwargs)
+        remodl_params_dict = get_remodl_params(**kwargs)
 
-        logging: Logging = litellm_logging_obj
+        logging: Logging = remodl_logging_obj
         logging.update_environment_variables(
             model=model,
             user=user,
             optional_params=optional_params,
-            litellm_params={
+            remodl_params={
                 "timeout": timeout,
                 "azure": False,
-                "litellm_call_id": litellm_call_id,
+                "remodl_call_id": remodl_call_id,
                 "logger_fn": logger_fn,
                 "proxy_server_request": proxy_server_request,
                 "model_info": model_info,
@@ -290,18 +290,18 @@ def image_generation(  # noqa: PLR0915
             # azure configs
             api_type = get_secret_str("AZURE_API_TYPE") or "azure"
 
-            api_base = api_base or litellm.api_base or get_secret_str("AZURE_API_BASE")
+            api_base = api_base or remodl.api_base or get_secret_str("AZURE_API_BASE")
 
             api_version = (
                 api_version
-                or litellm.api_version
+                or remodl.api_version
                 or get_secret_str("AZURE_API_VERSION")
             )
 
             api_key = (
                 api_key
-                or litellm.api_key
-                or litellm.azure_key
+                or remodl.api_key
+                or remodl.azure_key
                 or get_secret_str("AZURE_OPENAI_API_KEY")
                 or get_secret_str("AZURE_API_KEY")
             )
@@ -326,22 +326,22 @@ def image_generation(  # noqa: PLR0915
                 api_base=api_base,
                 azure_ad_token=azure_ad_token,
                 azure_ad_token_provider=azure_ad_token_provider,
-                logging_obj=litellm_logging_obj,
+                logging_obj=remodl_logging_obj,
                 optional_params=optional_params,
                 model_response=model_response,
                 api_version=api_version,
                 aimg_generation=aimg_generation,
                 client=client,
                 headers=headers,
-                litellm_params=litellm_params_dict,
+                remodl_params=remodl_params_dict,
             )
         #########################################################
         # Providers using llm_http_handler
         #########################################################
         elif custom_llm_provider in (
-            litellm.LlmProviders.RECRAFT,
-            litellm.LlmProviders.AIML,
-            litellm.LlmProviders.GEMINI,
+            remodl.LlmProviders.RECRAFT,
+            remodl.LlmProviders.AIML,
+            remodl.LlmProviders.GEMINI,
         ):
             if image_generation_config is None:
                 raise ValueError(
@@ -355,13 +355,13 @@ def image_generation(  # noqa: PLR0915
                 image_generation_provider_config=image_generation_config,
                 image_generation_optional_request_params=optional_params,
                 custom_llm_provider=custom_llm_provider,
-                litellm_params=litellm_params_dict,
-                logging_obj=litellm_logging_obj,
+                remodl_params=remodl_params_dict,
+                logging_obj=remodl_logging_obj,
                 timeout=timeout,
                 client=client,
             )
         elif custom_llm_provider == "azure_ai":
-            from litellm.llms.azure_ai.common_utils import AzureFoundryModelInfo
+            from remodl.llms.azure_ai.common_utils import AzureFoundryModelInfo
 
             api_base = AzureFoundryModelInfo.get_api_base(api_base)
             api_key = AzureFoundryModelInfo.get_api_key(api_key)
@@ -384,19 +384,19 @@ def image_generation(  # noqa: PLR0915
                 api_base=api_base,
                 azure_ad_token=None,
                 azure_ad_token_provider=azure_ad_token_provider,
-                logging_obj=litellm_logging_obj,
+                logging_obj=remodl_logging_obj,
                 optional_params=optional_params,
                 model_response=model_response,
                 api_version=api_version,
                 aimg_generation=aimg_generation,
                 client=client,
                 headers=headers,
-                litellm_params=litellm_params_dict,
+                remodl_params=remodl_params_dict,
             )
         elif (
             custom_llm_provider == "openai"
             or custom_llm_provider == LlmProviders.LITELLM_PROXY.value
-            or custom_llm_provider in litellm.openai_compatible_providers
+            or custom_llm_provider in remodl.openai_compatible_providers
         ):
             model_response = openai_chat_completions.image_generation(
                 model=model,
@@ -404,7 +404,7 @@ def image_generation(  # noqa: PLR0915
                 timeout=timeout,
                 api_key=api_key or dynamic_api_key,
                 api_base=api_base,
-                logging_obj=litellm_logging_obj,
+                logging_obj=remodl_logging_obj,
                 optional_params=optional_params,
                 model_response=model_response,
                 aimg_generation=aimg_generation,
@@ -417,7 +417,7 @@ def image_generation(  # noqa: PLR0915
                 model=model,
                 prompt=prompt,
                 timeout=timeout,
-                logging_obj=litellm_logging_obj,
+                logging_obj=remodl_logging_obj,
                 optional_params=optional_params,
                 model_response=model_response,
                 aimg_generation=aimg_generation,
@@ -429,13 +429,13 @@ def image_generation(  # noqa: PLR0915
             vertex_ai_project = (
                 optional_params.pop("vertex_project", None)
                 or optional_params.pop("vertex_ai_project", None)
-                or litellm.vertex_project
+                or remodl.vertex_project
                 or get_secret_str("VERTEXAI_PROJECT")
             )
             vertex_ai_location = (
                 optional_params.pop("vertex_location", None)
                 or optional_params.pop("vertex_ai_location", None)
-                or litellm.vertex_location
+                or remodl.vertex_location
                 or get_secret_str("VERTEXAI_LOCATION")
             )
             vertex_credentials = (
@@ -446,7 +446,7 @@ def image_generation(  # noqa: PLR0915
 
             api_base = (
                 api_base
-                or litellm.api_base
+                or remodl.api_base
                 or get_secret_str("VERTEXAI_API_BASE")
                 or get_secret_str("VERTEX_API_BASE")
             )
@@ -455,7 +455,7 @@ def image_generation(  # noqa: PLR0915
                 model=model,
                 prompt=prompt,
                 timeout=timeout,
-                logging_obj=litellm_logging_obj,
+                logging_obj=remodl_logging_obj,
                 optional_params=optional_params,
                 model_response=model_response,
                 vertex_project=vertex_ai_project,
@@ -466,11 +466,11 @@ def image_generation(  # noqa: PLR0915
                 client=client,
             )
         elif (
-            custom_llm_provider in litellm._custom_providers
+            custom_llm_provider in remodl._custom_providers
         ):  # Assume custom LLM provider
             # Get the Custom Handler
             custom_handler: Optional[CustomLLM] = None
-            for item in litellm.custom_provider_map:
+            for item in remodl.custom_provider_map:
                 if item["provider"] == custom_llm_provider:
                     custom_handler = item["custom_handler"]
 
@@ -493,7 +493,7 @@ def image_generation(  # noqa: PLR0915
                     api_base=api_base,
                     model_response=model_response,
                     optional_params=optional_params,
-                    logging_obj=litellm_logging_obj,
+                    logging_obj=remodl_logging_obj,
                     timeout=timeout,
                     client=async_custom_client,
                 )
@@ -510,7 +510,7 @@ def image_generation(  # noqa: PLR0915
                     api_base=api_base,
                     model_response=model_response,
                     optional_params=optional_params,
-                    logging_obj=litellm_logging_obj,
+                    logging_obj=remodl_logging_obj,
                     timeout=timeout,
                     client=custom_client,
                 )
@@ -595,16 +595,16 @@ def image_variation(
     # get non-default params
     client = kwargs.get("client", None)
     # get logging object
-    litellm_logging_obj = cast(LiteLLMLoggingObj, kwargs.get("litellm_logging_obj"))
+    remodl_logging_obj = cast(LiteLLMLoggingObj, kwargs.get("remodl_logging_obj"))
 
-    # get the litellm params
-    litellm_params = get_litellm_params(**kwargs)
+    # get the remodl params
+    remodl_params = get_remodl_params(**kwargs)
     # get the custom llm provider
     model, custom_llm_provider, dynamic_api_key, api_base = get_llm_provider(
         model=model,
-        custom_llm_provider=litellm_params.get("custom_llm_provider", None),
-        api_base=litellm_params.get("api_base", None),
-        api_key=litellm_params.get("api_key", None),
+        custom_llm_provider=remodl_params.get("custom_llm_provider", None),
+        api_base=remodl_params.get("api_base", None),
+        api_key=remodl_params.get("api_key", None),
     )
 
     # route to the correct provider w/ the params
@@ -629,8 +629,8 @@ def image_variation(
             f"image variation provider has no known model info config - required for getting api keys, etc.: {custom_llm_provider}. Supported providers are: {LITELLM_IMAGE_VARIATION_PROVIDERS}"
         )
 
-    api_key = provider_config.get_api_key(litellm_params.get("api_key", None))
-    api_base = provider_config.get_api_base(litellm_params.get("api_base", None))
+    api_key = provider_config.get_api_key(remodl_params.get("api_key", None))
+    api_base = provider_config.get_api_base(remodl_params.get("api_base", None))
 
     if image_variation_provider == LITELLM_IMAGE_VARIATION_PROVIDERS.OPENAI:
         if api_key is None:
@@ -644,11 +644,11 @@ def image_variation(
             api_base=api_base,
             model=model,
             image=image,
-            timeout=litellm_params.get("timeout", None),
+            timeout=remodl_params.get("timeout", None),
             custom_llm_provider=custom_llm_provider,
-            logging_obj=litellm_logging_obj,
+            logging_obj=remodl_logging_obj,
             optional_params={},
-            litellm_params=litellm_params,
+            remodl_params=remodl_params,
         )
     elif image_variation_provider == LITELLM_IMAGE_VARIATION_PROVIDERS.TOPAZ:
         if api_key is None:
@@ -662,11 +662,11 @@ def image_variation(
             api_base=api_base,
             model=model,
             image=image,
-            timeout=litellm_params.get("timeout", None) or DEFAULT_REQUEST_TIMEOUT,
+            timeout=remodl_params.get("timeout", None) or DEFAULT_REQUEST_TIMEOUT,
             custom_llm_provider=custom_llm_provider,
-            logging_obj=litellm_logging_obj,
+            logging_obj=remodl_logging_obj,
             optional_params={},
-            litellm_params=litellm_params,
+            remodl_params=remodl_params,
             client=client,
         )
 
@@ -704,8 +704,8 @@ def image_edit(
     """
     local_vars = locals()
     try:
-        litellm_logging_obj: LiteLLMLoggingObj = kwargs.get("litellm_logging_obj")  # type: ignore
-        litellm_call_id: Optional[str] = kwargs.get("litellm_call_id", None)
+        remodl_logging_obj: LiteLLMLoggingObj = kwargs.get("remodl_logging_obj")  # type: ignore
+        remodl_call_id: Optional[str] = kwargs.get("remodl_call_id", None)
         _is_async = kwargs.pop("async_call", False) is True
 
         # add images / or return a single image
@@ -722,7 +722,7 @@ def image_edit(
             extra_headers = dict(merged_extra_headers)
 
         # get llm provider logic
-        litellm_params = GenericLiteLLMParams(**kwargs)
+        remodl_params = GenericLiteLLMParams(**kwargs)
         model, custom_llm_provider, _, _ = get_llm_provider(
             model=model or DEFAULT_IMAGE_ENDPOINT_MODEL,
             custom_llm_provider=custom_llm_provider,
@@ -732,7 +732,7 @@ def image_edit(
         image_edit_provider_config: Optional[BaseImageEditConfig] = (
             ProviderConfigManager.get_provider_image_edit_config(
                 model=model,
-                provider=litellm.LlmProviders(custom_llm_provider),
+                provider=remodl.LlmProviders(custom_llm_provider),
             )
         )
 
@@ -755,12 +755,12 @@ def image_edit(
         )
 
         # Pre Call logging
-        litellm_logging_obj.update_environment_variables(
+        remodl_logging_obj.update_environment_variables(
             model=model,
             user=user,
             optional_params=dict(image_edit_request_params),
-            litellm_params={
-                "litellm_call_id": litellm_call_id,
+            remodl_params={
+                "remodl_call_id": remodl_call_id,
                 **image_edit_request_params,
             },
             custom_llm_provider=custom_llm_provider,
@@ -774,8 +774,8 @@ def image_edit(
             image_edit_provider_config=image_edit_provider_config,
             image_edit_optional_request_params=image_edit_request_params,
             custom_llm_provider=custom_llm_provider,
-            litellm_params=litellm_params,
-            logging_obj=litellm_logging_obj,
+            remodl_params=remodl_params,
+            logging_obj=remodl_logging_obj,
             extra_headers=extra_headers,
             extra_body=extra_body,
             timeout=timeout or DEFAULT_REQUEST_TIMEOUT,
@@ -784,7 +784,7 @@ def image_edit(
         )
 
     except Exception as e:
-        raise litellm.exception_type(
+        raise remodl.exception_type(
             model=model,
             custom_llm_provider=custom_llm_provider,
             original_exception=e,
@@ -831,7 +831,7 @@ async def aimage_edit(
 
         # get custom llm provider so we can use this for mapping exceptions
         if custom_llm_provider is None:
-            _, custom_llm_provider, _, _ = litellm.get_llm_provider(
+            _, custom_llm_provider, _, _ = remodl.get_llm_provider(
                 model=model, api_base=local_vars.get("base_url", None)
             )
 
@@ -864,7 +864,7 @@ async def aimage_edit(
 
         return response
     except Exception as e:
-        raise litellm.exception_type(
+        raise remodl.exception_type(
             model=model,
             custom_llm_provider=custom_llm_provider,
             original_exception=e,

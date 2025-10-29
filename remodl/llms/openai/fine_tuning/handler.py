@@ -3,8 +3,8 @@ from typing import Any, Coroutine, Optional, Union, cast
 import httpx
 from openai import AsyncAzureOpenAI, AsyncOpenAI, AzureOpenAI, OpenAI
 
-from litellm._logging import verbose_logger
-from litellm.types.utils import LiteLLMFineTuningJob
+from remodl._logging import verbose_logger
+from remodl.types.utils import LiteLLMFineTuningJob
 
 
 class OpenAIFineTuningAPI:
@@ -27,7 +27,7 @@ class OpenAIFineTuningAPI:
         ] = None,
         _is_async: bool = False,
         api_version: Optional[str] = None,
-        litellm_params: Optional[dict] = None,
+        remodl_params: Optional[dict] = None,
     ) -> Optional[Union[OpenAI, AsyncOpenAI, AzureOpenAI, AsyncAzureOpenAI,]]:
         received_args = locals()
         openai_client: Optional[

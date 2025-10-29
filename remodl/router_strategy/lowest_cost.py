@@ -3,11 +3,11 @@
 from datetime import datetime, timedelta
 from typing import Dict, List, Optional, Union
 
-import litellm
-from litellm import ModelResponse, token_counter, verbose_logger
-from litellm._logging import verbose_router_logger
-from litellm.caching.caching import DualCache
-from litellm.integrations.custom_logger import CustomLogger
+import remodl
+from remodl import ModelResponse, token_counter, verbose_logger
+from remodl._logging import verbose_router_logger
+from remodl.caching.caching import DualCache
+from remodl.integrations.custom_logger import CustomLogger
 
 
 class LowestCostLoggingHandler(CustomLogger):
@@ -25,14 +25,14 @@ class LowestCostLoggingHandler(CustomLogger):
             """
             Update usage on success
             """
-            if kwargs["litellm_params"].get("metadata") is None:
+            if kwargs["remodl_params"].get("metadata") is None:
                 pass
             else:
-                model_group = kwargs["litellm_params"]["metadata"].get(
+                model_group = kwargs["remodl_params"]["metadata"].get(
                     "model_group", None
                 )
 
-                id = kwargs["litellm_params"].get("model_info", {}).get("id", None)
+                id = kwargs["remodl_params"].get("model_info", {}).get("id", None)
                 if model_group is None or id is None:
                     return
                 elif isinstance(id, int):
@@ -62,7 +62,7 @@ class LowestCostLoggingHandler(CustomLogger):
 
                 if isinstance(response_obj, ModelResponse):
                     _usage = getattr(response_obj, "usage", None)
-                    if _usage is not None and isinstance(_usage, litellm.Usage):
+                    if _usage is not None and isinstance(_usage, remodl.Usage):
                         completion_tokens = _usage.completion_tokens
                         total_tokens = _usage.total_tokens
                         float(response_ms.total_seconds() / completion_tokens)
@@ -98,7 +98,7 @@ class LowestCostLoggingHandler(CustomLogger):
                     self.logged_success += 1
         except Exception as e:
             verbose_logger.exception(
-                "litellm.router_strategy.lowest_cost.py::log_success_event(): Exception occured - {}".format(
+                "remodl.router_strategy.lowest_cost.py::log_success_event(): Exception occured - {}".format(
                     str(e)
                 )
             )
@@ -109,14 +109,14 @@ class LowestCostLoggingHandler(CustomLogger):
             """
             Update cost usage on success
             """
-            if kwargs["litellm_params"].get("metadata") is None:
+            if kwargs["remodl_params"].get("metadata") is None:
                 pass
             else:
-                model_group = kwargs["litellm_params"]["metadata"].get(
+                model_group = kwargs["remodl_params"]["metadata"].get(
                     "model_group", None
                 )
 
-                id = kwargs["litellm_params"].get("model_info", {}).get("id", None)
+                id = kwargs["remodl_params"].get("model_info", {}).get("id", None)
                 if model_group is None or id is None:
                     return
                 elif isinstance(id, int):
@@ -148,7 +148,7 @@ class LowestCostLoggingHandler(CustomLogger):
 
                 if isinstance(response_obj, ModelResponse):
                     _usage = getattr(response_obj, "usage", None)
-                    if _usage is not None and isinstance(_usage, litellm.Usage):
+                    if _usage is not None and isinstance(_usage, remodl.Usage):
                         completion_tokens = _usage.completion_tokens
                         total_tokens = _usage.total_tokens
 
@@ -186,7 +186,7 @@ class LowestCostLoggingHandler(CustomLogger):
                     self.logged_success += 1
         except Exception as e:
             verbose_logger.exception(
-                "litellm.proxy.hooks.prompt_injection_detection.py::async_pre_call_hook(): Exception occured - {}".format(
+                "remodl.proxy.hooks.prompt_injection_detection.py::async_pre_call_hook(): Exception occured - {}".format(
                     str(e)
                 )
             )
@@ -251,46 +251,46 @@ class LowestCostLoggingHandler(CustomLogger):
 
             _deployment_tpm = (
                 _deployment.get("tpm", None)
-                or _deployment.get("litellm_params", {}).get("tpm", None)
+                or _deployment.get("remodl_params", {}).get("tpm", None)
                 or _deployment.get("model_info", {}).get("tpm", None)
                 or float("inf")
             )
 
             _deployment_rpm = (
                 _deployment.get("rpm", None)
-                or _deployment.get("litellm_params", {}).get("rpm", None)
+                or _deployment.get("remodl_params", {}).get("rpm", None)
                 or _deployment.get("model_info", {}).get("rpm", None)
                 or float("inf")
             )
-            item_litellm_model_name = _deployment.get("litellm_params", {}).get("model")
-            item_litellm_model_cost_map = litellm.model_cost.get(
-                item_litellm_model_name, {}
+            item_remodl_model_name = _deployment.get("remodl_params", {}).get("model")
+            item_remodl_model_cost_map = remodl.model_cost.get(
+                item_remodl_model_name, {}
             )
 
-            # check if user provided input_cost_per_token and output_cost_per_token in litellm_params
+            # check if user provided input_cost_per_token and output_cost_per_token in remodl_params
             item_input_cost = None
             item_output_cost = None
-            if _deployment.get("litellm_params", {}).get("input_cost_per_token", None):
-                item_input_cost = _deployment.get("litellm_params", {}).get(
+            if _deployment.get("remodl_params", {}).get("input_cost_per_token", None):
+                item_input_cost = _deployment.get("remodl_params", {}).get(
                     "input_cost_per_token"
                 )
 
-            if _deployment.get("litellm_params", {}).get("output_cost_per_token", None):
-                item_output_cost = _deployment.get("litellm_params", {}).get(
+            if _deployment.get("remodl_params", {}).get("output_cost_per_token", None):
+                item_output_cost = _deployment.get("remodl_params", {}).get(
                     "output_cost_per_token"
                 )
 
             if item_input_cost is None:
-                item_input_cost = item_litellm_model_cost_map.get(
+                item_input_cost = item_remodl_model_cost_map.get(
                     "input_cost_per_token", 5.0
                 )
 
             if item_output_cost is None:
-                item_output_cost = item_litellm_model_cost_map.get(
+                item_output_cost = item_remodl_model_cost_map.get(
                     "output_cost_per_token", 5.0
                 )
 
-            # if litellm["model"] is not in model_cost map -> use item_cost = $10
+            # if remodl["model"] is not in model_cost map -> use item_cost = $10
 
             item_cost = item_input_cost + item_output_cost
 
@@ -306,7 +306,7 @@ class LowestCostLoggingHandler(CustomLogger):
             # -------------- #
             # We use _cost_per_deployment to log to langfuse, slack - this is not used to make a decision on routing
             # this helps a user to debug why the router picked a specfic deployment      #
-            _deployment_api_base = _deployment.get("litellm_params", {}).get(
+            _deployment_api_base = _deployment.get("remodl_params", {}).get(
                 "api_base", ""
             )
             if _deployment_api_base is not None:

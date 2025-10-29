@@ -4,14 +4,14 @@ import httpx
 from openai import AsyncOpenAI, OpenAI
 from pydantic import BaseModel
 
-import litellm
-from litellm.litellm_core_utils.audio_utils.utils import get_audio_file_name
-from litellm.litellm_core_utils.litellm_logging import Logging as LiteLLMLoggingObj
-from litellm.llms.base_llm.audio_transcription.transformation import (
+import remodl
+from remodl.remodl_core_utils.audio_utils.utils import get_audio_file_name
+from remodl.remodl_core_utils.remodl_logging import Logging as LiteLLMLoggingObj
+from remodl.llms.base_llm.audio_transcription.transformation import (
     BaseAudioTranscriptionConfig,
 )
-from litellm.types.utils import FileTypes
-from litellm.utils import (
+from remodl.types.utils import FileTypes
+from remodl.utils import (
     TranscriptionResponse,
     convert_to_model_response_object,
     extract_duration_from_srt_or_vtt,
@@ -30,7 +30,7 @@ class OpenAIAudioTranscription(OpenAIChatCompletion):
     ):
         """
         Helper to:
-        - call openai_aclient.audio.transcriptions.with_raw_response when litellm.return_response_headers is True
+        - call openai_aclient.audio.transcriptions.with_raw_response when remodl.return_response_headers is True
         - call openai_aclient.audio.transcriptions.create by default
         """
         try:
@@ -55,11 +55,11 @@ class OpenAIAudioTranscription(OpenAIChatCompletion):
     ):
         """
         Helper to:
-        - call openai_aclient.audio.transcriptions.with_raw_response when litellm.return_response_headers is True
+        - call openai_aclient.audio.transcriptions.with_raw_response when remodl.return_response_headers is True
         - call openai_aclient.audio.transcriptions.create by default
         """
         try:
-            if litellm.return_response_headers is True:
+            if remodl.return_response_headers is True:
                 raw_response = (
                     openai_client.audio.transcriptions.with_raw_response.create(
                         **data, timeout=timeout
@@ -79,7 +79,7 @@ class OpenAIAudioTranscription(OpenAIChatCompletion):
         model: str,
         audio_file: FileTypes,
         optional_params: dict,
-        litellm_params: dict,
+        remodl_params: dict,
         model_response: TranscriptionResponse,
         timeout: float,
         max_retries: int,
@@ -98,7 +98,7 @@ class OpenAIAudioTranscription(OpenAIChatCompletion):
                 model=model,
                 audio_file=audio_file,
                 optional_params=optional_params,
-                litellm_params=litellm_params,
+                remodl_params=remodl_params,
             )
 
             data = cast(dict, transformed_data.data)

@@ -2,12 +2,12 @@ from typing import TYPE_CHECKING, Optional, Dict, Any
 
 if TYPE_CHECKING:
     from .gitlab_prompt_manager import GitLabPromptManager
-    from litellm.types.prompts.init_prompts import PromptLiteLLMParams, PromptSpec
-    from litellm.integrations.custom_prompt_management import CustomPromptManagement
+    from remodl.types.prompts.init_prompts import PromptLiteLLMParams, PromptSpec
+    from remodl.integrations.custom_prompt_management import CustomPromptManagement
 
-from litellm.types.prompts.init_prompts import SupportedPromptIntegrations
-from litellm.integrations.custom_prompt_management import CustomPromptManagement
-from litellm.types.prompts.init_prompts import PromptSpec, PromptLiteLLMParams
+from remodl.types.prompts.init_prompts import SupportedPromptIntegrations
+from remodl.integrations.custom_prompt_management import CustomPromptManagement
+from remodl.types.prompts.init_prompts import PromptSpec, PromptLiteLLMParams
 from .gitlab_prompt_manager import GitLabPromptManager, GitLabPromptCache
 
 # Global instances
@@ -25,19 +25,19 @@ def set_global_gitlab_config(config: dict) -> None:
                 - access_token: gitlab access token
                 - branch: Branch to fetch prompts from (default: main)
     """
-    import litellm
+    import remodl
 
-    litellm.global_gitlab_config = config  # type: ignore
+    remodl.global_gitlab_config = config  # type: ignore
 
 
 def prompt_initializer(
-    litellm_params: "PromptLiteLLMParams", prompt_spec: "PromptSpec"
+    remodl_params: "PromptLiteLLMParams", prompt_spec: "PromptSpec"
 ) -> "CustomPromptManagement":
     """
     Initialize a prompt from a Gitlab repository.
     """
-    gitlab_config = getattr(litellm_params, "gitlab_config", None)
-    prompt_id = getattr(litellm_params, "prompt_id", None)
+    gitlab_config = getattr(remodl_params, "gitlab_config", None)
+    prompt_id = getattr(remodl_params, "prompt_id", None)
 
 
     if not gitlab_config:
@@ -56,21 +56,21 @@ def prompt_initializer(
         raise e
 
 def _gitlab_prompt_initializer(
-        litellm_params: PromptLiteLLMParams,
+        remodl_params: PromptLiteLLMParams,
         prompt: PromptSpec,
 ) -> CustomPromptManagement:
     """
     Build a GitLab-backed prompt manager for this prompt.
-    Expected fields on litellm_params:
+    Expected fields on remodl_params:
       - prompt_integration="gitlab"  (handled by the caller)
       - gitlab_config: Dict[str, Any] (project/access_token/branch/prompts_path/etc.)
       - git_ref (optional): per-prompt tag/branch/SHA override
     """
     # You can store arbitrary integration-specific config on PromptLiteLLMParams.
     # If your dataclass doesn't have these attributes, add them or put inside
-    # `litellm_params.extra` and pull them from there.
-    gitlab_config: Dict[str, Any] = getattr(litellm_params, "gitlab_config", None) or {}
-    git_ref: Optional[str] = getattr(litellm_params, "git_ref", None)
+    # `remodl_params.extra` and pull them from there.
+    gitlab_config: Dict[str, Any] = getattr(remodl_params, "gitlab_config", None) or {}
+    git_ref: Optional[str] = getattr(remodl_params, "git_ref", None)
 
     if not gitlab_config:
         raise ValueError("gitlab_config is required for gitlab prompt integration")

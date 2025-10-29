@@ -7,9 +7,9 @@ from typing import Callable, Optional
 import httpx
 from openai import AsyncOpenAI, OpenAI
 
-import litellm
-from litellm.types.utils import FileTypes, ImageResponse, LlmProviders
-from litellm.utils import ProviderConfigManager
+import remodl
+from remodl.types.utils import FileTypes, ImageResponse, LlmProviders
+from remodl.utils import ProviderConfigManager
 
 from ...base_llm.image_variations.transformation import BaseImageVariationConfig
 from ...custom_httpx.llm_http_handler import LiteLLMLoggingObj
@@ -55,7 +55,7 @@ class OpenAIImageVariationsHandler:
         logging_obj: LiteLLMLoggingObj,
         model_response: ImageResponse,
         optional_params: dict,
-        litellm_params: dict,
+        remodl_params: dict,
         image: FileTypes,
         provider_config: BaseImageVariationConfig,
     ) -> ImageResponse:
@@ -63,7 +63,7 @@ class OpenAIImageVariationsHandler:
             init_client_params = {
                 "api_key": api_key,
                 "base_url": api_base,
-                "http_client": litellm.client_session,
+                "http_client": remodl.client_session,
                 "timeout": timeout,
                 "max_retries": max_retries,  # type: ignore
                 "organization": organization,
@@ -94,14 +94,14 @@ class OpenAIImageVariationsHandler:
                 raw_response=httpx.Response(
                     status_code=200,
                     request=httpx.Request(
-                        method="GET", url="https://litellm.ai"
+                        method="GET", url="https://remodl.ai"
                     ),  # mock request object
                 ),
                 logging_obj=logging_obj,
                 request_data=data,
                 image=image,
                 optional_params=optional_params,
-                litellm_params=litellm_params,
+                remodl_params=remodl_params,
                 encoding=None,
                 api_key=api_key,
             )
@@ -127,7 +127,7 @@ class OpenAIImageVariationsHandler:
         custom_llm_provider: str,
         logging_obj: LiteLLMLoggingObj,
         optional_params: dict,
-        litellm_params: dict,
+        remodl_params: dict,
         print_verbose: Optional[Callable] = None,
         logger_fn=None,
         client=None,
@@ -168,7 +168,7 @@ class OpenAIImageVariationsHandler:
                     "complete_input_dict": data,
                 },
             )
-            if litellm_params.get("async_call", False):
+            if remodl_params.get("async_call", False):
                 return self.async_image_variations(
                     api_base=api_base,
                     data=json_data,
@@ -184,13 +184,13 @@ class OpenAIImageVariationsHandler:
                     provider_config=provider_config,
                     image=image,
                     optional_params=optional_params,
-                    litellm_params=litellm_params,
+                    remodl_params=remodl_params,
                 )  # type: ignore
 
             init_client_params = {
                 "api_key": api_key,
                 "base_url": api_base,
-                "http_client": litellm.client_session,
+                "http_client": remodl.client_session,
                 "timeout": timeout,
                 "max_retries": max_retries,  # type: ignore
                 "organization": organization,
@@ -221,14 +221,14 @@ class OpenAIImageVariationsHandler:
                 raw_response=httpx.Response(
                     status_code=200,
                     request=httpx.Request(
-                        method="GET", url="https://litellm.ai"
+                        method="GET", url="https://remodl.ai"
                     ),  # mock request object
                 ),
                 logging_obj=logging_obj,
                 request_data=json_data,
                 image=image,
                 optional_params=optional_params,
-                litellm_params=litellm_params,
+                remodl_params=remodl_params,
                 encoding=None,
                 api_key=api_key,
             )

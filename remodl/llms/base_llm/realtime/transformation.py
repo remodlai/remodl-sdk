@@ -3,7 +3,7 @@ from typing import TYPE_CHECKING, Any, List, Optional, Union
 
 import httpx
 
-from litellm.types.realtime import (
+from remodl.types.realtime import (
     RealtimeResponseTransformInput,
     RealtimeResponseTypedDict,
 )
@@ -11,7 +11,7 @@ from litellm.types.realtime import (
 from ..chat.transformation import BaseLLMException
 
 if TYPE_CHECKING:
-    from litellm.litellm_core_utils.litellm_logging import Logging as _LiteLLMLoggingObj
+    from remodl.remodl_core_utils.remodl_logging import Logging as _LiteLLMLoggingObj
 
     LiteLLMLoggingObj = _LiteLLMLoggingObj
 else:

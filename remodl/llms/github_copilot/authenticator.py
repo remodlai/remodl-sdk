@@ -6,8 +6,8 @@ from typing import Any, Dict, Optional
 
 import httpx
 
-from litellm._logging import verbose_logger
-from litellm.llms.custom_httpx.http_handler import _get_httpx_client
+from remodl._logging import verbose_logger
+from remodl.llms.custom_httpx.http_handler import _get_httpx_client
 
 from .common_utils import (
     APIKeyExpiredError,
@@ -30,7 +30,7 @@ class Authenticator:
         # Token storage paths
         self.token_dir = os.getenv(
             "GITHUB_COPILOT_TOKEN_DIR",
-            os.path.expanduser("~/.config/litellm/github_copilot"),
+            os.path.expanduser("~/.config/remodl/github_copilot"),
         )
         self.access_token_file = os.path.join(
             self.token_dir,

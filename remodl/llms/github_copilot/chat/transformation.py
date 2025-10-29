@@ -1,8 +1,8 @@
 from typing import Any, Optional, Tuple, cast, List
 
-from litellm.exceptions import AuthenticationError
-from litellm.llms.openai.openai import OpenAIConfig
-from litellm.types.llms.openai import AllMessageValues
+from remodl.exceptions import AuthenticationError
+from remodl.llms.openai.openai import OpenAIConfig
+from remodl.types.llms.openai import AllMessageValues
 
 from ..authenticator import Authenticator
 from ..common_utils import GetAPIKeyError
@@ -45,10 +45,10 @@ class GithubCopilotConfig(OpenAIConfig):
         messages,
         model: str,
     ):
-        import litellm
+        import remodl
 
         disable_copilot_system_to_assistant = (
-            litellm.disable_copilot_system_to_assistant
+            remodl.disable_copilot_system_to_assistant
         )
         if not disable_copilot_system_to_assistant:
             for message in messages:
@@ -62,13 +62,13 @@ class GithubCopilotConfig(OpenAIConfig):
         model: str,
         messages: List[AllMessageValues],
         optional_params: dict,
-        litellm_params: dict,
+        remodl_params: dict,
         api_key: Optional[str] = None,
         api_base: Optional[str] = None,
     ) -> dict:
         # Get base headers from parent
         validated_headers = super().validate_environment(
-            headers, model, messages, optional_params, litellm_params, api_key, api_base
+            headers, model, messages, optional_params, remodl_params, api_key, api_base
         )
 
         # Add X-Initiator header based on message roles
@@ -88,7 +88,7 @@ class GithubCopilotConfig(OpenAIConfig):
         For Claude models that support extended thinking (Claude 4 family and Claude 3-7), includes thinking and reasoning_effort parameters.
         For other models, returns standard OpenAI parameters (which may include reasoning_effort for o-series models).
         """
-        from litellm.utils import supports_reasoning
+        from remodl.utils import supports_reasoning
         
         # Get base OpenAI parameters
         base_params = super().get_supported_openai_params(model)

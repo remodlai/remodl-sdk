@@ -7,14 +7,14 @@ from urllib.parse import urlencode
 
 from httpx import Headers, Response
 
-from litellm.litellm_core_utils.audio_utils.utils import process_audio_file
-from litellm.llms.base_llm.chat.transformation import BaseLLMException
-from litellm.secret_managers.main import get_secret_str
-from litellm.types.llms.openai import (
+from remodl.remodl_core_utils.audio_utils.utils import process_audio_file
+from remodl.llms.base_llm.chat.transformation import BaseLLMException
+from remodl.secret_managers.main import get_secret_str
+from remodl.types.llms.openai import (
     AllMessageValues,
     OpenAIAudioTranscriptionOptionalParams,
 )
-from litellm.types.utils import FileTypes, TranscriptionResponse
+from remodl.types.utils import FileTypes, TranscriptionResponse
 
 from ...base_llm.audio_transcription.transformation import (
     AudioTranscriptionRequestData,
@@ -54,7 +54,7 @@ class DeepgramAudioTranscriptionConfig(BaseAudioTranscriptionConfig):
         model: str,
         audio_file: FileTypes,
         optional_params: dict,
-        litellm_params: dict,
+        remodl_params: dict,
     ) -> AudioTranscriptionRequestData:
         """
         Processes the audio file input based on its type and returns AudioTranscriptionRequestData.
@@ -127,7 +127,7 @@ class DeepgramAudioTranscriptionConfig(BaseAudioTranscriptionConfig):
         api_key: Optional[str],
         model: str,
         optional_params: dict,
-        litellm_params: dict,
+        remodl_params: dict,
         stream: Optional[bool] = None,
     ) -> str:
         if api_base is None:
@@ -196,7 +196,7 @@ class DeepgramAudioTranscriptionConfig(BaseAudioTranscriptionConfig):
         model: str,
         messages: List[AllMessageValues],
         optional_params: dict,
-        litellm_params: dict,
+        remodl_params: dict,
         api_key: Optional[str] = None,
         api_base: Optional[str] = None,
     ) -> dict:

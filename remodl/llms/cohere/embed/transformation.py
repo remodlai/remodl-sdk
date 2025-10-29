@@ -14,18 +14,18 @@ from typing import Any, List, Optional, Union, cast
 
 import httpx
 
-import litellm
-from litellm import COHERE_DEFAULT_EMBEDDING_INPUT_TYPE
-from litellm.litellm_core_utils.litellm_logging import Logging as LiteLLMLoggingObj
-from litellm.llms.base_llm import BaseEmbeddingConfig
-from litellm.llms.base_llm.chat.transformation import BaseLLMException
-from litellm.types.llms.bedrock import (
+import remodl
+from remodl import COHERE_DEFAULT_EMBEDDING_INPUT_TYPE
+from remodl.remodl_core_utils.remodl_logging import Logging as LiteLLMLoggingObj
+from remodl.llms.base_llm import BaseEmbeddingConfig
+from remodl.llms.base_llm.chat.transformation import BaseLLMException
+from remodl.types.llms.bedrock import (
     CohereEmbeddingRequest,
     CohereEmbeddingRequestWithModel,
 )
-from litellm.types.llms.openai import AllEmbeddingInputValues, AllMessageValues
-from litellm.types.utils import EmbeddingResponse, PromptTokensDetailsWrapper, Usage
-from litellm.utils import is_base64_encoded
+from remodl.types.llms.openai import AllEmbeddingInputValues, AllMessageValues
+from remodl.types.utils import EmbeddingResponse, PromptTokensDetailsWrapper, Usage
+from remodl.utils import is_base64_encoded
 
 from ..common_utils import CohereError
 
@@ -64,7 +64,7 @@ class CohereEmbeddingConfig(BaseEmbeddingConfig):
         model: str,
         messages: List[AllMessageValues],
         optional_params: dict,
-        litellm_params: dict,
+        remodl_params: dict,
         api_key: Optional[str] = None,
         api_base: Optional[str] = None,
     ) -> dict:
@@ -85,7 +85,7 @@ class CohereEmbeddingConfig(BaseEmbeddingConfig):
         api_key: Optional[str],
         model: str,
         optional_params: dict,
-        litellm_params: dict,
+        remodl_params: dict,
         stream: Optional[bool] = None,
     ) -> str:
         return api_base or "https://api.cohere.ai/v2/embed"
@@ -224,7 +224,7 @@ class CohereEmbeddingConfig(BaseEmbeddingConfig):
         api_key: Optional[str],
         request_data: dict,
         optional_params: dict,
-        litellm_params: dict,
+        remodl_params: dict,
     ) -> EmbeddingResponse:
         return self._transform_response(
             response=raw_response,
@@ -233,7 +233,7 @@ class CohereEmbeddingConfig(BaseEmbeddingConfig):
             data=request_data,
             model_response=model_response,
             model=model,
-            encoding=litellm.encoding,
+            encoding=remodl.encoding,
             input=logging_obj.model_call_details["input"],
         )
 

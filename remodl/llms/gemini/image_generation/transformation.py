@@ -2,19 +2,19 @@ from typing import TYPE_CHECKING, Any, List, Optional
 
 import httpx
 
-from litellm.llms.base_llm.image_generation.transformation import (
+from remodl.llms.base_llm.image_generation.transformation import (
     BaseImageGenerationConfig,
 )
-from litellm.secret_managers.main import get_secret_str
-from litellm.types.llms.gemini import GeminiImageGenerationRequest
-from litellm.types.llms.openai import (
+from remodl.secret_managers.main import get_secret_str
+from remodl.types.llms.gemini import GeminiImageGenerationRequest
+from remodl.types.llms.openai import (
     AllMessageValues,
     OpenAIImageGenerationOptionalParams,
 )
-from litellm.types.utils import ImageObject, ImageResponse
+from remodl.types.utils import ImageObject, ImageResponse
 
 if TYPE_CHECKING:
-    from litellm.litellm_core_utils.litellm_logging import Logging as _LiteLLMLoggingObj
+    from remodl.remodl_core_utils.remodl_logging import Logging as _LiteLLMLoggingObj
 
     LiteLLMLoggingObj = _LiteLLMLoggingObj
 else:
@@ -80,7 +80,7 @@ class GoogleImageGenConfig(BaseImageGenerationConfig):
         api_key: Optional[str],
         model: str,
         optional_params: dict,
-        litellm_params: dict,
+        remodl_params: dict,
         stream: Optional[bool] = None,
     ) -> str:
         """
@@ -112,7 +112,7 @@ class GoogleImageGenConfig(BaseImageGenerationConfig):
         model: str,
         messages: List[AllMessageValues],
         optional_params: dict,
-        litellm_params: dict,
+        remodl_params: dict,
         api_key: Optional[str] = None,
         api_base: Optional[str] = None,
     ) -> dict:
@@ -132,7 +132,7 @@ class GoogleImageGenConfig(BaseImageGenerationConfig):
         model: str,
         prompt: str,
         optional_params: dict,
-        litellm_params: dict,
+        remodl_params: dict,
         headers: dict,
     ) -> dict:
         """
@@ -169,7 +169,7 @@ class GoogleImageGenConfig(BaseImageGenerationConfig):
             return request_body
         else:
             # For other Imagen models, use the original Imagen format
-            from litellm.types.llms.gemini import (
+            from remodl.types.llms.gemini import (
                 GeminiImageGenerationInstance,
                 GeminiImageGenerationParameters,
             )
@@ -191,13 +191,13 @@ class GoogleImageGenConfig(BaseImageGenerationConfig):
         logging_obj: LiteLLMLoggingObj,
         request_data: dict,
         optional_params: dict,
-        litellm_params: dict,
+        remodl_params: dict,
         encoding: Any,
         api_key: Optional[str] = None,
         json_mode: Optional[bool] = None,
     ) -> ImageResponse:
         """
-        Transform Google AI Imagen response to litellm ImageResponse format
+        Transform Google AI Imagen response to remodl ImageResponse format
         """
         try:
             response_data = raw_response.json()

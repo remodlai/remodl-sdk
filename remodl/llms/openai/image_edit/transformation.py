@@ -4,22 +4,22 @@ from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple, cast
 import httpx
 from httpx._types import RequestFiles
 
-import litellm
-from litellm.images.utils import ImageEditRequestUtils
-from litellm.llms.base_llm.image_edit.transformation import BaseImageEditConfig
-from litellm.secret_managers.main import get_secret_str
-from litellm.types.images.main import (
+import remodl
+from remodl.images.utils import ImageEditRequestUtils
+from remodl.llms.base_llm.image_edit.transformation import BaseImageEditConfig
+from remodl.secret_managers.main import get_secret_str
+from remodl.types.images.main import (
     ImageEditOptionalRequestParams,
     ImageEditRequestParams,
 )
-from litellm.types.llms.openai import FileTypes
-from litellm.types.router import GenericLiteLLMParams
-from litellm.utils import ImageResponse
+from remodl.types.llms.openai import FileTypes
+from remodl.types.router import GenericLiteLLMParams
+from remodl.utils import ImageResponse
 
 from ..common_utils import OpenAIError
 
 if TYPE_CHECKING:
-    from litellm.litellm_core_utils.litellm_logging import Logging as _LiteLLMLoggingObj
+    from remodl.remodl_core_utils.remodl_logging import Logging as _LiteLLMLoggingObj
 
     LiteLLMLoggingObj = _LiteLLMLoggingObj
 else:
@@ -82,7 +82,7 @@ class OpenAIImageEditConfig(BaseImageEditConfig):
         prompt: str,
         image: FileTypes,
         image_edit_optional_request_params: Dict,
-        litellm_params: GenericLiteLLMParams,
+        remodl_params: GenericLiteLLMParams,
         headers: dict,
     ) -> Tuple[Dict, RequestFiles]:
         """
@@ -162,8 +162,8 @@ class OpenAIImageEditConfig(BaseImageEditConfig):
     ) -> dict:
         api_key = (
             api_key
-            or litellm.api_key
-            or litellm.openai_key
+            or remodl.api_key
+            or remodl.openai_key
             or get_secret_str("OPENAI_API_KEY")
         )
         headers.update(
@@ -177,14 +177,14 @@ class OpenAIImageEditConfig(BaseImageEditConfig):
         self,
         model: str,
         api_base: Optional[str],
-        litellm_params: dict,
+        remodl_params: dict,
     ) -> str:
         """
         Get the endpoint for OpenAI responses API
         """
         api_base = (
             api_base
-            or litellm.api_base
+            or remodl.api_base
             or get_secret_str("OPENAI_BASE_URL")
             or get_secret_str("OPENAI_API_BASE")
             or "https://api.openai.com/v1"

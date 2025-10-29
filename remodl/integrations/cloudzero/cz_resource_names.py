@@ -20,7 +20,7 @@ import re
 from enum import Enum
 from typing import Any, cast
 
-import litellm
+import remodl
 
 
 class CZEntityType(str, Enum):
@@ -36,20 +36,20 @@ class CZRNGenerator:
         """Initialize CZRN generator."""
         pass
 
-    def create_from_litellm_data(self, row: dict[str, Any]) -> str:
+    def create_from_remodl_data(self, row: dict[str, Any]) -> str:
         """Create a CZRN from LiteLLM daily spend data.
         
         CZRN format: czrn:<service-type>:<provider>:<region>:<owner-account-id>:<resource-type>:<cloud-local-id>
         
         For LiteLLM resources, we map:
-        - service-type: 'litellm' (the service managing the LLM calls)
+        - service-type: 'remodl' (the service managing the LLM calls)
         - provider: The custom_llm_provider (e.g., 'openai', 'anthropic', 'azure')
         - region: 'cross-region' (LiteLLM operates across regions)
         - owner-account-id: The team_id or user_id (entity_id)
         - resource-type: 'llm-usage' (represents LLM usage/inference)
         - cloud-local-id: model
         """
-        service_type = 'litellm'
+        service_type = 'remodl'
         provider = self._normalize_provider(row.get('custom_llm_provider', 'unknown'))
         region = 'cross-region'
 
@@ -117,21 +117,21 @@ class CZRNGenerator:
         """Normalize provider names to standard CZRN format."""
         # Map common provider names to CZRN standards
         provider_map = {
-            litellm.LlmProviders.AZURE.value: 'azure',
-            litellm.LlmProviders.AZURE_AI.value: 'azure',
-            litellm.LlmProviders.ANTHROPIC.value: 'anthropic',
-            litellm.LlmProviders.BEDROCK.value: 'aws',
-            litellm.LlmProviders.VERTEX_AI.value: 'gcp',
-            litellm.LlmProviders.GEMINI.value: 'google',
-            litellm.LlmProviders.COHERE.value: 'cohere',
-            litellm.LlmProviders.HUGGINGFACE.value: 'huggingface',
-            litellm.LlmProviders.REPLICATE.value: 'replicate',
-            litellm.LlmProviders.TOGETHER_AI.value: 'together-ai',
+            remodl.LlmProviders.AZURE.value: 'azure',
+            remodl.LlmProviders.AZURE_AI.value: 'azure',
+            remodl.LlmProviders.ANTHROPIC.value: 'anthropic',
+            remodl.LlmProviders.BEDROCK.value: 'aws',
+            remodl.LlmProviders.VERTEX_AI.value: 'gcp',
+            remodl.LlmProviders.GEMINI.value: 'google',
+            remodl.LlmProviders.COHERE.value: 'cohere',
+            remodl.LlmProviders.HUGGINGFACE.value: 'huggingface',
+            remodl.LlmProviders.REPLICATE.value: 'replicate',
+            remodl.LlmProviders.TOGETHER_AI.value: 'together-ai',
         }
 
         normalized = provider.lower().replace('_', '-')
 
-        # use litellm custom llm provider if not in provider_map
+        # use remodl custom llm provider if not in provider_map
         if normalized not in provider_map:
             return normalized
         return provider_map.get(normalized, normalized)

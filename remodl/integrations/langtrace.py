@@ -1,7 +1,7 @@
 import json
 from typing import TYPE_CHECKING, Any, Union
 
-from litellm.proxy._types import SpanAttributes
+from remodl.proxy._types import SpanAttributes
 
 if TYPE_CHECKING:
     from opentelemetry.trace import Span as _Span
@@ -21,7 +21,7 @@ class LangtraceAttributes:
         This function is used to log the event to Langtrace
         """
 
-        vendor = kwargs.get("litellm_params").get("custom_llm_provider")
+        vendor = kwargs.get("remodl_params").get("custom_llm_provider")
         optional_params = kwargs.get("optional_params", {})
         options = {**kwargs, **optional_params}
         self.set_request_attributes(span, options, vendor)

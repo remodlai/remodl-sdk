@@ -3,7 +3,7 @@ from typing import List, Literal, Optional, Union
 from pydantic import PrivateAttr
 from typing_extensions import Any, List, Optional, TypedDict
 
-from litellm.types.llms.base import BaseLiteLLMOpenAIResponseObject
+from remodl.types.llms.base import BaseLiteLLMOpenAIResponseObject
 
 
 class GenericResponseOutputItemContentAnnotation(BaseLiteLLMOpenAIResponseObject):

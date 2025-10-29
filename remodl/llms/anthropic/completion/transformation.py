@@ -10,20 +10,20 @@ from typing import AsyncIterator, Dict, Iterator, List, Optional, Union
 
 import httpx
 
-import litellm
-from litellm.constants import DEFAULT_MAX_TOKENS
-from litellm.litellm_core_utils.prompt_templates.factory import (
+import remodl
+from remodl.constants import DEFAULT_MAX_TOKENS
+from remodl.remodl_core_utils.prompt_templates.factory import (
     custom_prompt,
     prompt_factory,
 )
-from litellm.llms.base_llm.base_model_iterator import BaseModelResponseIterator
-from litellm.llms.base_llm.chat.transformation import (
+from remodl.llms.base_llm.base_model_iterator import BaseModelResponseIterator
+from remodl.llms.base_llm.chat.transformation import (
     BaseConfig,
     BaseLLMException,
     LiteLLMLoggingObj,
 )
-from litellm.types.llms.openai import AllMessageValues
-from litellm.types.utils import (
+from remodl.types.llms.openai import AllMessageValues
+from remodl.types.utils import (
     ChatCompletionToolCallChunk,
     ChatCompletionUsageBlock,
     GenericStreamingChunk,
@@ -56,7 +56,7 @@ class AnthropicTextConfig(BaseConfig):
     """
 
     max_tokens_to_sample: Optional[int] = (
-        litellm.max_tokens
+        remodl.max_tokens
     )  # anthropic requires a default
     stop_sequences: Optional[list] = None
     temperature: Optional[int] = None
@@ -87,7 +87,7 @@ class AnthropicTextConfig(BaseConfig):
         model: str,
         messages: List[AllMessageValues],
         optional_params: dict,
-        litellm_params: dict,
+        remodl_params: dict,
         api_key: Optional[str] = None,
         api_base: Optional[str] = None,
     ) -> dict:
@@ -109,14 +109,14 @@ class AnthropicTextConfig(BaseConfig):
         model: str,
         messages: List[AllMessageValues],
         optional_params: dict,
-        litellm_params: dict,
+        remodl_params: dict,
         headers: dict,
     ) -> dict:
         prompt = self._get_anthropic_text_prompt_from_messages(
             messages=messages, model=model
         )
         ## Load Config
-        config = litellm.AnthropicTextConfig.get_config()
+        config = remodl.AnthropicTextConfig.get_config()
         for k, v in config.items():
             if (
                 k not in optional_params
@@ -167,7 +167,7 @@ class AnthropicTextConfig(BaseConfig):
             if param == "stream" and value is True:
                 optional_params["stream"] = value
             if param == "stop" and (isinstance(value, str) or isinstance(value, list)):
-                _value = litellm.AnthropicConfig()._map_stop_sequences(value)
+                _value = remodl.AnthropicConfig()._map_stop_sequences(value)
                 if _value is not None:
                     optional_params["stop_sequences"] = _value
             if param == "temperature":
@@ -188,7 +188,7 @@ class AnthropicTextConfig(BaseConfig):
         request_data: dict,
         messages: List[AllMessageValues],
         optional_params: dict,
-        litellm_params: dict,
+        remodl_params: dict,
         encoding: str,
         api_key: Optional[str] = None,
         json_mode: Optional[bool] = None,
@@ -248,7 +248,7 @@ class AnthropicTextConfig(BaseConfig):
     def _get_anthropic_text_prompt_from_messages(
         self, messages: List[AllMessageValues], model: str
     ) -> str:
-        custom_prompt_dict = litellm.custom_prompt_dict
+        custom_prompt_dict = remodl.custom_prompt_dict
         if model in custom_prompt_dict:
             # check if the model has a registered custom prompt
             model_prompt_details = custom_prompt_dict[model]

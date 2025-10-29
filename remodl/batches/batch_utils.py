@@ -1,10 +1,10 @@
 import json
 from typing import Any, List, Literal, Tuple, Optional
 
-import litellm
-from litellm._logging import verbose_logger
-from litellm.types.llms.openai import Batch
-from litellm.types.utils import CallTypes, Usage
+import remodl
+from remodl._logging import verbose_logger
+from remodl.types.llms.openai import Batch
+from remodl.types.utils import CallTypes, Usage
 
 
 async def calculate_batch_cost_and_usage(
@@ -115,11 +115,11 @@ def calculate_vertex_ai_batch_cost_and_usage(
     for response in vertex_ai_batch_responses:
         if response.get("status") == "JOB_STATE_SUCCEEDED":  # Check if response was successful
             # Transform Vertex AI response to OpenAI format if needed
-            from litellm.llms.vertex_ai.gemini.vertex_and_google_ai_studio_gemini import VertexGeminiConfig
-            from litellm import ModelResponse
-            from litellm.litellm_core_utils.litellm_logging import Logging
-            from litellm.types.utils import CallTypes
-            from litellm._uuid import uuid
+            from remodl.llms.vertex_ai.gemini.vertex_and_google_ai_studio_gemini import VertexGeminiConfig
+            from remodl import ModelResponse
+            from remodl.remodl_core_utils.remodl_logging import Logging
+            from remodl.types.utils import CallTypes
+            from remodl._uuid import uuid
             import httpx
             import time
             
@@ -136,9 +136,9 @@ def calculate_vertex_ai_batch_cost_and_usage(
                 stream=False,
                 call_type=CallTypes.aretrieve_batch,
                 start_time=time.time(),
-                litellm_call_id="batch_" + str(uuid.uuid4()),
+                remodl_call_id="batch_" + str(uuid.uuid4()),
                 function_id="batch_processing",
-                litellm_trace_id=str(uuid.uuid4()),
+                remodl_trace_id=str(uuid.uuid4()),
                 kwargs={"optional_params": {}}
             )
             
@@ -155,7 +155,7 @@ def calculate_vertex_ai_batch_cost_and_usage(
             )
             
             # Calculate cost using existing function
-            cost = litellm.completion_cost(
+            cost = remodl.completion_cost(
                 completion_response=openai_format_response,
                 custom_llm_provider="vertex_ai",
                 call_type=CallTypes.aretrieve_batch.value,
@@ -188,7 +188,7 @@ async def _get_batch_output_file_content_as_dictionary(
     """
     Get the batch output file content as a list of dictionaries
     """
-    from litellm.files.main import afile_content
+    from remodl.files.main import afile_content
 
     if custom_llm_provider == "vertex_ai":
         raise ValueError("Vertex AI does not support file content retrieval")
@@ -236,7 +236,7 @@ def _get_batch_job_cost_from_file_content(
         for _item in file_content_dictionary:
             if _batch_response_was_successful(_item):
                 _response_body = _get_response_from_batch_job_output_file(_item)
-                total_cost += litellm.completion_cost(
+                total_cost += remodl.completion_cost(
                     completion_response=_response_body,
                     custom_llm_provider=custom_llm_provider,
                     call_type=CallTypes.aretrieve_batch.value,

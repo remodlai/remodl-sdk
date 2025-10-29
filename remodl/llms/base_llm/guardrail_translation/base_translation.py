@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
-    from litellm.integrations.custom_guardrail import CustomGuardrail
+    from remodl.integrations.custom_guardrail import CustomGuardrail
 
 
 class BaseTranslation(ABC):

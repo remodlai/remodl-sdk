@@ -3,11 +3,11 @@ from typing import TYPE_CHECKING, Any, Dict, List, Optional, cast
 
 from httpx import Response
 
-from litellm.types.llms.openai import AllMessageValues
-from litellm.types.utils import ModelResponse
+from remodl.types.llms.openai import AllMessageValues
+from remodl.types.utils import ModelResponse
 
 if TYPE_CHECKING:
-    from litellm.litellm_core_utils.litellm_logging import Logging as LiteLLMLoggingObj
+    from remodl.remodl_core_utils.remodl_logging import Logging as LiteLLMLoggingObj
 
     LoggingClass = LiteLLMLoggingObj
 else:
@@ -29,13 +29,13 @@ class AnthropicBatchesConfig:
         request_data: Dict,
         messages: List[AllMessageValues],
         optional_params: Dict,
-        litellm_params: dict,
+        remodl_params: dict,
         encoding: Any,
         api_key: Optional[str] = None,
         json_mode: Optional[bool] = None,
     ) -> ModelResponse:
-        from litellm.cost_calculator import BaseTokenUsageProcessor
-        from litellm.types.utils import Usage
+        from remodl.cost_calculator import BaseTokenUsageProcessor
+        from remodl.types.utils import Usage
 
         response_text = raw_response.text.strip()
         all_usage: List[Usage] = []

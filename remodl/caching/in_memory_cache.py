@@ -15,11 +15,11 @@ import heapq
 from typing import TYPE_CHECKING, Any, List, Optional
 
 if TYPE_CHECKING:
-    from litellm.types.caching import RedisPipelineIncrementOperation
+    from remodl.types.caching import RedisPipelineIncrementOperation
 
 from pydantic import BaseModel
 
-from litellm.constants import MAX_SIZE_PER_ITEM_IN_MEMORY_CACHE_IN_KB
+from remodl.constants import MAX_SIZE_PER_ITEM_IN_MEMORY_CACHE_IN_KB
 
 from .base_cache import BaseCache
 
@@ -30,7 +30,7 @@ class InMemoryCache(BaseCache):
         max_size_in_memory: Optional[int] = 200,
         default_ttl: Optional[
             int
-        ] = 600,  # default ttl is 10 minutes. At maximum litellm rate limiting logic requires objects to be in memory for 1 minute
+        ] = 600,  # default ttl is 10 minutes. At maximum remodl rate limiting logic requires objects to be in memory for 1 minute
         max_size_per_item: Optional[int] = 1024,  # 1MB = 1024KB
     ):
         """

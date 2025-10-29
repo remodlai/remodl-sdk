@@ -1,6 +1,6 @@
 from typing import Any, Dict, List, Optional, Union
 
-from litellm.llms.base_llm.rerank.transformation import BaseRerankConfig
+from remodl.llms.base_llm.rerank.transformation import BaseRerankConfig
 
 
 def get_optional_rerank_params(

@@ -2,11 +2,11 @@ import json
 import threading
 from typing import TYPE_CHECKING, Any, Optional
 
-from litellm._logging import verbose_logger
-from litellm.integrations.custom_logger import CustomLogger
+from remodl._logging import verbose_logger
+from remodl.integrations.custom_logger import CustomLogger
 
 if TYPE_CHECKING:
-    from litellm.types.utils import StandardLoggingPayload
+    from remodl.types.utils import StandardLoggingPayload
 else:
     StandardLoggingPayload = Any
 
@@ -114,18 +114,18 @@ class MlflowLogger(CustomLogger):
         """
         from mlflow.entities import SpanStatusCode
 
-        litellm_call_id = kwargs.get("litellm_call_id")
+        remodl_call_id = kwargs.get("remodl_call_id")
 
-        if litellm_call_id not in self._stream_id_to_span:
+        if remodl_call_id not in self._stream_id_to_span:
             with self._lock:
                 # Check again after acquiring lock
-                if litellm_call_id not in self._stream_id_to_span:
+                if remodl_call_id not in self._stream_id_to_span:
                     # Start a new span for the first chunk of the stream
                     span = self._start_span_or_trace(kwargs, start_time)
-                    self._stream_id_to_span[litellm_call_id] = span
+                    self._stream_id_to_span[remodl_call_id] = span
 
         # Add chunk as event to the span
-        span = self._stream_id_to_span[litellm_call_id]
+        span = self._stream_id_to_span[remodl_call_id]
         self._add_chunk_events(span, response_obj)
 
         # If this is the final chunk, end the span. The final chunk
@@ -143,7 +143,7 @@ class MlflowLogger(CustomLogger):
 
             # Remove the stream_id from the map
             with self._lock:
-                self._stream_id_to_span.pop(litellm_call_id)
+                self._stream_id_to_span.pop(remodl_call_id)
 
     def _add_chunk_events(self, span, response_obj):
         from mlflow.entities import SpanEvent
@@ -178,12 +178,12 @@ class MlflowLogger(CustomLogger):
         """
         Extract span attributes from kwargs.
 
-        With the latest version of litellm, the standard_logging_object contains
+        With the latest version of remodl, the standard_logging_object contains
         canonical information for logging. If it is not present, we extract
         subset of attributes from other kwargs.
         """
         attributes = {
-            "litellm_call_id": kwargs.get("litellm_call_id"),
+            "remodl_call_id": kwargs.get("remodl_call_id"),
             "call_type": kwargs.get("call_type"),
             "model": kwargs.get("model"),
         }
@@ -207,13 +207,13 @@ class MlflowLogger(CustomLogger):
                 }
             )
         else:
-            litellm_params = kwargs.get("litellm_params", {})
+            remodl_params = kwargs.get("remodl_params", {})
             attributes.update(
                 {
                     "model": kwargs.get("model"),
                     "cache_hit": kwargs.get("cache_hit"),
                     "custom_llm_provider": kwargs.get("custom_llm_provider"),
-                    "api_base": litellm_params.get("api_base"),
+                    "api_base": remodl_params.get("api_base"),
                     "response_cost": kwargs.get("response_cost"),
                 }
             )
@@ -239,7 +239,7 @@ class MlflowLogger(CustomLogger):
         import mlflow
 
         call_type = kwargs.get("call_type", "completion")
-        span_name = f"litellm-{call_type}"
+        span_name = f"remodl-{call_type}"
         span_type = self._get_span_type(call_type)
         start_time_ns = int(start_time.timestamp() * 1e9)
 

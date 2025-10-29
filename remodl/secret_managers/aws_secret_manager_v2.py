@@ -6,7 +6,7 @@ Handles Async Operations for:
 - Write Secret
 - Delete Secret
 
-Relevant issue: https://github.com/BerriAI/litellm/issues/1883
+Relevant issue: https://github.com/BerriAI/remodl/issues/1883
 
 Requires:
 * `os.environ["AWS_REGION_NAME"], 
@@ -19,15 +19,15 @@ from typing import Any, Optional, Union
 
 import httpx
 
-import litellm
-from litellm._logging import verbose_logger
-from litellm.llms.bedrock.base_aws_llm import BaseAWSLLM
-from litellm.llms.custom_httpx.http_handler import (
+import remodl
+from remodl._logging import verbose_logger
+from remodl.llms.bedrock.base_aws_llm import BaseAWSLLM
+from remodl.llms.custom_httpx.http_handler import (
     _get_httpx_client,
     get_async_httpx_client,
 )
-from litellm.proxy._types import KeyManagementSystem
-from litellm.types.llms.custom_http import httpxSpecialProvider
+from remodl.proxy._types import KeyManagementSystem
+from remodl.types.llms.custom_http import httpxSpecialProvider
 
 from .base_secret_manager import BaseSecretManager
 
@@ -45,14 +45,14 @@ class AWSSecretsManagerV2(BaseAWSLLM, BaseSecretManager):
     @classmethod
     def load_aws_secret_manager(cls, use_aws_secret_manager: Optional[bool]):
         """
-        Initialize AWSSecretsManagerV2 and sets litellm.secret_manager_client = AWSSecretsManagerV2() and litellm._key_management_system = KeyManagementSystem.AWS_SECRET_MANAGER
+        Initialize AWSSecretsManagerV2 and sets remodl.secret_manager_client = AWSSecretsManagerV2() and remodl._key_management_system = KeyManagementSystem.AWS_SECRET_MANAGER
         """
         if use_aws_secret_manager is None or use_aws_secret_manager is False:
             return
         try:
             cls.validate_environment()
-            litellm.secret_manager_client = cls()
-            litellm._key_management_system = KeyManagementSystem.AWS_SECRET_MANAGER
+            remodl.secret_manager_client = cls()
+            remodl._key_management_system = KeyManagementSystem.AWS_SECRET_MANAGER
 
         except Exception as e:
             raise e
@@ -215,7 +215,7 @@ class AWSSecretsManagerV2(BaseAWSLLM, BaseSecretManager):
             optional_params: Additional AWS parameters
             timeout: Request timeout
         """
-        from litellm._uuid import uuid
+        from remodl._uuid import uuid
 
         # Prepare the request data
         data = {"Name": secret_name, "SecretString": secret_value}

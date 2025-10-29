@@ -5,24 +5,24 @@ from typing import TYPE_CHECKING, Any, Dict, List, Optional, Union
 
 import httpx
 
-from litellm.litellm_core_utils.exception_mapping_utils import exception_type
-from litellm.litellm_core_utils.logging_utils import track_llm_api_timing
-from litellm.llms.base_llm.chat.transformation import BaseConfig, BaseLLMException
-from litellm.llms.custom_httpx.http_handler import (
+from remodl.remodl_core_utils.exception_mapping_utils import exception_type
+from remodl.remodl_core_utils.logging_utils import track_llm_api_timing
+from remodl.llms.base_llm.chat.transformation import BaseConfig, BaseLLMException
+from remodl.llms.custom_httpx.http_handler import (
     AsyncHTTPHandler,
     HTTPHandler,
     _get_httpx_client,
     get_async_httpx_client,
     version,
 )
-from litellm.types.llms.openai import AllMessageValues
-from litellm.types.utils import LlmProviders
-from litellm.utils import CustomStreamWrapper, ModelResponse, Usage
+from remodl.types.llms.openai import AllMessageValues
+from remodl.types.utils import LlmProviders
+from remodl.utils import CustomStreamWrapper, ModelResponse, Usage
 
 from ..common_utils import API_BASE, BytezError
 
 if TYPE_CHECKING:
-    from litellm.litellm_core_utils.litellm_logging import Logging as _LiteLLMLoggingObj
+    from remodl.remodl_core_utils.remodl_logging import Logging as _LiteLLMLoggingObj
 
     LiteLLMLoggingObj = _LiteLLMLoggingObj
 else:
@@ -120,7 +120,7 @@ class BytezChatConfig(BaseConfig):
         model: str,
         messages: List[AllMessageValues],
         optional_params: dict,
-        litellm_params: dict,
+        remodl_params: dict,
         api_key: Optional[str] = None,
         api_base: Optional[str] = None,
     ) -> dict:
@@ -129,7 +129,7 @@ class BytezChatConfig(BaseConfig):
             {
                 "content-type": "application/json",
                 "Authorization": f"Key {api_key}",
-                "user-agent": f"litellm/{version}",
+                "user-agent": f"remodl/{version}",
             }
         )
 
@@ -150,7 +150,7 @@ class BytezChatConfig(BaseConfig):
         api_key: Optional[str],
         model: str,
         optional_params: dict,
-        litellm_params: dict,
+        remodl_params: dict,
         stream: Optional[bool] = None,
     ) -> str:
         return f"{API_BASE}/{model}"
@@ -160,7 +160,7 @@ class BytezChatConfig(BaseConfig):
         model: str,
         messages: List[AllMessageValues],
         optional_params: dict,
-        litellm_params: dict,
+        remodl_params: dict,
         headers: dict,
     ) -> dict:
         stream = optional_params.get("stream", False)
@@ -188,7 +188,7 @@ class BytezChatConfig(BaseConfig):
         request_data: dict,
         messages: List[AllMessageValues],
         optional_params: dict,
-        litellm_params: dict,
+        remodl_params: dict,
         encoding: Any,
         api_key: Optional[str] = None,
         json_mode: Optional[bool] = None,
@@ -375,7 +375,7 @@ class BytezCustomStreamWrapper(CustomStreamWrapper):
             )
 
 
-# litellm/types/llms/openai.py is a good reference for what is supported
+# remodl/types/llms/openai.py is a good reference for what is supported
 open_ai_to_bytez_content_item_map = {
     "text": {"type": "text", "value_name": "text"},
     "image_url": {"type": "image", "value_name": "url"},

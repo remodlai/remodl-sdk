@@ -3,7 +3,7 @@
 import inspect
 from typing import Any
 from weakref import WeakKeyDictionary
-from litellm.constants import (
+from remodl.constants import (
     COROUTINE_CHECKER_MAX_SIZE_IN_MEMORY,
 )
 

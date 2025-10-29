@@ -1,7 +1,7 @@
 """
 This is a file for the Google KMS integration
 
-Relevant issue: https://github.com/BerriAI/litellm/issues/1235
+Relevant issue: https://github.com/BerriAI/remodl/issues/1235
 
 Requires:
 * `os.environ["GOOGLE_APPLICATION_CREDENTIALS"], os.environ["GOOGLE_KMS_RESOURCE_NAME"]`
@@ -11,8 +11,8 @@ Requires:
 import os
 from typing import Optional
 
-import litellm
-from litellm.proxy._types import KeyManagementSystem
+import remodl
+from remodl.proxy._types import KeyManagementSystem
 
 
 def validate_environment():
@@ -36,8 +36,8 @@ def load_google_kms(use_google_kms: Optional[bool]):
 
         # Create the KMS client
         client = kms_v1.KeyManagementServiceClient()
-        litellm.secret_manager_client = client
-        litellm._key_management_system = KeyManagementSystem.GOOGLE_KMS
-        litellm._google_kms_resource_name = os.getenv("GOOGLE_KMS_RESOURCE_NAME")
+        remodl.secret_manager_client = client
+        remodl._key_management_system = KeyManagementSystem.GOOGLE_KMS
+        remodl._google_kms_resource_name = os.getenv("GOOGLE_KMS_RESOURCE_NAME")
     except Exception as e:
         raise e

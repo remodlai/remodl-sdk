@@ -1,4 +1,4 @@
-from litellm.llms.base_llm.chat.transformation import BaseConfig
+from remodl.llms.base_llm.chat.transformation import BaseConfig
 
 
 def get_vertex_ai_partner_model_config(

@@ -19,22 +19,22 @@ from typing import (
 
 import httpx
 
-import litellm
-from litellm.litellm_core_utils.llm_response_utils.convert_dict_to_response import (
+import remodl
+from remodl.remodl_core_utils.llm_response_utils.convert_dict_to_response import (
     _extract_reasoning_content,
     _handle_invalid_parallel_tool_calls,
     _should_convert_tool_call_to_json_mode,
 )
-from litellm.litellm_core_utils.prompt_templates.common_utils import get_tool_call_names
-from litellm.litellm_core_utils.prompt_templates.image_handling import (
+from remodl.remodl_core_utils.prompt_templates.common_utils import get_tool_call_names
+from remodl.remodl_core_utils.prompt_templates.image_handling import (
     async_convert_url_to_base64,
     convert_url_to_base64,
 )
-from litellm.llms.base_llm.base_model_iterator import BaseModelResponseIterator
-from litellm.llms.base_llm.base_utils import BaseLLMModelInfo
-from litellm.llms.base_llm.chat.transformation import BaseConfig, BaseLLMException
-from litellm.secret_managers.main import get_secret_str
-from litellm.types.llms.openai import (
+from remodl.llms.base_llm.base_model_iterator import BaseModelResponseIterator
+from remodl.llms.base_llm.base_utils import BaseLLMModelInfo
+from remodl.llms.base_llm.chat.transformation import BaseConfig, BaseLLMException
+from remodl.secret_managers.main import get_secret_str
+from remodl.types.llms.openai import (
     AllMessageValues,
     ChatCompletionFileObject,
     ChatCompletionFileObjectFile,
@@ -43,7 +43,7 @@ from litellm.types.llms.openai import (
     OpenAIChatCompletionChoices,
     OpenAIMessageContentListBlock,
 )
-from litellm.types.utils import (
+from remodl.types.utils import (
     ChatCompletionMessageToolCall,
     Choices,
     Function,
@@ -51,13 +51,13 @@ from litellm.types.utils import (
     ModelResponse,
     ModelResponseStream,
 )
-from litellm.utils import convert_to_model_response_object
+from remodl.utils import convert_to_model_response_object
 
 from ..common_utils import OpenAIError
 
 if TYPE_CHECKING:
-    from litellm.litellm_core_utils.litellm_logging import Logging as _LiteLLMLoggingObj
-    from litellm.types.llms.openai import ChatCompletionToolParam
+    from remodl.remodl_core_utils.remodl_logging import Logging as _LiteLLMLoggingObj
+    from remodl.types.llms.openai import ChatCompletionToolParam
 
     LiteLLMLoggingObj = _LiteLLMLoggingObj
 else:
@@ -169,8 +169,8 @@ class OpenAIGPTConfig(BaseLLMModelInfo, BaseConfig):
             model_specific_params.append("response_format")
 
         if (
-            model in litellm.open_ai_chat_completion_models
-        ) or model in litellm.open_ai_text_completion_models:
+            model in remodl.open_ai_chat_completion_models
+        ) or model in remodl.open_ai_text_completion_models:
             model_specific_params.append(
                 "user"
             )  # user is not a param supported by all openai-compatible endpoints - e.g. azure ai
@@ -259,7 +259,7 @@ class OpenAIGPTConfig(BaseLLMModelInfo, BaseConfig):
         self,
         content_item: OpenAIMessageContentListBlock,
     ) -> OpenAIMessageContentListBlock:
-        litellm_specific_params = {"format"}
+        remodl_specific_params = {"format"}
         if content_item.get("type") == "image_url":
             content_item = cast(ChatCompletionImageObject, content_item)
             if isinstance(content_item["image_url"], str):
@@ -271,7 +271,7 @@ class OpenAIGPTConfig(BaseLLMModelInfo, BaseConfig):
                     **{  # type: ignore
                         k: v
                         for k, v in content_item["image_url"].items()
-                        if k not in litellm_specific_params
+                        if k not in remodl_specific_params
                     }
                 )
                 content_item["image_url"] = new_image_url_obj
@@ -282,7 +282,7 @@ class OpenAIGPTConfig(BaseLLMModelInfo, BaseConfig):
                 **{  # type: ignore
                     k: v
                     for k, v in file_obj.items()
-                    if k not in litellm_specific_params
+                    if k not in remodl_specific_params
                 }
             )
             content_item["file"] = new_file_obj
@@ -393,10 +393,10 @@ class OpenAIGPTConfig(BaseLLMModelInfo, BaseConfig):
         messages: List[AllMessageValues],
         tools: Optional[List["ChatCompletionToolParam"]] = None,
     ) -> Tuple[List[AllMessageValues], Optional[List["ChatCompletionToolParam"]]]:
-        from litellm.litellm_core_utils.prompt_templates.common_utils import (
+        from remodl.remodl_core_utils.prompt_templates.common_utils import (
             filter_value_from_dict,
         )
-        from litellm.types.llms.openai import ChatCompletionToolParam
+        from remodl.types.llms.openai import ChatCompletionToolParam
 
         for i, message in enumerate(messages):
             messages[i] = cast(
@@ -415,7 +415,7 @@ class OpenAIGPTConfig(BaseLLMModelInfo, BaseConfig):
         model: str,
         messages: List[AllMessageValues],
         optional_params: dict,
-        litellm_params: dict,
+        remodl_params: dict,
         headers: dict,
     ) -> dict:
         """
@@ -444,7 +444,7 @@ class OpenAIGPTConfig(BaseLLMModelInfo, BaseConfig):
         model: str,
         messages: List[AllMessageValues],
         optional_params: dict,
-        litellm_params: dict,
+        remodl_params: dict,
         headers: dict,
     ) -> dict:
         transformed_messages = await self._transform_messages(
@@ -468,7 +468,7 @@ class OpenAIGPTConfig(BaseLLMModelInfo, BaseConfig):
         else:
             ## allow for any object specific behaviour to be handled
             return self.transform_request(
-                model, messages, optional_params, litellm_params, headers
+                model, messages, optional_params, remodl_params, headers
             )
 
     def _passed_in_tools(self, optional_params: dict) -> bool:
@@ -600,7 +600,7 @@ class OpenAIGPTConfig(BaseLLMModelInfo, BaseConfig):
         request_data: dict,
         messages: List[AllMessageValues],
         optional_params: dict,
-        litellm_params: dict,
+        remodl_params: dict,
         encoding: Any,
         api_key: Optional[str] = None,
         json_mode: Optional[bool] = None,
@@ -657,7 +657,7 @@ class OpenAIGPTConfig(BaseLLMModelInfo, BaseConfig):
         api_key: Optional[str],
         model: str,
         optional_params: dict,
-        litellm_params: dict,
+        remodl_params: dict,
         stream: Optional[bool] = None,
     ) -> str:
         """
@@ -685,7 +685,7 @@ class OpenAIGPTConfig(BaseLLMModelInfo, BaseConfig):
         model: str,
         messages: List[AllMessageValues],
         optional_params: dict,
-        litellm_params: dict,
+        remodl_params: dict,
         api_key: Optional[str] = None,
         api_base: Optional[str] = None,
     ) -> dict:
@@ -716,7 +716,7 @@ class OpenAIGPTConfig(BaseLLMModelInfo, BaseConfig):
         if parsed_url.port:
             base_url += f":{parsed_url.port}"
 
-        response = litellm.module_level_client.get(
+        response = remodl.module_level_client.get(
             url=f"{base_url}/v1/models",
             headers={"Authorization": f"Bearer {api_key}"},
         )
@@ -731,8 +731,8 @@ class OpenAIGPTConfig(BaseLLMModelInfo, BaseConfig):
     def get_api_key(api_key: Optional[str] = None) -> Optional[str]:
         return (
             api_key
-            or litellm.api_key
-            or litellm.openai_key
+            or remodl.api_key
+            or remodl.openai_key
             or get_secret_str("OPENAI_API_KEY")
         )
 
@@ -740,7 +740,7 @@ class OpenAIGPTConfig(BaseLLMModelInfo, BaseConfig):
     def get_api_base(api_base: Optional[str] = None) -> Optional[str]:
         return (
             api_base
-            or litellm.api_base
+            or remodl.api_base
             or get_secret_str("OPENAI_BASE_URL")
             or get_secret_str("OPENAI_API_BASE")
             or "https://api.openai.com/v1"

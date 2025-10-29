@@ -1,28 +1,28 @@
 import asyncio
 import json
 import os
-from litellm._uuid import uuid
+from remodl._uuid import uuid
 from datetime import datetime, timedelta, timezone
 from typing import TYPE_CHECKING, Any, Dict, List, Optional
 from urllib.parse import quote
 
-from litellm._logging import verbose_logger
-from litellm.integrations.additional_logging_utils import AdditionalLoggingUtils
-from litellm.integrations.gcs_bucket.gcs_bucket_base import GCSBucketBase
-from litellm.proxy._types import CommonProxyErrors
-from litellm.types.integrations.base_health_check import IntegrationHealthCheckStatus
-from litellm.types.integrations.gcs_bucket import *
-from litellm.types.utils import StandardLoggingPayload
+from remodl._logging import verbose_logger
+from remodl.integrations.additional_logging_utils import AdditionalLoggingUtils
+from remodl.integrations.gcs_bucket.gcs_bucket_base import GCSBucketBase
+from remodl.proxy._types import CommonProxyErrors
+from remodl.types.integrations.base_health_check import IntegrationHealthCheckStatus
+from remodl.types.integrations.gcs_bucket import *
+from remodl.types.utils import StandardLoggingPayload
 
 if TYPE_CHECKING:
-    from litellm.llms.vertex_ai.vertex_llm_base import VertexBase
+    from remodl.llms.vertex_ai.vertex_llm_base import VertexBase
 else:
     VertexBase = Any
 
 
 class GCSBucketLogger(GCSBucketBase, AdditionalLoggingUtils):
     def __init__(self, bucket_name: Optional[str] = None) -> None:
-        from litellm.proxy.proxy_server import premium_user
+        from remodl.proxy.proxy_server import premium_user
 
         super().__init__(bucket_name=bucket_name)
 
@@ -48,7 +48,7 @@ class GCSBucketLogger(GCSBucketBase, AdditionalLoggingUtils):
 
     #### ASYNC ####
     async def async_log_success_event(self, kwargs, response_obj, start_time, end_time):
-        from litellm.proxy.proxy_server import premium_user
+        from remodl.proxy.proxy_server import premium_user
 
         if premium_user is not True:
             raise ValueError(
@@ -164,8 +164,8 @@ class GCSBucketLogger(GCSBucketBase, AdditionalLoggingUtils):
             )
 
         # used for testing
-        _litellm_params = kwargs.get("litellm_params", None) or {}
-        _metadata = _litellm_params.get("metadata", None) or {}
+        _remodl_params = kwargs.get("remodl_params", None) or {}
+        _metadata = _remodl_params.get("metadata", None) or {}
         if "gcs_log_id" in _metadata:
             object_name = _metadata["gcs_log_id"]
 

@@ -2,12 +2,12 @@ from typing import Any, Dict, List, Optional, Union
 
 import httpx
 
-import litellm
-from litellm.litellm_core_utils.litellm_logging import Logging as LiteLLMLoggingObj
-from litellm.llms.base_llm.chat.transformation import BaseLLMException
-from litellm.llms.base_llm.rerank.transformation import BaseRerankConfig
-from litellm.secret_managers.main import get_secret_str
-from litellm.types.rerank import OptionalRerankParams, RerankRequest, RerankResponse
+import remodl
+from remodl.remodl_core_utils.remodl_logging import Logging as LiteLLMLoggingObj
+from remodl.llms.base_llm.chat.transformation import BaseLLMException
+from remodl.llms.base_llm.rerank.transformation import BaseRerankConfig
+from remodl.secret_managers.main import get_secret_str
+from remodl.types.rerank import OptionalRerankParams, RerankRequest, RerankResponse
 
 from ..common_utils import CohereError
 
@@ -77,12 +77,12 @@ class CohereRerankConfig(BaseRerankConfig):
             api_key = (
                 get_secret_str("COHERE_API_KEY")
                 or get_secret_str("CO_API_KEY")
-                or litellm.cohere_key
+                or remodl.cohere_key
             )
 
         if api_key is None:
             raise ValueError(
-                "Cohere API key is required. Please set 'COHERE_API_KEY' or 'CO_API_KEY' or 'litellm.cohere_key'"
+                "Cohere API key is required. Please set 'COHERE_API_KEY' or 'CO_API_KEY' or 'remodl.cohere_key'"
             )
 
         default_headers = {
@@ -128,12 +128,12 @@ class CohereRerankConfig(BaseRerankConfig):
         api_key: Optional[str] = None,
         request_data: dict = {},
         optional_params: dict = {},
-        litellm_params: dict = {},
+        remodl_params: dict = {},
     ) -> RerankResponse:
         """
         Transform Cohere rerank response
 
-        No transformation required, litellm follows cohere API response format
+        No transformation required, remodl follows cohere API response format
         """
         try:
             raw_response_json = raw_response.json()

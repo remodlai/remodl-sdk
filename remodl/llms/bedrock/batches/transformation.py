@@ -4,9 +4,9 @@ from typing import Any, Dict, List, Literal, Optional, Union, cast
 
 from httpx import Headers, Response
 
-from litellm.llms.base_llm.batches.transformation import BaseBatchesConfig
-from litellm.llms.base_llm.chat.transformation import BaseLLMException
-from litellm.types.llms.bedrock import (
+from remodl.llms.base_llm.batches.transformation import BaseBatchesConfig
+from remodl.llms.base_llm.chat.transformation import BaseLLMException
+from remodl.types.llms.bedrock import (
     BedrockCreateBatchRequest,
     BedrockCreateBatchResponse,
     BedrockInputDataConfig,
@@ -14,11 +14,11 @@ from litellm.types.llms.bedrock import (
     BedrockS3InputDataConfig,
     BedrockS3OutputDataConfig,
 )
-from litellm.types.llms.openai import (
+from remodl.types.llms.openai import (
     AllMessageValues,
     CreateBatchRequest,
 )
-from litellm.types.utils import LiteLLMBatch, LlmProviders
+from remodl.types.utils import LiteLLMBatch, LlmProviders
 
 from ..base_aws_llm import BaseAWSLLM
 from ..common_utils import CommonBatchFilesUtils
@@ -43,7 +43,7 @@ class BedrockBatchesConfig(BaseAWSLLM, BaseBatchesConfig):
         model: str,
         messages: List[AllMessageValues],
         optional_params: dict,
-        litellm_params: dict,
+        remodl_params: dict,
         api_key: Optional[str] = None,
         api_base: Optional[str] = None,
     ) -> dict:
@@ -60,7 +60,7 @@ class BedrockBatchesConfig(BaseAWSLLM, BaseBatchesConfig):
         api_key: Optional[str],
         model: str,
         optional_params: Dict,
-        litellm_params: Dict,
+        remodl_params: Dict,
         data: CreateBatchRequest,
     ) -> str:
         """
@@ -86,7 +86,7 @@ class BedrockBatchesConfig(BaseAWSLLM, BaseBatchesConfig):
         model: str,
         create_batch_data: CreateBatchRequest,
         optional_params: dict,
-        litellm_params: dict,
+        remodl_params: dict,
     ) -> Dict[str, Any]:
         """
         Transform the batch creation request to Bedrock format.
@@ -107,21 +107,21 @@ class BedrockBatchesConfig(BaseAWSLLM, BaseBatchesConfig):
         input_bucket, input_key = self.common_utils.parse_s3_uri(input_file_id)
         
         # Get output S3 configuration
-        output_bucket = litellm_params.get("s3_output_bucket_name") or os.getenv("AWS_S3_OUTPUT_BUCKET_NAME")
+        output_bucket = remodl_params.get("s3_output_bucket_name") or os.getenv("AWS_S3_OUTPUT_BUCKET_NAME")
         if not output_bucket:
             # Use same bucket as input if no output bucket specified
             output_bucket = input_bucket
         
         # Get IAM role ARN
         role_arn = (
-            litellm_params.get("aws_batch_role_arn") 
+            remodl_params.get("aws_batch_role_arn") 
             or optional_params.get("aws_batch_role_arn")
             or os.getenv("AWS_BATCH_ROLE_ARN")
         )
         if not role_arn:
             raise ValueError(
                 "AWS IAM role ARN is required for Bedrock batch jobs. "
-                "Set 'aws_batch_role_arn' in litellm_params or AWS_BATCH_ROLE_ARN env var"
+                "Set 'aws_batch_role_arn' in remodl_params or AWS_BATCH_ROLE_ARN env var"
             )
 
         
@@ -129,8 +129,8 @@ class BedrockBatchesConfig(BaseAWSLLM, BaseBatchesConfig):
             raise ValueError("Could not determine Bedrock model ID. Please pass `model` in your request body.")
         
         # Generate job name with the correct model ID using common utility
-        job_name = self.common_utils.generate_unique_job_name(model, prefix="litellm")
-        output_key = f"litellm-batch-outputs/{job_name}/"
+        job_name = self.common_utils.generate_unique_job_name(model, prefix="remodl")
+        output_key = f"remodl-batch-outputs/{job_name}/"
         
         # Build input data config
         input_data_config: BedrockInputDataConfig = {
@@ -187,7 +187,7 @@ class BedrockBatchesConfig(BaseAWSLLM, BaseBatchesConfig):
         model: Optional[str],
         raw_response: Response,
         logging_obj: Any,
-        litellm_params: dict,
+        remodl_params: dict,
     ) -> LiteLLMBatch:
         """
         Transform Bedrock batch creation response to LiteLLM format.
@@ -217,8 +217,8 @@ class BedrockBatchesConfig(BaseAWSLLM, BaseBatchesConfig):
         
         openai_status = cast(Literal["validating", "failed", "in_progress", "finalizing", "completed", "expired", "cancelling", "cancelled"], status_mapping.get(status_str, "validating"))
         
-        # Get original request data from litellm_params if available
-        original_request = litellm_params.get("original_batch_request", {})
+        # Get original request data from remodl_params if available
+        original_request = remodl_params.get("original_batch_request", {})
         
         # Create LiteLLM batch object
         return LiteLLMBatch(
@@ -248,7 +248,7 @@ class BedrockBatchesConfig(BaseAWSLLM, BaseBatchesConfig):
         self,
         batch_id: str,
         optional_params: dict,
-        litellm_params: dict,
+        remodl_params: dict,
     ) -> Dict[str, Any]:
         """
         Transform batch retrieval request for Bedrock.
@@ -256,7 +256,7 @@ class BedrockBatchesConfig(BaseAWSLLM, BaseBatchesConfig):
         Args:
             batch_id: Bedrock job ARN
             optional_params: Optional parameters
-            litellm_params: LiteLLM parameters
+            remodl_params: LiteLLM parameters
             
         Returns:
             Transformed request data for Bedrock GetModelInvocationJob API
@@ -387,12 +387,12 @@ class BedrockBatchesConfig(BaseAWSLLM, BaseBatchesConfig):
         model: Optional[str],
         raw_response: Response,
         logging_obj: Any,
-        litellm_params: dict,
+        remodl_params: dict,
     ) -> LiteLLMBatch:
         """
         Transform Bedrock batch retrieval response to LiteLLM format.
         """
-        from litellm.types.llms.bedrock import BedrockGetBatchResponse
+        from remodl.types.llms.bedrock import BedrockGetBatchResponse
         try:
             response_data: BedrockGetBatchResponse = raw_response.json()
         except Exception as e:

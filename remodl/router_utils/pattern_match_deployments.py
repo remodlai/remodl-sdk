@@ -7,8 +7,8 @@ import re
 from re import Match
 from typing import Dict, List, Optional, Tuple
 
-from litellm import get_llm_provider
-from litellm._logging import verbose_router_logger
+from remodl import get_llm_provider
+from remodl._logging import verbose_router_logger
 
 
 class PatternUtils:
@@ -53,7 +53,7 @@ class PatternMatchRouter:
     """
     Class to handle llm wildcard routing and regex pattern matching
 
-    doc: https://docs.litellm.ai/docs/proxy/configs#provider-specific-wildcard-routing
+    doc: https://docs.remodl.ai/docs/proxy/configs#provider-specific-wildcard-routing
 
     This class will store a mapping for regex pattern: List[Deployments]
     """
@@ -105,11 +105,11 @@ class PatternMatchRouter:
         new_deployments = []
         for deployment in deployments:
             new_deployment = copy.deepcopy(deployment)
-            new_deployment["litellm_params"][
+            new_deployment["remodl_params"][
                 "model"
             ] = PatternMatchRouter.set_deployment_model_name(
                 matched_pattern=matched_pattern,
-                litellm_deployment_litellm_model=deployment["litellm_params"]["model"],
+                remodl_deployment_remodl_model=deployment["remodl_params"]["model"],
             )
             new_deployments.append(new_deployment)
 
@@ -160,7 +160,7 @@ class PatternMatchRouter:
     @staticmethod
     def set_deployment_model_name(
         matched_pattern: Match,
-        litellm_deployment_litellm_model: str,
+        remodl_deployment_remodl_model: str,
     ) -> str:
         """
         Set the model name for the matched pattern llm deployment
@@ -169,31 +169,31 @@ class PatternMatchRouter:
 
         Case 1:
         model_name: llmengine/* (can be any regex pattern or wildcard pattern)
-        litellm_params:
+        remodl_params:
             model: openai/*
 
         if model_name = "llmengine/foo" -> model = "openai/foo"
 
         Case 2:
         model_name: llmengine/fo::*::static::*
-        litellm_params:
+        remodl_params:
             model: openai/fo::*::static::*
 
         if model_name = "llmengine/foo::bar::static::baz" -> model = "openai/foo::bar::static::baz"
 
         Case 3:
         model_name: *meta.llama3*
-        litellm_params:
+        remodl_params:
             model: bedrock/meta.llama3*
 
         if model_name = "hello-world-meta.llama3-70b" -> model = "bedrock/meta.llama3-70b"
         """
 
         ## BASE CASE: if the deployment model name does not contain a wildcard, return the deployment model name
-        if "*" not in litellm_deployment_litellm_model:
-            return litellm_deployment_litellm_model
+        if "*" not in remodl_deployment_remodl_model:
+            return remodl_deployment_remodl_model
 
-        wildcard_count = litellm_deployment_litellm_model.count("*")
+        wildcard_count = remodl_deployment_remodl_model.count("*")
 
         # Extract all dynamic segments from the request
         dynamic_segments = matched_pattern.groups()
@@ -202,13 +202,13 @@ class PatternMatchRouter:
             return (
                 matched_pattern.string
             )  # default to the user input, if unable to map based on wildcards.
-        # Replace the corresponding wildcards in the litellm model pattern with extracted segments
+        # Replace the corresponding wildcards in the remodl model pattern with extracted segments
         for segment in dynamic_segments:
-            litellm_deployment_litellm_model = litellm_deployment_litellm_model.replace(
+            remodl_deployment_remodl_model = remodl_deployment_remodl_model.replace(
                 "*", segment, 1
             )
 
-        return litellm_deployment_litellm_model
+        return remodl_deployment_remodl_model
 
     def get_pattern(
         self, model: str, custom_llm_provider: Optional[str] = None

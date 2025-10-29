@@ -2,11 +2,11 @@ from typing import TYPE_CHECKING, List, Optional, Tuple
 
 import httpx
 
-from litellm.llms.azure.common_utils import BaseAzureLLM
-from litellm.llms.base_llm.passthrough.transformation import BasePassthroughConfig
-from litellm.secret_managers.main import get_secret_str
-from litellm.types.llms.openai import AllMessageValues
-from litellm.types.router import GenericLiteLLMParams
+from remodl.llms.azure.common_utils import BaseAzureLLM
+from remodl.llms.base_llm.passthrough.transformation import BasePassthroughConfig
+from remodl.secret_managers.main import get_secret_str
+from remodl.types.llms.openai import AllMessageValues
+from remodl.types.router import GenericLiteLLMParams
 
 if TYPE_CHECKING:
     from httpx import URL
@@ -23,23 +23,23 @@ class AzurePassthroughConfig(BasePassthroughConfig):
         model: str,
         endpoint: str,
         request_query_params: Optional[dict],
-        litellm_params: dict,
+        remodl_params: dict,
     ) -> Tuple["URL", str]:
         base_target_url = self.get_api_base(api_base)
 
         if base_target_url is None:
             raise Exception("Azure api base not found")
 
-        litellm_metadata = litellm_params.get("litellm_metadata") or {}
-        model_group = litellm_metadata.get("model_group")
+        remodl_metadata = remodl_params.get("remodl_metadata") or {}
+        model_group = remodl_metadata.get("model_group")
         if model_group and model_group in endpoint:
             endpoint = endpoint.replace(model_group, model)
 
         complete_url = BaseAzureLLM._get_base_azure_url(
             api_base=base_target_url,
-            litellm_params=litellm_params,
+            remodl_params=remodl_params,
             route=endpoint,
-            default_api_version=litellm_params.get("api_version"),
+            default_api_version=remodl_params.get("api_version"),
         )
         return (
             httpx.URL(complete_url),
@@ -52,14 +52,14 @@ class AzurePassthroughConfig(BasePassthroughConfig):
         model: str,
         messages: List[AllMessageValues],
         optional_params: dict,
-        litellm_params: dict,
+        remodl_params: dict,
         api_key: Optional[str] = None,
         api_base: Optional[str] = None,
     ) -> dict:
         return BaseAzureLLM._base_validate_azure_environment(
             headers=headers,
-            litellm_params=GenericLiteLLMParams(
-                **{**litellm_params, "api_key": api_key}
+            remodl_params=GenericLiteLLMParams(
+                **{**remodl_params, "api_key": api_key}
             ),
         )
 

@@ -3,8 +3,8 @@ from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple, Union
 
 import httpx
 
-from litellm.types.router import GenericLiteLLMParams
-from litellm.types.vector_stores import (
+from remodl.types.router import GenericLiteLLMParams
+from remodl.types.vector_stores import (
     VectorStoreCreateOptionalRequestParams,
     VectorStoreCreateResponse,
     VectorStoreSearchOptionalRequestParams,
@@ -12,7 +12,7 @@ from litellm.types.vector_stores import (
 )
 
 if TYPE_CHECKING:
-    from litellm.litellm_core_utils.litellm_logging import Logging as _LiteLLMLoggingObj
+    from remodl.remodl_core_utils.remodl_logging import Logging as _LiteLLMLoggingObj
 
     from ..chat.transformation import BaseLLMException as _BaseLLMException
 
@@ -31,14 +31,14 @@ class BaseVectorStoreConfig:
         query: Union[str, List[str]],
         vector_store_search_optional_params: VectorStoreSearchOptionalRequestParams,
         api_base: str,
-        litellm_logging_obj: LiteLLMLoggingObj,
-        litellm_params: dict,
+        remodl_logging_obj: LiteLLMLoggingObj,
+        remodl_params: dict,
     ) -> Tuple[str, Dict]:
         pass
 
     @abstractmethod
     def transform_search_vector_store_response(
-        self, response: httpx.Response, litellm_logging_obj: LiteLLMLoggingObj
+        self, response: httpx.Response, remodl_logging_obj: LiteLLMLoggingObj
     ) -> VectorStoreSearchResponse:
         pass
 
@@ -58,7 +58,7 @@ class BaseVectorStoreConfig:
 
     @abstractmethod
     def validate_environment(
-        self, headers: dict, litellm_params: Optional[GenericLiteLLMParams]
+        self, headers: dict, remodl_params: Optional[GenericLiteLLMParams]
     ) -> dict:
         return {}
 
@@ -66,7 +66,7 @@ class BaseVectorStoreConfig:
     def get_complete_url(
         self,
         api_base: Optional[str],
-        litellm_params: dict,
+        remodl_params: dict,
     ) -> str:
         """
         OPTIONAL

@@ -10,21 +10,21 @@ from typing import Any, Callable, Dict, List, Optional, Union, cast
 import httpx
 from pydantic import BaseModel
 
-import litellm
-from litellm import verbose_logger
-from litellm._uuid import uuid
-from litellm.litellm_core_utils.model_response_utils import (
+import remodl
+from remodl import verbose_logger
+from remodl._uuid import uuid
+from remodl.remodl_core_utils.model_response_utils import (
     is_model_response_stream_empty,
 )
-from litellm.litellm_core_utils.redact_messages import LiteLLMLoggingObject
-from litellm.litellm_core_utils.thread_pool_executor import executor
-from litellm.types.llms.openai import ChatCompletionChunk
-from litellm.types.router import GenericLiteLLMParams
-from litellm.types.utils import (
+from remodl.remodl_core_utils.redact_messages import LiteLLMLoggingObject
+from remodl.remodl_core_utils.thread_pool_executor import executor
+from remodl.types.llms.openai import ChatCompletionChunk
+from remodl.types.router import GenericLiteLLMParams
+from remodl.types.utils import (
     Delta,
 )
-from litellm.types.utils import GenericStreamingChunk as GChunk
-from litellm.types.utils import (
+from remodl.types.utils import GenericStreamingChunk as GChunk
+from remodl.types.utils import (
     ModelResponse,
     ModelResponseStream,
     StreamingChoices,
@@ -59,7 +59,7 @@ def is_async_iterable(obj: Any) -> bool:
 
 def print_verbose(print_statement):
     try:
-        if litellm.set_verbose:
+        if remodl.set_verbose:
             print(print_statement)  # noqa
     except Exception:
         pass
@@ -84,11 +84,11 @@ class CustomStreamWrapper:
         self.sent_first_chunk = False
         self.sent_last_chunk = False
 
-        litellm_params: GenericLiteLLMParams = GenericLiteLLMParams(
-            **self.logging_obj.model_call_details.get("litellm_params", {})
+        remodl_params: GenericLiteLLMParams = GenericLiteLLMParams(
+            **self.logging_obj.model_call_details.get("remodl_params", {})
         )
         self.merge_reasoning_content_in_choices: bool = (
-            litellm_params.merge_reasoning_content_in_choices or False
+            remodl_params.merge_reasoning_content_in_choices or False
         )
         self.sent_first_thinking_block = False
         self.sent_last_thinking_block = False
@@ -111,12 +111,12 @@ class CustomStreamWrapper:
         self.holding_chunk = ""
         self.complete_response = ""
         self.response_uptil_now = ""
-        _model_info: Dict = litellm_params.model_info or {}
+        _model_info: Dict = remodl_params.model_info or {}
 
         _api_base = get_api_base(
             model=model or "",
             optional_params=self.logging_obj.model_call_details.get(
-                "litellm_params", {}
+                "remodl_params", {}
             ),
         )
 
@@ -161,7 +161,7 @@ class CustomStreamWrapper:
         )
 
     def check_is_function_call(self, logging_obj) -> bool:
-        from litellm.litellm_core_utils.prompt_templates.common_utils import (
+        from remodl.remodl_core_utils.prompt_templates.common_utils import (
             is_function_call,
         )
 
@@ -192,15 +192,15 @@ class CustomStreamWrapper:
 
     def safety_checker(self) -> None:
         """
-        Fixes - https://github.com/BerriAI/litellm/issues/5158
+        Fixes - https://github.com/BerriAI/remodl/issues/5158
 
         if the model enters a loop and starts repeating the same chunk again, break out of loop and raise an internalservererror - allows for retries.
 
         Raises - InternalServerError, if LLM enters infinite loop while streaming
         """
-        if len(self.chunks) >= litellm.REPEATED_STREAMING_CHUNK_LIMIT:
+        if len(self.chunks) >= remodl.REPEATED_STREAMING_CHUNK_LIMIT:
             # Get the last n chunks
-            last_chunks = self.chunks[-litellm.REPEATED_STREAMING_CHUNK_LIMIT :]
+            last_chunks = self.chunks[-remodl.REPEATED_STREAMING_CHUNK_LIMIT :]
 
             # Extract the relevant content from the chunks
             last_contents = [chunk.choices[0].delta.content for chunk in last_chunks]
@@ -211,9 +211,9 @@ class CustomStreamWrapper:
                     last_contents[0] is not None
                     and isinstance(last_contents[0], str)
                     and len(last_contents[0]) > 2
-                ):  # ignore empty content - https://github.com/BerriAI/litellm/issues/5158#issuecomment-2287156946
+                ):  # ignore empty content - https://github.com/BerriAI/remodl/issues/5158#issuecomment-2287156946
                     # All last n chunks are identical
-                    raise litellm.InternalServerError(
+                    raise remodl.InternalServerError(
                         message="The model is repeating the same chunk = {}.".format(
                             last_contents[0]
                         ),
@@ -562,7 +562,7 @@ class CustomStreamWrapper:
                 return ""
         except Exception as e:
             verbose_logger.exception(
-                "litellm.CustomStreamWrapper.handle_baseten_chunk(): Exception occured - {}".format(
+                "remodl.CustomStreamWrapper.handle_baseten_chunk(): Exception occured - {}".format(
                     str(e)
                 )
             )
@@ -642,7 +642,7 @@ class CustomStreamWrapper:
 
         if (
             self.created is not None
-        ):  # maintain same 'created' across all chunks - https://github.com/BerriAI/litellm/issues/11437
+        ):  # maintain same 'created' across all chunks - https://github.com/BerriAI/remodl/issues/11437
             model_response.created = self.created
         else:
             self.created = model_response.created
@@ -865,7 +865,7 @@ class CustomStreamWrapper:
         model_response: ModelResponseStream,
         response_obj: Dict[str, Any],
     ):
-        from litellm.litellm_core_utils.core_helpers import (
+        from remodl.remodl_core_utils.core_helpers import (
             preserve_upstream_non_openai_attributes,
         )
 
@@ -1041,7 +1041,7 @@ class CustomStreamWrapper:
         try:
             # return this for all models
             completion_obj: Dict[str, Any] = {"content": ""}
-            from litellm.types.utils import GenericStreamingChunk as GChunk
+            from remodl.types.utils import GenericStreamingChunk as GChunk
 
             if (
                 isinstance(chunk, dict)
@@ -1050,7 +1050,7 @@ class CustomStreamWrapper:
                 )  # check if chunk is a generic streaming chunk
             ) or (
                 self.custom_llm_provider
-                and self.custom_llm_provider in litellm._custom_providers
+                and self.custom_llm_provider in remodl._custom_providers
             ):
                 if self.received_finish_reason is not None:
                     if "provider_specific_fields" not in chunk:
@@ -1071,7 +1071,7 @@ class CustomStreamWrapper:
                     setattr(
                         model_response,
                         "usage",
-                        litellm.Usage(**anthropic_response_obj["usage"]),
+                        remodl.Usage(**anthropic_response_obj["usage"]),
                     )
 
                 if (
@@ -1172,7 +1172,7 @@ class CustomStreamWrapper:
                                     args_str = json.dumps(args_dict)
                                 except Exception as e:
                                     raise e
-                                _delta_obj = litellm.utils.Delta(
+                                _delta_obj = remodl.utils.Delta(
                                     content=None,
                                     tool_calls=[
                                         {
@@ -1244,7 +1244,7 @@ class CustomStreamWrapper:
                     setattr(
                         model_response,
                         "usage",
-                        litellm.Usage(
+                        remodl.Usage(
                             prompt_tokens=response_obj["usage"].prompt_tokens,
                             completion_tokens=response_obj["usage"].completion_tokens,
                             total_tokens=response_obj["usage"].total_tokens,
@@ -1255,7 +1255,7 @@ class CustomStreamWrapper:
                     raise ValueError(f"chunk is not a string: {chunk}")
                 response_obj = cast(
                     Dict[str, Any],
-                    litellm.CodestralTextCompletionConfig()._chunk_parser(chunk),
+                    remodl.CodestralTextCompletionConfig()._chunk_parser(chunk),
                 )
                 completion_obj["content"] = response_obj["text"]
                 print_verbose(f"completion obj content: {completion_obj['content']}")
@@ -1265,7 +1265,7 @@ class CustomStreamWrapper:
                     setattr(
                         model_response,
                         "usage",
-                        litellm.Usage(
+                        remodl.Usage(
                             prompt_tokens=response_obj["usage"].prompt_tokens,
                             completion_tokens=response_obj["usage"].completion_tokens,
                             total_tokens=response_obj["usage"].total_tokens,
@@ -1342,7 +1342,7 @@ class CustomStreamWrapper:
                         setattr(
                             model_response,
                             "usage",
-                            litellm.Usage(
+                            remodl.Usage(
                                 prompt_tokens=response_obj["usage"].get(
                                     "prompt_tokens", None
                                 )
@@ -1367,7 +1367,7 @@ class CustomStreamWrapper:
                         setattr(
                             model_response,
                             "usage",
-                            litellm.Usage(**response_obj["usage"].model_dump()),
+                            remodl.Usage(**response_obj["usage"].model_dump()),
                         )
 
             model_response.model = self.model
@@ -1453,7 +1453,7 @@ class CustomStreamWrapper:
                             model_response.choices[0].delta = Delta(**_json_delta)
                         except Exception as e:
                             verbose_logger.exception(
-                                "litellm.CustomStreamWrapper.chunk_creator(): Exception occured - {}".format(
+                                "remodl.CustomStreamWrapper.chunk_creator(): Exception occured - {}".format(
                                     str(e)
                                 )
                             )
@@ -1517,11 +1517,11 @@ class CustomStreamWrapper:
 
     def set_logging_event_loop(self, loop):
         """
-        import litellm, asyncio
+        import remodl, asyncio
 
         loop = asyncio.get_event_loop() # 👈 gets the current event loop
 
-        response = litellm.completion(.., stream=True)
+        response = remodl.completion(.., stream=True)
 
         response.set_logging_event_loop(loop=loop) # 👈 enables async_success callbacks for sync logging
 
@@ -1537,9 +1537,9 @@ class CustomStreamWrapper:
         This allows callbacks to modify streaming chunks before they're returned.
         """
         try:
-            import litellm
-            from litellm.integrations.custom_logger import CustomLogger
-            from litellm.types.utils import CallTypes
+            import remodl
+            from remodl.integrations.custom_logger import CustomLogger
+            from remodl.types.utils import CallTypes
 
             # Get request kwargs from logging object
             request_data = self.logging_obj.model_call_details
@@ -1551,7 +1551,7 @@ class CustomStreamWrapper:
                 typed_call_type = None
             
             # Call hooks for all callbacks
-            for callback in litellm.callbacks:
+            for callback in remodl.callbacks:
                 if isinstance(callback, CustomLogger) and hasattr(callback, "async_post_call_streaming_deployment_hook"):
                     result = await callback.async_post_call_streaming_deployment_hook(
                         request_data=request_data,
@@ -1563,7 +1563,7 @@ class CustomStreamWrapper:
             
             return chunk
         except Exception as e:
-            from litellm._logging import verbose_logger
+            from remodl._logging import verbose_logger
             verbose_logger.exception(f"Error in post-call streaming deployment hook: {str(e)}")
             return chunk
 
@@ -1589,10 +1589,10 @@ class CustomStreamWrapper:
         """
         Runs success logging in a thread and adds the response to the cache
         """
-        if litellm.disable_streaming_logging is True:
+        if remodl.disable_streaming_logging is True:
             """
             [NOT RECOMMENDED]
-            Set this via `litellm.disable_streaming_logging = True`.
+            Set this via `remodl.disable_streaming_logging = True`.
 
             Disables streaming logging.
             """
@@ -1667,7 +1667,7 @@ class CustomStreamWrapper:
                             completion_start_time=datetime.datetime.now()
                         )
                     ## LOGGING
-                    if not litellm.disable_streaming_logging:
+                    if not remodl.disable_streaming_logging:
                         executor.submit(
                             self.run_success_logging_and_cache_storage,
                             response,
@@ -1713,7 +1713,7 @@ class CustomStreamWrapper:
 
         except StopIteration:
             if self.sent_last_chunk is True:
-                complete_streaming_response = litellm.stream_chunk_builder(
+                complete_streaming_response = remodl.stream_chunk_builder(
                     chunks=self.chunks,
                     messages=self.messages,
                     logging_obj=self.logging_obj,
@@ -1782,7 +1782,7 @@ class CustomStreamWrapper:
     def fetch_sync_stream(self):
         if self.completion_stream is None and self.make_call is not None:
             # Call make_call to get the completion stream
-            self.completion_stream = self.make_call(client=litellm.module_level_client)
+            self.completion_stream = self.make_call(client=remodl.module_level_client)
             self._stream_iter = self.completion_stream.__iter__()
 
         return self.completion_stream
@@ -1791,7 +1791,7 @@ class CustomStreamWrapper:
         if self.completion_stream is None and self.make_call is not None:
             # Call make_call to get the completion stream
             self.completion_stream = await self.make_call(
-                client=litellm.module_level_aclient
+                client=remodl.module_level_aclient
             )
             self._stream_iter = self.completion_stream.__aiter__()
 
@@ -1915,7 +1915,7 @@ class CustomStreamWrapper:
         except (StopAsyncIteration, StopIteration):
             if self.sent_last_chunk is True:
                 # log the final chunk with accurate streaming values
-                complete_streaming_response = litellm.stream_chunk_builder(
+                complete_streaming_response = remodl.stream_chunk_builder(
                     chunks=self.chunks,
                     messages=self.messages,
                     logging_obj=self.logging_obj,
@@ -1966,7 +1966,7 @@ class CustomStreamWrapper:
             traceback_exception = traceback.format_exc()
             ## ADD DEBUG INFORMATION - E.G. LITELLM REQUEST TIMEOUT
             traceback_exception += "\nLiteLLM Default Request Timeout - {}".format(
-                litellm.request_timeout
+                remodl.request_timeout
             )
             if self.logging_obj is not None:
                 ## LOGGING
@@ -2001,7 +2001,7 @@ class CustomStreamWrapper:
                     extra_kwargs={},
                 )
             except Exception as e:
-                from litellm.exceptions import MidStreamFallbackError
+                from remodl.exceptions import MidStreamFallbackError
 
                 raise MidStreamFallbackError(
                     message=str(e),
@@ -2085,7 +2085,7 @@ def generic_chunk_has_all_required_fields(chunk: dict) -> bool:
 def convert_generic_chunk_to_model_response_stream(
     chunk: GChunk,
 ) -> ModelResponseStream:
-    from litellm.types.utils import Delta
+    from remodl.types.utils import Delta
 
     model_response_stream = ModelResponseStream(
         id=str(uuid.uuid4()),

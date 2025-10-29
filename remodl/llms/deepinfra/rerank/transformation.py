@@ -6,14 +6,14 @@ from typing import Any, Dict, List, Optional, Union
 
 import httpx
 
-from litellm._uuid import uuid
-from litellm.litellm_core_utils.litellm_logging import Logging as LiteLLMLoggingObj
-from litellm.llms.base_llm.rerank.transformation import (
+from remodl._uuid import uuid
+from remodl.remodl_core_utils.remodl_logging import Logging as LiteLLMLoggingObj
+from remodl.llms.base_llm.rerank.transformation import (
     BaseLLMException,
     BaseRerankConfig,
 )
-from litellm.secret_managers.main import get_secret_str
-from litellm.types.rerank import (
+from remodl.secret_managers.main import get_secret_str
+from remodl.types.rerank import (
     OptionalRerankParams,
     RerankBilledUnits,
     RerankResponse,
@@ -141,7 +141,7 @@ class DeepinfraRerankConfig(BaseRerankConfig):
         api_key: Optional[str] = None,
         request_data: dict = {},
         optional_params: dict = {},
-        litellm_params: dict = {},
+        remodl_params: dict = {},
     ) -> RerankResponse:
         try:
             response_json = raw_response.json()
@@ -201,7 +201,7 @@ class DeepinfraRerankConfig(BaseRerankConfig):
                 api_key=api_key,
                 request_data=request_data,
                 optional_params=optional_params,
-                litellm_params=litellm_params,
+                remodl_params=remodl_params,
             )
 
             rerank_response._hidden_params["model"] = model

@@ -6,11 +6,11 @@ from typing import TYPE_CHECKING, Any, Dict, List, Optional, Union
 import httpx
 from pydantic import PrivateAttr
 
-from litellm.llms.base_llm.chat.transformation import BaseLLMException
-from litellm.types.llms.base import LiteLLMPydanticObjectBase
+from remodl.llms.base_llm.chat.transformation import BaseLLMException
+from remodl.types.llms.base import LiteLLMPydanticObjectBase
 
 if TYPE_CHECKING:
-    from litellm.litellm_core_utils.litellm_logging import Logging as LiteLLMLoggingObj
+    from remodl.remodl_core_utils.remodl_logging import Logging as LiteLLMLoggingObj
 else:
     LiteLLMLoggingObj = Any
 

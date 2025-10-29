@@ -15,7 +15,7 @@ from functools import partial
 from typing import Optional
 from datetime import datetime, timezone, timedelta
 
-from litellm._logging import print_verbose, verbose_logger
+from remodl._logging import print_verbose, verbose_logger
 
 from .base_cache import BaseCache
 

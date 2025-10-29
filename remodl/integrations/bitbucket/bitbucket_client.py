@@ -5,7 +5,7 @@ BitBucket API client for fetching .prompt files from BitBucket repositories.
 import base64
 from typing import Any, Dict, List, Optional
 
-from litellm.llms.custom_httpx.http_handler import HTTPHandler
+from remodl.llms.custom_httpx.http_handler import HTTPHandler
 
 
 class BitBucketClient:

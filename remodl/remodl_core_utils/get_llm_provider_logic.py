@@ -2,9 +2,9 @@ from typing import Optional, Tuple
 
 import httpx
 
-import litellm
-from litellm.constants import REPLICATE_MODEL_NAME_WITH_ID_LENGTH
-from litellm.secret_managers.main import get_secret, get_secret_str
+import remodl
+from remodl.constants import REPLICATE_MODEL_NAME_WITH_ID_LENGTH
+from remodl.secret_managers.main import get_secret, get_secret_str
 
 from ..types.router import LiteLLM_Params
 
@@ -13,8 +13,8 @@ def _is_non_openai_azure_model(model: str) -> bool:
     try:
         model_name = model.split("/", 1)[1]
         if (
-            model_name in litellm.cohere_chat_models
-            or f"mistral/{model_name}" in litellm.mistral_chat_models
+            model_name in remodl.cohere_chat_models
+            or f"mistral/{model_name}" in remodl.mistral_chat_models
         ):
             return True
     except Exception:
@@ -37,7 +37,7 @@ def handle_cohere_chat_model_custom_llm_provider(
     """
 
     if custom_llm_provider:
-        if custom_llm_provider == "cohere" and model in litellm.cohere_chat_models:
+        if custom_llm_provider == "cohere" and model in remodl.cohere_chat_models:
             return model, "cohere_chat"
 
     if "/" in model:
@@ -45,7 +45,7 @@ def handle_cohere_chat_model_custom_llm_provider(
         if (
             _custom_llm_provider
             and _custom_llm_provider == "cohere"
-            and _model in litellm.cohere_chat_models
+            and _model in remodl.cohere_chat_models
         ):
             return _model, "cohere_chat"
 
@@ -69,7 +69,7 @@ def handle_anthropic_text_model_custom_llm_provider(
     if custom_llm_provider:
         if (
             custom_llm_provider == "anthropic"
-            and litellm.AnthropicTextConfig._is_anthropic_text_model(model)
+            and remodl.AnthropicTextConfig._is_anthropic_text_model(model)
         ):
             return model, "anthropic_text"
 
@@ -78,7 +78,7 @@ def handle_anthropic_text_model_custom_llm_provider(
         if (
             _custom_llm_provider
             and _custom_llm_provider == "anthropic"
-            and litellm.AnthropicTextConfig._is_anthropic_text_model(_model)
+            and remodl.AnthropicTextConfig._is_anthropic_text_model(_model)
         ):
             return _model, "anthropic_text"
 
@@ -90,33 +90,33 @@ def get_llm_provider(  # noqa: PLR0915
     custom_llm_provider: Optional[str] = None,
     api_base: Optional[str] = None,
     api_key: Optional[str] = None,
-    litellm_params: Optional[LiteLLM_Params] = None,
+    remodl_params: Optional[LiteLLM_Params] = None,
 ) -> Tuple[str, str, Optional[str], Optional[str]]:
     """
     Returns the provider for a given model name - e.g. 'azure/chatgpt-v-2' -> 'azure'
 
-    For router -> Can also give the whole litellm param dict -> this function will extract the relevant details
+    For router -> Can also give the whole remodl param dict -> this function will extract the relevant details
 
     Raises Error - if unable to map model to a provider
 
     Return model, custom_llm_provider, dynamic_api_key, api_base
     """
     try:
-        if litellm.LiteLLMProxyChatConfig._should_use_litellm_proxy_by_default(
-            litellm_params=litellm_params
+        if remodl.LiteLLMProxyChatConfig._should_use_remodl_proxy_by_default(
+            remodl_params=remodl_params
         ):
-            return litellm.LiteLLMProxyChatConfig.litellm_proxy_get_custom_llm_provider_info(
+            return remodl.LiteLLMProxyChatConfig.remodl_proxy_get_custom_llm_provider_info(
                 model=model, api_base=api_base, api_key=api_key
             )
 
         ## IF LITELLM PARAMS GIVEN ##
-        if litellm_params:
+        if remodl_params:
             assert (
                 custom_llm_provider is None and api_base is None and api_key is None
-            ), "Either pass in litellm_params or the custom_llm_provider/api_base/api_key. Otherwise, these values will be overriden."
-            custom_llm_provider = litellm_params.custom_llm_provider
-            api_base = litellm_params.api_base
-            api_key = litellm_params.api_key
+            ), "Either pass in remodl_params or the custom_llm_provider/api_base/api_key. Otherwise, these values will be overriden."
+            custom_llm_provider = remodl_params.custom_llm_provider
+            api_base = remodl_params.api_base
+            api_key = remodl_params.api_key
 
         dynamic_api_key = None
         # check if llm provider provided
@@ -146,10 +146,10 @@ def get_llm_provider(  # noqa: PLR0915
         # check if llm provider part of model name
 
         if (
-            model.split("/", 1)[0] in litellm.provider_list
-            and model.split("/", 1)[0] not in litellm.model_list_set
+            model.split("/", 1)[0] in remodl.provider_list
+            and model.split("/", 1)[0] not in remodl.model_list_set
             and len(model.split("/"))
-            > 1  # handle edge case where user passes in `litellm --model mistral` https://github.com/BerriAI/litellm/issues/1351
+            > 1  # handle edge case where user passes in `remodl --model mistral` https://github.com/BerriAI/remodl/issues/1351
         ):
             return _get_openai_compatible_provider_info(
                 model=model,
@@ -157,7 +157,7 @@ def get_llm_provider(  # noqa: PLR0915
                 api_key=api_key,
                 dynamic_api_key=dynamic_api_key,
             )
-        elif model.split("/", 1)[0] in litellm.provider_list:
+        elif model.split("/", 1)[0] in remodl.provider_list:
             custom_llm_provider = model.split("/", 1)[0]
             model = model.split("/", 1)[1]
             if api_base is not None and not isinstance(api_base, str):
@@ -173,7 +173,7 @@ def get_llm_provider(  # noqa: PLR0915
             return model, custom_llm_provider, dynamic_api_key, api_base
         # check if api base is a known openai compatible endpoint
         if api_base:
-            for endpoint in litellm.openai_compatible_endpoints:
+            for endpoint in remodl.openai_compatible_endpoints:
                 if endpoint in api_base:
                     if endpoint == "api.perplexity.ai":
                         custom_llm_provider = "perplexity"
@@ -231,9 +231,9 @@ def get_llm_provider(  # noqa: PLR0915
                     elif endpoint == "https://api.featherless.ai/v1":
                         custom_llm_provider = "featherless_ai"
                         dynamic_api_key = get_secret_str("FEATHERLESS_AI_API_KEY")
-                    elif endpoint == litellm.NscaleConfig.API_BASE_URL:
+                    elif endpoint == remodl.NscaleConfig.API_BASE_URL:
                         custom_llm_provider = "nscale"
-                        dynamic_api_key = litellm.NscaleConfig.get_api_key()
+                        dynamic_api_key = remodl.NscaleConfig.get_api_key()
                     elif endpoint == "dashscope-intl.aliyuncs.com/compatible-mode/v1":
                         custom_llm_provider = "dashscope"
                         dynamic_api_key = get_secret_str("DASHSCOPE_API_KEY")
@@ -275,29 +275,29 @@ def get_llm_provider(  # noqa: PLR0915
         # check if model in known model provider list  -> for huggingface models, raise exception as they don't have a fixed provider (can be togetherai, anyscale, baseten, runpod, et.)
         ## openai - chatcompletion + text completion
         if (
-            model in litellm.open_ai_chat_completion_models
+            model in remodl.open_ai_chat_completion_models
             or "ft:gpt-3.5-turbo" in model
             or "ft:gpt-4" in model  # catches ft:gpt-4-0613, ft:gpt-4o
-            or model in litellm.openai_image_generation_models
-            or model in litellm.openai_video_generation_models
+            or model in remodl.openai_image_generation_models
+            or model in remodl.openai_video_generation_models
         ):
             custom_llm_provider = "openai"
-        elif model in litellm.open_ai_text_completion_models:
+        elif model in remodl.open_ai_text_completion_models:
             custom_llm_provider = "text-completion-openai"
         ## anthropic
-        elif model in litellm.anthropic_models:
-            if litellm.AnthropicTextConfig._is_anthropic_text_model(model):
+        elif model in remodl.anthropic_models:
+            if remodl.AnthropicTextConfig._is_anthropic_text_model(model):
                 custom_llm_provider = "anthropic_text"
             else:
                 custom_llm_provider = "anthropic"
         ## cohere
-        elif model in litellm.cohere_models or model in litellm.cohere_embedding_models:
+        elif model in remodl.cohere_models or model in remodl.cohere_embedding_models:
             custom_llm_provider = "cohere"
         ## cohere chat models
-        elif model in litellm.cohere_chat_models:
+        elif model in remodl.cohere_chat_models:
             custom_llm_provider = "cohere_chat"
         ## replicate
-        elif model in litellm.replicate_models or (
+        elif model in remodl.replicate_models or (
             ":" in model and len(model) > REPLICATE_MODEL_NAME_WITH_ID_LENGTH
         ):
             model_parts = model.split(":")
@@ -306,29 +306,29 @@ def get_llm_provider(  # noqa: PLR0915
                 and len(model_parts[1]) == REPLICATE_MODEL_NAME_WITH_ID_LENGTH
             ):  ## checks if model name has a 64 digit code - e.g. "meta/llama-2-70b-chat:02e509c789964a7ea8736978a43525956ef40397be9033abf9fd2badfe68c9e3"
                 custom_llm_provider = "replicate"
-            elif model in litellm.replicate_models:
+            elif model in remodl.replicate_models:
                 custom_llm_provider = "replicate"
         ## openrouter
-        elif model in litellm.openrouter_models:
+        elif model in remodl.openrouter_models:
             custom_llm_provider = "openrouter"
         ## maritalk
-        elif model in litellm.maritalk_models:
+        elif model in remodl.maritalk_models:
             custom_llm_provider = "maritalk"
         ## vertex - text + chat + language (gemini) models
         elif (
-            model in litellm.vertex_chat_models
-            or model in litellm.vertex_code_chat_models
-            or model in litellm.vertex_text_models
-            or model in litellm.vertex_code_text_models
-            or model in litellm.vertex_language_models
-            or model in litellm.vertex_embedding_models
-            or model in litellm.vertex_vision_models
-            or model in litellm.vertex_ai_image_models
-            or model in litellm.vertex_ai_video_models
+            model in remodl.vertex_chat_models
+            or model in remodl.vertex_code_chat_models
+            or model in remodl.vertex_text_models
+            or model in remodl.vertex_code_text_models
+            or model in remodl.vertex_language_models
+            or model in remodl.vertex_embedding_models
+            or model in remodl.vertex_vision_models
+            or model in remodl.vertex_ai_image_models
+            or model in remodl.vertex_ai_video_models
         ):
             custom_llm_provider = "vertex_ai"
         ## ai21
-        elif model in litellm.ai21_chat_models or model in litellm.ai21_models:
+        elif model in remodl.ai21_chat_models or model in remodl.ai21_models:
             custom_llm_provider = "ai21_chat"
             api_base = (
                 api_base
@@ -337,38 +337,38 @@ def get_llm_provider(  # noqa: PLR0915
             )  # type: ignore
             dynamic_api_key = api_key or get_secret("AI21_API_KEY")
         ## aleph_alpha
-        elif model in litellm.aleph_alpha_models:
+        elif model in remodl.aleph_alpha_models:
             custom_llm_provider = "aleph_alpha"
         ## baseten
-        elif model in litellm.baseten_models:
+        elif model in remodl.baseten_models:
             custom_llm_provider = "baseten"
         ## nlp_cloud
-        elif model in litellm.nlp_cloud_models:
+        elif model in remodl.nlp_cloud_models:
             custom_llm_provider = "nlp_cloud"
         ## petals
-        elif model in litellm.petals_models:
+        elif model in remodl.petals_models:
             custom_llm_provider = "petals"
         ## bedrock
         elif (
-            model in litellm.bedrock_models
-            or model in litellm.bedrock_embedding_models
-            or model in litellm.bedrock_converse_models
+            model in remodl.bedrock_models
+            or model in remodl.bedrock_embedding_models
+            or model in remodl.bedrock_converse_models
         ):
             custom_llm_provider = "bedrock"
-        elif model in litellm.watsonx_models:
+        elif model in remodl.watsonx_models:
             custom_llm_provider = "watsonx"
 
         # remodlai embeddings
-        elif model in litellm.remodlai_embedding_models:
+        elif model in remodl.remodlai_embedding_models:
             custom_llm_provider = "remodlai"
-        elif model in litellm.remodlai_models:
+        elif model in remodl.remodlai_models:
             custom_llm_provider = "remodlai"
         # openai embeddings
-        elif model in litellm.open_ai_embedding_models:
+        elif model in remodl.open_ai_embedding_models:
             custom_llm_provider = "openai"
-        elif model in litellm.empower_models:
+        elif model in remodl.empower_models:
             custom_llm_provider = "empower"
-        elif model in litellm.gradient_ai_models:
+        elif model in remodl.gradient_ai_models:
             custom_llm_provider = "gradient_ai"
         elif model == "*":
             custom_llm_provider = "openai"
@@ -393,21 +393,21 @@ def get_llm_provider(  # noqa: PLR0915
         elif model.startswith("clarifai/"):
             custom_llm_provider = "clarifai"
         if not custom_llm_provider:
-            if litellm.suppress_debug_info is False:
+            if remodl.suppress_debug_info is False:
                 print()  # noqa
                 print(  # noqa
-                    "\033[1;31mProvider List: https://docs.litellm.ai/docs/providers\033[0m"  # noqa
+                    "\033[1;31mProvider List: https://docs.remodl.ai/docs/providers\033[0m"  # noqa
                 )  # noqa
                 print()  # noqa
-            error_str = f"LLM Provider NOT provided. Pass in the LLM provider you are trying to call. You passed model={model}\n Pass model as E.g. For 'Huggingface' inference endpoints pass in `completion(model='huggingface/starcoder',..)` Learn more: https://docs.litellm.ai/docs/providers"
+            error_str = f"LLM Provider NOT provided. Pass in the LLM provider you are trying to call. You passed model={model}\n Pass model as E.g. For 'Huggingface' inference endpoints pass in `completion(model='huggingface/starcoder',..)` Learn more: https://docs.remodl.ai/docs/providers"
             # maps to openai.NotFoundError, this is raised when openai does not recognize the llm
-            raise litellm.exceptions.BadRequestError(  # type: ignore
+            raise remodl.exceptions.BadRequestError(  # type: ignore
                 message=error_str,
                 model=model,
                 response=httpx.Response(
                     status_code=400,
                     content=error_str,
-                    request=httpx.Request(method="completion", url="https://github.com/BerriAI/litellm"),  # type: ignore
+                    request=httpx.Request(method="completion", url="https://github.com/BerriAI/remodl"),  # type: ignore
                 ),
                 llm_provider="",
             )
@@ -423,19 +423,19 @@ def get_llm_provider(  # noqa: PLR0915
             )
         return model, custom_llm_provider, dynamic_api_key, api_base
     except Exception as e:
-        if isinstance(e, litellm.exceptions.BadRequestError):
+        if isinstance(e, remodl.exceptions.BadRequestError):
             raise e
         else:
             error_str = (
                 f"GetLLMProvider Exception - {str(e)}\n\noriginal model: {model}"
             )
-            raise litellm.exceptions.BadRequestError(  # type: ignore
+            raise remodl.exceptions.BadRequestError(  # type: ignore
                 message=f"GetLLMProvider Exception - {str(e)}\n\noriginal model: {model}",
                 model=model,
                 response=httpx.Response(
                     status_code=400,
                     content=error_str,
-                    request=httpx.Request(method="completion", url="https://github.com/BerriAI/litellm"),  # type: ignore
+                    request=httpx.Request(method="completion", url="https://github.com/BerriAI/remodl"),  # type: ignore
                 ),
                 llm_provider="",
             )
@@ -464,7 +464,7 @@ def _get_openai_compatible_provider_info(  # noqa: PLR0915
         (
             api_base,
             dynamic_api_key,
-        ) = litellm.PerplexityChatConfig()._get_openai_compatible_provider_info(
+        ) = remodl.PerplexityChatConfig()._get_openai_compatible_provider_info(
             api_base, api_key
         )
     elif custom_llm_provider == "aiohttp_openai":
@@ -477,7 +477,7 @@ def _get_openai_compatible_provider_info(  # noqa: PLR0915
         (
             api_base,
             dynamic_api_key,
-        ) = litellm.DeepInfraConfig()._get_openai_compatible_provider_info(
+        ) = remodl.DeepInfraConfig()._get_openai_compatible_provider_info(
             api_base, api_key
         )
     elif custom_llm_provider == "empower":
@@ -491,7 +491,7 @@ def _get_openai_compatible_provider_info(  # noqa: PLR0915
         (
             api_base,
             dynamic_api_key,
-        ) = litellm.GroqChatConfig()._get_openai_compatible_provider_info(
+        ) = remodl.GroqChatConfig()._get_openai_compatible_provider_info(
             api_base, api_key
         )
     elif custom_llm_provider == "nvidia_nim":
@@ -510,7 +510,7 @@ def _get_openai_compatible_provider_info(  # noqa: PLR0915
     elif custom_llm_provider == "baseten":
         # Use BasetenConfig to determine the appropriate API base URL
         if api_base is None:
-            api_base = litellm.BasetenConfig.get_api_base_for_model(model)
+            api_base = remodl.BasetenConfig.get_api_base_for_model(model)
         else:
             api_base = api_base or get_secret_str("BASETEN_API_BASE") or "https://inference.baseten.co/v1"
         dynamic_api_key = api_key or get_secret_str("BASETEN_API_KEY")
@@ -536,7 +536,7 @@ def _get_openai_compatible_provider_info(  # noqa: PLR0915
         )  # type: ignore
         dynamic_api_key = api_key or get_secret_str("NEBIUS_API_KEY")
     elif (custom_llm_provider == "ai21_chat") or (
-        custom_llm_provider == "ai21" and model in litellm.ai21_chat_models
+        custom_llm_provider == "ai21" and model in remodl.ai21_chat_models
     ):
         api_base = (
             api_base or get_secret("AI21_API_BASE") or "https://api.ai21.com/studio/v1"
@@ -564,7 +564,7 @@ def _get_openai_compatible_provider_info(  # noqa: PLR0915
         (
             api_base,
             dynamic_api_key,
-        ) = litellm.HostedVLLMChatConfig()._get_openai_compatible_provider_info(
+        ) = remodl.HostedVLLMChatConfig()._get_openai_compatible_provider_info(
             api_base, api_key
         )
     elif custom_llm_provider == "llamafile":
@@ -572,7 +572,7 @@ def _get_openai_compatible_provider_info(  # noqa: PLR0915
         (
             api_base,
             dynamic_api_key,
-        ) = litellm.LlamafileChatConfig()._get_openai_compatible_provider_info(
+        ) = remodl.LlamafileChatConfig()._get_openai_compatible_provider_info(
             api_base, api_key
         )
     elif custom_llm_provider == "datarobot":
@@ -580,7 +580,7 @@ def _get_openai_compatible_provider_info(  # noqa: PLR0915
         (
             api_base,
             dynamic_api_key,
-        ) = litellm.DataRobotConfig()._get_openai_compatible_provider_info(
+        ) = remodl.DataRobotConfig()._get_openai_compatible_provider_info(
             api_base, api_key
         )
     elif custom_llm_provider == "lm_studio":
@@ -588,7 +588,7 @@ def _get_openai_compatible_provider_info(  # noqa: PLR0915
         (
             api_base,
             dynamic_api_key,
-        ) = litellm.LMStudioChatConfig()._get_openai_compatible_provider_info(
+        ) = remodl.LMStudioChatConfig()._get_openai_compatible_provider_info(
             api_base, api_key
         )
     elif custom_llm_provider == "deepseek":
@@ -605,7 +605,7 @@ def _get_openai_compatible_provider_info(  # noqa: PLR0915
         (
             api_base,
             dynamic_api_key,
-        ) = litellm.FireworksAIConfig()._get_openai_compatible_provider_info(
+        ) = remodl.FireworksAIConfig()._get_openai_compatible_provider_info(
             api_base=api_base, api_key=api_key
         )
     elif custom_llm_provider == "azure_ai":
@@ -613,7 +613,7 @@ def _get_openai_compatible_provider_info(  # noqa: PLR0915
             api_base,
             dynamic_api_key,
             custom_llm_provider,
-        ) = litellm.AzureAIStudioConfig()._get_openai_compatible_provider_info(
+        ) = remodl.AzureAIStudioConfig()._get_openai_compatible_provider_info(
             model, api_base, api_key, custom_llm_provider
         )
     elif custom_llm_provider == "github":
@@ -623,11 +623,11 @@ def _get_openai_compatible_provider_info(  # noqa: PLR0915
             or "https://models.inference.ai.azure.com"  # This is github's default base url
         )
         dynamic_api_key = api_key or get_secret_str("GITHUB_API_KEY")
-    elif custom_llm_provider == "litellm_proxy":
+    elif custom_llm_provider == "remodl_proxy":
         (
             api_base,
             dynamic_api_key,
-        ) = litellm.LiteLLMProxyChatConfig()._get_openai_compatible_provider_info(
+        ) = remodl.LiteLLMProxyChatConfig()._get_openai_compatible_provider_info(
             api_base=api_base, api_key=api_key
         )
 
@@ -635,7 +635,7 @@ def _get_openai_compatible_provider_info(  # noqa: PLR0915
         (
             api_base,
             dynamic_api_key,
-        ) = litellm.MistralConfig()._get_openai_compatible_provider_info(
+        ) = remodl.MistralConfig()._get_openai_compatible_provider_info(
             api_base, api_key
         )
     elif custom_llm_provider == "jina_ai":
@@ -643,14 +643,14 @@ def _get_openai_compatible_provider_info(  # noqa: PLR0915
             custom_llm_provider,
             api_base,
             dynamic_api_key,
-        ) = litellm.JinaAIEmbeddingConfig()._get_openai_compatible_provider_info(
+        ) = remodl.JinaAIEmbeddingConfig()._get_openai_compatible_provider_info(
             api_base, api_key
         )
     elif custom_llm_provider == "xai":
         (
             api_base,
             dynamic_api_key,
-        ) = litellm.XAIChatConfig()._get_openai_compatible_provider_info(
+        ) = remodl.XAIChatConfig()._get_openai_compatible_provider_info(
             api_base, api_key
         )
     elif custom_llm_provider == "together_ai":
@@ -688,7 +688,7 @@ def _get_openai_compatible_provider_info(  # noqa: PLR0915
             api_base,
             dynamic_api_key,
             custom_llm_provider,
-        ) = litellm.GithubCopilotConfig()._get_openai_compatible_provider_info(
+        ) = remodl.GithubCopilotConfig()._get_openai_compatible_provider_info(
             model, api_base, api_key, custom_llm_provider
         )
     elif custom_llm_provider == "novita":
@@ -709,84 +709,84 @@ def _get_openai_compatible_provider_info(  # noqa: PLR0915
         (
             api_base,
             dynamic_api_key,
-        ) = litellm.GradientAIConfig()._get_openai_compatible_provider_info(
+        ) = remodl.GradientAIConfig()._get_openai_compatible_provider_info(
             api_base, api_key
         )
     elif custom_llm_provider == "featherless_ai":
         (
             api_base,
             dynamic_api_key,
-        ) = litellm.FeatherlessAIConfig()._get_openai_compatible_provider_info(
+        ) = remodl.FeatherlessAIConfig()._get_openai_compatible_provider_info(
             api_base, api_key
         )
     elif custom_llm_provider == "nscale":
         (
             api_base,
             dynamic_api_key,
-        ) = litellm.NscaleConfig()._get_openai_compatible_provider_info(
+        ) = remodl.NscaleConfig()._get_openai_compatible_provider_info(
             api_base=api_base, api_key=api_key
         )
     elif custom_llm_provider == "heroku":
         (
             api_base,
             dynamic_api_key,
-        ) = litellm.HerokuChatConfig()._get_openai_compatible_provider_info(
+        ) = remodl.HerokuChatConfig()._get_openai_compatible_provider_info(
             api_base, api_key
         )
     elif custom_llm_provider == "dashscope":
         (
             api_base,
             dynamic_api_key,
-        ) = litellm.DashScopeChatConfig()._get_openai_compatible_provider_info(
+        ) = remodl.DashScopeChatConfig()._get_openai_compatible_provider_info(
             api_base, api_key
         )
     elif custom_llm_provider == "moonshot":
         (
             api_base,
             dynamic_api_key,
-        ) = litellm.MoonshotChatConfig()._get_openai_compatible_provider_info(
+        ) = remodl.MoonshotChatConfig()._get_openai_compatible_provider_info(
             api_base, api_key
         )
     elif custom_llm_provider == "v0":
         (
             api_base,
             dynamic_api_key,
-        ) = litellm.V0ChatConfig()._get_openai_compatible_provider_info(
+        ) = remodl.V0ChatConfig()._get_openai_compatible_provider_info(
             api_base, api_key
         )
     elif custom_llm_provider == "morph":
         (
             api_base,
             dynamic_api_key,
-        ) = litellm.MorphChatConfig()._get_openai_compatible_provider_info(
+        ) = remodl.MorphChatConfig()._get_openai_compatible_provider_info(
             api_base, api_key
         )
     elif custom_llm_provider == "lambda_ai":
         (
             api_base,
             dynamic_api_key,
-        ) = litellm.LambdaAIChatConfig()._get_openai_compatible_provider_info(
+        ) = remodl.LambdaAIChatConfig()._get_openai_compatible_provider_info(
             api_base, api_key
         )
     elif custom_llm_provider == "hyperbolic":
         (
             api_base,
             dynamic_api_key,
-        ) = litellm.HyperbolicChatConfig()._get_openai_compatible_provider_info(
+        ) = remodl.HyperbolicChatConfig()._get_openai_compatible_provider_info(
             api_base, api_key
         )
     elif custom_llm_provider == "vercel_ai_gateway":
         (
             api_base,
             dynamic_api_key,
-        ) = litellm.VercelAIGatewayConfig()._get_openai_compatible_provider_info(
+        ) = remodl.VercelAIGatewayConfig()._get_openai_compatible_provider_info(
             api_base, api_key
         )
     elif custom_llm_provider == "aiml":
         (
             api_base,
             dynamic_api_key,
-        ) = litellm.AIMLChatConfig()._get_openai_compatible_provider_info(
+        ) = remodl.AIMLChatConfig()._get_openai_compatible_provider_info(
             api_base, api_key
         )
     elif custom_llm_provider == "wandb":
@@ -800,14 +800,14 @@ def _get_openai_compatible_provider_info(  # noqa: PLR0915
         (
             api_base,
             dynamic_api_key,
-        ) = litellm.LemonadeChatConfig()._get_openai_compatible_provider_info(
+        ) = remodl.LemonadeChatConfig()._get_openai_compatible_provider_info(
             api_base, api_key
         )
     elif custom_llm_provider == "clarifai":
         (
             api_base,
             dynamic_api_key,
-        ) = litellm.ClarifaiConfig()._get_openai_compatible_provider_info(
+        ) = remodl.ClarifaiConfig()._get_openai_compatible_provider_info(
             api_base, api_key
         )
 

@@ -10,8 +10,8 @@ Note: This is called `anthropic_interface` because `anthropic` is a known python
 
 #### Non-streaming example
 ```python showLineNumbers title="Example using LiteLLM Python SDK"
-import litellm
-response = await litellm.anthropic.messages.acreate(
+import remodl
+response = await remodl.anthropic.messages.acreate(
     messages=[{"role": "user", "content": "Hello, can you tell me a short joke?"}],
     api_key=api_key,
     model="anthropic/claude-3-haiku-20240307",
@@ -45,8 +45,8 @@ Example response:
 
 #### Streaming example
 ```python showLineNumbers title="Example using LiteLLM Python SDK"
-import litellm
-response = await litellm.anthropic.messages.acreate(
+import remodl
+response = await remodl.anthropic.messages.acreate(
     messages=[{"role": "user", "content": "Hello, can you tell me a short joke?"}],
     api_key=api_key,
     model="anthropic/claude-3-haiku-20240307",
@@ -65,14 +65,14 @@ async for chunk in response:
 ```yaml
 model_list:
     - model_name: anthropic-claude
-      litellm_params:
+      remodl_params:
         model: claude-3-7-sonnet-latest
 ```
 
 2. Start proxy 
 
 ```bash
-litellm --config /path/to/config.yaml
+remodl --config /path/to/config.yaml
 ```
 
 3. Test it! 
@@ -83,7 +83,7 @@ litellm --config /path/to/config.yaml
 ```python showLineNumbers title="Example using LiteLLM Proxy Server"
 import anthropic
 
-# point anthropic sdk to litellm proxy 
+# point anthropic sdk to remodl proxy 
 client = anthropic.Anthropic(
     base_url="http://0.0.0.0:4000",
     api_key="sk-1234",

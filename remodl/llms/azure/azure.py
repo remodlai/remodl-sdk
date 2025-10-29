@@ -6,22 +6,22 @@ from typing import Any, Callable, Coroutine, Dict, List, Optional, Union
 import httpx  # type: ignore
 from openai import APITimeoutError, AsyncAzureOpenAI, AzureOpenAI
 
-import litellm
-from litellm.constants import AZURE_OPERATION_POLLING_TIMEOUT, DEFAULT_MAX_RETRIES
-from litellm.litellm_core_utils.litellm_logging import Logging as LiteLLMLoggingObj
-from litellm.litellm_core_utils.logging_utils import track_llm_api_timing
-from litellm.llms.custom_httpx.http_handler import (
+import remodl
+from remodl.constants import AZURE_OPERATION_POLLING_TIMEOUT, DEFAULT_MAX_RETRIES
+from remodl.remodl_core_utils.remodl_logging import Logging as LiteLLMLoggingObj
+from remodl.remodl_core_utils.logging_utils import track_llm_api_timing
+from remodl.llms.custom_httpx.http_handler import (
     AsyncHTTPHandler,
     HTTPHandler,
     get_async_httpx_client,
 )
-from litellm.types.utils import (
+from remodl.types.utils import (
     EmbeddingResponse,
     ImageResponse,
     LlmProviders,
     ModelResponse,
 )
-from litellm.utils import (
+from remodl.utils import (
     CustomStreamWrapper,
     convert_to_model_response_object,
     modify_url,
@@ -68,7 +68,7 @@ class AzureOpenAIAssistantsAPIConfig:
                 if isinstance(value, str):
                     optional_params["content"] = value
                 else:
-                    raise litellm.utils.UnsupportedParamsError(
+                    raise remodl.utils.UnsupportedParamsError(
                         message="Azure only accepts content as a string.",
                         status_code=400,
                     )
@@ -81,17 +81,17 @@ class AzureOpenAIAssistantsAPIConfig:
                         if "file_id" in item:
                             file_ids.append(item["file_id"])
                         else:
-                            if litellm.drop_params is True:
+                            if remodl.drop_params is True:
                                 pass
                             else:
-                                raise litellm.utils.UnsupportedParamsError(
-                                    message="Azure doesn't support {}. To drop it from the call, set `litellm.drop_params = True.".format(
+                                raise remodl.utils.UnsupportedParamsError(
+                                    message="Azure doesn't support {}. To drop it from the call, set `remodl.drop_params = True.".format(
                                         value
                                     ),
                                     status_code=400,
                                 )
                 else:
-                    raise litellm.utils.UnsupportedParamsError(
+                    raise remodl.utils.UnsupportedParamsError(
                         message="Invalid param. attachments should always be a list. Got={}, Expected=List. Raw value={}".format(
                             type(value), value
                         ),
@@ -133,7 +133,7 @@ class AzureChatCompletion(BaseAzureLLM, BaseLLM):
     ):
         """
         Helper to:
-        - call chat.completions.create.with_raw_response when litellm.return_response_headers is True
+        - call chat.completions.create.with_raw_response when remodl.return_response_headers is True
         - call chat.completions.create by default
         """
         try:
@@ -157,7 +157,7 @@ class AzureChatCompletion(BaseAzureLLM, BaseLLM):
     ):
         """
         Helper to:
-        - call chat.completions.create.with_raw_response when litellm.return_response_headers is True
+        - call chat.completions.create.with_raw_response when remodl.return_response_headers is True
         - call chat.completions.create by default
         """
         start_time = time.time()
@@ -193,7 +193,7 @@ class AzureChatCompletion(BaseAzureLLM, BaseLLM):
         timeout: Union[float, httpx.Timeout],
         logging_obj: LiteLLMLoggingObj,
         optional_params,
-        litellm_params,
+        remodl_params,
         logger_fn,
         acompletion: bool = False,
         headers: Optional[dict] = None,
@@ -226,24 +226,24 @@ class AzureChatCompletion(BaseAzureLLM, BaseLLM):
                     azure_ad_token_provider=azure_ad_token_provider,
                     acompletion=acompletion,
                     client=client,
-                    litellm_params=litellm_params,
+                    remodl_params=remodl_params,
                 )
 
                 data = {"model": None, "messages": messages, **optional_params}
-            elif litellm.AzureOpenAIGPT5Config.is_model_gpt_5_model(model=model):
-                data = litellm.AzureOpenAIGPT5Config().transform_request(
+            elif remodl.AzureOpenAIGPT5Config.is_model_gpt_5_model(model=model):
+                data = remodl.AzureOpenAIGPT5Config().transform_request(
                     model=model,
                     messages=messages,
                     optional_params=optional_params,
-                    litellm_params=litellm_params,
+                    remodl_params=remodl_params,
                     headers=headers or {},
                 )
             else:
-                data = litellm.AzureOpenAIConfig().transform_request(
+                data = remodl.AzureOpenAIConfig().transform_request(
                     model=model,
                     messages=messages,
                     optional_params=optional_params,
-                    litellm_params=litellm_params,
+                    remodl_params=remodl_params,
                     headers=headers or {},
                 )
 
@@ -262,7 +262,7 @@ class AzureChatCompletion(BaseAzureLLM, BaseLLM):
                         timeout=timeout,
                         client=client,
                         max_retries=max_retries,
-                        litellm_params=litellm_params,
+                        remodl_params=remodl_params,
                     )
                 else:
                     return self.acompletion(
@@ -280,7 +280,7 @@ class AzureChatCompletion(BaseAzureLLM, BaseLLM):
                         logging_obj=logging_obj,
                         max_retries=max_retries,
                         convert_tool_call_to_json_mode=json_mode,
-                        litellm_params=litellm_params,
+                        remodl_params=remodl_params,
                     )
             elif "stream" in optional_params and optional_params["stream"] is True:
                 return self.streaming(
@@ -296,7 +296,7 @@ class AzureChatCompletion(BaseAzureLLM, BaseLLM):
                     timeout=timeout,
                     client=client,
                     max_retries=max_retries,
-                    litellm_params=litellm_params,
+                    remodl_params=remodl_params,
                 )
             else:
                 ## LOGGING
@@ -325,7 +325,7 @@ class AzureChatCompletion(BaseAzureLLM, BaseLLM):
                     model=model,
                     client=client,
                     _is_async=False,
-                    litellm_params=litellm_params,
+                    remodl_params=remodl_params,
                 )
                 if not isinstance(azure_client, AzureOpenAI):
                     raise AzureOpenAIError(
@@ -386,7 +386,7 @@ class AzureChatCompletion(BaseAzureLLM, BaseLLM):
         azure_ad_token_provider: Optional[Callable] = None,
         convert_tool_call_to_json_mode: Optional[bool] = None,
         client=None,  # this is the AsyncAzureOpenAI
-        litellm_params: Optional[dict] = {},
+        remodl_params: Optional[dict] = {},
     ):
         response = None
         try:
@@ -398,7 +398,7 @@ class AzureChatCompletion(BaseAzureLLM, BaseLLM):
                 model=model,
                 client=client,
                 _is_async=True,
-                litellm_params=litellm_params,
+                remodl_params=remodl_params,
             )
             if not isinstance(azure_client, AsyncAzureOpenAI):
                 raise ValueError("Azure client is not an instance of AsyncAzureOpenAI")
@@ -487,14 +487,14 @@ class AzureChatCompletion(BaseAzureLLM, BaseLLM):
         azure_ad_token: Optional[str] = None,
         azure_ad_token_provider: Optional[Callable] = None,
         client=None,
-        litellm_params: Optional[dict] = {},
+        remodl_params: Optional[dict] = {},
     ):
         # init AzureOpenAI Client
         azure_client_params = {
             "api_version": api_version,
             "azure_endpoint": api_base,
             "azure_deployment": model,
-            "http_client": litellm.client_session,
+            "http_client": remodl.client_session,
             "max_retries": max_retries,
             "timeout": timeout,
         }
@@ -517,7 +517,7 @@ class AzureChatCompletion(BaseAzureLLM, BaseLLM):
             model=model,
             client=client,
             _is_async=False,
-            litellm_params=litellm_params,
+            remodl_params=remodl_params,
         )
         if not isinstance(azure_client, AzureOpenAI):
             raise AzureOpenAIError(
@@ -565,7 +565,7 @@ class AzureChatCompletion(BaseAzureLLM, BaseLLM):
         azure_ad_token: Optional[str] = None,
         azure_ad_token_provider: Optional[Callable] = None,
         client=None,
-        litellm_params: Optional[dict] = {},
+        remodl_params: Optional[dict] = {},
     ):
         try:
             azure_client = self.get_azure_openai_client(
@@ -575,7 +575,7 @@ class AzureChatCompletion(BaseAzureLLM, BaseLLM):
                 model=model,
                 client=client,
                 _is_async=True,
-                litellm_params=litellm_params,
+                remodl_params=remodl_params,
             )
             if not isinstance(azure_client, AsyncAzureOpenAI):
                 raise ValueError("Azure client is not an instance of AsyncAzureOpenAI")
@@ -643,7 +643,7 @@ class AzureChatCompletion(BaseAzureLLM, BaseLLM):
         max_retries: Optional[int] = None,
         azure_ad_token: Optional[str] = None,
         azure_ad_token_provider: Optional[Callable] = None,
-        litellm_params: Optional[dict] = {},
+        remodl_params: Optional[dict] = {},
     ) -> EmbeddingResponse:
         response = None
         try:
@@ -654,7 +654,7 @@ class AzureChatCompletion(BaseAzureLLM, BaseLLM):
                 model=model,
                 _is_async=True,
                 client=client,
-                litellm_params=litellm_params,
+                remodl_params=remodl_params,
             )
             if not isinstance(openai_aclient, AsyncAzureOpenAI):
                 raise ValueError("Azure client is not an instance of AsyncAzureOpenAI")
@@ -712,7 +712,7 @@ class AzureChatCompletion(BaseAzureLLM, BaseLLM):
         client=None,
         aembedding=None,
         headers: Optional[dict] = None,
-        litellm_params: Optional[dict] = None,
+        remodl_params: Optional[dict] = None,
     ) -> Union[EmbeddingResponse, Coroutine[Any, Any, EmbeddingResponse]]:
         if headers:
             optional_params["extra_headers"] = headers
@@ -721,7 +721,7 @@ class AzureChatCompletion(BaseAzureLLM, BaseLLM):
         try:
             data = {"model": model, "input": input, **optional_params}
             if max_retries is None:
-                max_retries = litellm.DEFAULT_MAX_RETRIES
+                max_retries = remodl.DEFAULT_MAX_RETRIES
             ## LOGGING
             logging_obj.pre_call(
                 input=input,
@@ -742,7 +742,7 @@ class AzureChatCompletion(BaseAzureLLM, BaseLLM):
                     model_response=model_response,
                     timeout=timeout,
                     client=client,
-                    litellm_params=litellm_params,
+                    remodl_params=remodl_params,
                     api_base=api_base,
                 )
             azure_client = self.get_azure_openai_client(
@@ -752,7 +752,7 @@ class AzureChatCompletion(BaseAzureLLM, BaseLLM):
                 model=model,
                 _is_async=False,
                 client=client,
-                litellm_params=litellm_params,
+                remodl_params=remodl_params,
             )
             if not isinstance(azure_client, AzureOpenAI):
                 raise AzureOpenAIError(
@@ -912,7 +912,7 @@ class AzureChatCompletion(BaseAzureLLM, BaseLLM):
             else:
                 _params["timeout"] = httpx.Timeout(timeout=600.0, connect=5.0)
 
-            sync_handler = HTTPHandler(**_params, client=litellm.client_session)  # type: ignore
+            sync_handler = HTTPHandler(**_params, client=remodl.client_session)  # type: ignore
         else:
             sync_handler = client  # type: ignore
 
@@ -1019,7 +1019,7 @@ class AzureChatCompletion(BaseAzureLLM, BaseLLM):
         headers: dict,
         client=None,
         timeout=None,
-    ) -> litellm.ImageResponse:
+    ) -> remodl.ImageResponse:
         response: Optional[dict] = None
         try:
             # response = await azure_client.images.generate(**data, timeout=timeout)
@@ -1093,7 +1093,7 @@ class AzureChatCompletion(BaseAzureLLM, BaseLLM):
         azure_ad_token_provider: Optional[Callable] = None,
         client=None,
         aimg_generation=None,
-        litellm_params: Optional[dict] = None,
+        remodl_params: Optional[dict] = None,
     ) -> ImageResponse:
         try:
             if model and len(model) > 0:
@@ -1127,7 +1127,7 @@ class AzureChatCompletion(BaseAzureLLM, BaseLLM):
 
             # init AzureOpenAI Client
             azure_client_params: Dict[str, Any] = self.initialize_azure_sdk_client(
-                litellm_params=litellm_params or {},
+                remodl_params=remodl_params or {},
                 api_key=api_key,
                 model_name=model or "",
                 api_version=api_version,
@@ -1196,7 +1196,7 @@ class AzureChatCompletion(BaseAzureLLM, BaseLLM):
         azure_ad_token_provider: Optional[Callable] = None,
         aspeech: Optional[bool] = None,
         client=None,
-        litellm_params: Optional[dict] = None,
+        remodl_params: Optional[dict] = None,
     ) -> HttpxBinaryResponseContent:
         max_retries = optional_params.pop("max_retries", 2)
 
@@ -1214,7 +1214,7 @@ class AzureChatCompletion(BaseAzureLLM, BaseLLM):
                 max_retries=max_retries,
                 timeout=timeout,
                 client=client,
-                litellm_params=litellm_params,
+                remodl_params=remodl_params,
             )  # type: ignore
 
         azure_client: AzureOpenAI = self.get_azure_openai_client(
@@ -1224,7 +1224,7 @@ class AzureChatCompletion(BaseAzureLLM, BaseLLM):
             model=model,
             _is_async=False,
             client=client,
-            litellm_params=litellm_params,
+            remodl_params=remodl_params,
         )  # type: ignore
 
         response = azure_client.audio.speech.create(
@@ -1249,7 +1249,7 @@ class AzureChatCompletion(BaseAzureLLM, BaseLLM):
         max_retries: int,
         timeout: Union[float, httpx.Timeout],
         client=None,
-        litellm_params: Optional[dict] = None,
+        remodl_params: Optional[dict] = None,
     ) -> HttpxBinaryResponseContent:
         azure_client: AsyncAzureOpenAI = self.get_azure_openai_client(
             api_base=api_base,
@@ -1258,7 +1258,7 @@ class AzureChatCompletion(BaseAzureLLM, BaseLLM):
             model=model,
             _is_async=True,
             client=client,
-            litellm_params=litellm_params,
+            remodl_params=remodl_params,
         )  # type: ignore
 
         azure_response = await azure_client.audio.speech.create(
@@ -1282,7 +1282,7 @@ class AzureChatCompletion(BaseAzureLLM, BaseLLM):
         input: Optional[list] = None,
         prompt: Optional[str] = None,
     ) -> dict:
-        client_session = litellm.client_session or httpx.Client()
+        client_session = remodl.client_session or httpx.Client()
         if "gateway.ai.cloudflare.com" in api_base:
             ## build base url - assume api base includes resource name
             if not api_base.endswith("/"):

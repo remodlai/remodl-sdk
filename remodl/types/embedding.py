@@ -14,8 +14,8 @@ class EmbeddingRequest(BaseModel):
     caching: bool = False
     user: Optional[str] = None
     custom_llm_provider: Optional[Union[str, dict]] = None
-    litellm_call_id: Optional[str] = None
-    litellm_logging_obj: Optional[dict] = None
+    remodl_call_id: Optional[str] = None
+    remodl_logging_obj: Optional[dict] = None
     logger_fn: Optional[str] = None
 
     model_config = ConfigDict(extra="allow")

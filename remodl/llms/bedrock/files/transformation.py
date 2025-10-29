@@ -1,20 +1,20 @@
 import json
 import os
 import time
-from litellm._uuid import uuid
+from remodl._uuid import uuid
 from typing import Any, Dict, List, Optional, Tuple, Union
 
 from httpx import Headers, Response
 
-from litellm._logging import verbose_logger
-from litellm.files.utils import FilesAPIUtils
-from litellm.litellm_core_utils.prompt_templates.common_utils import extract_file_data
-from litellm.llms.base_llm.chat.transformation import BaseLLMException
-from litellm.llms.base_llm.files.transformation import (
+from remodl._logging import verbose_logger
+from remodl.files.utils import FilesAPIUtils
+from remodl.remodl_core_utils.prompt_templates.common_utils import extract_file_data
+from remodl.llms.base_llm.chat.transformation import BaseLLMException
+from remodl.llms.base_llm.files.transformation import (
     BaseFilesConfig,
     LiteLLMLoggingObj,
 )
-from litellm.types.llms.openai import (
+from remodl.types.llms.openai import (
     AllMessageValues,
     CreateFileRequest,
     FileTypes,
@@ -22,8 +22,8 @@ from litellm.types.llms.openai import (
     OpenAIFileObject,
     PathLike,
 )
-from litellm.types.utils import ExtractedFileData, LlmProviders
-from litellm.utils import get_llm_provider
+from remodl.types.utils import ExtractedFileData, LlmProviders
+from remodl.utils import get_llm_provider
 
 from ..base_aws_llm import BaseAWSLLM
 from ..common_utils import BedrockError
@@ -55,7 +55,7 @@ class BedrockFilesConfig(BaseAWSLLM, BaseFilesConfig):
         model: str,
         messages: List[AllMessageValues],
         optional_params: dict,
-        litellm_params: dict,
+        remodl_params: dict,
         api_key: Optional[str] = None,
         api_base: Optional[str] = None,
     ) -> dict:
@@ -108,7 +108,7 @@ class BedrockFilesConfig(BaseAWSLLM, BaseFilesConfig):
         """
         Gets a unique S3 object name for the Bedrock batch processing job
 
-        named as: litellm-bedrock-files/{model}/{uuid}
+        named as: remodl-bedrock-files/{model}/{uuid}
         """
         _model = openai_jsonl_content[0].get("body", {}).get("model", "")
         # Remove bedrock/ prefix if present
@@ -118,7 +118,7 @@ class BedrockFilesConfig(BaseAWSLLM, BaseFilesConfig):
         # Replace colons with hyphens for Bedrock S3 URI compliance
         _model = _model.replace(":", "-")
         
-        object_name = f"litellm-bedrock-files-{_model}-{uuid.uuid4()}.jsonl"
+        object_name = f"remodl-bedrock-files-{_model}-{uuid.uuid4()}.jsonl"
         return object_name
 
     def get_object_name(
@@ -158,15 +158,15 @@ class BedrockFilesConfig(BaseAWSLLM, BaseFilesConfig):
         api_key: Optional[str],
         model: str,
         optional_params: Dict,
-        litellm_params: Dict,
+        remodl_params: Dict,
         data: CreateFileRequest,
     ) -> str:
         """
         Get the complete S3 URL for the file upload request
         """
-        bucket_name = litellm_params.get("s3_bucket_name") or os.getenv("AWS_S3_BUCKET_NAME")
+        bucket_name = remodl_params.get("s3_bucket_name") or os.getenv("AWS_S3_BUCKET_NAME")
         if not bucket_name:
-            raise ValueError("S3 bucket_name is required. Set 's3_bucket_name' in litellm_params or AWS_S3_BUCKET_NAME env var")
+            raise ValueError("S3 bucket_name is required. Set 's3_bucket_name' in remodl_params or AWS_S3_BUCKET_NAME env var")
         
         aws_region_name = self._get_aws_region_name(optional_params, model)
         
@@ -207,13 +207,13 @@ class BedrockFilesConfig(BaseAWSLLM, BaseFilesConfig):
         """
         Transform OpenAI request body to Bedrock-compatible modelInput parameters using existing transformation logic
         """
-        from litellm.types.utils import LlmProviders
+        from remodl.types.utils import LlmProviders
         _model = openai_request_body.get("model", "")
         messages = openai_request_body.get("messages", [])
         
         # Use existing Anthropic transformation logic for Anthropic models
         if provider == LlmProviders.ANTHROPIC:
-            from litellm.llms.bedrock.chat.invoke_transformations.anthropic_claude3_transformation import (
+            from remodl.llms.bedrock.chat.invoke_transformations.anthropic_claude3_transformation import (
                 AmazonAnthropicClaudeConfig,
             )
             
@@ -233,7 +233,7 @@ class BedrockFilesConfig(BaseAWSLLM, BaseFilesConfig):
                 model=_model,
                 messages=messages,
                 optional_params=mapped_params,
-                litellm_params={},
+                remodl_params={},
                 headers={}
             )
 
@@ -281,7 +281,7 @@ class BedrockFilesConfig(BaseAWSLLM, BaseFilesConfig):
                             custom_llm_provider=None, 
                     )
             except Exception as e:
-                verbose_logger.exception(f"litellm.llms.bedrock.files.transformation.py::_transform_openai_jsonl_content_to_bedrock_jsonl_content() - Error inferring custom_llm_provider - {str(e)}")
+                verbose_logger.exception(f"remodl.llms.bedrock.files.transformation.py::_transform_openai_jsonl_content_to_bedrock_jsonl_content() - Error inferring custom_llm_provider - {str(e)}")
             
             # Determine provider from model name
             provider = self.get_bedrock_invoke_provider(model)
@@ -307,7 +307,7 @@ class BedrockFilesConfig(BaseAWSLLM, BaseFilesConfig):
         model: str,
         create_file_data: CreateFileRequest,
         optional_params: dict,
-        litellm_params: dict,
+        remodl_params: dict,
     ) -> Union[bytes, str, dict]:
         """
         Transform file request and return a pre-signed request for S3.
@@ -353,7 +353,7 @@ class BedrockFilesConfig(BaseAWSLLM, BaseFilesConfig):
             api_key=None,
             model=model,
             optional_params=optional_params,
-            litellm_params=litellm_params,
+            remodl_params=remodl_params,
             data=create_file_data,
         )
         
@@ -364,7 +364,7 @@ class BedrockFilesConfig(BaseAWSLLM, BaseFilesConfig):
             optional_params=optional_params,
         )
 
-        litellm_params["upload_url"] = api_base
+        remodl_params["upload_url"] = api_base
         
         # Return a dict that tells the HTTP handler exactly what to do
         return {
@@ -382,7 +382,7 @@ class BedrockFilesConfig(BaseAWSLLM, BaseFilesConfig):
     ) -> Tuple[dict, str]:
         """
         Sign S3 PUT request using the same proven logic as S3Logger.
-        Reuses the exact pattern from litellm/integrations/s3_v2.py
+        Reuses the exact pattern from remodl/integrations/s3_v2.py
         """
         try:
             import hashlib
@@ -459,8 +459,8 @@ class BedrockFilesConfig(BaseAWSLLM, BaseFilesConfig):
             Tuple of (s3_uri, filename)
         
         Example:
-            Input: "https://s3.us-west-2.amazonaws.com/litellm-proxy/file.jsonl"
-            Output: ("s3://litellm-proxy/file.jsonl", "file.jsonl")
+            Input: "https://s3.us-west-2.amazonaws.com/remodl-proxy/file.jsonl"
+            Output: ("s3://remodl-proxy/file.jsonl", "file.jsonl")
         """
         import re
 
@@ -503,7 +503,7 @@ class BedrockFilesConfig(BaseAWSLLM, BaseFilesConfig):
         model: Optional[str],
         raw_response: Response,
         logging_obj: LiteLLMLoggingObj,
-        litellm_params: dict,
+        remodl_params: dict,
     ) -> OpenAIFileObject:
         """
         Transform S3 File upload response into OpenAI-style FileObject
@@ -515,7 +515,7 @@ class BedrockFilesConfig(BaseAWSLLM, BaseFilesConfig):
         content_length = response_headers.get("Content-Length", "0")
         
         # Use the actual upload URL that was used for the S3 upload
-        upload_url = litellm_params.get("upload_url")
+        upload_url = remodl_params.get("upload_url")
         file_id: str = ""
         filename: str = ""
         if upload_url:
@@ -590,13 +590,13 @@ class BedrockJsonlFilesTransformation:
         """
         Gets a unique S3 object name for the Bedrock batch processing job
 
-        named as: litellm-bedrock-files-{model}-{uuid}
+        named as: remodl-bedrock-files-{model}-{uuid}
         """
         _model = openai_jsonl_content[0].get("body", {}).get("model", "")
         # Remove bedrock/ prefix if present
         if _model.startswith("bedrock/"):
             _model = _model[8:]
-        object_name = f"litellm-bedrock-files-{_model}-{uuid.uuid4()}.jsonl"
+        object_name = f"remodl-bedrock-files-{_model}-{uuid.uuid4()}.jsonl"
         return object_name
 
 
