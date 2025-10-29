@@ -1416,3 +1416,23 @@ def set_global_gitlab_config(config: Dict[str, Any]) -> None:
     """Set global BitBucket configuration for prompt management."""
     global global_gitlab_config
     global_gitlab_config = config
+
+### DSPY INTEGRATION ###
+# Lazy-loaded DSPy integration with litellm → remodl shim
+_dspy_module = None
+
+def _get_dspy():
+    """Lazy-load DSPy with remodl shim."""
+    global _dspy_module
+    if _dspy_module is None:
+        from .dspy_integration import dspy
+        _dspy_module = dspy
+    return _dspy_module
+
+# Make dspy available as remodl.dspy
+class _DSPyProxy:
+    """Proxy object for lazy DSPy loading."""
+    def __getattr__(self, name):
+        return getattr(_get_dspy(), name)
+
+dspy = _DSPyProxy()

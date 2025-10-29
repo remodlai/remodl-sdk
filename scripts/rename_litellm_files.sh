@@ -41,3 +41,4 @@ echo ""
 echo "📝 Summary of renames:"
 git status --short | grep "^R" | head -20
 
+
