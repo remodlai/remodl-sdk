@@ -11,6 +11,24 @@
 		},
 		{
 			"path": "."
+		},
+		{
+			"path": "../DSPyUI"
+		},
+		{
+			"path": "../dev-notes"
+		},
+		{
+			"path": "../dspy"
+		},
+		{
+			"path": "../dspy-attachments"
+		},
+		{
+			"path": "../dspy-profiles"
+		},
+		{
+			"path": "../mcp2py"
 		}
 	],
 	"settings": {}

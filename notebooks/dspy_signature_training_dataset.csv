@@ -1,0 +1,135 @@
+index,natural_language,code
+1,"You will receive a sentence. You will return whether the sentiment is positive or negative as a boolean. True means positive, False means negative.","class ClassifySentiment(dspy.Signature):
+    """"""Classify the sentiment of a sentence as positive or negative.""""""
+    
+    sentence: str = dspy.InputField()
+    is_positive: bool = dspy.OutputField()"
+2,I need to summarize documents into brief summaries. You will receive a long document. You may receive a target word count (default 100 words). You must preserve key information. You can omit redundant details. You will return a concise summary.,"class SummarizeDocument(dspy.Signature):
+    """"""Summarize documents concisely while preserving key information.""""""
+    
+    document: str = dspy.InputField()
+    target_words: int = dspy.InputField(desc=""desired summary length in words"")
+    summary: str = dspy.OutputField()"
+3,You will receive a question and a list of context passages. You will return a short answer based on the context.,"class AnswerQuestion(dspy.Signature):
+    """"""Answer questions using provided context passages.""""""
+    
+    question: str = dspy.InputField()
+    context: list[str] = dspy.InputField()
+    answer: str = dspy.OutputField()"
+4,I need to translate text between languages. You will receive text in the source language. You will receive the target language code. You may receive a formality level (default neutral). You must maintain meaning accurately. You can adapt idioms appropriately. You will return the translated text.,"class TranslateText(dspy.Signature):
+    """"""Translate text between languages while maintaining meaning.""""""
+    
+    text: str = dspy.InputField()
+    target_language: str = dspy.InputField()
+    formality: str = dspy.InputField(desc=""tone level for translation"")
+    translated_text: str = dspy.OutputField()"
+5,You will receive a code snippet. You will receive the programming language. You must identify bugs and security issues. You can suggest improvements. You will return a list of issues found. You will return a list of suggested fixes.,"class ReviewCode(dspy.Signature):
+    """"""Review code for bugs, security issues, and improvements.""""""
+    
+    code: str = dspy.InputField()
+    language: str = dspy.InputField()
+    issues: list[str] = dspy.OutputField()
+    fixes: list[str] = dspy.OutputField()"
+6,I need to extract key entities from text. You will receive a text passage. You may receive entity types to focus on. You will return a list of entities found. You will return their types.,"class ExtractEntities(dspy.Signature):
+    """"""Extract named entities from text passages.""""""
+    
+    text: str = dspy.InputField()
+    entity_types: list[str] = dspy.InputField(desc=""types to focus on"")
+    entities: list[str] = dspy.OutputField()
+    types: list[str] = dspy.OutputField()"
+7,You will receive an email message. You must classify it as spam or not spam. You should provide a confidence score. You will return a boolean indicating if it's spam. You will return a confidence score between 0 and 1.,"class DetectSpam(dspy.Signature):
+    """"""Classify emails as spam or not spam with confidence scores.""""""
+    
+    email: str = dspy.InputField()
+    is_spam: bool = dspy.OutputField()
+    confidence: float = dspy.OutputField(desc=""score between 0 and 1"")"
+8,You will receive a product description. You will receive a category taxonomy. You will return the most appropriate category. You will return a confidence score.,"class CategorizeProduct(dspy.Signature):
+    """"""Categorize products into appropriate taxonomy categories.""""""
+    
+    description: str = dspy.InputField()
+    taxonomy: list[str] = dspy.InputField()
+    category: str = dspy.OutputField()
+    confidence: float = dspy.OutputField()"
+9,I need to generate SQL queries from natural language. You will receive a question in plain English. You will receive the database schema. You must generate valid SQL. You will return the SQL query.,"class GenerateSQL(dspy.Signature):
+    """"""Generate valid SQL queries from natural language questions.""""""
+    
+    question: str = dspy.InputField()
+    schema: str = dspy.InputField()
+    sql_query: str = dspy.OutputField()"
+10,"You will receive a customer support ticket. You may receive previous ticket history. You must determine the urgency level. You can categorize the issue type. You will return the urgency (low, medium, high, critical). You will return the issue category.","class TriageTicket(dspy.Signature):
+    """"""Triage customer support tickets by urgency and category.""""""
+    
+    ticket: str = dspy.InputField()
+    history: list[str] = dspy.InputField(desc=""previous related tickets"")
+    urgency: str = dspy.OutputField(desc=""low, medium, high, or critical"")
+    category: str = dspy.OutputField()"
+11,I need to compare two documents for similarity. You will receive document A. You will receive document B. You will return a similarity score between 0 and 1. You will return key differences found.,"class CompareDocuments(dspy.Signature):
+    """"""Compare two documents for similarity and identify differences.""""""
+    
+    document_a: str = dspy.InputField()
+    document_b: str = dspy.InputField()
+    similarity: float = dspy.OutputField(desc=""score between 0 and 1"")
+    differences: list[str] = dspy.OutputField()"
+12,You will receive a meeting transcript. You must extract action items. You should identify who is responsible for each item. You will return a list of action items. You will return assigned owners for each.,"class ExtractActionItems(dspy.Signature):
+    """"""Extract action items and owners from meeting transcripts.""""""
+    
+    transcript: str = dspy.InputField()
+    action_items: list[str] = dspy.OutputField()
+    owners: list[str] = dspy.OutputField()"
+13,I need to rewrite text to match a target reading level. You will receive the original text. You will receive the target grade level. You may receive preserve technical terms flag. You will return the rewritten text.,"class SimplifyText(dspy.Signature):
+    """"""Rewrite text to match a target reading level.""""""
+    
+    text: str = dspy.InputField()
+    grade_level: int = dspy.InputField()
+    preserve_technical: bool = dspy.InputField(desc=""keep technical terminology"")
+    simplified_text: str = dspy.OutputField()"
+14,You will receive a research paper abstract. You will receive a list of research areas. You will return which areas the paper belongs to. You will return relevance scores for each area.,"class ClassifyResearch(dspy.Signature):
+    """"""Classify research papers into relevant areas.""""""
+    
+    abstract: str = dspy.InputField()
+    research_areas: list[str] = dspy.InputField()
+    relevant_areas: list[str] = dspy.OutputField()
+    relevance_scores: list[float] = dspy.OutputField()"
+15,I need to generate test cases for functions. You will receive a function signature. You will receive the function description. You must cover edge cases. You will return a list of test inputs. You will return expected outputs for each.,"class GenerateTests(dspy.Signature):
+    """"""Generate comprehensive test cases for functions.""""""
+    
+    signature: str = dspy.InputField()
+    description: str = dspy.InputField()
+    test_inputs: list[str] = dspy.OutputField()
+    expected_outputs: list[str] = dspy.OutputField()"
+16,You will receive a news article. You may receive a list of known biases to check for. You must identify potential bias. You should rate objectivity. You will return detected biases. You will return an objectivity score from 0 to 10.,"class AnalyzeBias(dspy.Signature):
+    """"""Analyze news articles for bias and objectivity.""""""
+    
+    article: str = dspy.InputField()
+    known_biases: list[str] = dspy.InputField(desc=""biases to check for"")
+    detected_biases: list[str] = dspy.OutputField()
+    objectivity_score: int = dspy.OutputField(desc=""score from 0 to 10"")"
+17,I need to generate creative product names. You will receive a product description. You will receive the target market. You may receive brand guidelines. You will return 5 name suggestions. You will return explanations for each name.,"class GenerateProductNames(dspy.Signature):
+    """"""Generate creative product names with explanations.""""""
+    
+    description: str = dspy.InputField()
+    target_market: str = dspy.InputField()
+    brand_guidelines: str = dspy.InputField(desc=""optional brand constraints"")
+    names: list[str] = dspy.OutputField(desc=""5 name suggestions"")
+    explanations: list[str] = dspy.OutputField()"
+18,You will receive two pieces of text to check for plagiarism. You must identify matching sections. You will return a plagiarism score between 0 and 100. You will return specific matching passages.,"class CheckPlagiarism(dspy.Signature):
+    """"""Check two texts for plagiarism and identify matches.""""""
+    
+    text_original: str = dspy.InputField()
+    text_suspect: str = dspy.InputField()
+    plagiarism_score: int = dspy.OutputField(desc=""score from 0 to 100"")
+    matching_passages: list[str] = dspy.OutputField()"
+19,I need to validate addresses. You will receive an address string. You will receive the expected country. You must check if the format is valid. You can suggest corrections. You will return whether it's valid. You will return corrected address if invalid.,"class ValidateAddress(dspy.Signature):
+    """"""Validate addresses and suggest corrections.""""""
+    
+    address: str = dspy.InputField()
+    country: str = dspy.InputField()
+    is_valid: bool = dspy.OutputField()
+    corrected_address: str = dspy.OutputField(desc=""suggested correction if invalid"")"
+20,You will receive a legal contract section. You will receive a list of compliance requirements. You must identify compliance issues. You should rate risk level. You will return identified issues. You will return risk ratings for each issue.,"class ReviewContract(dspy.Signature):
+    """"""Review legal contracts for compliance issues.""""""
+    
+    contract_section: str = dspy.InputField()
+    requirements: list[str] = dspy.InputField()
+    issues: list[str] = dspy.OutputField()
+    risk_ratings: list[str] = dspy.OutputField(desc=""risk level for each issue"")"

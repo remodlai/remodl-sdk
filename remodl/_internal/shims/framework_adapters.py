@@ -1,15 +1,9 @@
 """
-DSPy Integration with RemodlAI SDK
+Internal framework adapters for third-party integrations.
 
-This module provides a shim layer that makes DSPy use remodl instead of litellm.
-When DSPy tries to import litellm, it will get remodl instead.
-
-Usage:
-    from remodl import dspy
-    
-    # DSPy now uses remodl under the hood!
-    cot = dspy.ChainOfThought("question -> answer")
-    result = cot(question="What is AI?")  # Uses remodl.completion()
+This module provides import shims for integrating external frameworks
+that have dependencies on specific packages. DO NOT import directly -
+use the public API in remodl.agents instead.
 """
 
 import sys

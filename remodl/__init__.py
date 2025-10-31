@@ -1417,22 +1417,29 @@ def set_global_gitlab_config(config: Dict[str, Any]) -> None:
     global global_gitlab_config
     global_gitlab_config = config
 
-### DSPY INTEGRATION ###
-# Lazy-loaded DSPy integration with litellm → remodl shim
+### AGENTS & FRAMEWORKS ###
+# Import clean agent DSL (hides internal framework details)
+from . import agents
+
+### LEGACY COMPATIBILITY ###
+# Lazy-loaded framework adapter (internal - do not use directly)
 _dspy_module = None
 
 def _get_dspy():
-    """Lazy-load DSPy with remodl shim."""
+    """Lazy-load DSPy framework adapter. Internal use only."""
     global _dspy_module
     if _dspy_module is None:
-        from .dspy_integration import dspy
+        from ._internal.shims.framework_adapters import dspy
         _dspy_module = dspy
     return _dspy_module
 
-# Make dspy available as remodl.dspy
+# Expose dspy for backward compatibility (prefer remodl.agents API)
 class _DSPyProxy:
-    """Proxy object for lazy DSPy loading."""
+    """Framework proxy. Internal use - prefer remodl.agents API."""
     def __getattr__(self, name):
         return getattr(_get_dspy(), name)
 
 dspy = _DSPyProxy()
+
+### TOOLS INTEGRATION ###
+from .tools import Tools, MCPTools, from_mcp, from_functions, to_dspy
