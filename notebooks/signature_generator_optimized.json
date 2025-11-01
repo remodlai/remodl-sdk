@@ -6,26 +6,26 @@
       {
         "augmented": true,
         "task_description": "You will receive a sentence. You will return whether the sentiment is positive or negative as a boolean. True means positive, False means negative.",
-        "reasoning": "The task requires classifying a sentence's sentiment as positive (True) or negative (False). The input is a single sentence string, and the output is a boolean. Following DSPy conventions, we define an InputField for the sentence and an OutputField for the boolean result, with clear naming to indicate the positive sentiment mapping.",
-        "signature_code": "class AnalyzeSentiment(dspy.Signature):\n    \"\"\"Classify sentence sentiment as positive (True) or negative (False).\"\"\"\n    \n    sentence: str = dspy.InputField()\n    is_positive: bool = dspy.OutputField()"
+        "reasoning": "The task requires sentiment analysis of a sentence with a binary output. The input is a sentence (string), and the output is a boolean where True represents positive sentiment and False represents negative sentiment. This is a straightforward classification task that maps to a simple DSPy signature with one input field and one output field.",
+        "signature_code": "class AnalyzeSentiment(dspy.Signature):\n    \"\"\"Analyze sentiment of a sentence as positive or negative.\"\"\"\n    \n    sentence: str = dspy.InputField()\n    is_positive: bool = dspy.OutputField(desc=\"True for positive, False for negative\")"
       },
       {
         "augmented": true,
         "task_description": "I need to summarize documents into brief summaries. You will receive a long document. You may receive a target word count (default 100 words). You must preserve key information. You can omit redundant details. You will return a concise summary.",
-        "reasoning": "The task requires creating a DSPy Signature for document summarization. Inputs include the document and an optional target word count with a default of 100. The output is the concise summary. Following previous examples, we define InputFields for required/optional parameters with descriptive annotations, and an OutputField for the summary.",
-        "signature_code": "class SummarizeDocument(dspy.Signature):\n    \"\"\"Summarize documents into brief summaries preserving key information.\"\"\"\n    \n    document: str = dspy.InputField()\n    target_word_count: int = dspy.InputField(desc=\"target word count (default 100)\")\n    summary: str = dspy.OutputField()"
+        "reasoning": "The task requires summarizing documents with optional word count control. The input is a document (required) and target_word_count (optional with default 100). The output is a summary. The description emphasizes preserving key information and omitting redundancy, which should be captured in the docstring.",
+        "signature_code": "class SummarizeDocument(dspy.Signature):\n    \"\"\"Summarize documents into brief summaries while preserving key information.\"\"\"\n    \n    document: str = dspy.InputField()\n    target_word_count: int = dspy.InputField(desc=\"default 100 words\")\n    summary: str = dspy.OutputField()"
       },
       {
         "augmented": true,
         "task_description": "You will receive a question and a list of context passages. You will return a short answer based on the context.",
-        "reasoning": "The task requires generating a short answer from a question and context passages. Inputs include the question (string) and context passages (list of strings), both essential for deriving the answer. The output must be a concise response based solely on the provided context. Following DSPy conventions, the Signature defines these elements with clear type hints and descriptive field names.",
-        "signature_code": "class AnswerQuestion(dspy.Signature):\n    \"\"\"Answer questions based on provided context passages.\"\"\"\n    \n    question: str = dspy.InputField()\n    context_passages: list[str] = dspy.InputField()\n    short_answer: str = dspy.OutputField()"
+        "reasoning": "This is a question answering task that takes a question and supporting context passages as input, and produces a short answer as output. The signature should have two input fields (question and context passages) and one output field (the answer).",
+        "signature_code": "class AnswerQuestion(dspy.Signature):\n    \"\"\"Answer questions based on provided context passages.\"\"\"\n    \n    question: str = dspy.InputField()\n    context: list[str] = dspy.InputField()\n    answer: str = dspy.OutputField()"
       },
       {
         "augmented": true,
         "task_description": "I need to translate text between languages. You will receive text in the source language. You will receive the target language code. You may receive a formality level (default neutral). You must maintain meaning accurately. You can adapt idioms appropriately. You will return the translated text.",
-        "reasoning": "The task requires translating text between languages while considering formality levels. Inputs include source text, target language code, and an optional formality parameter (default neutral). The Signature must capture these inputs and produce translated text. Following DSPy conventions, we define input fields for text, target_language, and formality (with description noting default), and an output field for the translation result.",
-        "signature_code": "class TranslateText(dspy.Signature):\n    \"\"\"Translate text between languages with specified formality level.\"\"\"\n    \n    text: str = dspy.InputField()\n    target_language: str = dspy.InputField()\n    formality: str = dspy.InputField(desc=\"formality level, default neutral\")\n    translated_text: str = dspy.OutputField()"
+        "reasoning": "This task requires translating text from one language to another. The inputs are: the source text to translate, the target language code, and an optional formality level (which defaults to neutral if not provided). The outputs are: the translated text. The signature should capture the translation task with appropriate field descriptions to guide the model in maintaining meaning and adapting idioms.",
+        "signature_code": "class TranslateText(dspy.Signature):\n    \"\"\"Translate text between languages while maintaining meaning and adapting idioms.\"\"\"\n    \n    text: str = dspy.InputField()\n    target_language: str = dspy.InputField()\n    formality: str = dspy.InputField(desc=\"formality level (default neutral)\")\n    translated_text: str = dspy.OutputField()"
       },
       {
         "task_description": "You will receive a product description. You will receive a category taxonomy. You will return the most appropriate category. You will return a confidence score.",

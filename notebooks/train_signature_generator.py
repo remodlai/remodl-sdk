@@ -23,7 +23,7 @@ dspy.configure(
 )
 
 # Teacher model for optimization
-teacher_lm = dspy.LM("openrouter/qwen/qwen3-235b-a22b-thinking-2507", api_key="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")
+teacher_lm = dspy.LM("openrouter/anthropic/claude-sonnet-4.5", api_key="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")
 
 # Define the signature template and keywords (from dspy_signature_template.py)
 signature_template = """
@@ -128,19 +128,26 @@ dev = trainset[split_point:]
 print(f"\nTrain: {len(train)} examples")
 print(f"Dev: {len(dev)} examples")
 
+# Define LLM-as-a-judge metric
+class AssessDSPyCode(dspy.Signature):
+    """Assess whether generated DSPy signature code is valid and follows best practices."""
+    
+    generated_code: str = dspy.InputField(desc="The generated DSPy signature code to assess")
+    template: str = dspy.InputField(desc="The correct DSPy signature format template")
+    assessment: str = dspy.OutputField(desc="Detailed assessment of code quality and correctness")
+    is_valid: bool = dspy.OutputField(desc="Whether the code is valid DSPy syntax")
+    score: float = dspy.OutputField(desc="Quality score from 0.0 to 1.0")
+
+# Create judge program
+judge = dspy.ChainOfThought(AssessDSPyCode)
+
 # Define evaluation metric
 def validate_dspy_signature(gold, pred, trace=None):
     """
-    Validate that generated code is a proper DSPy Signature.
+    LLM-as-a-judge metric for DSPy signature validation.
     
-    Checks:
-    1. Inherits from dspy.Signature (not just 'Signature')
-    2. Has docstring
-    3. Uses dspy.InputField() and dspy.OutputField()
-    4. Uses 'desc' parameter (not 'description')
-    5. No comments like "# Input fields"
-    6. Proper type annotations (field: type = ...)
-    7. Code is syntactically valid Python
+    Uses an LLM to assess code quality, validity, and adherence to DSPy patterns.
+    Falls back to syntax checking for safety.
     """
     if not pred or not hasattr(pred, 'signature_code'):
         return 0.0
@@ -154,89 +161,47 @@ def validate_dspy_signature(gold, pred, trace=None):
         except IndexError:
             return 0.0
     
-    score = 0.0
-    errors = []
-    
-    # CRITICAL: Must inherit from dspy.Signature (not just Signature)
-    if 'class' in pred_code and '(dspy.Signature)' in pred_code:
-        score += 0.2
-    else:
-        errors.append("Missing 'class X(dspy.Signature)'")
-        return 0.0  # Fail fast
-    
-    # CRITICAL: Must have docstring
-    if '"""' in pred_code:
-        score += 0.1
-    else:
-        errors.append("Missing docstring")
-    
-    # CRITICAL: Must have at least one InputField
-    if 'dspy.InputField(' in pred_code:
-        score += 0.15
-    else:
-        errors.append("No dspy.InputField() found")
-        return score * 0.5  # Partial credit
-    
-    # CRITICAL: Must have at least one OutputField
-    if 'dspy.OutputField(' in pred_code:
-        score += 0.15
-    else:
-        errors.append("No dspy.OutputField() found")
-        return score * 0.5  # Partial credit
-    
-    # RULE: Must use 'desc' not 'description'
-    if 'description=' in pred_code and 'dspy.InputField' in pred_code or 'dspy.OutputField' in pred_code:
-        errors.append("Uses 'description=' instead of 'desc='")
-        score -= 0.1
-    
-    # RULE: Should not have comments like "# Input fields"
-    if '# Input' in pred_code or '# Output' in pred_code:
-        errors.append("Contains comments like '# Input fields'")
-        score -= 0.05
-    
-    # VALIDATION: Try to parse as Python
+    # Quick syntax check first (fail fast)
     try:
         compile(pred_code, '<string>', 'exec')
-        score += 0.2  # Valid Python syntax
-    except SyntaxError as e:
-        errors.append(f"Syntax error: {e}")
-        score -= 0.2
+    except SyntaxError:
+        return 0.0  # Invalid Python
     
-    # VALIDATION: Check type annotation format (field: type = ...)
-    import re
-    # Look for pattern: word: word = dspy.
-    if re.search(r'\w+:\s*\w+\s*=\s*dspy\.(Input|Output)Field', pred_code):
-        score += 0.1
-    else:
-        errors.append("Incorrect type annotation format")
+    # Basic validation (must have dspy.Signature)
+    if '(dspy.Signature)' not in pred_code:
+        return 0.0  # Not a DSPy signature
     
-    # BONUS: Try to actually execute and instantiate
+    # Use LLM judge for detailed assessment
     try:
-        exec_globals = {'dspy': dspy}
-        exec(pred_code, exec_globals)
-        # Find the class that was defined
-        sig_class = None
-        for name, obj in exec_globals.items():
-            if isinstance(obj, type) and issubclass(obj, dspy.Signature) and obj != dspy.Signature:
-                sig_class = obj
-                break
+        assessment = judge(
+            generated_code=pred_code,
+            template=signature_template
+        )
         
-        if sig_class:
-            score += 0.1  # Successfully created signature class
-            
-            # Try to instantiate
-            try:
-                instance = sig_class()
-                score += 0.05  # Can instantiate
-            except Exception:
-                pass
+        # During bootstrapping (trace is not None), return bool
+        if trace is not None:
+            return assessment.is_valid and assessment.score >= 0.7
+        
+        # During evaluation, return float score
+        return float(assessment.score)
+        
     except Exception as e:
-        errors.append(f"Cannot execute: {e}")
-    
-    if errors and trace:
-        print(f"Validation errors: {errors}")
-    
-    return max(0.0, min(score, 1.0))  # Clamp between 0 and 1
+        # Fallback to basic scoring if LLM judge fails
+        print(f"Judge failed: {e}, using fallback scoring")
+        
+        score = 0.5  # Base score for valid syntax
+        
+        # Bonus points for good patterns
+        if 'dspy.InputField(' in pred_code:
+            score += 0.15
+        if 'dspy.OutputField(' in pred_code:
+            score += 0.15
+        if '"""' in pred_code:
+            score += 0.1
+        if 'desc=' in pred_code:
+            score += 0.1
+        
+        return min(score, 1.0)
 
 # Create baseline program
 print("\n" + "="*60)
