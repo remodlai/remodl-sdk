@@ -29,6 +29,15 @@
 		},
 		{
 			"path": "../mcp2py"
+		},
+		{
+			"path": "../langgraph"
+		},
+		{
+			"path": "../langchain"
+		},
+		{
+			"path": "../deepagents"
 		}
 	],
 	"settings": {
